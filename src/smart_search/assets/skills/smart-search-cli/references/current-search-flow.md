@@ -97,7 +97,7 @@ flowchart TD
 - For xAI Responses, `--timeout` is a soft waiting window. Reaching it triggers request-status checks instead of immediately killing a live search.
 - Request status is isolated by client key and polling does not consume inference RPM, concurrency, or billing quota.
 - The current polling interval is 15 seconds and the shared hard deadline is 7200 seconds unless `XAI_HARD_TIMEOUT_SECONDS` overrides it.
-- Only failures proven to occur before submission are eligible for automatic retry.
+- Within one logical attempt, provider-level retries remain limited to failures proven before submission; additional logical attempts are controlled by the CLI's `--max-try` option.
 - Once submission may have reached grok2api, an unknown outcome or terminal connection anomaly is never replayed. This prevents duplicate searches and duplicate billing.
 - OpenAI-compatible keeps its regular hard-timeout behavior; the xAI request-status extension is provider-specific.
 
