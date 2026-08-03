@@ -132,6 +132,24 @@ def test_tavily_timeout_can_be_configured(monkeypatch):
     assert info["config_sources"]["TAVILY_TIMEOUT_SECONDS"] == "environment"
 
 
+def test_xai_request_monitor_timeouts_have_safe_defaults(monkeypatch):
+    monkeypatch.delenv("XAI_SOFT_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.delenv("XAI_HARD_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.delenv("XAI_STATUS_POLL_SECONDS", raising=False)
+    config = _fresh_config_file(monkeypatch)
+
+    assert config.xai_soft_timeout == 120.0
+    assert config.xai_hard_timeout == 7200.0
+    assert config.xai_status_poll == 15.0
+
+
+def test_xai_status_poll_accepts_five_minute_maximum(monkeypatch):
+    monkeypatch.setenv("XAI_STATUS_POLL_SECONDS", "300")
+    config = _fresh_config_file(monkeypatch)
+
+    assert config.xai_status_poll == 300.0
+
+
 def test_absolute_log_dir_is_resolved_without_creation(monkeypatch, tmp_path):
     target = tmp_path / "shared-root"
     log_dir = tmp_path / "explicit-logs"

@@ -361,6 +361,11 @@ Local config path:
 
 Provider timeouts:
 
+- `search --timeout` is the initial wait window for xAI Responses. When it expires, Smart Search polls `GET /v1/request-status/{request_id}` on compatible gateways and keeps waiting while the request is running.
+- `search --max-try N` replays only explicit terminal xAI HTTP 504 failures; it defaults to one logical attempt.
+- `XAI_SOFT_TIMEOUT_SECONDS` defaults to `120` for direct provider calls without a CLI timeout. `XAI_STATUS_POLL_SECONDS` defaults to `15` and `XAI_HARD_TIMEOUT_SECONDS` defaults to `7200`.
+- Gateways without the request-status extension are treated as unknown and remain bounded by `XAI_HARD_TIMEOUT_SECONDS`.
+- The hard deadline covers connection attempts, retry waits, response waiting, and status polling. Automatic retries are limited to connection failures that happen before request submission; protocol or terminal-state failures after submission are returned without replaying the request.
 - `TAVILY_TIMEOUT_SECONDS` controls the Tavily `doctor` connectivity check timeout and defaults to `30`.
 - `ANYSEARCH_TIMEOUT_SECONDS` controls experimental AnySearch JSON-RPC calls and defaults to `30`.
 - Raise it for slower Tavily Hikari / pooled / community endpoints before treating the provider as unhealthy.

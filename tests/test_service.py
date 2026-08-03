@@ -886,6 +886,28 @@ async def test_search_fallbacks_from_xai_responses_to_openai_compatible(monkeypa
 
 
 @pytest.mark.asyncio
+async def test_search_stops_provider_fallback_when_xai_submission_outcome_is_unknown(monkeypatch):
+    monkeypatch.setenv("XAI_API_KEY", "xai-test-secret")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_URL", "https://relay.example.com/v1")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_KEY", "relay-test-secret")
+
+    async def ambiguous_xai(self, query, platform="", ctx=None):
+        raise service.XAIRequestOutcomeUnknown("xAI request may already be running")
+
+    async def should_not_replay(self, query, platform="", ctx=None):
+        raise AssertionError("ambiguous xAI submission must stop provider fallback")
+
+    monkeypatch.setattr(service.XAIResponsesSearchProvider, "search", ambiguous_xai)
+    monkeypatch.setattr(service.OpenAICompatibleSearchProvider, "search", should_not_replay)
+
+    result = await service.search("what is example")
+
+    assert result["ok"] is False
+    assert result["fallback_used"] is False
+    assert [attempt["provider"] for attempt in result["provider_attempts"]] == ["xAI Responses"]
+
+
+@pytest.mark.asyncio
 async def test_search_does_not_fake_openai_compatible_fallback_when_only_xai_configured(monkeypatch):
     monkeypatch.setenv("XAI_API_KEY", "xai-test-secret")
 

@@ -12,10 +12,11 @@ Use the local `smart-search` command as the default execution layer for web rese
 1. Run `smart-search doctor --format json` when configuration or availability is uncertain.
 2. If `doctor` reports missing configuration, use `smart-search setup` or `smart-search config set KEY VALUE` when the user provides keys. Do not ask users to edit global environment variables by default.
 3. If OpenAI-compatible `search` hangs or times out after `doctor` succeeds, run `smart-search diagnose openai-compatible --format markdown` and use its summary.
-4. If `doctor` returns `ok: true`, use only `smart-search` CLI subcommands for web research. Do not call Codex native web search in the same task.
-5. Use `smart-search skills status --targets codex --format json` when the installed global skill may be stale; use `smart-search skills update --targets codex --format json` to refresh it without rerunning setup.
-6. Use `smart-search smoke --mock --format json` after CLI/provider architecture changes. Use `--live` only when real keys are available and the user expects live checks.
-7. Preserve command lines and source URLs in your answer. Prefer citing fetched pages or `primary_sources`; treat `extra_sources` as follow-up candidates until fetched.
+4. For resilient xAI search, run `smart-search search "QUERY" --timeout 120 --max-try 5 --format json` and wait for the CLI to finish; do not implement another retry loop in the agent.
+5. If `doctor` returns `ok: true`, use only `smart-search` CLI subcommands for web research. Do not call Codex native web search in the same task.
+6. Use `smart-search skills status --targets codex --format json` when the installed global skill may be stale; use `smart-search skills update --targets codex --format json` to refresh it without rerunning setup.
+7. Use `smart-search smoke --mock --format json` after CLI/provider architecture changes. Use `--live` only when real keys are available and the user expects live checks.
+8. Preserve command lines and source URLs in your answer. Prefer citing fetched pages or `primary_sources`; treat `extra_sources` as follow-up candidates until fetched.
 
 ## Routing
 
@@ -44,6 +45,7 @@ Use the local `smart-search` command as the default execution layer for web rese
 
 ## References
 
+- Current OPPO Linux search flow, Embedding trigger conditions, provider layout, and Mermaid diagram: `references/current-search-flow.md`
 - Command examples, evidence files, timeout retry policy, and guardrails: `references/command-patterns.md`
 - Deep Research planner/executor workflow, plan fields, gap check, and smoke matrix: `references/deep-research-mode.md`
 - CLI entrypoints, command signatures, aliases, output fields, exit codes, and tool policy: `references/cli-core.md`

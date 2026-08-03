@@ -1,6 +1,7 @@
 import json
 import asyncio
 from pathlib import Path
+import pytest
 from smart_search import cli
 from smart_search import skill_installer
 
@@ -176,6 +177,7 @@ def test_search_help_exposes_timeout(capsys):
 
     out = capsys.readouterr().out
     assert "--timeout SECONDS" in out
+    assert "--max-try ATTEMPTS" in out
     assert "--stream" in out
     assert "--no-stream" in out
 
@@ -755,6 +757,158 @@ def test_search_timeout_respects_requested_format_and_exit_4(monkeypatch, capsys
     assert data["model"] == "relay-timeout-model"
     assert data["stream"] is True
     assert data["recommendation"]
+
+
+def test_xai_search_timeout_is_managed_by_request_status_monitor(monkeypatch, capsys):
+    monkeypatch.setenv("XAI_API_KEY", "xai-test-key")
+
+    async def monitored_search(query, **kwargs):
+        await asyncio.sleep(0.02)
+        return {
+            "ok": True,
+            "query": query,
+            "content": "monitored answer",
+            "sources": [],
+            "sources_count": 0,
+        }
+
+    monkeypatch.setattr(cli.service, "search", monitored_search)
+
+    code = cli.main(["search", "slow xai query", "--timeout", "0.01", "--format", "content"])
+
+    assert code == cli.EXIT_OK
+    assert capsys.readouterr().out.strip() == "monitored answer"
+
+
+def test_search_max_try_replays_only_explicit_xai_terminal_504(monkeypatch, capsys):
+    monkeypatch.setenv("XAI_API_KEY", "xai-test-key")
+    calls = 0
+    sleeps = []
+
+    async def retry_then_succeed(query, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls < 3:
+            return {
+                "ok": False,
+                "query": query,
+                "content": "",
+                "sources": [],
+                "provider_attempts": [
+                    {
+                        "provider": "xAI Responses",
+                        "status": "error",
+                        "error": 'xAI Responses HTTP 504: {"error":{"code":"upstream_server_error"}}',
+                    }
+                ],
+            }
+        return {
+            "ok": True,
+            "query": query,
+            "content": "recovered",
+            "sources": [],
+            "provider_attempts": [
+                {"provider": "xAI Responses", "status": "ok", "error": ""}
+            ],
+        }
+
+    async def record_sleep(seconds):
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(cli.service, "search", retry_then_succeed)
+    monkeypatch.setattr(cli.asyncio, "sleep", record_sleep)
+    monkeypatch.setattr(cli.random, "uniform", lambda low, high: 3.0)
+
+    code = cli.main(
+        ["search", "retry query", "--timeout", "120", "--max-try", "5", "--format", "json"]
+    )
+
+    assert code == cli.EXIT_OK
+    data = json.loads(capsys.readouterr().out)
+    assert calls == 3
+    assert sleeps == [3.0, 3.0]
+    assert data["logical_attempts"] == 3
+    assert data["logical_retry_used"] is True
+    assert data["logical_retry_max_attempts"] == 5
+    assert [attempt["logical_attempt"] for attempt in data["provider_attempts"]] == [1, 2, 3]
+
+
+def test_search_max_try_stops_on_nonmatching_failure(monkeypatch, capsys):
+    monkeypatch.setenv("XAI_API_KEY", "xai-test-key")
+    calls = 0
+
+    async def nonmatching_failure(query, **kwargs):
+        nonlocal calls
+        calls += 1
+        return {
+            "ok": False,
+            "error_type": "network_error",
+            "error": "HTTP 503",
+            "query": query,
+            "content": "",
+            "sources": [],
+            "provider_attempts": [
+                {"provider": "xAI Responses", "status": "error", "error": "HTTP 503"}
+            ],
+        }
+
+    monkeypatch.setattr(cli.service, "search", nonmatching_failure)
+
+    code = cli.main(["search", "auth query", "--max-try", "5", "--format", "json"])
+
+    assert code == cli.EXIT_NETWORK_ERROR
+    data = json.loads(capsys.readouterr().out)
+    assert calls == 1
+    assert data["logical_attempts"] == 1
+    assert data["logical_retry_used"] is False
+
+
+def test_search_max_try_stops_after_configured_attempts(monkeypatch, capsys):
+    monkeypatch.setenv("XAI_API_KEY", "xai-test-key")
+    calls = 0
+    sleeps = []
+
+    async def terminal_504(query, **kwargs):
+        nonlocal calls
+        calls += 1
+        return {
+            "ok": False,
+            "error_type": "network_error",
+            "error": "search failed",
+            "query": query,
+            "content": "",
+            "sources": [],
+            "provider_attempts": [
+                {
+                    "provider": "xAI Responses",
+                    "status": "error",
+                    "error": 'xAI Responses HTTP 504: {"error":{"code":"upstream_server_error"}}',
+                }
+            ],
+        }
+
+    async def record_sleep(seconds):
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(cli.service, "search", terminal_504)
+    monkeypatch.setattr(cli.asyncio, "sleep", record_sleep)
+    monkeypatch.setattr(cli.random, "uniform", lambda low, high: 2.5)
+
+    code = cli.main(["search", "retry query", "--max-try", "5", "--format", "json"])
+
+    assert code == cli.EXIT_NETWORK_ERROR
+    data = json.loads(capsys.readouterr().out)
+    assert calls == 5
+    assert sleeps == [2.5, 2.5, 2.5, 2.5]
+    assert data["logical_attempts"] == 5
+    assert len(data["provider_attempts"]) == 5
+
+
+def test_search_max_try_must_be_positive():
+    with pytest.raises(SystemExit) as exc:
+        cli.main(["search", "query", "--max-try", "0"])
+
+    assert exc.value.code == cli.EXIT_PARAMETER_ERROR
 
 
 def test_markdown_search_includes_sources(monkeypatch, capsys):

@@ -28,6 +28,8 @@ smart-search search QUERY
   [--fallback auto|off]
   [--providers auto|CSV]
   [--stream | --no-stream]
+  [--timeout SECONDS]
+  [--max-try ATTEMPTS]
   [--format json|markdown|content]
 smart-search research QUERY
   [--budget quick|standard|deep]
@@ -491,6 +493,11 @@ Output contracts:
 - Include observability fields: `routing_decision`, `providers_used`,
   `provider_attempts`, `fallback_used`, `validation_level`,
   `minimum_profile_ok`, and `capability_status`.
+- `search --max-try N` defaults to one logical attempt and replays only a
+  completed xAI Responses `HTTP 504` containing `upstream_server_error`.
+  Search output records `logical_attempts`, `logical_retry_used`,
+  `logical_retry_max_attempts`, and annotates aggregated `provider_attempts`
+  with `logical_attempt`.
 - `research` JSON must include `final_answer`, `content`, `citations`,
   `evidence_items`, `gap_check`, `provider_attempts`, `fallback_used`,
   `degraded`, `route_policy_version`, and `evidence_dir`.
@@ -700,6 +707,7 @@ smart-search doctor --format json
 | Exa `--include-domains` / `--exclude-domains` receives comma-separated, whitespace-separated, or PowerShell-split values | Normalize to a flat domain list before sending `includeDomains` / `excludeDomains` to Exa |
 | Exa returns HTTP 400 or 422 | Return `error_type: "parameter_error"` and preserve the Exa response body excerpt for diagnosis |
 | Provider HTTP/network/timeout/schema error | Record `provider_attempts[].status="error"` and try next same-capability provider when fallback is `auto` |
+| Explicit terminal xAI HTTP 504 and `--max-try N` has remaining attempts | Start a new logical search attempt after 2-5 seconds; stop on success, a different terminal outcome, or attempt `N` |
 | Provider returns empty normalized result | Record `status="empty"` and try next same-capability provider when fallback is `auto` |
 | `--fallback off` | Try only the first matching provider in the capability chain |
 | `research --fallback off` | Try only the first selected provider inside each capability route and report gaps rather than continuing through same-capability fallback |
@@ -853,6 +861,9 @@ When this contract changes, add or update tests that assert:
 - `search` CLI timeout results include provider/model/stream context when
   available plus the next diagnostic command
   `smart-search diagnose openai-compatible --format markdown`;
+- `search --max-try` defaults to one, rejects values below one, retries only
+  explicit terminal xAI 504 results, stops on other failures, and annotates
+  aggregated provider attempts with their logical attempt number;
 - AnySearch config keys are listed, settable, masked where secret, and optional
   for the `standard` minimum profile;
 - AnySearch capability status is `vertical_search`, `experimental=true`, and

@@ -48,6 +48,8 @@ Intent router rules:
 - `OPENAI_COMPATIBLE_STREAM=true` or `search --stream` sets `stream=true` only for OpenAI-compatible `search` and provider-side `fetch`; it is a relay compatibility switch and does not affect xAI Responses, URL description, or source ranking.
 - Legacy `SMART_SEARCH_API_URL`, `SMART_SEARCH_API_KEY`, `SMART_SEARCH_API_MODE`, `SMART_SEARCH_MODEL`, and `SMART_SEARCH_XAI_TOOLS` are unsupported config keys.
 - xAI Responses mode may use only `XAI_TOOLS=web_search,x_search` and a subset of those tools.
+- xAI Responses requests carry a generated `X-Request-ID`. `search --timeout` is the first wait window; after it expires, compatible gateways are polled through `GET /v1/request-status/{request_id}`. `running` extends the wait, terminal states close a stuck response connection, and unknown status remains bounded by one `XAI_HARD_TIMEOUT_SECONDS` deadline that includes retries and retry waits. Automatic retry is limited to connection failures before request submission; failures after submission preserve single-submission semantics.
+- `XAI_SOFT_TIMEOUT_SECONDS`, `XAI_STATUS_POLL_SECONDS`, and `XAI_HARD_TIMEOUT_SECONDS` default to `120`, `15`, and `7200` seconds.
 - Chat Completions mode must not send xAI `web_search` / `x_search` tools or legacy `search_parameters`; xAI Chat Completions Live Search is deprecated.
 - The standard minimum profile requires one configured provider in each of `main_search`, `docs_search`, and fetch capability. Missing required capabilities should be treated as a hard configuration failure.
 - AnySearch is reported only as optional experimental `vertical_search`; it is not part of the `web_search` fallback and is not required by the `standard` minimum profile.

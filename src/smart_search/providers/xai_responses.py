@@ -1,12 +1,16 @@
+import asyncio
 import json
 import logging
+import uuid
+from contextlib import suppress
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt
 
 from .base import BaseSearchProvider
-from .openai_compatible import _WaitWithRetryAfter, _is_retryable_exception, get_local_time_info
+from .openai_compatible import _WaitWithRetryAfter, get_local_time_info
 from ..config import config
 from ..logger import log_info
 from ..utils import search_prompt
@@ -14,6 +18,18 @@ from ..utils import search_prompt
 
 _logger = logging.getLogger(__name__)
 _ssl_warning_emitted = False
+
+
+class XAIRequestHardTimeout(TimeoutError):
+    pass
+
+
+class XAIRequestOutcomeUnknown(httpx.RemoteProtocolError):
+    pass
+
+
+def _is_pre_submission_connection_failure(exc: BaseException) -> bool:
+    return isinstance(exc, (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout))
 
 
 class XAIResponsesSearchProvider(BaseSearchProvider):
@@ -55,29 +71,164 @@ class XAIResponsesSearchProvider(BaseSearchProvider):
         }
         return payload
 
-    async def search(self, query: str, platform: str = "", ctx=None) -> str:
+    async def search(self, query: str, platform: str = "", ctx=None, soft_timeout_seconds: float | None = None) -> str:
         payload = self._build_search_payload(query, platform)
         await log_info(ctx, f"platform_prompt: {query}", config.debug_enabled)
-        return await self._execute_response_with_retry(self._build_api_headers(), payload, ctx)
+        return await self._execute_response_with_retry(
+            self._build_api_headers(),
+            payload,
+            ctx,
+            soft_timeout_seconds=soft_timeout_seconds,
+        )
 
-    async def _execute_response_with_retry(self, headers: dict, payload: dict, ctx=None) -> str:
-        timeout = httpx.Timeout(connect=6.0, read=120.0, write=10.0, pool=None)
+    async def _execute_response_with_retry(
+        self,
+        headers: dict,
+        payload: dict,
+        ctx=None,
+        *,
+        soft_timeout_seconds: float | None = None,
+    ) -> str:
+        hard_timeout = config.xai_hard_timeout
+        hard_deadline = asyncio.get_running_loop().time() + hard_timeout
+        execution_task = asyncio.create_task(
+            self._execute_response_attempts(
+                headers,
+                payload,
+                ctx,
+                soft_timeout_seconds=soft_timeout_seconds,
+                hard_deadline=hard_deadline,
+            )
+        )
+        try:
+            done, _ = await asyncio.wait({execution_task}, timeout=hard_timeout)
+        except BaseException:
+            await self._cancel_request_task(execution_task)
+            raise
+        if done:
+            return execution_task.result()
+        await self._cancel_request_task(execution_task)
+        raise XAIRequestHardTimeout(
+            f"xAI Responses logical request exceeded hard timeout of {hard_timeout:g} seconds"
+        )
+
+    async def _execute_response_attempts(
+        self,
+        headers: dict,
+        payload: dict,
+        ctx=None,
+        *,
+        soft_timeout_seconds: float | None,
+        hard_deadline: float,
+    ) -> str:
+        timeout = httpx.Timeout(connect=6.0, read=None, write=10.0, pool=None)
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, verify=self._get_ssl_verify()) as client:
             async for attempt in AsyncRetrying(
                 stop=stop_after_attempt(config.retry_max_attempts + 1),
                 wait=_WaitWithRetryAfter(config.retry_multiplier, config.retry_max_wait),
-                retry=retry_if_exception(_is_retryable_exception),
+                retry=retry_if_exception(_is_pre_submission_connection_failure),
                 reraise=True,
             ):
                 with attempt:
-                    response = await client.post(
-                        f"{self.api_url}/responses",
-                        headers=headers,
-                        json=payload,
+                    response = await self._post_with_status_monitor(
+                        client,
+                        headers,
+                        payload,
+                        soft_timeout_seconds=soft_timeout_seconds,
+                        hard_deadline=hard_deadline,
                     )
                     response.raise_for_status()
                     return await self._parse_response(response, ctx)
         return ""
+
+    async def _post_with_status_monitor(
+        self,
+        client: httpx.AsyncClient,
+        headers: dict,
+        payload: dict,
+        *,
+        soft_timeout_seconds: float | None,
+        hard_deadline: float | None = None,
+    ) -> httpx.Response:
+        request_id = uuid.uuid4().hex
+        request_headers = {**headers, "X-Request-ID": request_id}
+        request_task = asyncio.create_task(
+            client.post(f"{self.api_url}/responses", headers=request_headers, json=payload)
+        )
+        loop = asyncio.get_running_loop()
+        started_at = loop.time()
+        soft_timeout = soft_timeout_seconds or config.xai_soft_timeout
+        hard_timeout = config.xai_hard_timeout
+        if hard_deadline is None:
+            hard_deadline = started_at + hard_timeout
+        wait_seconds = min(soft_timeout, hard_timeout)
+        try:
+            while True:
+                remaining = hard_deadline - loop.time()
+                if remaining <= 0:
+                    await self._cancel_request_task(request_task)
+                    raise XAIRequestHardTimeout(
+                        f"xAI Responses request {request_id} exceeded hard timeout of {hard_timeout:g} seconds"
+                    )
+                done, _ = await asyncio.wait({request_task}, timeout=min(wait_seconds, remaining))
+                if done:
+                    return self._completed_response(request_task, request_id)
+
+                state = await self._request_status(client, request_headers, request_id)
+                if state in {"completed", "failed"}:
+                    done, _ = await asyncio.wait(
+                        {request_task},
+                        timeout=min(2.0, config.xai_status_poll, remaining),
+                    )
+                    if done:
+                        return self._completed_response(request_task, request_id)
+                    await self._cancel_request_task(request_task)
+                    raise XAIRequestOutcomeUnknown(
+                        f"request {request_id} reached terminal state {state} before the response connection completed"
+                    )
+                wait_seconds = config.xai_status_poll
+        except BaseException:
+            await self._cancel_request_task(request_task)
+            raise
+
+    @staticmethod
+    def _completed_response(request_task: asyncio.Task, request_id: str) -> httpx.Response:
+        try:
+            return request_task.result()
+        except (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout):
+            raise
+        except httpx.RequestError as exc:
+            raise XAIRequestOutcomeUnknown(
+                f"request {request_id} may have been submitted before the response connection failed: {exc}"
+            ) from exc
+
+    async def _request_status(
+        self,
+        client: httpx.AsyncClient,
+        headers: dict,
+        request_id: str,
+    ) -> str:
+        try:
+            response = await client.get(
+                f"{self.api_url}/request-status/{quote(request_id, safe='')}",
+                headers=headers,
+                timeout=min(10.0, config.xai_status_poll),
+            )
+            if response.status_code != 200:
+                return "unknown"
+            data = response.json()
+            state = data.get("state") if isinstance(data, dict) else None
+            return state if state in {"running", "completed", "failed"} else "unknown"
+        except (httpx.HTTPError, ValueError, TypeError):
+            return "unknown"
+
+    @staticmethod
+    async def _cancel_request_task(request_task: asyncio.Task) -> None:
+        if request_task.done():
+            return
+        request_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await request_task
 
     async def _parse_response(self, response: httpx.Response, ctx=None) -> str:
         data = response.json()

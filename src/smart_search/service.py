@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import inspect
 import json
 import re
 import tempfile
@@ -37,7 +38,7 @@ from .providers.context7 import Context7Provider
 from .providers.exa import ExaSearchProvider
 from .providers.jina import JinaReaderProvider
 from .providers.openai_compatible import OpenAICompatibleSearchProvider, get_local_time_info
-from .providers.xai_responses import XAIResponsesSearchProvider
+from .providers.xai_responses import XAIRequestHardTimeout, XAIRequestOutcomeUnknown, XAIResponsesSearchProvider
 from .providers.zhipu import ZhipuWebSearchProvider
 from .providers.zhipu_mcp import ZhipuMCPProvider
 from .sources import merge_sources, new_session_id, split_answer_and_sources
@@ -2128,6 +2129,7 @@ async def search(
     primary_result = None
     successful_main_config: dict[str, Any] | None = None
     last_primary_error: dict[str, Any] | None = None
+    stop_main_fallback = False
     model_fallback_used = False
     transport_fallback_used = False
     total_main_candidates = sum(
@@ -2175,7 +2177,16 @@ async def search(
                 total_main_candidates - completed_main_candidates + 1,
             )
             try:
-                if attempt_timeout is not None:
+                if (
+                    isinstance(search_provider, XAIResponsesSearchProvider)
+                    and "soft_timeout_seconds" in inspect.signature(search_provider.search).parameters
+                ):
+                    candidate_result = await search_provider.search(
+                        query,
+                        platform,
+                        soft_timeout_seconds=attempt_timeout,
+                    )
+                elif attempt_timeout is not None:
                     candidate_result = await asyncio.wait_for(search_provider.search(query, platform), timeout=attempt_timeout)
                 else:
                     candidate_result = await search_provider.search(query, platform)
@@ -2218,6 +2229,8 @@ async def search(
             except Exception as e:
                 error_result = _primary_search_exception_result(start, session_id, query, candidate_config["mode"], search_provider.get_provider_name(), e)
                 last_primary_error = error_result
+                if isinstance(e, (XAIRequestOutcomeUnknown, XAIRequestHardTimeout)):
+                    stop_main_fallback = True
                 transport_attempts = getattr(search_provider, "last_transport_attempts", [])
                 if _append_openai_transport_attempts(provider_attempts, search_provider, candidate_config):
                     transport_fallback_used = transport_fallback_used or any(
@@ -2237,7 +2250,7 @@ async def search(
                             extra=attempt_extra,
                         )
                     )
-        if primary_result is not None:
+        if primary_result is not None or stop_main_fallback:
             break
     if primary_result is None:
         result = last_primary_error or _primary_search_error_result(start, session_id, query, primary_api_mode, "network_error", "搜索失败或无结果")

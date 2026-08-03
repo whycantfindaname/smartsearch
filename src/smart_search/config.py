@@ -29,6 +29,9 @@ class Config:
         "XAI_API_KEY",
         "XAI_MODEL",
         "XAI_TOOLS",
+        "XAI_SOFT_TIMEOUT_SECONDS",
+        "XAI_HARD_TIMEOUT_SECONDS",
+        "XAI_STATUS_POLL_SECONDS",
         "OPENAI_COMPATIBLE_API_URL",
         "OPENAI_COMPATIBLE_API_KEY",
         "OPENAI_COMPATIBLE_MODEL",
@@ -326,6 +329,18 @@ class Config:
     @property
     def xai_tools_raw(self) -> str:
         return self._get_config_value("XAI_TOOLS", self._DEFAULT_XAI_TOOLS) or self._DEFAULT_XAI_TOOLS
+
+    @property
+    def xai_soft_timeout(self) -> float:
+        return self._bounded_float_value("XAI_SOFT_TIMEOUT_SECONDS", "120", 1.0, 3600.0)
+
+    @property
+    def xai_hard_timeout(self) -> float:
+        return self._bounded_float_value("XAI_HARD_TIMEOUT_SECONDS", "7200", 1.0, 86400.0)
+
+    @property
+    def xai_status_poll(self) -> float:
+        return self._bounded_float_value("XAI_STATUS_POLL_SECONDS", "15", 0.1, 300.0)
 
     @property
     def openai_compatible_api_url(self) -> str | None:
@@ -748,6 +763,9 @@ class Config:
             "XAI_API_KEY": self._mask_api_key(self.xai_api_key) if self.xai_api_key else "未配置",
             "XAI_MODEL": self.xai_model,
             "XAI_TOOLS": self.xai_tools_raw,
+            "XAI_SOFT_TIMEOUT_SECONDS": self.xai_soft_timeout,
+            "XAI_HARD_TIMEOUT_SECONDS": self.xai_hard_timeout,
+            "XAI_STATUS_POLL_SECONDS": self.xai_status_poll,
             "OPENAI_COMPATIBLE_API_URL": self.openai_compatible_api_url or "未配置",
             "OPENAI_COMPATIBLE_API_KEY": self._mask_api_key(self.openai_compatible_api_key) if self.openai_compatible_api_key else "未配置",
             "OPENAI_COMPATIBLE_MODEL": self.openai_compatible_model,

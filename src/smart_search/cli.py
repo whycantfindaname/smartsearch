@@ -4,6 +4,7 @@ import contextlib
 import getpass
 import inspect
 import json
+import random
 from importlib import metadata
 import subprocess
 import sys
@@ -158,6 +159,26 @@ def _escape_unencodable_json_char(char: str, encoding: str) -> str:
 
 def _format_seconds(seconds: float) -> str:
     return f"{seconds:g}"
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("must be at least 1")
+    return parsed
+
+
+def _is_retryable_xai_504(data: dict[str, Any]) -> bool:
+    if data.get("ok") is not False:
+        return False
+    return any(
+        attempt.get("provider") == "xAI Responses"
+        and attempt.get("status") == "error"
+        and "HTTP 504" in str(attempt.get("error", ""))
+        and "upstream_server_error" in str(attempt.get("error", ""))
+        for attempt in data.get("provider_attempts", [])
+        if isinstance(attempt, dict)
+    )
 
 
 def _search_timeout_result(query: str, timeout: float, search_kwargs: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -2382,14 +2403,41 @@ async def _run_async(args: argparse.Namespace) -> int:
             search_kwargs["stream"] = args.stream
         if "timeout_seconds" in inspect.signature(service.search).parameters:
             search_kwargs["timeout_seconds"] = args.timeout
-        try:
-            data = await asyncio.wait_for(
-                service.search(args.query, **search_kwargs),
-                timeout=args.timeout,
-            )
-        except asyncio.TimeoutError:
-            data = _search_timeout_result(args.query, args.timeout, search_kwargs)
-            return _print_result("search", data, args.format, args.output)
+        configured_providers = {
+            item.strip().lower()
+            for item in str(args.providers or "auto").split(",")
+            if item.strip()
+        }
+        xai_status_monitor_active = bool(service.config.xai_api_key) and (
+            "auto" in configured_providers or "xai-responses" in configured_providers
+        )
+        provider_attempts: list[dict[str, Any]] = []
+        for logical_attempt in range(1, args.max_try + 1):
+            try:
+                if xai_status_monitor_active:
+                    data = await service.search(args.query, **search_kwargs)
+                else:
+                    data = await asyncio.wait_for(
+                        service.search(args.query, **search_kwargs),
+                        timeout=args.timeout,
+                    )
+            except asyncio.TimeoutError:
+                data = _search_timeout_result(args.query, args.timeout, search_kwargs)
+
+            for attempt in data.get("provider_attempts", []):
+                if isinstance(attempt, dict):
+                    provider_attempts.append({**attempt, "logical_attempt": logical_attempt})
+
+            retryable = _is_retryable_xai_504(data)
+            if not retryable or logical_attempt == args.max_try:
+                break
+            await asyncio.sleep(random.uniform(2.0, 5.0))
+
+        data = dict(data)
+        data["provider_attempts"] = provider_attempts
+        data["logical_attempts"] = logical_attempt
+        data["logical_retry_used"] = logical_attempt > 1
+        data["logical_retry_max_attempts"] = args.max_try
         return _print_result("search", data, args.format, args.output)
     if args.command == "route":
         data = await service.route(args.query, validation=args.validation, mode=args.router_mode)
@@ -2737,7 +2785,20 @@ def build_parser() -> argparse.ArgumentParser:
     stream_group = search_parser.add_mutually_exclusive_group()
     stream_group.add_argument("--stream", dest="stream", action="store_true", default=None, help="Use stream=true for OpenAI-compatible main search.")
     stream_group.add_argument("--no-stream", dest="stream", action="store_false", help="Force stream=false for OpenAI-compatible main search.")
-    search_parser.add_argument("--timeout", type=float, default=90, metavar="SECONDS", help="Hard timeout in seconds.")
+    search_parser.add_argument(
+        "--timeout",
+        type=float,
+        default=90,
+        metavar="SECONDS",
+        help="Search timeout in seconds; xAI Responses checks request status before extending the wait.",
+    )
+    search_parser.add_argument(
+        "--max-try",
+        type=_positive_int,
+        default=1,
+        metavar="ATTEMPTS",
+        help="Maximum logical attempts for explicit terminal xAI HTTP 504 failures (default: 1).",
+    )
     _add_format_args(search_parser)
 
     route_parser = sub.add_parser(

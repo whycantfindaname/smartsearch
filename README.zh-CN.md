@@ -375,6 +375,9 @@ smart-search anysearch-batch "AAPL" "RAG papers" --max-results 2 --format json
 | `XAI_API_URL` | xAI API 地址，默认 `https://api.x.ai/v1` |
 | `XAI_MODEL` | xAI 模型名 |
 | `XAI_TOOLS` | xAI Responses 工具列表，通常 `web_search,x_search` |
+| `XAI_SOFT_TIMEOUT_SECONDS` | 未传 CLI timeout 时的首次等待窗口，默认 `120` 秒 |
+| `XAI_STATUS_POLL_SECONDS` | 兼容网关请求状态轮询间隔，默认 `15` 秒 |
+| `XAI_HARD_TIMEOUT_SECONDS` | xAI Responses 请求绝对等待上限，默认 `7200` 秒 |
 | `OPENAI_COMPATIBLE_API_URL` | OpenAI-compatible `/v1` base URL |
 | `OPENAI_COMPATIBLE_API_KEY` | OpenAI-compatible key |
 | `OPENAI_COMPATIBLE_MODEL` | 兼容模型名 |
@@ -416,6 +419,10 @@ smart-search anysearch-batch "AAPL" "RAG papers" --max-results 2 --format json
 | `SMART_SEARCH_RESEARCH_PREFERRED_PROVIDERS` | `research` 路由优先 provider CSV，只能在同 capability 内调整顺序 |
 | `SMART_SEARCH_RESEARCH_DISABLED_PROVIDERS` | `research` 禁用 provider CSV，不能改变 provider capability 边界 |
 | `SMART_SEARCH_CONFIG_DIR` | 指定本机配置和日志根目录 |
+
+xAI 的 hard deadline 覆盖连接尝试、重试等待、响应等待和状态轮询。自动重试仅处理请求提交前的连接失败；提交后的协议异常或终态连接异常直接返回，保持单次提交语义。
+
+`search --max-try N` 只会重放明确终态的 xAI HTTP 504；默认只执行一轮逻辑请求。
 
 ## 常用命令
 
