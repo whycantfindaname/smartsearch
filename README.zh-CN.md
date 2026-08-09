@@ -598,24 +598,24 @@ npm pack --dry-run
 
 ## 最新稳定版说明
 
-### v0.1.14
+### v0.1.15
 
-这个稳定补丁版把已经验证过的 `0.1.13-beta.4` CLI 和内置 skill contract 推到 npm `latest`。
+这个稳定版包含已经通过源码、真实 provider 和打包安装门禁验证的 provider 可靠性与打包加固改动。
 
-- 修复 GitHub issue #7：npm `latest` 现在包含新版 `smart-search-cli` skill 会调用的 `smart-search skills` 命令。
-- `smart-search skills status` 可以只读检查用户级 skill 是缺失、过期、已最新，还是有额外文件。
-- `smart-search skills update` 用于升级 CLI 后刷新指定 AI 工具里的托管 `smart-search-cli` 文件，不会改 provider key，也不会创建 Trellis/hooks/agents/commands。
-- `smart-search diagnose openai-compatible --format markdown` 会生成适合复制给维护者的 OpenAI-compatible 卡住/超时诊断报告。
-- 文档/API 路由现在优先用 Context7 处理库/框架文档，Exa 继续负责官方域名、论文、产品页和可信站点发现。
-- README、打包 skill 资源、release notes 和测试已经同步说明并验证这次稳定包行为。
+- Context7 自动文档选择现在要求查询主题与候选标题或 ID 重合；结果为空或置信度不足时，才在同一能力内回退到 Exa。
+- AnySearch 支持重复的 `--param key=value` 覆盖，并在发起网络请求前校验错误的结构化参数。
+- Provider 失败使用统一错误分类，`TAVILY_ENABLED=false` 会阻止意外的 Tavily 路由和网络请求。
+- mock 与 live smoke 会区分 healthy、degraded、failed 和 skipped 状态。
+- 发布安全门禁新增只读 CI 矩阵、公开/打包 Skill 一致性检查，以及全新临时 npm prefix 的 tarball 安装 smoke。
+- npm 发布已串行化，稳定版 merge 或 squash 提交不会再与自动 beta 发布竞争。
 
 ## 发布通道
 
 稳定版走 Git tag 和 npm `latest`：
 
 ```powershell
-git tag v0.1.14
-git push origin v0.1.14
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 测试版不移动 `latest`。推送到 `main` 会发布下一个 `<package.json version>-beta.N` 到 npm `next`，并且 `N` 按每个稳定版本重新从 1 开始。发布 beta 前，workflow 会比较当前稳定 `package.json` 版本和 first parent，因此 merge 或 squash 形式的稳定版升级都会跳过 beta，只由匹配的 `vX.Y.Z` tag 发布 npm `latest`；`chore(release): bump version to X.Y.Z` 标题保留为兼容兜底。例如 `0.1.10-beta.1`、`0.1.10-beta.2` 之后是 `0.1.10-beta.3`。

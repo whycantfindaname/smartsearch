@@ -555,24 +555,24 @@ npm pack --dry-run
 
 ## Latest stable release notes
 
-### v0.1.14
+### v0.1.15
 
-This stable patch release moves the tested `0.1.13-beta.4` CLI and bundled skill contract into npm `latest`.
+This stable release contains the provider reliability and packaging hardening work validated through source, live-provider, and packed-install release gates.
 
-- Fixes GitHub issue #7: npm `latest` now includes the `smart-search skills` command expected by the newer installed `smart-search-cli` skill.
-- `smart-search skills status` reports whether installed user-level skills are missing, stale, up to date, or contain extra files without writing anything.
-- `smart-search skills update` refreshes only the managed bundled `smart-search-cli` files for selected AI-tool targets after a CLI upgrade.
-- `smart-search diagnose openai-compatible --format markdown` produces a focused, copy-pasteable troubleshooting report for OpenAI-compatible search hangs/timeouts.
-- Docs/API routing now prefers Context7 for library/framework documentation and keeps Exa for official domains, papers, product pages, and trusted-site discovery.
-- README, bundled skill assets, release notes, and tests now document and verify the exact stable package behavior.
+- Context7 automatic documentation selection now requires query-subject overlap with the candidate title or id; same-capability Exa fallback handles empty or low-confidence results.
+- AnySearch accepts repeatable `--param key=value` overrides and validates malformed structured parameters before network calls.
+- Provider failures use a consistent error taxonomy, and `TAVILY_ENABLED=false` prevents accidental Tavily routing or network requests.
+- Mock and live smoke reports distinguish healthy, degraded, failed, and skipped checks.
+- Release safety includes a read-only CI matrix, public/package Skill parity, and a fresh temporary-prefix tarball install smoke.
+- npm release publication is serialized, and stable merge or squash commits no longer race into an automatic beta publication.
 
 ## Release lanes
 
 Stable releases use Git tags and npm `latest`:
 
 ```powershell
-git tag v0.1.14
-git push origin v0.1.14
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 Test releases use npm prereleases and do not move `latest`. A push to `main` publishes the next `<package.json version>-beta.N` version under npm dist-tag `next`; `N` resets for each stable base version. Before creating a beta, the workflow compares the current stable `package.json` version with its first parent, so a merge or squash release bump skips the beta and the matching `vX.Y.Z` tag publishes npm `latest`. The `chore(release): bump version to X.Y.Z` title remains a legacy fallback. For example, after `0.1.10-beta.1` and `0.1.10-beta.2`, the next `main` publish is `0.1.10-beta.3`.
