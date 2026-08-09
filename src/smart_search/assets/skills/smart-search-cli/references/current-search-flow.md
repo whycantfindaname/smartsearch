@@ -41,7 +41,7 @@ Embedding is skipped for `rules` and `off` modes, the offline `deep` planner, di
 ## Active Provider Layout
 
 - Main search: local grok2api through xAI Responses, model `grok-4.20-multi-agent-xhigh`, with `web_search` and `x_search` tools.
-- Same-capability main fallback: OpenAI-compatible model `grok-4.3-fast`, used after a clear pre-result xAI failure when fallback is enabled.
+- No secondary `main_search` provider is configured. A terminal xAI failure is returned after the CLI-managed logical-attempt policy; it is not sent to an OpenAI-compatible peer.
 - Documentation evidence: `context7`, then `exa` when configured.
 - Web discovery implementation order: `zhipu`, `zhipu-mcp`, `tavily`, then `firecrawl`, restricted to configured providers. The operating policy uses Tavily for normal web discovery and avoids direct `zhipu-search`; an internally selected `web_search` supplemental path still follows the configured implementation order.
 - Page extraction implementation order: `tavily`, `jina`, `zhipu-mcp-reader`, then `firecrawl`, restricted to configured providers.
@@ -58,9 +58,8 @@ flowchart TD
     D --> E["Main search: xAI Responses via local grok2api"]
     E --> F{"Main outcome"}
     F -- Success --> G["Answer and primary sources"]
-    F -- "Clear failure" --> H["OpenAI-compatible same-capability fallback"]
-    F -- "Unknown outcome or hard timeout" --> I["Stop without replay or fallback"]
-    H --> G
+    F -- "Clear failure" --> H["Return failure; no secondary main provider"]
+    F -- "Unknown outcome or hard timeout" --> I["Stop without replay"]
     G --> J{"--extra-sources greater than 0?"}
     J -- Yes --> K["Tavily and Firecrawl discovery in parallel"]
     J -- No --> L{"Validation is balanced or strict?"}
@@ -99,7 +98,7 @@ flowchart TD
 - The current polling interval is 15 seconds and the shared hard deadline is 7200 seconds unless `XAI_HARD_TIMEOUT_SECONDS` overrides it.
 - Within one logical attempt, provider-level retries remain limited to failures proven before submission; additional logical attempts are controlled by the CLI's `--max-try` option.
 - Once submission may have reached grok2api, an unknown outcome or terminal connection anomaly is never replayed. This prevents duplicate searches and duplicate billing.
-- OpenAI-compatible keeps its regular hard-timeout behavior; the xAI request-status extension is provider-specific.
+- The CLI still supports OpenAI-compatible peers as a generic capability, but none is configured on this host. The request-status extension is specific to the active xAI path.
 
 ## Result Interpretation
 
