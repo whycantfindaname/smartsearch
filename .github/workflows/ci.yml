@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "codex/release-*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Node ${{ matrix.node }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            node: "18"
+            python: "3.10"
+          - os: ubuntu-latest
+            node: "24"
+            python: "3.12"
+          - os: windows-latest
+            node: "22"
+            python: "3.12"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          # The whitespace check compares the checked-out commit with its first
+          # parent, so retain enough history for pull requests and main pushes.
+          fetch-depth: 2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install npm package
+        run: npm ci
+
+      - name: Test package
+        run: npm test
+
+      - name: Run source regression
+        run: node npm/bin/smart-search.js regression
+
+      - name: Run mock smoke
+        run: node npm/bin/smart-search.js smoke --mock --format json
+
+      - name: Check skill parity
+        run: npm run check:skill-parity
+
+      - name: Check package contents
+        run: npm run pack:dry
+
+      - name: Smoke test packed install
+        run: npm run smoke:tarball
+
+      - name: Check committed diff whitespace
+        shell: bash
+        run: |
+          if git rev-parse --verify HEAD^1 >/dev/null 2>&1; then
+            git diff --check HEAD^1 HEAD
+          else
+            git diff-tree --check --root -r --no-commit-id HEAD
+          fi

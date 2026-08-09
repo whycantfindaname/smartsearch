@@ -17,4 +17,5 @@ node_modules/
 .agents/
 .claude/
 .codex/
+.codestable/
 .trellis/

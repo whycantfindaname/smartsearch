@@ -17,6 +17,7 @@ from .embedding_presets import (
     QWEN3_EMBEDDING_8B_PRESET,
     embedding_preset_for_model,
 )
+from .providers.anysearch import parse_sub_domain_params
 from .skill_installer import (
     DEFAULT_SKILL_TARGET_IDS,
     SKILL_TARGETS,
@@ -50,6 +51,11 @@ COMMAND_ALIASES = {
     "anysearch-search": ["as-search", "as"],
     "anysearch-extract": ["as-extract"],
     "anysearch-batch": ["as-batch"],
+    "sciverse-catalog": ["sv-catalog"],
+    "sciverse-search": ["sv-search", "sv"],
+    "sciverse-semantic": ["sv-semantic"],
+    "sciverse-read": ["sv-read"],
+    "sciverse-relations": ["sv-relations"],
     "context7-library": ["c7", "ctx7"],
     "context7-docs": ["c7d", "c7docs", "ctx7-docs"],
     "deep": ["dr"],
@@ -257,7 +263,10 @@ def _status_label(value: Any) -> str:
     labels = {
         "ok": "OK",
         "true": "OK",
+        "healthy": "HEALTHY",
+        "degraded": "DEGRADED",
         "configured": "CONFIGURED",
+        "disabled": "DISABLED",
         "warning": "WARN",
         "timeout": "TIMEOUT",
         "error": "ERROR",
@@ -574,12 +583,14 @@ def _format_smoke_markdown(data: dict[str, Any]) -> str:
     cases = data.get("cases") or []
     failed = data.get("failed_cases") or []
     degraded = data.get("degraded_cases") or []
+    skipped = data.get("skipped_cases") or []
+    overall_status = data.get("status") or ("healthy" if data.get("ok") else "failed")
     lines = [
         "# Smart Search Smoke",
         "",
         f"Mode: `{data.get('mode', '')}`",
-        f"Overall: {_status_label(data.get('ok'))}",
-        f"Cases: {len(cases)} total, {len(failed)} failed, {len(degraded)} degraded",
+        f"Overall: {_status_label(overall_status)}",
+        f"Cases: {len(cases)} total, {len(failed)} failed, {len(degraded)} degraded, {len(skipped)} skipped",
     ]
     if cases:
         rows = []
@@ -587,7 +598,7 @@ def _format_smoke_markdown(data: dict[str, Any]) -> str:
             rows.append(
                 [
                     case.get("name", ""),
-                    _status_label(case.get("ok")),
+                    _status_label(case.get("status") or case.get("ok")),
                     case.get("severity", ""),
                     case.get("error") or case.get("error_type") or case.get("skipped", ""),
                 ]
@@ -994,6 +1005,11 @@ def _format_markdown(command: str, data: dict[str, Any]) -> str:
         "anysearch-search": "AnySearch Search",
         "anysearch-extract": "AnySearch Extract",
         "anysearch-batch": "AnySearch Batch",
+        "sciverse-catalog": "Sciverse Catalog",
+        "sciverse-search": "Sciverse Search",
+        "sciverse-semantic": "Sciverse Semantic Search",
+        "sciverse-read": "Sciverse Read",
+        "sciverse-relations": "Sciverse Relations",
         "context7-library": "Context7 Library Search",
     }
     if command in titles:
@@ -1108,7 +1124,12 @@ def _format_content(command: str, data: dict[str, Any]) -> str:
         cases = data.get("cases") or []
         failed = data.get("failed_cases") or []
         degraded = data.get("degraded_cases") or []
-        return f"Smoke {data.get('mode', '')} {_status_label(data.get('ok'))}: {len(cases)} cases, {len(failed)} failed, {len(degraded)} degraded\n"
+        skipped = data.get("skipped_cases") or []
+        status = data.get("status") or ("healthy" if data.get("ok") else "failed")
+        return (
+            f"Smoke {data.get('mode', '')} {_status_label(status)}: {len(cases)} cases, "
+            f"{len(failed)} failed, {len(degraded)} degraded, {len(skipped)} skipped\n"
+        )
     if command == "config":
         parts = [f"Config {_status_label(data.get('ok'))}"]
         if data.get("config_file"):
@@ -1166,6 +1187,11 @@ def _format_content(command: str, data: dict[str, Any]) -> str:
         "anysearch-search",
         "anysearch-extract",
         "anysearch-batch",
+        "sciverse-catalog",
+        "sciverse-search",
+        "sciverse-semantic",
+        "sciverse-read",
+        "sciverse-relations",
         "context7-library",
     }:
         lines = _plain_result_lines(data)
@@ -1239,18 +1265,20 @@ def _write_panel(text: str, lang: str) -> None:
 
 
 def _exit_code(data: dict[str, Any]) -> int:
+    if data.get("mode") in {"mock", "live"}:
+        smoke_status = str(data.get("status") or "").lower()
+        if smoke_status in {"healthy", "degraded"}:
+            return EXIT_OK
+        if smoke_status == "failed" and data.get("ok", False):
+            return EXIT_RUNTIME_ERROR
     if data.get("ok", False):
         return EXIT_OK
     error_type = data.get("error_type")
-    if error_type == "config_error":
+    if error_type in {"auth_error", "config_error"}:
         return EXIT_CONFIG_ERROR
     if error_type == "parameter_error":
         return EXIT_PARAMETER_ERROR
-    if error_type == "network_error":
-        return EXIT_NETWORK_ERROR
-    if error_type == "provider_error":
-        return EXIT_NETWORK_ERROR
-    if error_type == "evidence_error":
+    if error_type in {"evidence_error", "network_error", "parse_error", "provider_error", "quality_error", "rate_limited", "timeout"}:
         return EXIT_NETWORK_ERROR
     return EXIT_RUNTIME_ERROR
 
@@ -1270,6 +1298,30 @@ def _print_result(command: str, data: dict[str, Any], fmt: str, output: str = ""
 def _add_format_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--format", choices=["json", "markdown", "content"], default="json")
     parser.add_argument("--output", default="", help="Write rendered output to a file.")
+
+
+def _parse_json_object_arg(value: str, option_name: str) -> dict[str, Any] | None:
+    if not value:
+        return None
+    try:
+        data = json.loads(value)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{option_name} must be a JSON object: {exc.msg}") from exc
+    if not isinstance(data, dict):
+        raise ValueError(f"{option_name} must be a JSON object")
+    return data
+
+
+def _parse_json_array_arg(value: str, option_name: str) -> list[Any] | None:
+    if not value:
+        return None
+    try:
+        data = json.loads(value)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{option_name} must be a JSON array: {exc.msg}") from exc
+    if not isinstance(data, list):
+        raise ValueError(f"{option_name} must be a JSON array")
+    return data
 
 
 def _is_secret_key(key: str) -> bool:
@@ -1298,6 +1350,7 @@ def _display_provider(provider: str, lang: str) -> str:
         "tavily": "Tavily",
         "firecrawl": "Firecrawl",
         "anysearch": "AnySearch",
+        "sciverse": "Sciverse",
     }
     return names.get(provider, provider)
 
@@ -1506,9 +1559,18 @@ def _setup_status_from_values(values: dict[str, str]) -> dict[str, Any]:
             "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl"],
         },
         "vertical_search": {
-            "configured": ["anysearch"] if has("ANYSEARCH_API_KEY") else [],
+            "configured": [
+                provider
+                for provider, configured in [
+                    ("anysearch", has("ANYSEARCH_API_KEY")),
+                    ("sciverse", has("SCIVERSE_API_TOKEN")),
+                ]
+                if configured
+            ],
             "fallback_chain": ["anysearch"],
             "experimental": True,
+            "explicit_only": ["sciverse"],
+            "route_enabled": {"anysearch": True, "sciverse": False},
         },
     }
     for item in status.values():
@@ -2371,6 +2433,9 @@ def _run_advanced_setup_prompts(values: dict[str, str], current: dict[str, str],
         ("ANYSEARCH_API_URL", "AnySearch MCP API URL", True),
         ("ANYSEARCH_API_KEY", "AnySearch API key", True),
         ("ANYSEARCH_TIMEOUT_SECONDS", "AnySearch timeout seconds", True),
+        ("SCIVERSE_API_URL", "Sciverse API URL", True),
+        ("SCIVERSE_API_TOKEN", "Sciverse API token", True),
+        ("SCIVERSE_TIMEOUT_SECONDS", "Sciverse timeout seconds", True),
     ]
     for key, label, optional in prompts:
         if values[key]:
@@ -2385,6 +2450,8 @@ def _run_advanced_setup_prompts(values: dict[str, str], current: dict[str, str],
         elif key == "JINA_READER_API_URL":
             value = _normalize_jina_reader_api_url(value)
         elif key in {"ZHIPU_MCP_SEARCH_API_URL", "ZHIPU_MCP_READER_API_URL", "ZHIPU_MCP_ZREAD_API_URL"}:
+            value = _normalize_custom_base_url(value)
+        elif key == "SCIVERSE_API_URL":
             value = _normalize_custom_base_url(value)
         values[key] = value
 
@@ -2503,11 +2570,20 @@ async def _run_async(args: argparse.Namespace) -> int:
         data = await service.anysearch_domains(args.domain)
         return _print_result("anysearch-domains", data, args.format, args.output)
     if args.command == "anysearch-search":
+        try:
+            sub_domain_params = parse_sub_domain_params(
+                getattr(args, "sub_domain_params", "") or "",
+                getattr(args, "param", None) or [],
+            )
+        except ValueError as exc:
+            data = {"ok": False, "error_type": "parameter_error", "error": str(exc)}
+            return _print_result("anysearch-search", data, args.format, args.output)
         data = await service.anysearch_search(
             args.query,
             domain=args.domain,
             sub_domain=args.sub_domain,
             max_results=args.max_results,
+            sub_domain_params=sub_domain_params,
         )
         return _print_result("anysearch-search", data, args.format, args.output)
     if args.command == "anysearch-extract":
@@ -2516,6 +2592,57 @@ async def _run_async(args: argparse.Namespace) -> int:
     if args.command == "anysearch-batch":
         data = await service.anysearch_batch(args.queries, max_results=args.max_results)
         return _print_result("anysearch-batch", data, args.format, args.output)
+    if args.command == "sciverse-catalog":
+        data = await service.sciverse_catalog(
+            collection=args.collection,
+            include_sample_values=args.include_sample_values,
+            include_field_stats=args.include_field_stats,
+        )
+        return _print_result("sciverse-catalog", data, args.format, args.output)
+    if args.command == "sciverse-search":
+        try:
+            filters_advanced = _parse_json_array_arg(args.filters_advanced, "--filters-advanced")
+            sort_advanced = _parse_json_array_arg(args.sort_advanced, "--sort-advanced")
+        except ValueError as exc:
+            data = {"ok": False, "provider": "sciverse", "error_type": "parameter_error", "error": str(exc)}
+            return _print_result("sciverse-search", data, args.format, args.output)
+        data = await service.sciverse_search(
+            query=args.query,
+            collection=args.collection,
+            title_contains=args.title_contains,
+            abstract_contains=args.abstract_contains,
+            authors=args.authors,
+            journals=args.journals,
+            subjects=args.subjects,
+            year_from=args.year_from,
+            year_to=args.year_to,
+            filters_advanced=filters_advanced,
+            sort_advanced=sort_advanced,
+            sort_by_year=args.sort_by_year,
+            freshness_boost=args.freshness_boost,
+            page=args.page,
+            page_size=args.page_size,
+        )
+        return _print_result("sciverse-search", data, args.format, args.output)
+    if args.command == "sciverse-semantic":
+        data = await service.sciverse_semantic(
+            args.query,
+            top_k=args.top_k,
+            mode=args.mode,
+            source_types=args.source_types,
+        )
+        return _print_result("sciverse-semantic", data, args.format, args.output)
+    if args.command == "sciverse-read":
+        data = await service.sciverse_read(args.doc_id, offset=args.offset, limit=args.limit)
+        return _print_result("sciverse-read", data, args.format, args.output)
+    if args.command == "sciverse-relations":
+        data = await service.sciverse_relations(
+            args.unique_id,
+            relation=args.relation,
+            page=args.page,
+            page_size=args.page_size,
+        )
+        return _print_result("sciverse-relations", data, args.format, args.output)
     if args.command == "context7-library":
         data = await service.context7_library(args.name, args.query)
         return _print_result("context7-library", data, args.format, args.output)
@@ -2665,6 +2792,9 @@ def _run_setup(args: argparse.Namespace) -> int:
         "ANYSEARCH_API_URL": _normalize_custom_base_url(args.anysearch_api_url),
         "ANYSEARCH_API_KEY": args.anysearch_key,
         "ANYSEARCH_TIMEOUT_SECONDS": args.anysearch_timeout,
+        "SCIVERSE_API_URL": _normalize_custom_base_url(args.sciverse_api_url),
+        "SCIVERSE_API_TOKEN": args.sciverse_token,
+        "SCIVERSE_TIMEOUT_SECONDS": args.sciverse_timeout,
     }
 
     lang = args.lang if args.lang in {"zh", "en"} else "zh"
@@ -2947,6 +3077,13 @@ def build_parser() -> argparse.ArgumentParser:
     anysearch_search_parser.add_argument("query")
     anysearch_search_parser.add_argument("--domain", default="")
     anysearch_search_parser.add_argument("--sub-domain", default="")
+    anysearch_search_parser.add_argument("--sub-domain-params", default="", help="JSON object forwarded to AnySearch sub_domain_params.")
+    anysearch_search_parser.add_argument(
+        "--param",
+        action="append",
+        default=[],
+        help="Repeatable key=value entries that override matching JSON sub_domain_params keys.",
+    )
     anysearch_search_parser.add_argument("--max-results", type=int, default=5)
     _add_format_args(anysearch_search_parser)
 
@@ -2969,6 +3106,75 @@ def build_parser() -> argparse.ArgumentParser:
     anysearch_batch_parser.add_argument("queries", nargs="+")
     anysearch_batch_parser.add_argument("--max-results", type=int, default=3)
     _add_format_args(anysearch_batch_parser)
+
+    sciverse_catalog_parser = sub.add_parser(
+        "sciverse-catalog",
+        aliases=COMMAND_ALIASES["sciverse-catalog"],
+        help="List Sciverse academic metadata fields.",
+    )
+    sciverse_catalog_parser.set_defaults(command="sciverse-catalog")
+    sciverse_catalog_parser.add_argument("--collection", choices=["papers", "authors", "sources"], default="papers")
+    sciverse_catalog_parser.add_argument("--include-sample-values", action="store_true")
+    sciverse_catalog_parser.add_argument("--include-field-stats", action="store_true")
+    _add_format_args(sciverse_catalog_parser)
+
+    sciverse_search_parser = sub.add_parser(
+        "sciverse-search",
+        aliases=COMMAND_ALIASES["sciverse-search"],
+        help="Run explicit experimental Sciverse structured academic search.",
+    )
+    sciverse_search_parser.set_defaults(command="sciverse-search")
+    sciverse_search_parser.add_argument("query", nargs="?", default="")
+    sciverse_search_parser.add_argument("--collection", choices=["papers", "authors", "sources"], default="papers")
+    sciverse_search_parser.add_argument("--title-contains", default="")
+    sciverse_search_parser.add_argument("--abstract-contains", default="")
+    sciverse_search_parser.add_argument("--authors", default="", help="Comma-separated author names.")
+    sciverse_search_parser.add_argument("--journals", default="", help="Comma-separated journal/source names.")
+    sciverse_search_parser.add_argument("--subjects", default="", help="Comma-separated subject labels.")
+    sciverse_search_parser.add_argument("--year-from", type=int, default=None)
+    sciverse_search_parser.add_argument("--year-to", type=int, default=None)
+    sciverse_search_parser.add_argument("--filters-advanced", default="", help="JSON array forwarded to Sciverse advanced filters.")
+    sciverse_search_parser.add_argument("--sort-advanced", default="", help="JSON array forwarded to Sciverse advanced sorting.")
+    sciverse_search_parser.add_argument("--sort-by-year", choices=["desc", "asc", "none"], default="desc")
+    sciverse_search_parser.add_argument("--freshness-boost", choices=["NONE", "MILD", "STRONG"], default="NONE")
+    sciverse_search_parser.add_argument("--page", type=int, default=1)
+    sciverse_search_parser.add_argument("--page-size", type=int, default=10)
+    _add_format_args(sciverse_search_parser)
+
+    sciverse_semantic_parser = sub.add_parser(
+        "sciverse-semantic",
+        aliases=COMMAND_ALIASES["sciverse-semantic"],
+        help="Run explicit experimental Sciverse semantic paper search.",
+    )
+    sciverse_semantic_parser.set_defaults(command="sciverse-semantic")
+    sciverse_semantic_parser.add_argument("query")
+    sciverse_semantic_parser.add_argument("--top-k", type=int, default=10)
+    sciverse_semantic_parser.add_argument("--mode", choices=["fast", "balanced", "quality"], default="balanced")
+    sciverse_semantic_parser.add_argument("--source-types", default="", help="Comma-separated Sciverse source types.")
+    _add_format_args(sciverse_semantic_parser)
+
+    sciverse_read_parser = sub.add_parser(
+        "sciverse-read",
+        aliases=COMMAND_ALIASES["sciverse-read"],
+        help="Read a Sciverse document content chunk by doc_id.",
+    )
+    sciverse_read_parser.set_defaults(command="sciverse-read")
+    sciverse_read_parser.add_argument("doc_id")
+    sciverse_read_parser.add_argument("--offset", type=int, default=0)
+    sciverse_read_parser.add_argument("--limit", type=int, default=4096)
+    _add_format_args(sciverse_read_parser)
+
+    sciverse_relations_parser = sub.add_parser(
+        "sciverse-relations",
+        aliases=COMMAND_ALIASES["sciverse-relations"],
+        help="List Sciverse paper relations by unique_id; CITATIONS are papers citing the target, REFERENCES are papers cited by it.",
+    )
+    sciverse_relations_parser.set_defaults(command="sciverse-relations")
+    sciverse_relations_parser.add_argument("unique_id")
+    sciverse_relations_parser.add_argument("--relation", choices=["CITATIONS", "REFERENCES", "RELATED_WORKS"], default="CITATIONS")
+    sciverse_relations_parser.add_argument("--page", type=int, default=1)
+    sciverse_relations_parser.add_argument("--page-size", type=int, default=25)
+    _add_format_args(sciverse_relations_parser)
 
     context7_library_parser = sub.add_parser(
         "context7-library",
@@ -3153,6 +3359,9 @@ def build_parser() -> argparse.ArgumentParser:
     setup_parser.add_argument("--anysearch-api-url", default="", help="Save ANYSEARCH_API_URL.")
     setup_parser.add_argument("--anysearch-key", default="", help="Save ANYSEARCH_API_KEY.")
     setup_parser.add_argument("--anysearch-timeout", default="", help="Save ANYSEARCH_TIMEOUT_SECONDS.")
+    setup_parser.add_argument("--sciverse-api-url", default="", help="Save SCIVERSE_API_URL.")
+    setup_parser.add_argument("--sciverse-token", default="", help="Save SCIVERSE_API_TOKEN.")
+    setup_parser.add_argument("--sciverse-timeout", default="", help="Save SCIVERSE_TIMEOUT_SECONDS.")
     _add_format_args(setup_parser)
 
     config_parser = sub.add_parser(

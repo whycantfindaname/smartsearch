@@ -133,7 +133,7 @@ async def test_context7_provider_normalizes_library_results(monkeypatch):
         async def get(self, endpoint, headers):
             return httpx.Response(
                 200,
-                json=[{"id": "/facebook/react", "title": "React", "description": "UI"}],
+                json=[{"id": "/reactjs/react.dev", "title": "React", "description": "UI"}],
                 headers={"content-type": "application/json"},
                 request=httpx.Request("GET", endpoint),
             )
@@ -144,8 +144,38 @@ async def test_context7_provider_normalizes_library_results(monkeypatch):
     data = json.loads(await provider.library("react", "hooks"))
 
     assert data["ok"] is True
-    assert data["results"][0]["id"] == "/facebook/react"
+    assert data["results"][0]["id"] == "/reactjs/react.dev"
     assert data["results"][0]["provider"] == "context7"
+
+
+@pytest.mark.asyncio
+async def test_context7_provider_uses_shared_http_error_taxonomy(monkeypatch):
+    class FakeAsyncClient:
+        def __init__(self, timeout, follow_redirects=True):
+            self.timeout = timeout
+            self.follow_redirects = follow_redirects
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
+        async def get(self, endpoint, headers):
+            return httpx.Response(
+                422,
+                json={"error": "invalid library id"},
+                request=httpx.Request("GET", endpoint),
+            )
+
+    monkeypatch.setattr("smart_search.providers.context7.httpx.AsyncClient", FakeAsyncClient)
+    provider = Context7Provider("https://context7.com", "key")
+
+    data = json.loads(await provider.docs("/invalid", "hooks"))
+
+    assert data["ok"] is False
+    assert data["error_type"] == "parameter_error"
+    assert "HTTP 422" in data["error"]
 
 
 @pytest.mark.asyncio

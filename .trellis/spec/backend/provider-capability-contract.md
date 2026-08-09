@@ -76,14 +76,51 @@ smart-search anysearch-domains [DOMAIN] --format json|markdown|content
 smart-search anysearch-search QUERY
   [--domain DOMAIN]
   [--sub-domain SUBDOMAIN]
+  [--sub-domain-params JSON_OBJECT]
+  [--param KEY=VALUE]
   [--max-results N]
   [--format json|markdown|content]
 smart-search anysearch-extract URL [--max-length N] --format json|markdown|content
 smart-search anysearch-batch QUERY...
   [--max-results N]
   [--format json|markdown|content]
-smart-search context7-library NAME [--query QUERY] --format json|markdown|content
-smart-search context7-docs LIBRARY_ID [--query QUERY] --format json|markdown|content
+smart-search sciverse-catalog
+  [--collection papers|authors|sources]
+  [--include-sample-values]
+  [--include-field-stats]
+  [--format json|markdown|content]
+smart-search sciverse-search [QUERY]
+  [--collection papers|authors|sources]
+  [--title-contains TEXT]
+  [--abstract-contains TEXT]
+  [--authors CSV]
+  [--journals CSV]
+  [--subjects CSV]
+  [--year-from YEAR]
+  [--year-to YEAR]
+  [--filters-advanced JSON_ARRAY]
+  [--sort-advanced JSON_ARRAY]
+  [--sort-by-year desc|asc|none]
+  [--freshness-boost NONE|MILD|STRONG]
+  [--page N]
+  [--page-size N]
+  [--format json|markdown|content]
+smart-search sciverse-semantic QUERY
+  [--top-k N]
+  [--mode fast|balanced|quality]
+  [--source-types CSV]
+  [--format json|markdown|content]
+smart-search sciverse-read DOC_ID
+  [--offset N]
+  [--limit N]
+  [--format json|markdown|content]
+smart-search sciverse-relations UNIQUE_ID
+  [--relation CITATIONS|REFERENCES|RELATED_WORKS]
+  [--page N]
+  [--page-size N]
+  [--format json|markdown|content]
+smart-search context7-library NAME [QUERY] --format json|markdown|content
+smart-search context7-docs LIBRARY_ID QUERY --format json|markdown|content
 ```
 
 Service-level contracts:
@@ -116,7 +153,7 @@ Capabilities:
 | `web_search` | `zhipu`, `zhipu-mcp`, `tavily`, `firecrawl` | General web-source reinforcement |
 | `docs_search` | `context7`, `exa` by intent | Documentation, SDK, API, library, and framework lookup |
 | `web_fetch` | `tavily`, `jina`, `zhipu-mcp-reader`, `firecrawl` | Known URL content extraction |
-| `vertical_search` | `anysearch` | Experimental structured/vertical search evidence |
+| `vertical_search` | `anysearch`; `sciverse` is explicit-only and route-disabled in v1 | Experimental structured/vertical search evidence |
 | `synthesis` | currently successful `main_search` provider | Final answer synthesis |
 
 Deep Research planner orchestration:
@@ -187,7 +224,16 @@ Deep Research planner orchestration:
   searches; Zhipu MCP only as the separate Coding Plan quota route; Tavily for
   broad discovery and site maps; Jina for known public URL/PDF/arXiv clean
   extraction; Firecrawl for JS-heavy/dynamic/browser-like/OCR/PDF/structured
-  extraction fallback; AnySearch only when vertical intent is clear.
+  extraction fallback; AnySearch only when vertical intent is clear; Sciverse
+  remains explicit-only for academic catalog/search/semantic/read/relations and
+  must not participate in default `research` fallback.
+- Automatic Context7 candidate resolution must not rely on a fixed library id.
+  It is eligible only when normalized query subject tokens overlap the
+  candidate title or id. Title/id exact and multi-token matches dominate;
+  description, trust, and benchmark values are secondary tie-breakers. When no
+  candidate is eligible, record an empty Context7 docs attempt and permit
+  same-capability Exa fallback. Explicit `context7-library` results
+  and explicit `context7-docs LIBRARY_ID` calls remain transparent.
 - Research final synthesis receives only fetched/read evidence and structured
   source metadata. It must not call web providers again and must not cite
   unfetched discovery candidates as proof. If evidence cannot close, return a
@@ -233,6 +279,15 @@ Provider configuration:
   `Authorization: Bearer <key>`; when absent, requests are anonymous.
 - `ANYSEARCH_TIMEOUT_SECONDS` configures the AnySearch HTTP timeout and
   defaults to `30`.
+- `SCIVERSE_API_TOKEN` configures the explicit experimental Sciverse academic
+  provider. It is required for every `sciverse-*` command; when absent, commands
+  must return `error_type=config_error` without sending a network request.
+- `SCIVERSE_API_URL` defaults to `https://api.sciverse.space`.
+- `SCIVERSE_TIMEOUT_SECONDS` configures Sciverse HTTP timeout and defaults to
+  `30`.
+- Sciverse uses native HTTP/OpenAPI endpoints: `GET /meta-catalog`,
+  `POST /meta-search`, `POST /agentic-search`, `GET /content`, and
+  `POST /meta-paper-relations`.
 - `ZHIPU_API_KEY` registers the `zhipu` web-search provider.
 - `ZHIPU_API_URL` configures the Zhipu Web Search API base URL. It defaults to
   `https://open.bigmodel.cn/api` and is independent of `TAVILY_API_URL`.
@@ -264,12 +319,26 @@ Provider configuration:
 - Zhipu Coding Plan MCP must be implemented first as a narrow tested
   MCP-over-HTTP provider layer. Avoid broad MCP abstractions until the
   first search, reader, and zread tools are stable.
+- Zhipu Coding Plan MCP endpoints use stateful MCP-over-HTTP. Each provider
+  instance must send JSON-RPC `initialize`, read the `Mcp-Session-Id` response
+  header, and include that header on subsequent `tools/call` requests for
+  `web_search_prime`, `webReader`, and zread tools. Missing or failed
+  initialization must surface as masked auth/provider errors without leaking
+  `ZHIPU_MCP_API_KEY`.
 - `JINA_API_KEY` registers Jina Reader as `web_fetch`.
 - `JINA_READER_API_URL` defaults to `https://r.jina.ai`.
 - `JINA_RESPOND_WITH` is optional. `JINA_RESPOND_WITH=readerlm-v2` requires
   `JINA_API_KEY` and must fail before network when the key is absent.
 - Jina Reader is not a general `web_search` provider and must not be shown as
   one in docs, setup, doctor, or capability status.
+- `TAVILY_ENABLED` defaults to `true`; only `true`, `1`, and `yes` enable it.
+  When disabled, Tavily is not a configured provider even if `TAVILY_API_KEY`
+  is present.
+- `TAVILY_ENABLED=false` must remove Tavily from `web_search`, `web_fetch`,
+  research, and extra-source registration. Direct Tavily search/extract calls,
+  `doctor`, and smoke must make no Tavily network request; `map` must return a
+  local `config_error`. It must not enable Firecrawl or allow a cross-capability
+  fallback.
 - Legacy main-search keys are unsupported: `SMART_SEARCH_API_URL`,
   `SMART_SEARCH_API_KEY`, `SMART_SEARCH_API_MODE`, `SMART_SEARCH_MODEL`, and
   `SMART_SEARCH_XAI_TOOLS`. `config set` / `config unset` must reject them with
@@ -371,14 +440,48 @@ AnySearch boundary:
   explicit `anysearch-*` CLI commands and capability diagnostics.
 - Do not insert AnySearch into `web_search`, `docs_search`, `web_fetch`, or
   `main_search` fallback chains without a separate acceptance/routing task.
-- AnySearch uses JSON-RPC 2.0 `tools/call` with tool names `list_domains`,
+- AnySearch uses JSON-RPC 2.0 `tools/call` with tool names `get_sub_domains`,
   `search`, `extract`, and `batch_search`.
+- AnySearch parameterized vertical searches pass `sub_domain_params` as a JSON
+  object from the CLI to the provider without string flattening. Normalized
+  output may expose parameter keys, but must not echo sensitive values.
+- `--sub-domain-params` is decoded before repeatable `--param KEY=VALUE`
+  entries, and later repeated values override matching JSON keys. Invalid JSON,
+  non-object JSON, a missing `=`, or an empty key must return
+  `error_type=parameter_error` before an AnySearch network call.
 - AnySearch search/extract results must preserve raw markdown/text content.
   URL/title/snippet candidates should be extracted when present, but
   structured evidence without URLs must remain in the result instead of being
   discarded.
+- AnySearch `extract` sends only `{url}` upstream. A positive `--max-length`
+  truncates successful normalized `content`, `raw_content`, and result text
+  fields locally; zero or negative values preserve the successful payload.
 - `anysearch-batch` accepts at most five queries. Reject larger batches before
   sending a network request.
+
+Sciverse boundary:
+
+- Sciverse is an experimental `vertical_search` provider exposed only through
+  explicit `sciverse-*` CLI commands and capability diagnostics.
+- Do not insert Sciverse into `docs_search`, `web_search`, `web_fetch`,
+  `main_search`, default `smart-search search`, or default `smart-search
+  research` without a separate acceptance/routing task.
+- Sciverse is not required by and must not satisfy the `standard` minimum
+  profile.
+- `sciverse-catalog` calls `list_catalog`; `sciverse-search` calls
+  `search_papers`; `sciverse-semantic` calls `semantic_search`;
+  `sciverse-read` calls `read_content`; `sciverse-relations` calls
+  `list_paper_relations`.
+- `sciverse-read` uses `doc_id`. `sciverse-relations` uses `unique_id`.
+- Relation direction must stay explicit: `CITATIONS` means papers citing the
+  target paper, `REFERENCES` means papers cited by the target paper, and
+  `RELATED_WORKS` means related work suggestions.
+- Local parameter limits: search `page_size <= 50`, semantic `top_k <= 30`,
+  read `limit <= 16384`, relations `page_size <= 200`; violations return
+  `error_type=parameter_error` before network.
+- HTTP errors map as: 400 `parameter_error`, 401/403 `auth_error`, 404
+  `provider_error`, 429 `rate_limited`, 502/503/network `network_error`,
+  timeout `timeout`, and invalid JSON `parse_error`.
 
 Interactive setup contract:
 
@@ -558,6 +661,19 @@ Output contracts:
 - Exa HTTP `400` or `422` failures are parameter errors, not generic network
   errors. The provider should expose `error_type="parameter_error"` so the CLI
   and docs-search fallback path can report bad user arguments accurately.
+- Provider-call boundaries must classify exceptions consistently: HTTP `400` or
+  `422` is `parameter_error`, `401` or `403` is `auth_error`, timeout is
+  `timeout`, `429` is `rate_limited`, `5xx` and request failures are
+  `network_error`, invalid response decoding is `parse_error`, and explicit
+  upstream tool failures are `provider_error`. Unexpected local failures are
+  `runtime_error`. A normal decoded response with no normalized content is an
+  `empty` attempt, not an error attempt.
+- Smoke output must include `status` (`healthy`, `degraded`, or `failed`) and
+  `skipped_cases` in addition to its existing case lists. Healthy and degraded
+  smoke preserve backward-compatible `ok=true` and exit code `0`; failed smoke
+  is `ok=false` and non-zero. Missing optional live checks are skipped, not
+  failed. A configured minimum profile must still report a main-search
+  capability with no reachable configured route as a critical live smoke case.
 - Secrets must be masked or omitted in command output, smoke output, docs, task
   artifacts, and error strings.
 
@@ -570,6 +686,21 @@ Regression and release contracts:
 - Packaged-install regression is an install-health check only. Release
   validation must still run from a source checkout with full pytest-backed
   regression before publishing or tagging a release.
+- Read-only CI must cover exactly Ubuntu Node 18/Python 3.10, Ubuntu Node
+  24/Python 3.12, and Windows Node 22/Python 3.12. It must run npm test,
+  source regression, mock smoke, public/package skill parity, pack dry-run, a
+  real tarball install smoke under a fresh temporary npm prefix, and a
+  committed-diff whitespace check. CI must fetch the first parent and run
+  `git diff --check HEAD^1 HEAD`, with `git diff-tree --check --root -r
+  --no-commit-id HEAD` as the root-commit fallback; a bare `git diff --check`
+  after checkout only checks an empty worktree. It must not publish or request
+  npm provenance credentials. Push CI must also match `codex/release-*` so a
+  newly introduced workflow can validate its release branch before the
+  workflow first reaches the default branch.
+- Tarball smoke must assert that `npm pack --json` contains only the assets
+  declared by package metadata, then run the installed wrapper's version,
+  packaged regression fallback, and mock smoke without modifying a global npm
+  prefix.
 - Published npm versions are immutable. Retagging a GitHub release after npm
   publish can update repository history and rerun CI, but it cannot replace the
   already published tarball. If packaged assets must change for installed users,
@@ -579,6 +710,12 @@ Regression and release contracts:
   dist-tag `next`; `N` resets per base version and legacy `-dev.*` versions
   reserve the earlier beta slots. A pushed stable `vX.Y.Z` tag publishes
   `X.Y.Z` with npm dist-tag `latest`.
+- On a `main` push, stable-bump detection must compare the current stable
+  package version with `HEAD^1:package.json`, not only the commit subject, so
+  merge and squash release commits skip automatic beta publication. The legacy
+  `chore(release): bump version to X.Y.Z` subject remains a compatibility
+  fallback. The checkout must fetch the first parent, and npm publishing must
+  use non-cancelling repository-scoped concurrency.
 - Prerelease `vX.Y.Z-beta.N` tags or manual dispatch versions are never allowed
   to publish npm `latest`; they must use `next` or a backfill/non-latest tag.
 - Historical test builds may be backfilled with GitHub Actions
@@ -703,12 +840,16 @@ smart-search doctor --format json
 | AnySearch HTTP 401/403 | Return `error_type: "auth_error"` with a masked/non-secret message |
 | AnySearch timeout | Return `error_type: "timeout"` |
 | AnySearch JSON-RPC `error` object | Return `error_type: "provider_error"` with the provider message |
+| AnySearch `--sub-domain-params` / `--param` is invalid | Return `error_type: "parameter_error"` before a network request |
 | `anysearch-batch` receives more than five queries | Return `error_type: "parameter_error"` without a network request |
 | Exa `--include-domains` / `--exclude-domains` receives comma-separated, whitespace-separated, or PowerShell-split values | Normalize to a flat domain list before sending `includeDomains` / `excludeDomains` to Exa |
 | Exa returns HTTP 400 or 422 | Return `error_type: "parameter_error"` and preserve the Exa response body excerpt for diagnosis |
 | Provider HTTP/network/timeout/schema error | Record `provider_attempts[].status="error"` and try next same-capability provider when fallback is `auto` |
 | Explicit terminal xAI HTTP 504 and `--max-try N` has remaining attempts | Start a new logical search attempt after 2-5 seconds; stop on success, a different terminal outcome, or attempt `N` |
 | Provider returns empty normalized result | Record `status="empty"` and try next same-capability provider when fallback is `auto` |
+| `TAVILY_ENABLED=false` with a saved Tavily key | Remove Tavily from configured capability routes; direct Tavily boundaries, doctor, and smoke make no Tavily network call; `map` returns local `config_error` |
+| Tavily or Firecrawl raises while another same-capability provider is available | Record a classified `error` attempt rather than swallowing it; keep fallback within the capability |
+| Live smoke lacks an optional provider/check | Add a skipped case and derive overall `healthy`/`degraded`/`failed` status from case outcomes without changing healthy/degraded exit `0` behavior |
 | `--fallback off` | Try only the first matching provider in the capability chain |
 | `research --fallback off` | Try only the first selected provider inside each capability route and report gaps rather than continuing through same-capability fallback |
 | Docs intent is false | Do not invoke Context7 or Exa as generic web-search fallback |
@@ -871,6 +1012,16 @@ When this contract changes, add or update tests that assert:
 - AnySearch JSON-RPC success, `result.isError=true`, JSON-RPC error, HTTP
   error, timeout, anonymous request, authenticated header, raw markdown parsing,
   structured evidence without URL, and batch limit are covered;
+- Sciverse config keys are listed, settable, masked where secret, and optional
+  for the `standard` minimum profile;
+- Sciverse capability status is `vertical_search`, `experimental=true`,
+  `explicit_only`, route-disabled for default routing, and does not change
+  required minimum capabilities;
+- Sciverse mock calls cover catalog, search, semantic, read, relations, missing
+  token no-network behavior, Bearer auth, local bounds, relation enum, HTTP
+  error mapping, timeout, invalid JSON, and CLI advanced JSON validation;
+- default `search` / `research` provider attempts never contain `sciverse`
+  unless a future routing task explicitly changes this contract;
 - `doctor()` tests configured main providers independently;
 - general queries do not call docs providers;
 - docs queries use Exa before Context7;
@@ -880,6 +1031,11 @@ When this contract changes, add or update tests that assert:
   fallback records them as provider errors rather than empty results;
 - Tavily fetch failure falls back through Jina/Zhipu MCP Reader/Firecrawl as
   configured;
+- `TAVILY_ENABLED=false` suppresses Tavily at capability registration and every
+  direct boundary without making a Tavily request; Firecrawl remains a separate
+  same-capability option;
+- provider exceptions are recorded as classified `error` attempts, while normal
+  empty normalized responses remain `empty` attempts;
 - Jina no-key does not satisfy `web_fetch`, Jina key does, and ReaderLM-v2
   without key reports configuration error;
 - Jina and Remote MCP service wrappers await `_decode_provider_json(...)` and
@@ -889,6 +1045,9 @@ When this contract changes, add or update tests that assert:
 - `fetch URL` and known-URL `search "https://..."` use the same fetch chain;
 - Zhipu Coding Plan Remote MCP mock calls cover `web_search_prime`,
   `webReader`, `search_doc`, `get_repo_structure`, and `read_file`;
+- Zhipu Coding Plan Remote MCP mock calls assert `initialize` happens before
+  `tools/call`, `Mcp-Session-Id` is captured from response headers, and the
+  session header is sent on search, reader, and zread tool calls;
 - Zhipu MCP auth header is sent, masked, and provider errors are recorded in
   `provider_attempts` without cross-capability fallback;
 - strict validation returns insufficient evidence when sources are absent;

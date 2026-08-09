@@ -18,6 +18,7 @@ async def test_mock_smoke_passes():
     result = await service.smoke("mock")
 
     assert result["ok"] is True
+    assert result["status"] == "healthy"
     assert result["failed_cases"] == []
     assert any(case["name"] == "docs_search fallback context7_to_exa" for case in result["cases"])
     assert any(case["name"] == "deep_research explicit planner simple current prompt uses capability plan" for case in result["cases"])
@@ -59,6 +60,7 @@ async def test_mock_smoke_does_not_depend_on_local_keys(monkeypatch):
     result = await service.smoke("mock")
 
     assert result["ok"] is True
+    assert result["status"] == "healthy"
     assert result["failed_cases"] == []
     assert any(case["name"] == "doctor minimum profile fails closed" for case in result["cases"])
 
@@ -93,8 +95,122 @@ async def test_live_smoke_treats_provider_failure_as_degraded_when_fallback_exis
     result = await service.smoke("live")
 
     assert result["ok"] is True
+    assert result["status"] == "degraded"
     assert result["failed_cases"] == []
     assert result["degraded_cases"] == ["zhipu search"]
+    assert "context7 library" in result["skipped_cases"]
+
+
+@pytest.mark.asyncio
+async def test_live_smoke_reports_skipped_optional_cases_without_failing(monkeypatch):
+    async def fake_doctor():
+        return {
+            "ok": True,
+            "minimum_profile_ok": True,
+            "error_type": "",
+            "error": "",
+            "capability_status": {
+                "main_search": {"configured": ["xai-responses"], "fallback_chain": ["xai-responses"], "ok": True},
+                "web_search": {"configured": [], "fallback_chain": ["zhipu", "tavily", "firecrawl"], "ok": False},
+                "docs_search": {"configured": [], "fallback_chain": ["context7", "exa"], "ok": False},
+                "web_fetch": {"configured": [], "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl"], "ok": False},
+            },
+            "zhipu_connection_test": {"status": "not_configured", "message": "missing"},
+            "context7_connection_test": {"status": "not_configured", "message": "missing"},
+        }
+
+    monkeypatch.setattr(service, "doctor", fake_doctor)
+
+    result = await service.smoke("live")
+
+    assert result["ok"] is True
+    assert result["status"] == "healthy"
+    assert result["failed_cases"] == []
+    assert set(result["skipped_cases"]) == {"zhipu search", "context7 library", "web fetch fallback chain"}
+
+
+@pytest.mark.asyncio
+async def test_live_smoke_fails_when_configured_main_search_connection_fails(monkeypatch):
+    async def fake_doctor():
+        return {
+            "ok": False,
+            "minimum_profile_ok": True,
+            "error_type": "network_error",
+            "error": "main provider timed out",
+            "primary_connection_test": {"status": "timeout", "message": "main provider timed out"},
+            "capability_status": {
+                "main_search": {"configured": ["openai-compatible"], "fallback_chain": ["openai-compatible"], "ok": True},
+                "web_search": {"configured": [], "fallback_chain": [], "ok": False},
+                "docs_search": {"configured": ["exa"], "fallback_chain": ["exa"], "ok": True},
+                "web_fetch": {"configured": [], "fallback_chain": [], "ok": False},
+            },
+            "zhipu_connection_test": {"status": "not_configured", "message": "missing"},
+            "context7_connection_test": {"status": "not_configured", "message": "missing"},
+        }
+
+    monkeypatch.setattr(service, "doctor", fake_doctor)
+
+    result = await service.smoke("live")
+
+    assert result["ok"] is False
+    assert result["status"] == "failed"
+    assert result["failed_cases"] == ["main search connection"]
+
+
+@pytest.mark.asyncio
+async def test_live_smoke_accepts_a_main_search_fallback_connection(monkeypatch):
+    async def fake_doctor():
+        return {
+            "ok": True,
+            "minimum_profile_ok": True,
+            "error_type": "",
+            "error": "",
+            "primary_connection_test": {"status": "timeout", "message": "primary provider timed out"},
+            "main_search_connection_tests": {
+                "xai-responses": {"status": "timeout", "message": "primary provider timed out"},
+                "openai-compatible": {"status": "ok", "message": "fallback provider available"},
+            },
+            "capability_status": {
+                "main_search": {"configured": ["xai-responses", "openai-compatible"], "fallback_chain": ["xai-responses", "openai-compatible"], "ok": True},
+                "web_search": {"configured": [], "fallback_chain": [], "ok": False},
+                "docs_search": {"configured": [], "fallback_chain": [], "ok": False},
+                "web_fetch": {"configured": [], "fallback_chain": [], "ok": False},
+            },
+            "zhipu_connection_test": {"status": "not_configured", "message": "missing"},
+            "context7_connection_test": {"status": "not_configured", "message": "missing"},
+        }
+
+    monkeypatch.setattr(service, "doctor", fake_doctor)
+
+    result = await service.smoke("live")
+
+    main_search_case = next(case for case in result["cases"] if case["name"] == "main search connection")
+    assert result["ok"] is True
+    assert result["status"] == "healthy"
+    assert main_search_case["status"] == "ok"
+    assert main_search_case["available_providers"] == ["openai-compatible"]
+
+
+@pytest.mark.asyncio
+async def test_live_smoke_reports_failed_status_for_critical_case(monkeypatch):
+    async def fake_doctor():
+        return {
+            "ok": False,
+            "minimum_profile_ok": False,
+            "error_type": "config_error",
+            "error": "missing web_fetch",
+            "capability_status": {"web_fetch": {"configured": [], "fallback_chain": [], "ok": False}},
+            "zhipu_connection_test": {"status": "not_configured", "message": "missing"},
+            "context7_connection_test": {"status": "not_configured", "message": "missing"},
+        }
+
+    monkeypatch.setattr(service, "doctor", fake_doctor)
+
+    result = await service.smoke("live")
+
+    assert result["ok"] is False
+    assert result["status"] == "failed"
+    assert result["failed_cases"] == ["doctor minimum profile"]
 
 
 @pytest.mark.asyncio
@@ -131,7 +247,7 @@ async def test_search_docs_intent_uses_docs_fallback(monkeypatch):
         return "Answer."
 
     async def fake_context7(name, query=""):
-        return {"ok": True, "results": [{"id": "/facebook/react", "title": "React", "description": "UI"}], "total": 1}
+        return {"ok": True, "results": [{"id": "/reactjs/react.dev", "title": "React", "description": "UI"}], "total": 1}
 
     monkeypatch.setattr(service.OpenAICompatibleSearchProvider, "search", fake_search)
     monkeypatch.setattr(service, "context7_library", fake_context7)

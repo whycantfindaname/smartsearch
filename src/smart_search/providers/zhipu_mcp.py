@@ -5,27 +5,27 @@ from typing import Any
 
 import httpx
 
+from ..provider_errors import classify_provider_exception, sanitize_provider_error_message
+
+_MCP_PROTOCOL_VERSION = "2024-11-05"
+
 
 def _elapsed_ms(start: float) -> float:
     return round((time.time() - start) * 1000, 2)
 
 
-def _error_payload(exc: Exception) -> dict[str, str]:
-    if isinstance(exc, httpx.HTTPStatusError):
-        status_code = exc.response.status_code
-        if status_code in {401, 403}:
-            error_type = "auth_error"
-        elif status_code == 429:
-            error_type = "rate_limited"
-        else:
-            error_type = "network_error"
-        body = (exc.response.text or exc.response.reason_phrase or "")[:300]
-        return {"error_type": error_type, "error": f"HTTP {status_code}: {body}"}
-    if isinstance(exc, httpx.TimeoutException):
-        return {"error_type": "timeout", "error": "request timed out"}
-    if isinstance(exc, httpx.RequestError):
-        return {"error_type": "network_error", "error": str(exc)}
-    return {"error_type": "runtime_error", "error": str(exc)}
+class ZhipuMCPSessionError(Exception):
+    pass
+
+
+def _error_payload(exc: Exception, api_key: str = "") -> dict[str, str]:
+    if isinstance(exc, ZhipuMCPSessionError):
+        return {
+            "error_type": "provider_error",
+            "error": sanitize_provider_error_message(str(exc), additional_secrets=(api_key,)),
+        }
+    error_type, error = classify_provider_exception(exc, additional_secrets=(api_key,))
+    return {"error_type": error_type, "error": error}
 
 
 def _mask_secret(text: str, secret: str) -> str:
@@ -62,6 +62,17 @@ def _parse_sse_or_json(response: httpx.Response) -> dict[str, Any]:
         except json.JSONDecodeError:
             continue
     return response.json()
+
+
+def _jsonrpc_error_message(data: dict[str, Any]) -> str:
+    error = data.get("error") or {}
+    if isinstance(error, dict):
+        message = error.get("message")
+        if message:
+            return str(message)
+    if error:
+        return str(error)
+    return ""
 
 
 def _parse_markdown_results(text: str, provider: str) -> list[dict[str, str]]:
@@ -117,6 +128,49 @@ class ZhipuMCPProvider:
         self.api_key = api_key
         self.timeout = timeout
         self.provider_id = provider_id
+        self._session_id: str | None = None
+        self._request_id = 0
+
+    def _next_request_id(self) -> int:
+        self._request_id += 1
+        return self._request_id
+
+    def _headers(self, session_id: str = "") -> dict[str, str]:
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream",
+        }
+        if session_id:
+            headers["Mcp-Session-Id"] = session_id
+        return headers
+
+    async def _ensure_session(self, client: httpx.AsyncClient) -> str:
+        if self._session_id:
+            return self._session_id
+
+        payload = {
+            "jsonrpc": "2.0",
+            "id": self._next_request_id(),
+            "method": "initialize",
+            "params": {
+                "protocolVersion": _MCP_PROTOCOL_VERSION,
+                "capabilities": {},
+                "clientInfo": {"name": "smart-search", "version": "1"},
+            },
+        }
+        response = await client.post(self.api_url, headers=self._headers(), json=payload)
+        response.raise_for_status()
+        data = _parse_sse_or_json(response)
+        if "error" in data:
+            message = _jsonrpc_error_message(data)
+            raise ZhipuMCPSessionError(message or "Zhipu MCP initialize failed.")
+
+        session_id = (response.headers.get("Mcp-Session-Id") or "").strip()
+        if not session_id:
+            raise ZhipuMCPSessionError("Zhipu MCP initialize response did not include Mcp-Session-Id.")
+        self._session_id = session_id
+        return session_id
 
     async def call_tool(self, name: str, arguments: dict[str, Any]) -> str:
         start = time.time()
@@ -134,27 +188,23 @@ class ZhipuMCPProvider:
                 indent=2,
             )
 
-        payload = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "tools/call",
-            "params": {"name": name, "arguments": arguments},
-        }
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "Accept": "application/json, text/event-stream",
-        }
-
         try:
             timeout = httpx.Timeout(connect=6.0, read=self.timeout, write=10.0, pool=None)
             async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+                session_id = await self._ensure_session(client)
+                payload = {
+                    "jsonrpc": "2.0",
+                    "id": self._next_request_id(),
+                    "method": "tools/call",
+                    "params": {"name": name, "arguments": arguments},
+                }
+                headers = self._headers(session_id)
                 response = await client.post(self.api_url, headers=headers, json=payload)
                 response.raise_for_status()
                 data = _parse_sse_or_json(response)
             output = self._normalize_response(name, arguments, data, start)
         except Exception as e:
-            error = _error_payload(e)
+            error = _error_payload(e, self.api_key)
             output = {
                 "ok": False,
                 "provider": self.provider_id,
@@ -169,12 +219,15 @@ class ZhipuMCPProvider:
         if "error" in data:
             error = data.get("error") or {}
             message = error.get("message") if isinstance(error, dict) else str(error)
+            safe_error = sanitize_provider_error_message(
+                message or "Zhipu MCP JSON-RPC error", additional_secrets=(self.api_key,)
+            )
             return {
                 "ok": False,
                 "provider": self.provider_id,
                 "tool": name,
                 "error_type": "provider_error",
-                "error": message or "Zhipu MCP JSON-RPC error",
+                "error": safe_error,
                 "elapsed_ms": _elapsed_ms(start),
             }
 
@@ -201,7 +254,13 @@ class ZhipuMCPProvider:
             output["total"] = len(results)
         if is_error:
             output["error_type"] = content_error[0] if content_error else "provider_error"
-            output["error"] = content_error[1] if content_error else (text or "Zhipu MCP tool returned isError=true")
+            safe_error = sanitize_provider_error_message(
+                content_error[1] if content_error else (text or "Zhipu MCP tool returned isError=true"),
+                additional_secrets=(self.api_key,),
+            )
+            output["content"] = safe_error
+            output["raw_content"] = safe_error
+            output["error"] = safe_error
         return output
 
     async def web_search(self, query: str, count: int = 5) -> str:

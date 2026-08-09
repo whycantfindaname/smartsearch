@@ -1,10 +1,16 @@
 import json
+import re
 import subprocess
 from pathlib import Path
+
+import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 RESOLVER = ROOT / "npm" / "scripts" / "resolve-prerelease-version.js"
 WORKFLOW = ROOT / ".github" / "workflows" / "publish-npm.yml"
+CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
+TARBALL_SMOKE = ROOT / "npm" / "scripts" / "smoke-packed-install.js"
+SKILL_PARITY_CHECK = ROOT / "npm" / "scripts" / "check-skill-parity.js"
 
 
 def read_reference_tree(skill_dir: Path) -> str:
@@ -13,6 +19,20 @@ def read_reference_tree(skill_dir: Path) -> str:
         for p in sorted((skill_dir / "references").rglob("*"))
         if p.is_file() and p.suffix == ".md"
     )
+
+
+def read_workflow_events(workflow_text: str) -> dict[str, object]:
+    # GitHub Actions follows YAML 1.2, where `on` is a string. BaseLoader keeps
+    # that key intact while safe_load above remains the syntax validation gate.
+    return yaml.load(workflow_text, Loader=yaml.BaseLoader)["on"]
+
+
+def read_pyproject_version() -> str:
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    project_section = pyproject.split("[project]", 1)[1].split("\n[", 1)[0]
+    match = re.search(r'^version = "([^"]+)"$', project_section, flags=re.MULTILINE)
+    assert match is not None
+    return match.group(1)
 
 
 def run_resolver(base_version: str, versions: list[str]) -> str:
@@ -35,6 +55,21 @@ def run_resolver(base_version: str, versions: list[str]) -> str:
         capture_output=True,
     )
     return result.stdout
+
+
+def run_pack_output_normalizer(payload: object, *, check: bool = True) -> subprocess.CompletedProcess[str]:
+    script = """
+const { normalizePackOutput } = require(process.argv[1]);
+const normalized = normalizePackOutput(JSON.parse(process.argv[2]));
+process.stdout.write(JSON.stringify(normalized));
+"""
+    return subprocess.run(
+        ["node", "-e", script, str(TARBALL_SMOKE), json.dumps(payload)],
+        cwd=ROOT,
+        check=check,
+        text=True,
+        capture_output=True,
+    )
 
 
 def test_resolver_counts_legacy_dev_slots_per_base_version():
@@ -65,8 +100,41 @@ def test_resolver_starts_at_beta_one_without_prior_versions():
     assert run_resolver("0.2.0", []) == "0.2.0-beta.1"
 
 
+def test_tarball_smoke_normalizes_legacy_array_and_npm_12_object_pack_output():
+    metadata = {
+        "filename": "konbakuyomu-smart-search-0.1.15.tgz",
+        "files": [{"path": "package.json"}],
+    }
+
+    for payload in ([metadata], {"@konbakuyomu/smart-search": metadata}):
+        result = run_pack_output_normalizer(payload)
+        assert json.loads(result.stdout) == metadata
+
+
+def test_tarball_smoke_requires_exactly_one_pack_result_for_both_shapes():
+    metadata = {"filename": "smart-search.tgz", "files": []}
+
+    for payload in ([], [metadata, metadata], {}, {"first": metadata, "second": metadata}):
+        result = run_pack_output_normalizer(payload, check=False)
+        assert result.returncode != 0
+        assert "npm pack must produce exactly one tarball" in result.stderr
+
+
 def test_publish_workflow_uses_beta_lane_and_prerelease_guardrails():
     workflow = WORKFLOW.read_text(encoding="utf-8")
+
+    assert isinstance(yaml.safe_load(workflow), dict)
+    events = read_workflow_events(workflow)
+    assert events["push"] == {"branches": ["main"], "tags": ["v*"]}
+    assert set(events["workflow_dispatch"]["inputs"]) == {
+        "target_ref",
+        "version",
+        "npm_tag",
+        "create_github_release",
+    }
+    assert events["workflow_dispatch"]["inputs"]["target_ref"]["required"] == "true"
+    assert events["workflow_dispatch"]["inputs"]["version"]["required"] == "true"
+    assert events["workflow_dispatch"]["inputs"]["npm_tag"]["default"] == "next"
 
     assert "workflow_dispatch:" in workflow
     assert "github.event.inputs.target_ref" in workflow
@@ -86,6 +154,95 @@ def test_publish_workflow_uses_beta_lane_and_prerelease_guardrails():
     assert "notes_footer=\"$(printf" in workflow
     assert "gh release create" in workflow
     assert "--prerelease" in workflow
+    assert "concurrency:" in workflow
+    assert "group: publish-npm-${{ github.repository }}" in workflow
+    assert "cancel-in-progress: false" in workflow
+    assert "fetch-depth: 2" in workflow
+    assert "git cat-file -e HEAD^1:package.json" in workflow
+    assert "git show HEAD^1:package.json" in workflow
+    assert "current_version" in workflow
+    assert "parent_version" in workflow
+    assert "version_changed" in workflow
+    assert "legacy_subject" in workflow
+    assert 'version="${DISPATCH_VERSION}"' in workflow
+    assert 'tag="${DISPATCH_NPM_TAG}"' in workflow
+    assert 'version="${GITHUB_REF_NAME#v}"' in workflow
+
+
+def test_ci_workflow_is_no_publish_and_covers_the_release_runtime_matrix():
+    workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
+    workflow = yaml.safe_load(workflow_text)
+
+    assert isinstance(workflow, dict)
+    events = read_workflow_events(workflow_text)
+    assert set(events) == {"pull_request", "push", "workflow_dispatch"}
+    assert events["push"] == {"branches": ["main", "codex/release-*"]}
+    assert workflow["permissions"] == {"contents": "read"}
+    assert "npm publish" not in workflow_text
+    assert "id-token: write" not in workflow_text
+    assert "concurrency:" in workflow_text
+    assert "cancel-in-progress: true" in workflow_text
+
+    checkout = workflow["jobs"]["test"]["steps"][0]
+    assert checkout["uses"] == "actions/checkout@v6"
+    assert checkout["with"]["fetch-depth"] == 2
+
+    whitespace_check = workflow["jobs"]["test"]["steps"][-1]
+    assert whitespace_check["shell"] == "bash"
+    assert "git diff --check HEAD^1 HEAD" in whitespace_check["run"]
+    assert "git diff-tree --check --root -r --no-commit-id HEAD" in whitespace_check["run"]
+
+    matrix = workflow["jobs"]["test"]["strategy"]["matrix"]["include"]
+    assert {
+        (entry["os"], entry["node"], entry["python"])
+        for entry in matrix
+    } == {
+        ("ubuntu-latest", "18", "3.10"),
+        ("ubuntu-latest", "24", "3.12"),
+        ("windows-latest", "22", "3.12"),
+    }
+    assert len(matrix) == 3
+
+    for command in [
+        "npm ci",
+        "npm test",
+        "node npm/bin/smart-search.js regression",
+        "node npm/bin/smart-search.js smoke --mock --format json",
+        "npm run check:skill-parity",
+        "npm run pack:dry",
+        "npm run smoke:tarball",
+        "git diff --check HEAD^1 HEAD",
+        "git diff-tree --check --root -r --no-commit-id HEAD",
+    ]:
+        assert command in workflow_text
+
+
+def test_release_version_metadata_and_tarball_support_are_synchronized():
+    package_json = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+    package_lock = json.loads((ROOT / "package-lock.json").read_text(encoding="utf-8"))
+
+    assert package_json["version"] == "0.1.15"
+    assert package_lock["version"] == "0.1.15"
+    assert package_lock["packages"][""]["version"] == "0.1.15"
+    assert read_pyproject_version() == "0.1.15"
+    assert package_json["scripts"]["check:skill-parity"] == "node npm/scripts/check-skill-parity.js"
+    assert package_json["scripts"]["smoke:tarball"] == "node npm/scripts/smoke-packed-install.js"
+
+    tarball_smoke = TARBALL_SMOKE.read_text(encoding="utf-8")
+    assert SKILL_PARITY_CHECK.exists()
+    for marker in [
+        "--pack-destination",
+        "--prefix",
+        "smart-search-tarball-",
+        "--version",
+        "regression",
+        "smoke",
+        "--mock",
+        "assertPackContents",
+        "src/smart_search/assets/skills/smart-search-cli/",
+        'path.extname(filePath) === ".py"',
+    ]:
+        assert marker in tarball_smoke
 
 
 def test_release_docs_explain_beta_lane_and_npm_immutability():
@@ -166,3 +323,13 @@ def test_current_stable_release_notes_describe_user_visible_changes():
     ]
     for marker in required_markers:
         assert marker in notes
+
+
+def test_v015_release_notes_cover_beta_and_stable_lanes():
+    beta_notes = (ROOT / ".github" / "releases" / "v0.1.15-beta.1.md").read_text(encoding="utf-8")
+    stable_notes = (ROOT / ".github" / "releases" / "v0.1.15.md").read_text(encoding="utf-8")
+
+    for marker in ["v0.1.15-beta.1", "npm `next`", "tarball", "smart-search regression", "mock smoke"]:
+        assert marker in beta_notes
+    for marker in ["v0.1.15", "npm `latest`", "Context7", "AnySearch", "Validation"]:
+        assert marker in stable_notes

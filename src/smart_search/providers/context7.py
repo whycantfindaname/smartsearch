@@ -9,6 +9,7 @@ from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt, wait
 from .base import BaseSearchProvider
 from ..config import config
 from ..logger import log_info
+from ..provider_errors import classify_provider_exception
 
 
 RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
@@ -75,11 +76,13 @@ class Context7Provider(BaseSearchProvider):
             }
         except Exception as e:
             elapsed_ms = round((time.time() - start_time) * 1000, 2)
+            error_type, error = classify_provider_exception(e, additional_secrets=(self.api_key,))
             output = {
                 "ok": False,
                 "query": request_query,
                 "provider": "context7",
-                "error": str(e),
+                "error_type": error_type,
+                "error": error,
                 "elapsed_ms": elapsed_ms,
             }
         return json.dumps(output, ensure_ascii=False, indent=2)
@@ -108,12 +111,14 @@ class Context7Provider(BaseSearchProvider):
             }
         except Exception as e:
             elapsed_ms = round((time.time() - start_time) * 1000, 2)
+            error_type, error = classify_provider_exception(e, additional_secrets=(self.api_key,))
             output = {
                 "ok": False,
                 "library_id": library_id,
                 "query": query,
                 "provider": "context7",
-                "error": str(e),
+                "error_type": error_type,
+                "error": error,
                 "elapsed_ms": elapsed_ms,
             }
         return json.dumps(output, ensure_ascii=False, indent=2)

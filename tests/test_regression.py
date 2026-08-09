@@ -399,6 +399,7 @@ def test_jina_and_zhipu_mcp_contract_public_and_packaged_assets_match():
 def test_streaming_and_anysearch_contract_public_and_packaged_assets_match():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+    provider_contract = (ROOT / ".trellis/spec/backend/provider-capability-contract.md").read_text(encoding="utf-8")
     public_text = _read_skill_tree(PUBLIC_SKILL_DIR)
     packaged_text = _read_skill_tree(PACKAGED_SKILL_DIR)
     public_contract = _read_reference_tree(PUBLIC_SKILL_DIR)
@@ -415,8 +416,17 @@ def test_streaming_and_anysearch_contract_public_and_packaged_assets_match():
         "anysearch-search",
         "anysearch-extract",
         "anysearch-batch",
+        "SCIVERSE_API_TOKEN",
+        "SCIVERSE_API_URL",
+        "SCIVERSE_TIMEOUT_SECONDS",
+        "sciverse-catalog",
+        "sciverse-search",
+        "sciverse-semantic",
+        "sciverse-read",
+        "sciverse-relations",
         "vertical_search",
         "not part of the `web_search` fallback",
+        "not `docs_search`",
         "not required by the `standard` minimum profile",
     ]
     for marker in required_markers:
@@ -426,6 +436,17 @@ def test_streaming_and_anysearch_contract_public_and_packaged_assets_match():
         assert marker in public_contract
         assert marker in packaged_contract
 
+    provider_contract_markers = [
+        "SCIVERSE_API_TOKEN",
+        "sciverse-catalog",
+        "sciverse-relations",
+        "explicit-only",
+        "Do not insert Sciverse into `docs_search`",
+        "not required by and must not satisfy the `standard` minimum",
+    ]
+    for marker in provider_contract_markers:
+        assert marker in provider_contract
+
     zh_required_markers = [
         "OPENAI_COMPATIBLE_STREAM",
         "ANYSEARCH_API_URL",
@@ -433,8 +454,15 @@ def test_streaming_and_anysearch_contract_public_and_packaged_assets_match():
         "ANYSEARCH_TIMEOUT_SECONDS",
         "anysearch-domains",
         "anysearch-search",
+        "SCIVERSE_API_TOKEN",
+        "SCIVERSE_API_URL",
+        "SCIVERSE_TIMEOUT_SECONDS",
+        "sciverse-catalog",
+        "sciverse-search",
+        "sciverse-relations",
         "vertical_search",
         "不进入 `web_search` 兜底链",
+        "不是 `docs_search`",
         "不是 `standard` 最低配置要求",
     ]
     for marker in zh_required_markers:

@@ -153,6 +153,26 @@ async def test_search_stream_retryable_exception_falls_back_to_non_stream(monkey
 
 
 @pytest.mark.asyncio
+async def test_non_stream_transport_http_error_uses_shared_taxonomy(monkeypatch):
+    provider = OpenAICompatibleSearchProvider("https://api.example.com", "test-key", "test-model")
+    request = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
+    response = httpx.Response(422, text="invalid request", request=request)
+
+    async def fake_completion(headers, payload, ctx):
+        raise httpx.HTTPStatusError("invalid request", request=request, response=response)
+
+    monkeypatch.setattr(provider, "_execute_completion_with_retry", fake_completion)
+
+    with pytest.raises(httpx.HTTPStatusError):
+        await provider.search("query")
+
+    attempt = provider.last_transport_attempts[0]
+    assert attempt["status"] == "error"
+    assert attempt["error_type"] == "parameter_error"
+    assert "HTTP 422" in attempt["error"]
+
+
+@pytest.mark.asyncio
 async def test_search_stream_then_non_stream_error_records_both_attempts(monkeypatch):
     reset_openai_compatible_breakers()
     provider = OpenAICompatibleSearchProvider("https://api.example.com", "test-key", "test-model", stream=True)

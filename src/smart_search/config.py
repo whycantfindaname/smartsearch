@@ -80,6 +80,9 @@ class Config:
         "ANYSEARCH_API_KEY",
         "ANYSEARCH_API_URL",
         "ANYSEARCH_TIMEOUT_SECONDS",
+        "SCIVERSE_API_TOKEN",
+        "SCIVERSE_API_URL",
+        "SCIVERSE_TIMEOUT_SECONDS",
         "SMART_SEARCH_DEBUG",
         "SMART_SEARCH_LOG_LEVEL",
         "SMART_SEARCH_LOG_DIR",
@@ -561,6 +564,18 @@ class Config:
         return float(self._get_config_value("ANYSEARCH_TIMEOUT_SECONDS", "30") or "30")
 
     @property
+    def sciverse_api_url(self) -> str:
+        return self._get_config_value("SCIVERSE_API_URL", "https://api.sciverse.space") or "https://api.sciverse.space"
+
+    @property
+    def sciverse_api_token(self) -> str | None:
+        return self._get_config_value("SCIVERSE_API_TOKEN")
+
+    @property
+    def sciverse_timeout(self) -> float:
+        return float(self._get_config_value("SCIVERSE_TIMEOUT_SECONDS", "30") or "30")
+
+    @property
     def log_level(self) -> str:
         return (self._get_config_value("SMART_SEARCH_LOG_LEVEL", "INFO") or "INFO").upper()
 
@@ -801,6 +816,9 @@ class Config:
             "ANYSEARCH_API_URL": self.anysearch_api_url,
             "ANYSEARCH_API_KEY": self._mask_api_key(self.anysearch_api_key) if self.anysearch_api_key else "未配置",
             "ANYSEARCH_TIMEOUT_SECONDS": self.anysearch_timeout,
+            "SCIVERSE_API_URL": self.sciverse_api_url,
+            "SCIVERSE_API_TOKEN": self._mask_api_key(self.sciverse_api_token) if self.sciverse_api_token else "未配置",
+            "SCIVERSE_TIMEOUT_SECONDS": self.sciverse_timeout,
             "SMART_SEARCH_OUTPUT_CLEANUP": self.output_cleanup_enabled,
             "SMART_SEARCH_LOG_TO_FILE": self.log_to_file_enabled,
             "SSL_VERIFY": self.ssl_verify_enabled,

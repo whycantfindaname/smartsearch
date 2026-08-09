@@ -4,6 +4,8 @@ from typing import Any
 
 import httpx
 
+from ..provider_errors import classify_provider_exception
+
 
 CHALLENGE_MARKERS = (
     "title: just a moment",
@@ -18,23 +20,8 @@ def _elapsed_ms(start: float) -> float:
 
 
 def _error_payload(exc: Exception) -> dict[str, str]:
-    if isinstance(exc, httpx.HTTPStatusError):
-        status_code = exc.response.status_code
-        if status_code in {401, 403}:
-            error_type = "auth_error"
-        elif status_code == 422:
-            error_type = "parameter_error"
-        elif status_code == 429:
-            error_type = "rate_limited"
-        else:
-            error_type = "network_error"
-        body = (exc.response.text or exc.response.reason_phrase or "")[:300]
-        return {"error_type": error_type, "error": f"HTTP {status_code}: {body}"}
-    if isinstance(exc, httpx.TimeoutException):
-        return {"error_type": "timeout", "error": "request timed out"}
-    if isinstance(exc, httpx.RequestError):
-        return {"error_type": "network_error", "error": str(exc)}
-    return {"error_type": "runtime_error", "error": str(exc)}
+    error_type, error = classify_provider_exception(exc)
+    return {"error_type": error_type, "error": error}
 
 
 def _mask_secret(text: str, secret: str) -> str:

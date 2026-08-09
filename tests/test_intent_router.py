@@ -55,7 +55,7 @@ async def test_search_routing_decision_keeps_old_fields_and_adds_new_router_fiel
         return "Docs answer."
 
     async def fake_docs_search(query, providers="auto", fallback="auto"):
-        return [{"url": "context7:/facebook/react", "provider": "context7"}], [
+        return [{"url": "context7:/reactjs/react.dev", "provider": "context7"}], [
             {"capability": "docs_search", "provider": "context7", "status": "ok", "elapsed_ms": 1, "result_count": 1}
         ]
 

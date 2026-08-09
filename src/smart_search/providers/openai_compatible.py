@@ -11,6 +11,7 @@ from .base import BaseSearchProvider, SearchResult
 from ..utils import search_prompt, fetch_prompt, url_describe_prompt, rank_sources_prompt
 from ..logger import log_info
 from ..config import config
+from ..provider_errors import classify_provider_exception
 
 _logger = logging.getLogger(__name__)
 _ssl_warning_emitted = False
@@ -53,19 +54,11 @@ def _elapsed_ms(start: float) -> float:
 
 
 def _transport_error_type(exc: BaseException) -> str:
-    if isinstance(exc, httpx.TimeoutException):
-        return "timeout"
-    if isinstance(exc, (httpx.HTTPStatusError, httpx.RequestError)):
-        return "network_error"
-    return "runtime_error"
+    return classify_provider_exception(exc)[0]
 
 
-def _transport_error_message(exc: BaseException) -> str:
-    if isinstance(exc, httpx.HTTPStatusError):
-        body = exc.response.text[:300] if exc.response is not None else str(exc)
-        status = exc.response.status_code if exc.response is not None else "unknown"
-        return f"HTTP {status}: {body}"
-    return str(exc)
+def _transport_error_message(exc: BaseException, api_key: str = "") -> str:
+    return classify_provider_exception(exc, additional_secrets=(api_key,))[1]
 
 
 def _stream_breaker_key(api_url: str, model: str) -> tuple[str, str]:
@@ -245,7 +238,7 @@ class OpenAICompatibleSearchProvider(BaseSearchProvider):
                         "error",
                         start,
                         error_type=_transport_error_type(e),
-                        error=_transport_error_message(e),
+                        error=_transport_error_message(e, self.api_key),
                     )
                 )
                 raise
@@ -285,7 +278,7 @@ class OpenAICompatibleSearchProvider(BaseSearchProvider):
                         "error",
                         stream_start,
                         error_type=_transport_error_type(e),
-                        error=_transport_error_message(e),
+                        error=_transport_error_message(e, self.api_key),
                         breaker_state=breaker_state,
                     )
                 )
@@ -314,7 +307,7 @@ class OpenAICompatibleSearchProvider(BaseSearchProvider):
                     "error",
                     completion_start,
                     error_type=_transport_error_type(e),
-                    error=_transport_error_message(e),
+                    error=_transport_error_message(e, self.api_key),
                     fallback_from_transport="stream",
                 )
             )

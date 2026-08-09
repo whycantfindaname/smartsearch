@@ -8,6 +8,7 @@ from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt, wait
 from .base import BaseSearchProvider
 from ..config import config
 from ..logger import log_info
+from ..provider_errors import classify_provider_exception
 
 
 RETRYABLE_STATUS_CODES = {408, 500, 502, 503, 504}
@@ -34,21 +35,9 @@ def _normalize_result(item: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _error_payload(exc: Exception) -> dict[str, Any]:
-    if isinstance(exc, httpx.HTTPStatusError):
-        status_code = exc.response.status_code
-        if status_code == 429:
-            error_type = "rate_limited"
-        elif status_code in {401, 403}:
-            error_type = "auth_error"
-        else:
-            error_type = "network_error"
-        return {"error_type": error_type, "error": f"HTTP {status_code}: {exc.response.reason_phrase}"}
-    if isinstance(exc, httpx.TimeoutException):
-        return {"error_type": "timeout", "error": "request timed out"}
-    if isinstance(exc, httpx.RequestError):
-        return {"error_type": "network_error", "error": str(exc)}
-    return {"error_type": "runtime_error", "error": str(exc)}
+def _error_payload(exc: Exception, api_key: str = "") -> dict[str, Any]:
+    error_type, error = classify_provider_exception(exc, additional_secrets=(api_key,))
+    return {"error_type": error_type, "error": error}
 
 
 class ZhipuWebSearchProvider(BaseSearchProvider):
@@ -116,7 +105,7 @@ class ZhipuWebSearchProvider(BaseSearchProvider):
             }
         except Exception as e:
             elapsed_ms = round((time.time() - start_time) * 1000, 2)
-            error = _error_payload(e)
+            error = _error_payload(e, self.api_key)
             output = {
                 "ok": False,
                 "query": query,
