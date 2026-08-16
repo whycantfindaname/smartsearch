@@ -466,25 +466,86 @@ def _remaining_budget_seconds(start: float, timeout_seconds: float | None) -> fl
     return max(0.0, float(timeout_seconds) - (time.time() - start))
 
 
+OPENAI_COMPATIBLE_TIMEOUT_POLICY = "remaining_budget"
+
+
 def _attempt_timeout_seconds(
     search_start: float,
     timeout_seconds: float | None,
-    remaining_candidates: int,
+    remaining_candidates: int | None = None,
 ) -> float | None:
+    """Return the remaining search budget for the current candidate.
+
+    Model fallback is fail-over, not a time slice. Extra candidates must not
+    shrink the active model's timeout. ``remaining_candidates`` is accepted for
+    call-site compatibility and ignored.
+    """
+    del remaining_candidates
     remaining_budget = _remaining_budget_seconds(search_start, timeout_seconds)
     if remaining_budget is None:
         return None
-    if remaining_budget <= 0:
-        return 0.001
-    if remaining_candidates <= 1:
-        return max(0.001, remaining_budget)
-    return max(0.001, min(30.0, remaining_budget / 2.0))
+    return max(0.001, remaining_budget)
+
+
+def _openai_fallback_model_inventory(
+    fallback_models: list[str],
+    available_models: list[str] | None = None,
+    *,
+    primary_model: str = "",
+) -> dict[str, Any]:
+    available = [model for model in (available_models or []) if isinstance(model, str) and model]
+    configured = [model for model in fallback_models if isinstance(model, str) and model]
+    if not configured:
+        return {
+            "status": "not_configured",
+            "message": "未配置 OpenAI-compatible 兜底模型",
+            "fallback_models": [],
+            "available_models": available,
+            "unknown_fallback_models": [],
+            "known_fallback_models": [],
+            "timeout_policy": OPENAI_COMPATIBLE_TIMEOUT_POLICY,
+            "timeout_policy_message": "主模型使用剩余 --timeout 预算；只有硬失败后才接力兜底模型",
+            "primary_model": primary_model,
+        }
+    if not available:
+        return {
+            "status": "skipped",
+            "message": "无法对照 /models 清单，已跳过兜底模型检查",
+            "fallback_models": configured,
+            "available_models": [],
+            "unknown_fallback_models": [],
+            "known_fallback_models": configured,
+            "timeout_policy": OPENAI_COMPATIBLE_TIMEOUT_POLICY,
+            "timeout_policy_message": "主模型使用剩余 --timeout 预算；只有硬失败后才接力兜底模型",
+            "primary_model": primary_model,
+        }
+
+    unknown = [model for model in configured if model not in available]
+    known = [model for model in configured if model in available]
+    if unknown:
+        status = "warning"
+        message = "这些兜底模型不在上游 /models 列表中: " + ", ".join(unknown)
+    else:
+        status = "ok"
+        message = "已配置的兜底模型都在上游 /models 列表中"
+    return {
+        "status": status,
+        "message": message,
+        "fallback_models": configured,
+        "available_models": available,
+        "unknown_fallback_models": unknown,
+        "known_fallback_models": known,
+        "timeout_policy": OPENAI_COMPATIBLE_TIMEOUT_POLICY,
+        "timeout_policy_message": "主模型使用剩余 --timeout 预算；只有硬失败后才接力兜底模型",
+        "primary_model": primary_model,
+    }
 
 
 def _append_openai_transport_attempts(
     provider_attempts: list[dict],
     search_provider: Any,
     candidate_config: dict[str, Any],
+    extra: dict[str, Any] | None = None,
 ) -> bool:
     transport_attempts = getattr(search_provider, "last_transport_attempts", [])
     if candidate_config.get("provider") != "openai-compatible" or not transport_attempts:
@@ -495,6 +556,8 @@ def _append_openai_transport_attempts(
             for key, value in transport_attempt.items()
             if key not in {"status", "error_type", "error", "elapsed_ms", "result_count"}
         }
+        if extra:
+            transport_extra.update(extra)
         if candidate_config.get("fallback_from_model"):
             transport_extra["fallback_from_model"] = candidate_config["fallback_from_model"]
         provider_attempts.append(
@@ -2359,6 +2422,7 @@ async def search(
         "openai_compatible_stream": next((bool(item.get("stream")) for item in selected_main_provider_configs if item["provider"] == "openai-compatible"), False),
         "openai_compatible_models": openai_candidate_models,
         "openai_compatible_model_fallback_enabled": len(openai_candidate_models) > 1,
+        "openai_compatible_timeout_policy": OPENAI_COMPATIBLE_TIMEOUT_POLICY,
     }
 
     provider_attempts: list[dict] = []
@@ -2408,11 +2472,9 @@ async def search(
                         )
                     )
                     continue
-            attempt_timeout = _attempt_timeout_seconds(
-                start,
-                timeout_seconds,
-                total_main_candidates - completed_main_candidates + 1,
-            )
+            attempt_timeout = _attempt_timeout_seconds(start, timeout_seconds)
+            if attempt_timeout is not None:
+                attempt_extra["attempt_timeout_seconds"] = round(attempt_timeout, 3)
             try:
                 if (
                     isinstance(search_provider, XAIResponsesSearchProvider)
@@ -2428,7 +2490,7 @@ async def search(
                 else:
                     candidate_result = await search_provider.search(query, platform)
                 transport_attempts = getattr(search_provider, "last_transport_attempts", [])
-                if _append_openai_transport_attempts(provider_attempts, search_provider, candidate_config):
+                if _append_openai_transport_attempts(provider_attempts, search_provider, candidate_config, extra=attempt_extra):
                     transport_fallback_used = transport_fallback_used or any(
                         attempt.get("fallback_from_transport") for attempt in transport_attempts
                     )
@@ -2469,7 +2531,7 @@ async def search(
                 if isinstance(e, (XAIRequestOutcomeUnknown, XAIRequestHardTimeout)):
                     stop_main_fallback = True
                 transport_attempts = getattr(search_provider, "last_transport_attempts", [])
-                if _append_openai_transport_attempts(provider_attempts, search_provider, candidate_config):
+                if _append_openai_transport_attempts(provider_attempts, search_provider, candidate_config, extra=attempt_extra):
                     transport_fallback_used = transport_fallback_used or any(
                         attempt.get("fallback_from_transport") for attempt in transport_attempts
                     )
@@ -3833,7 +3895,33 @@ async def diagnose_openai_compatible(timeout_seconds: float = 30.0) -> dict[str,
     stream = await _probe_openai_compatible_search_shape(api_url, api_key, model, stream=True, timeout_seconds=timeout_seconds)
     result["checks"].append(stream)
 
+    available_models: list[str] = []
+    try:
+        available_models = await fetch_available_models(api_url, api_key)
+    except Exception:
+        available_models = []
+    inventory = _openai_fallback_model_inventory(
+        config.openai_compatible_fallback_models,
+        available_models,
+        primary_model=model,
+    )
+    result["checks"].append(
+        {
+            "name": "兜底模型清单",
+            "status": inventory["status"],
+            "message": inventory["message"],
+            "response_time_ms": None,
+            "http_status": None,
+            "content_type": "",
+            "has_content": False,
+        }
+    )
+    result["fallback_model_inventory"] = inventory
+    result["timeout_policy"] = OPENAI_COMPATIBLE_TIMEOUT_POLICY
+
     ok, summary, recommendation = _openai_compatible_diagnosis(quick_check, no_stream, stream)
+    if inventory.get("status") == "warning":
+        recommendation = f"{recommendation} 另外，{inventory['message']}。兜底只在主模型硬失败后接力，不会再把主模型砍成 30 秒。"
     result.update(
         {
             "ok": ok,
@@ -4122,6 +4210,15 @@ async def doctor() -> dict[str, Any]:
     info["minimum_profile_ok"] = minimum.get("ok", False)
     info["minimum_profile_missing"] = minimum.get("missing", [])
     info["intent_router_status"] = intent_router_status()
+    openai_test = (info.get("main_search_connection_tests") or {}).get("openai-compatible") or {}
+    available_models = []
+    if isinstance(openai_test, dict):
+        available_models = openai_test.get("available_models") or (openai_test.get("models_endpoint_test") or {}).get("available_models") or []
+    info["openai_compatible_fallback_inventory"] = _openai_fallback_model_inventory(
+        config.openai_compatible_fallback_models,
+        available_models if isinstance(available_models, list) else [],
+        primary_model=config.openai_compatible_model,
+    )
     main_connection_tests = info.get("main_search_connection_tests") or {}
     main_search_statuses = [item.get("status") for item in main_connection_tests.values() if isinstance(item, dict)]
     primary_test = info.get("primary_connection_test", {})

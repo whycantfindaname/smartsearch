@@ -467,3 +467,19 @@ def test_streaming_and_anysearch_contract_public_and_packaged_assets_match():
     ]
     for marker in zh_required_markers:
         assert marker in readme_zh
+
+
+def test_openai_compatible_fallback_is_fail_over_not_time_slice():
+    public_contract = _read_reference_tree(PUBLIC_SKILL_DIR)
+    packaged_contract = _read_reference_tree(PACKAGED_SKILL_DIR)
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+    markers = [
+        "fail-over after a hard primary-model failure, not a time slice",
+        "remaining `--timeout` budget",
+    ]
+    for marker in markers:
+        assert marker in public_contract
+        assert marker in packaged_contract
+    assert "fail-over, not a time slice" in readme
+    assert "失败后接力，不是时间片" in readme_zh

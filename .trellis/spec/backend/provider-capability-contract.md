@@ -264,6 +264,11 @@ Provider configuration:
   backup model ids for the same OpenAI-compatible route. The list is ordered,
   empty entries are ignored, duplicates and the primary model are skipped, and
   the same model suffix normalization as `OPENAI_COMPATIBLE_MODEL` applies.
+  Model fallback is fail-over after a hard failure, not a time slice. The
+  current candidate must receive the remaining `--timeout` budget even when
+  later fallback models are configured. `doctor` and `diagnose openai-compatible`
+  must warn when a configured fallback id is absent from `/models`, without
+  turning a healthy primary chat path into `ok: false`.
 - `OPENAI_COMPATIBLE_STREAM` is an opt-in relay compatibility switch. It
   defaults to `false`, accepts `true`, `1`, or `yes`, and may be overridden for
   one `search` call with `--stream` or `--no-stream`. `--stream` means prefer
@@ -367,6 +372,8 @@ Main-search peer rule:
   is an exact model diagnostic and disables configured fallback models.
   `--fallback off` disables provider fallback and OpenAI-compatible model
   fallback, but not same-model stream-to-non-stream transport fallback.
+  Configuring fallback models must not cap the primary attempt at 30 seconds
+  or half of the remaining budget.
 - OpenAI-compatible primary model instability is guarded by a process-local
   model breaker keyed by `api_url + model`; two consecutive whole-model
   failures open the breaker for 10 minutes and skip that model in favor of

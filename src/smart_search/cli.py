@@ -474,6 +474,24 @@ def _format_doctor_markdown(data: dict[str, Any]) -> str:
         lines.extend(["", "## Main Search Providers"])
         lines.extend(_markdown_table(["Provider", "Status", "Latency", "Message"], rows))
         lines.extend(_provider_detail_lines("Provider Details", main_tests))
+    inventory = data.get("openai_compatible_fallback_inventory") or {}
+    if inventory:
+        lines.extend(
+            [
+                "",
+                "## OpenAI-compatible Fallback Models",
+                "",
+                f"- Status: {_status_label(inventory.get('status'))}",
+                f"- Timeout policy: `{inventory.get('timeout_policy', 'remaining_budget')}`",
+                f"- Message: {inventory.get('message', '-')}",
+            ]
+        )
+        fallback_models = inventory.get("fallback_models") or []
+        if fallback_models:
+            lines.append("- Configured: `" + "`, `".join(str(item) for item in fallback_models) + "`")
+        unknown = inventory.get("unknown_fallback_models") or []
+        if unknown:
+            lines.append("- Unknown: `" + "`, `".join(str(item) for item in unknown) + "`")
 
     provider_tests = [
         ("exa", data.get("exa_connection_test") or {}),
@@ -624,7 +642,14 @@ def _format_diagnose_markdown(data: dict[str, Any]) -> str:
         f"Model: `{data.get('model', '')}`",
         f"Configured stream: {_yes_no(data.get('configured_stream'))}",
         f"Timeout: {_format_seconds(float(data.get('timeout_seconds', 0) or 0))} seconds",
+        f"Timeout policy: `{data.get('timeout_policy', 'remaining_budget')}`",
     ]
+    inventory = data.get("fallback_model_inventory") or {}
+    if inventory:
+        lines.append("Fallback models: `" + ", ".join(str(item) for item in (inventory.get("fallback_models") or []) or ["-"]) + "`")
+        unknown = inventory.get("unknown_fallback_models") or []
+        if unknown:
+            lines.append("Unknown fallback models: `" + ", ".join(str(item) for item in unknown) + "`")
     checks = data.get("checks") or []
     if checks:
         rows = []

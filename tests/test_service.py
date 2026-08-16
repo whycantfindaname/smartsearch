@@ -1363,6 +1363,176 @@ async def test_search_model_breaker_skips_primary_model(monkeypatch):
     assert result["provider_attempts"][0]["breaker_state"]["state"] == "open"
 
 
+def test_attempt_timeout_uses_remaining_budget_even_with_multiple_candidates():
+    start = time.time()
+
+    timeout = service._attempt_timeout_seconds(start, 90.0, remaining_candidates=2)
+
+    assert timeout is not None
+    assert 89.0 <= timeout <= 90.0
+
+
+def test_openai_fallback_model_inventory_warns_for_unknown_models():
+    inventory = service._openai_fallback_model_inventory(
+        ["missing-model", "grok-4.6"],
+        ["grok-4.6", "grok-4.5"],
+        primary_model="grok-4.6",
+    )
+
+    assert inventory["status"] == "warning"
+    assert inventory["unknown_fallback_models"] == ["missing-model"]
+    assert inventory["known_fallback_models"] == ["grok-4.6"]
+    assert inventory["timeout_policy"] == "remaining_budget"
+
+
+def test_openai_fallback_model_inventory_skips_without_model_list():
+    inventory = service._openai_fallback_model_inventory(["fallback-model"], [])
+
+    assert inventory["status"] == "skipped"
+    assert inventory["unknown_fallback_models"] == []
+
+
+@pytest.mark.asyncio
+async def test_search_does_not_cap_primary_timeout_when_fallback_configured(monkeypatch):
+    service.reset_runtime_breakers()
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_URL", "https://relay.example.com/v1")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_KEY", "relay-test-secret")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_MODEL", "primary-model")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_FALLBACK_MODELS", "fallback-model")
+    seen_timeouts = []
+
+    async def fake_search(self, query, platform="", ctx=None):
+        return "Primary answer with https://example.com/source"
+
+    async def fake_wait_for(coro, timeout=None):
+        seen_timeouts.append(timeout)
+        return await coro
+
+    monkeypatch.setattr(service.OpenAICompatibleSearchProvider, "search", fake_search)
+    monkeypatch.setattr(service.asyncio, "wait_for", fake_wait_for)
+
+    result = await service.search("what is example", providers="openai-compatible", timeout_seconds=90)
+
+    assert result["ok"] is True
+    assert result["model"] == "primary-model"
+    assert result["model_fallback_used"] is False
+    assert result["routing_decision"]["openai_compatible_timeout_policy"] == "remaining_budget"
+    assert seen_timeouts
+    assert seen_timeouts[0] >= 80
+    assert any(attempt.get("attempt_timeout_seconds", 0) >= 80 for attempt in result["provider_attempts"])
+
+
+@pytest.mark.asyncio
+async def test_search_gives_fallback_remaining_budget_after_primary_hard_failure(monkeypatch):
+    service.reset_runtime_breakers()
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_URL", "https://relay.example.com/v1")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_KEY", "relay-test-secret")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_MODEL", "primary-model")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_FALLBACK_MODELS", "fallback-model")
+    seen_timeouts = []
+
+    async def fake_search(self, query, platform="", ctx=None):
+        if self.model == "primary-model":
+            raise httpx.HTTPStatusError(
+                "missing",
+                request=httpx.Request("POST", "https://relay.example.com/v1/chat/completions"),
+                response=httpx.Response(503, json={"error": {"code": "model_not_found"}}, request=httpx.Request("POST", "https://relay.example.com/v1/chat/completions")),
+            )
+        return "Fallback answer with https://example.com/source"
+
+    async def fake_wait_for(coro, timeout=None):
+        seen_timeouts.append(timeout)
+        return await coro
+
+    monkeypatch.setattr(service.OpenAICompatibleSearchProvider, "search", fake_search)
+    monkeypatch.setattr(service.asyncio, "wait_for", fake_wait_for)
+
+    result = await service.search("what is example", providers="openai-compatible", timeout_seconds=90)
+
+    assert result["ok"] is True
+    assert result["model"] == "fallback-model"
+    assert result["model_fallback_used"] is True
+    assert len(seen_timeouts) == 2
+    assert seen_timeouts[0] >= 80
+    assert seen_timeouts[1] >= 80
+
+
+@pytest.mark.asyncio
+async def test_diagnose_reports_unknown_fallback_models_without_failing_ok(monkeypatch):
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_URL", "https://relay.example.com/v1")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_KEY", "relay-test-secret")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_MODEL", "grok-4.6")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_FALLBACK_MODELS", "missing-model")
+
+    async def fake_quick(api_url, api_key, model):
+        return {"status": "ok", "message": "chat ok", "response_time_ms": 10, "http_status": 200, "content_type": "application/json", "has_content": True}
+
+    async def fake_probe(api_url, api_key, model, *, stream, timeout_seconds):
+        return {
+            "name": "真实 search 请求 (stream=true)" if stream else "真实 search 请求 (stream=false)",
+            "status": "ok",
+            "message": "ok",
+            "response_time_ms": 10,
+            "http_status": 200,
+            "content_type": "application/json",
+            "has_content": True,
+            "stream": stream,
+        }
+
+    async def fake_models(api_url, api_key):
+        return ["grok-4.6", "grok-4.5"]
+
+    monkeypatch.setattr(service, "_test_primary_chat_completion", fake_quick)
+    monkeypatch.setattr(service, "_probe_openai_compatible_search_shape", fake_probe)
+    monkeypatch.setattr(service, "fetch_available_models", fake_models)
+
+    result = await service.diagnose_openai_compatible(timeout_seconds=5)
+
+    assert result["ok"] is True
+    assert result["timeout_policy"] == "remaining_budget"
+    assert result["fallback_model_inventory"]["unknown_fallback_models"] == ["missing-model"]
+    assert any(check.get("name") == "兜底模型清单" and check.get("status") == "warning" for check in result["checks"])
+    assert "不在上游" in result["recommendation"]
+
+
+@pytest.mark.asyncio
+async def test_doctor_warns_unknown_fallback_models_without_failing_ok(monkeypatch, tmp_path):
+    _reset_config(monkeypatch, tmp_path)
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_URL", "https://relay.example.com/v1")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_KEY", "relay-test-secret")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_MODEL", "grok-4.6")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_FALLBACK_MODELS", "missing-model")
+    monkeypatch.setenv("EXA_API_KEY", "exa-test-secret")
+    monkeypatch.setenv("CONTEXT7_API_KEY", "ctx-test-secret")
+    monkeypatch.setenv("TAVILY_API_KEY", "tavily-test-secret")
+
+    async def fake_main(provider_config):
+        return {
+            "status": "ok",
+            "message": "ok",
+            "available_models": ["grok-4.6"],
+            "models_endpoint_test": {"status": "ok", "available_models": ["grok-4.6"]},
+            "chat_completion_test": {"status": "ok"},
+        }
+
+    async def fake_ok():
+        return {"status": "ok", "message": "ok"}
+
+    monkeypatch.setattr(service, "_safe_test_main_provider_connection", fake_main)
+    monkeypatch.setattr(service, "_test_exa_connection", fake_ok)
+    monkeypatch.setattr(service, "_test_tavily_connection", fake_ok)
+    monkeypatch.setattr(service, "_test_jina_connection", fake_ok)
+    monkeypatch.setattr(service, "_test_zhipu_connection", fake_ok)
+    monkeypatch.setattr(service, "_test_zhipu_mcp_connection", fake_ok)
+    monkeypatch.setattr(service, "_test_context7_connection", fake_ok)
+
+    result = await service.doctor()
+
+    assert result["ok"] is True
+    assert result["openai_compatible_fallback_inventory"]["status"] == "warning"
+    assert result["openai_compatible_fallback_inventory"]["unknown_fallback_models"] == ["missing-model"]
+
+
 def test_anysearch_vertical_status_is_experimental_and_not_minimum_required(monkeypatch):
     monkeypatch.setenv("SMART_SEARCH_MINIMUM_PROFILE", "standard")
     monkeypatch.setenv("OPENAI_COMPATIBLE_API_URL", "https://relay.example.com/v1")
