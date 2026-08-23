@@ -860,6 +860,13 @@ def test_search_max_try_replays_only_explicit_xai_terminal_504(monkeypatch, caps
     assert [attempt["logical_attempt"] for attempt in data["provider_attempts"]] == [1, 2, 3]
 
 
+def test_search_timeout_and_max_try_defaults():
+    args = cli.build_parser().parse_args(["search", "query"])
+
+    assert args.timeout == 120
+    assert args.max_try == 5
+
+
 def test_search_max_try_stops_on_nonmatching_failure(monkeypatch, capsys):
     monkeypatch.setenv("XAI_API_KEY", "xai-test-key")
     calls = 0

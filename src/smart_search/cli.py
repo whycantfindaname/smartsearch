@@ -2900,16 +2900,16 @@ def build_parser() -> argparse.ArgumentParser:
     search_parser.add_argument(
         "--timeout",
         type=float,
-        default=90,
+        default=120,
         metavar="SECONDS",
-        help="Search timeout in seconds; xAI Responses checks request status before extending the wait.",
+        help="Search timeout in seconds (default: 120); xAI Responses checks request status before extending the wait.",
     )
     search_parser.add_argument(
         "--max-try",
         type=_positive_int,
-        default=1,
+        default=5,
         metavar="ATTEMPTS",
-        help="Maximum logical attempts for explicit terminal xAI HTTP 504 failures (default: 1).",
+        help="Maximum logical attempts for explicit terminal xAI HTTP 504 failures (default: 5).",
     )
     _add_format_args(search_parser)
 

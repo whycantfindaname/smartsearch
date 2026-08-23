@@ -577,7 +577,8 @@ Output contracts:
 - Include observability fields: `routing_decision`, `providers_used`,
   `provider_attempts`, `fallback_used`, `validation_level`,
   `minimum_profile_ok`, and `capability_status`.
-- `search --max-try N` defaults to one logical attempt and replays only a
+- `search --timeout` defaults to 120 seconds.
+- `search --max-try N` defaults to five logical attempts and replays only a
   completed xAI Responses `HTTP 504` containing `upstream_server_error`.
   Search output records `logical_attempts`, `logical_retry_used`,
   `logical_retry_max_attempts`, and annotates aggregated `provider_attempts`
@@ -977,7 +978,8 @@ When this contract changes, add or update tests that assert:
 - `search` CLI timeout results include provider/model/stream context when
   available plus the next diagnostic command
   `smart-search diagnose openai-compatible --format markdown`;
-- `search --max-try` defaults to one, rejects values below one, retries only
+- `search --timeout` defaults to 120 seconds;
+- `search --max-try` defaults to five, rejects values below one, retries only
   explicit terminal xAI 504 results, stops on other failures, and annotates
   aggregated provider attempts with their logical attempt number;
 - AnySearch does not appear in Smart Search config keys or provider fallback;

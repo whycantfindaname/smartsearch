@@ -369,8 +369,8 @@ Local config path:
 
 Provider timeouts:
 
-- `search --timeout` is the initial wait window for xAI Responses. When it expires, Smart Search polls `GET /v1/request-status/{request_id}` on compatible gateways and keeps waiting while the request is running.
-- `search --max-try N` replays only explicit terminal xAI HTTP 504 failures; it defaults to one logical attempt.
+- `search --timeout` defaults to `120` seconds and is the initial wait window for xAI Responses. When it expires, Smart Search polls `GET /v1/request-status/{request_id}` on compatible gateways and keeps waiting while the request is running.
+- `search --max-try N` replays only explicit terminal xAI HTTP 504 failures; it defaults to five logical attempts.
 - `XAI_SOFT_TIMEOUT_SECONDS` defaults to `120` for direct provider calls without a CLI timeout. `XAI_STATUS_POLL_SECONDS` defaults to `15` and `XAI_HARD_TIMEOUT_SECONDS` defaults to `7200`.
 - Gateways without the request-status extension are treated as unknown and remain bounded by `XAI_HARD_TIMEOUT_SECONDS`.
 - The hard deadline covers connection attempts, retry waits, response waiting, and status polling. Automatic retries are limited to connection failures that happen before request submission; protocol or terminal-state failures after submission are returned without replaying the request.

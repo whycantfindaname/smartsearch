@@ -189,7 +189,7 @@ def test_search_timeout_retry_policy_is_distributable():
     contract_markers = [
         "Use the CLI-managed retry path",
         'smart-search search "query" --timeout 120 --max-try 5',
-        "`--max-try` defaults to one",
+        "`--timeout` defaults to 120 seconds and `--max-try` defaults to five",
         "Do not add an agent-side retry loop",
     ]
 

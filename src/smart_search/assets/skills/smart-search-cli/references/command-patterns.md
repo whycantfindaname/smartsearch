@@ -128,7 +128,7 @@ Use the CLI-managed retry path and wait for the single command to finish:
 smart-search search "query" --timeout 120 --max-try 5 --extra-sources 1 --format json --output result.json
 ```
 
-`--max-try` defaults to one. Do not add an agent-side retry loop around this command.
+`--timeout` defaults to 120 seconds and `--max-try` defaults to five. Do not add an agent-side retry loop around this command.
 
 ## Guardrails
 
