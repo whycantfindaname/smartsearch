@@ -2,7 +2,7 @@
 
 > 状态：实施前设计已部分确认
 >
-> 目标分支：`preview/macos-agentic-research`
+> 目标分支：`preview/multi-source-agentic-research`
 >
 > 首发范围：仅 macOS Preview
 >
