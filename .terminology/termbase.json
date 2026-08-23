@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "project_id": "smartsearch",
+  "domain": "smart-search-agentic-research",
+  "concepts": [
+    {
+      "concept_id": "source-curator",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "候选来源超过 Root Agent 的候选上下文预算时，按 SearchTask、主题或来源分片整理 CandidateCard，并生成可回溯筛选提案的 Smart Search 项目专用 Subagent。",
+      "scope_note": "Source Curator 只负责分片整理候选，不负责选择最终关键文档、创建 EvidenceMiningTask 或综合跨来源结论。",
+      "labels": {
+        "en": {
+          "preferred": "Source Curator",
+          "alternatives": [],
+          "deprecated": []
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "Source Curator",
+          "search_query": "Source Curator Smart Search candidate curation",
+          "source_url": "project:docs/plans/multi-source-research-implementation.md#26-subagent-的职责边界",
+          "observed_usage": "The accepted implementation plan names Source Curator as the project-specific Subagent that performs sharded candidate curation while Root Agent retains the final decision.",
+          "checked_at": "2026-08-23"
+        }
+      ]
+    },
+    {
+      "concept_id": "candidate-card",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "Root Agent 与 Source Curator 阅读候选时使用的紧凑结构化视图，包含稳定候选 ID、来源信息、相关性摘要、发现路径和原始产物引用。",
+      "scope_note": "CandidateCard 是可展开的候选视图，不是已核验的 EvidenceItem；它必须能够通过 candidate_id 回到原始 DiscoveryCandidate 或 ResearchArtifact。",
+      "labels": {
+        "en": {
+          "preferred": "CandidateCard",
+          "alternatives": [],
+          "deprecated": []
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "CandidateCard",
+          "search_query": "CandidateCard Smart Search candidate view",
+          "source_url": "project:docs/plans/multi-source-research-implementation.md#48-candidatecard-与-keysourceproposal",
+          "observed_usage": "The accepted implementation plan defines CandidateCard as the compact, reversible view used to inspect normalized discovery candidates.",
+          "checked_at": "2026-08-23"
+        }
+      ]
+    },
+    {
+      "concept_id": "key-source-proposal",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "一个 Source Curator 分片返回的结构化筛选提案，记录建议保留、延后与淘汰的候选 ID 及理由，以及覆盖缺口、不确定项和原始产物引用。",
+      "scope_note": "KeySourceProposal 是供 Root Agent 裁决的可回溯提案，不是最终关键文档清单，也不能直接生成 EvidenceMiningTask。",
+      "labels": {
+        "en": {
+          "preferred": "KeySourceProposal",
+          "alternatives": [],
+          "deprecated": []
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "KeySourceProposal",
+          "search_query": "KeySourceProposal Smart Search source selection",
+          "source_url": "project:docs/plans/multi-source-research-implementation.md#48-candidatecard-与-keysourceproposal",
+          "observed_usage": "The accepted implementation plan defines KeySourceProposal as the reversible output of one curator shard and preserves Root Agent as the final decision-maker.",
+          "checked_at": "2026-08-23"
+        }
+      ]
+    }
+  ]
+}
