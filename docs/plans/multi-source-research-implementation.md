@@ -95,7 +95,10 @@
 - `evidence_miner` 只负责单个或一组紧密相关文档的证据提取，不负责跨来源最终结论，也不得继续派生 Subagent。
 - Root Agent 负责 Claim Ledger、冲突裁决和最终综合，不亲自承担逐页、逐段的常规文档挖掘。
 - Codex 项目专用 Agent 分别放在 `.codex/agents/search_scout.toml`、`.codex/agents/source_curator.toml` 和 `.codex/agents/evidence_miner.toml`；`skills/smart-search-cli/agents/openai.yaml` 仅保留 Skill UI 与调用元数据，不承载 Subagent 实现。
+- Codex 首版为三种项目专用 Subagent 统一配置 `model = "gpt-5.6-luna"`、`model_reasoning_effort = "max"` 和 `service_tier = "priority"`。其中 `priority` 是 Codex 配置中对应 Fast 服务层的取值；首版不做自动模型升级或按角色切换模型。
+- Root Agent 使用哪个模型和推理强度仍由当前 Harness 与用户会话控制，Smart Search 不在项目协议中硬编码。
 - Harness 无关的任务输入、输出和停止条件写入 `skills/smart-search-cli/references/subagent-orchestration.md`。Claude Code、Pi 等 Harness 后续只实现自己的 Agent Adapter，不能复制出互相漂移的业务协议。
+- Harness 无关协议只定义角色职责和输入输出契约；具体 Harness 负责把这些要求映射为自己的等价模型、推理强度与服务层配置。
 - 全局 `scout`、`worker`、`complex_worker` 和 `reviewer` 仍由 Infra 管理，只用于开发、定位、实施和审查等通用工程任务；它们不参与 Smart Search 的产品运行流程。Smart Search 仓库独立管理三种项目专用 Agent 及其调用协议。
 
 ### 2.7 候选筛选与关键文档选择
@@ -278,6 +281,7 @@ Root Agent 保留最终选择权；`KeySourceProposal` 不得删除原始候选�
 - Agent 自主选择 AnySearch Skill 功能，并按最小 JSON 协议返回结果。
 - 为互相独立的研究角度生成并行 `SearchTask`，由 Root Agent 委派给项目专用 `search_scout`。
 - 在 Smart Search 仓库增加 `search_scout`、`source_curator` 和 `evidence_miner` 三种项目专用 Agent 定义及 Harness 无关协议；不修改或依赖 Infra 的全局 Agent role。
+- 三个 Codex Agent 定义首版统一使用 `gpt-5.6-luna`、`max` 推理强度和 Fast 服务层（配置值为 `service_tier = "priority"`），不实现自动模型升级；Root Agent 的模型继续由 Harness 控制。
 - 候选量超过上下文预算时动态创建多个 Curator 分片；保存全部原始候选，并验证 Root Agent 可以按候选 ID 展开任意保留、延后或淘汰项。
 - Scout、Curator 和 Evidence Miner 的返回值必须进入公共合并入口，不能由 Root Agent 直接把自然语言报告拼接成最终答案。
 - 公共合并入口把 AnySearch 结果送入与其他来源相同的证据处理流程。
@@ -303,11 +307,11 @@ Root Agent 保留最终选择权；`KeySourceProposal` 不得删除原始候选�
 - 处理来源冲突、时效差异和证据缺口。
 - 使用统一权重生成一次性带引用结论。
 
-### 阶段 G：更新 Preview CLI 后启动 max Benchmark 调研
+### 阶段 G：更新 Preview CLI 后启动 deep 验收调研
 
 - 本阶段只能在阶段 A 至 F 的代码完成并通过工程测试后启动。
 - 构建并安装本分支的 Smart Search CLI 到隔离的 Preview 验收环境，使后续调研使用这次实现的新功能；该操作不替换 macOS 当前激活版本。
-- 使用更新后的 Preview CLI，以 `max` 调研强度搜索和回读论文、官方产品与技术文档、开源仓库、工程博客、公开案例、Benchmark 数据集和评分说明。这里的 `max` 表示验收调研的深度，不是 Smart Search 面向用户的第四种运行模式。
+- 使用更新后的 Preview CLI，以 `deep` 模式搜索和回读论文、官方产品与技术文档、开源仓库、工程博客、公开案例、Benchmark 数据集和评分说明。若一次 `deep` 运行无法覆盖两个调研主题，由外层 Goal 拆成多次有边界的 `deep` 运行并汇总，不再定义第四种验收强度。
 - 主题一只回答：当前框架在规划、Subagent 信息交换、文档选择、文档深挖、证据综合、Research Trace 和反馈循环上是否存在更好的方案。
 - 主题一必须重点检查现有搜索与 Deep Research 系统怎样把计划、委派、工具执行、原始产物、证据、冲突和最终结论连接成 Trace；比较哪些信息应当持久化、哪些只属于临时日志，以及怎样在可追溯性、恢复能力、存储与上下文成本、隐私和 Harness 无关性之间取舍。
 - 主题二只回答：哪些 Search、Agentic Search 和 Deep Research Benchmark 值得后续考虑，各自怎样评分、需要哪些数据与服务、复现成本多高。
@@ -320,7 +324,7 @@ Root Agent 保留最终选择权；`KeySourceProposal` 不得删除原始候选�
 
 ### 6.1 启动条件
 
-max Benchmark 调研必须同时满足：
+deep 验收调研必须同时满足：
 
 1. 阶段 A 至 F 的功能已经实现。
 2. 工程测试、打包测试和有限 live smoke test 已通过。
@@ -329,7 +333,7 @@ max Benchmark 调研必须同时满足：
 
 ### 6.2 调研问题
 
-max 调研需要回答：
+deep 验收调研需要回答：
 
 1. 当前两阶段、多 Agent 搜索框架是否存在更合理的规划、委派、信息交换、关键文档选择、文档深挖、证据综合或反馈循环设计？
 2. 相关论文和公开系统如何把任务发给 Subagent、限制其上下文，并把结构化结果返回 Root Agent？
@@ -340,7 +344,7 @@ max 调研需要回答：
 7. 每个候选怎样评分，是否使用确定性指标、LLM Judge 或人工复核，结果容易受到哪些搜索源、网页变化和时间因素影响？
 8. 复现每个候选需要哪些数据许可、模型/API、搜索与网页读取服务、Judge、计算资源、工程时间和大致费用？
 
-用户提供的 Firecrawl Developer Index、Mistral Agentic Search、SearchSwarm 和 MultiAgent 工程文章只作为后续 max 调研的起始线索，不代表已经选定对应 Benchmark，也不限定来源类型。
+用户提供的 Firecrawl Developer Index、Mistral Agentic Search、SearchSwarm 和 MultiAgent 工程文章只作为后续 deep 验收调研的起始线索，不代表已经选定对应 Benchmark，也不限定来源类型。
 
 ### 6.3 调研交付物
 
@@ -369,6 +373,7 @@ max 调研需要回答：
 - AnySearch 不存在、Provider 失败或套餐不可用时，流程可降级并说明覆盖缺口。
 - `search_scout` 按研究角度而不是 Provider 拆分；其产物可追溯到对应 `SearchTask`，且不会作为最终报告直接拼接。
 - `search_scout`、`source_curator` 和 `evidence_miner` 均由 Smart Search 仓库管理；产品运行不依赖 Infra 的全局 `scout`、`worker`、`complex_worker` 或 `reviewer`。
+- 三个 Codex 项目 Subagent 的 TOML 均配置 `model = "gpt-5.6-luna"`、`model_reasoning_effort = "max"` 和 `service_tier = "priority"`；首版没有自动模型升级，Root Agent 模型不由 Smart Search 硬编码。
 - 原始候选和 Provider 产物完整保存；任何 CandidateCard 或 Curator 筛选结果都可以按稳定 ID 回到原始记录。
 - 候选未超过上下文预算时不启动 Curator；候选溢出时启动多个分片 Curator，不把全部溢出上下文转交给单个 Agent。
 - 每个 `KeySourceProposal` 都包含输入候选集合、保留/延后/淘汰理由、覆盖缺口、不确定项和原始产物引用；Root Agent 保留关键文档的最终选择权。
@@ -389,7 +394,7 @@ max 调研需要回答：
 ### 7.2 Benchmark 验收
 
 - 阶段 A 至 F 已完成并通过工程测试，随后把本分支 CLI 安装到隔离的 Preview 验收环境。
-- 使用该 Preview CLI 的新多源搜索功能，以 `max` 调研强度完成两项调研：框架改进建议；Benchmark 推荐、评分流程与复现成本。
+- 使用该 Preview CLI 的新多源搜索功能，以一次或多次有边界的 `deep` 运行完成两项调研：框架改进建议；Benchmark 推荐、评分流程与复现成本。多次运行由外层 Goal 编排，不引入第四种产品模式。
 - 架构结论同时参考论文、官方产品与技术文档、开源仓库、工程博客和公开案例，并专项检查 Root Agent 与 Subagent 的任务输入、结构化返回、上下文隔离和 Research Trace。
 - Trace 专项必须区分执行 Trace、普通运行日志、证据 provenance 与模型隐藏思维过程；给出有来源依据的质量标准、当前实现缺口和最小改进建议，但不在用户审阅调研结果前扩大阶段 A 至 F 的实现范围。
 - Benchmark 部分只推荐候选并说明评分与复现条件，不选择最终 Benchmark、不运行 Benchmark，也不生成分数。
@@ -416,7 +421,7 @@ max 调研需要回答：
 - `ProviderRun`、`DiscoveryCandidate`、`ResearchArtifact`、`CandidateCard`、`KeySourceProposal`、`EvidenceItem` 和 `Claim Ledger` 的完整代码实现。
 - 实体去重、原始来源回读、冲突处理和统一加权综合。
 - 整张流程图对应的端到端执行与验收。
-- max 架构复盘与 Benchmark 推荐报告。
+- deep 验收调研产出的架构复盘与 Benchmark 推荐报告。
 
 ## 9. 尚待确认的关键问题
 
@@ -426,9 +431,9 @@ max 调研需要回答：
 2. 最终综合沿用当前 Smart Search 的合成模型，还是允许 Planner 独立选择合成 Provider。
 3. `quick | standard | deep` 各模式允许委派多少个 SearchTask 和 EvidenceMiningTask，以及调用预算如何与全局并发上限结合。
 4. Document Embedding 的默认显式维度和归一化方式，以及本地索引达到什么规模后才需要重新评估 Vespa。
-5. max Benchmark 调研完成后，用户是否选择候选 Benchmark 并另建实际运行任务。
+5. deep 验收调研完成后，用户是否选择候选 Benchmark 并另建实际运行任务。
 
-第 1 至 4 项在对应实现阶段编码前继续讨论并确定；第 5 项只能在新版 Preview CLI 完成后通过 max 调研确定。
+第 1 至 4 项在对应实现阶段编码前继续讨论并确定；第 5 项只能在新版 Preview CLI 完成后通过 deep 验收调研确定。
 
 ## 10. 本轮设计依据
 

@@ -503,7 +503,7 @@
         <span class="brand-mark">S</span>
         <div class="brand-copy">
           <strong>Smart Search · 多源研究实施地图</strong>
-          <span>preview/multi-source-agentic-research · v0.8 · 2026-08-23</span>
+          <span>preview/multi-source-agentic-research · v0.9 · 2026-08-23</span>
         </div>
       </div>
       <div class="top-status" aria-label="当前状态">
@@ -654,7 +654,7 @@
           phase: ['A–B', '计划契约与编译器', '先固定协议和确定性校验，再接 Root Agent 的动态规划。'], related: ['planner', 'modes', 'capabilities', 'provider-run']
         },
         modes: {
-          path: '编排层 / 预算', status: 'confirmed', statusText: '已确认', title: 'quick · standard · deep', summary: '三种产品模式共用同一证据管线，只改变允许调用的能力和任务预算。max 不是第四种产品模式。',
+          path: '编排层 / 预算', status: 'confirmed', statusText: '已确认', title: 'quick · standard · deep', summary: '三种产品模式共用同一证据管线，只改变允许调用的能力和任务预算。阶段 G 的验收调研同样使用 deep，不另设第四种模式。',
           principle: '预算可以降低搜索深度，但不能降低“候选不是证据”的基本标准。',
           implementation: ['Root Agent 根据问题复杂度安排任务；Plan Compiler 负责执行模式硬约束。', 'quick：只执行 Smart Search 基础搜索，不调用 AnySearch 或 Provider Research Agents。', 'standard：执行基础搜索；Root Agent 判断有价值时委派 AnySearch；不调用 Provider Research Agents。', 'deep：始终执行 Smart Search Research，可委派 Scout、AnySearch 和最多 2 个已验证 Provider Research Agents。'],
           inputs: ['quick', 'standard', 'deep'], outputs: ['mode gates', 'task budget', 'capability budget'], constraints: ['超过 2 个 Provider Research Agents 必须由用户显式指定。', '各模式具体 SearchTask 与 EvidenceMiningTask 数量仍待确认。'],
@@ -677,8 +677,8 @@
         scouts: {
           path: '发现阶段 / 项目 Subagent', status: 'pending', statusText: '待实现', title: 'Search Scout 并行探索', summary: 'Smart Search 项目专用 Search Scout 分别执行互相独立的 SearchTask，在任务范围内自主决定怎样搜索。',
           principle: 'Subagent 是执行分工，不是第二套规划器；它寻找来源，但不裁决最终结论。',
-          implementation: ['在 .codex/agents/search_scout.toml 定义 Codex 项目 Agent。', 'Root Agent 按通过编译器校验的 SearchTask 委派 Search Scout。', 'Search Scout 自主使用 Smart Search、AnySearch Skill 或可用 Provider Research Agents。', '按统一协议返回候选、原始产物引用、覆盖缺口、使用能力、建议任务和停止原因。', '自然语言小结不能绕过公共合并入口直接拼成最终答案。'],
-          inputs: ['SearchTask', 'available capabilities'], outputs: ['DiscoveryCandidate[]', 'ResearchArtifact[]', 'raw artifact refs', 'coverage gaps'], constraints: ['不依赖 Infra 管理的全局 Agent role。', '不为每个搜索引擎创建专用 Agent。', 'Search Scout 不继续派生 Subagent。'],
+          implementation: ['在 .codex/agents/search_scout.toml 定义 Codex 项目 Agent。', 'Codex 首版固定使用 gpt-5.6-luna、Max 推理强度与 Fast 服务层；对应配置为 model_reasoning_effort = "max"、service_tier = "priority"。', 'Root Agent 按通过编译器校验的 SearchTask 委派 Search Scout。', 'Search Scout 自主使用 Smart Search、AnySearch Skill 或可用 Provider Research Agents。', '按统一协议返回候选、原始产物引用、覆盖缺口、使用能力、建议任务和停止原因。', '自然语言小结不能绕过公共合并入口直接拼成最终答案。'],
+          inputs: ['SearchTask', 'available capabilities'], outputs: ['DiscoveryCandidate[]', 'ResearchArtifact[]', 'raw artifact refs', 'coverage gaps'], constraints: ['不依赖 Infra 管理的全局 Agent role。', '不为每个搜索引擎创建专用 Agent。', 'Search Scout 不继续派生 Subagent。', '首版不自动升级或切换模型；Root Agent 模型由 Harness 控制。'],
           phase: ['D', 'Agent 委派与结果合并', '实现 Codex 首版，同时保持协议可被 Claude Code、Pi 适配。'], related: ['search-task', 'capabilities', 'candidates', 'root-agent']
         },
         capabilities: {
@@ -731,7 +731,7 @@
         coverage: {
           path: '发现阶段 / 分片筛选与裁决', status: 'confirmed', statusText: '架构已确认', title: 'Source Curator 分片筛选与 Root 裁决', summary: '候选能装入 Root 上下文时全部直达 Root；溢出时由多个项目专用 Source Curator 分片生成可回溯提案，再由 Root 决定关键文档、补搜或降级。',
           principle: 'Curator 只减少 Root 首轮需要阅读的内容，不能成为唯一信息入口或替 Root 作最终判断。',
-          implementation: ['确定性代码按当前模式的候选上下文预算判断是否需要 Curator。', '候选溢出时按 SearchTask、主题或来源分片；不得把全部溢出上下文交给单个 Curator。', '在 .codex/agents/source_curator.toml 定义项目 Agent；每个实例返回 KeySourceProposal，包括输入候选集合、保留/延后/淘汰理由、覆盖缺口、不确定项和原始产物引用。', 'Root Agent 读取全部 CandidateCard 或分片提案，必要时按 candidate_id 展开原始记录。', 'Root Agent 决定关键文档、补搜、重新筛选或降级；新任务仍经过 Plan Compiler。'],
+          implementation: ['确定性代码按当前模式的候选上下文预算判断是否需要 Curator。', '候选溢出时按 SearchTask、主题或来源分片；不得把全部溢出上下文交给单个 Curator。', '在 .codex/agents/source_curator.toml 定义项目 Agent；Codex 首版固定使用 gpt-5.6-luna、Max 推理强度与 Fast 服务层，对应 service_tier = "priority"。', '每个实例返回 KeySourceProposal，包括输入候选集合、保留/延后/淘汰理由、覆盖缺口、不确定项和原始产物引用。', 'Root Agent 读取全部 CandidateCard 或分片提案，必要时按 candidate_id 展开原始记录。', 'Root Agent 决定关键文档、补搜、重新筛选或降级；新任务仍经过 Plan Compiler。'],
           inputs: ['ResearchFrame', 'CandidateCard[]', 'raw artifact index', 'context budget'], outputs: ['KeySourceProposal[]', 'sufficient | replan | degrade', 'key sources'], constraints: ['原始候选始终保留。', 'Curator 实例数动态决定。', 'Root Agent 保留最终选择权。', '预算耗尽时明确降级。'],
           phase: ['A/B/D/F', '候选协议、分片委派与动态重规划', '先实现可回溯筛选，再接关键文档任务。'], related: ['planner', 'plan-compiler', 'search-task', 'candidates', 'mining-task']
         },
@@ -745,8 +745,8 @@
         miner: {
           path: '深挖阶段 / Subagent', status: 'pending', statusText: '待实现', title: 'Evidence Miner', summary: '项目专用 Subagent，围绕单个关键文档反复 search/open/read/grep，直到找到可定位证据或达到停止条件。',
           principle: 'Root Agent 不承担逐页、逐段的常规挖掘；Evidence Miner 不承担跨来源综合。',
-          implementation: ['在 .codex/agents/evidence_miner.toml 定义 Codex 项目 Agent。', '读取 Harness 无关的 EvidenceMiningTask 与 EvidenceItem 协议。', '优先复用已有正文，必要时调用 MinerU 和 Agentic Docs MCP。', '返回结构化 EvidenceItem[]、证据缺口与停止原因，不得继续派生 Subagent。'],
-          inputs: ['EvidenceMiningTask', 'document tools'], outputs: ['EvidenceItem[]', 'evidence gaps', 'termination reason'], constraints: ['只处理单个或紧密相关文档。', '不输出最终报告。', '不继续派生 Agent。'],
+          implementation: ['在 .codex/agents/evidence_miner.toml 定义 Codex 项目 Agent。', 'Codex 首版固定使用 gpt-5.6-luna、Max 推理强度与 Fast 服务层；对应配置为 model_reasoning_effort = "max"、service_tier = "priority"。', '读取 Harness 无关的 EvidenceMiningTask 与 EvidenceItem 协议。', '优先复用已有正文，必要时调用 MinerU 和 Agentic Docs MCP。', '返回结构化 EvidenceItem[]、证据缺口与停止原因，不得继续派生 Subagent。'],
+          inputs: ['EvidenceMiningTask', 'document tools'], outputs: ['EvidenceItem[]', 'evidence gaps', 'termination reason'], constraints: ['只处理单个或紧密相关文档。', '不输出最终报告。', '不继续派生 Agent。', '首版不自动升级或切换模型；Root Agent 模型由 Harness 控制。'],
           phase: ['D/E', 'Agent bundle 与文档深挖', 'Codex 首版先实现，其他 Harness 只写 Adapter。'], related: ['mining-task', 'docs', 'evidence-item', 'root-agent']
         },
         docs: {
@@ -824,12 +824,12 @@
         roadmap: {
           path: '实施计划', status: 'pending', statusText: '待实现', title: '阶段 A–G', summary: 'A–F 完成全流程代码化；G 使用新版 Preview CLI 完成架构复盘与 Benchmark 推荐报告。验收阶段不选择或运行 Benchmark。',
           principle: '先实现可执行系统，再用它检查架构并调研评测方法。报告用于帮助用户作决定，不替用户完成 Benchmark 选型。',
-          implementation: ['A：公共数据契约。B：Root Agent 规划协议与 Plan Compiler / Validator。', 'C：Provider Research Agents 适配。D：项目专用 Search Scout、Source Curator、Evidence Miner 委派，以及候选分片与双层重规划反馈。', 'E：Agentic Docs MCP 与关键文档深挖。F：证据合并与综合。', 'G：在隔离 Preview 环境中，用 max 模式完成两项调研：架构改进建议；Benchmark 推荐、评分流程与复现成本。'],
+          implementation: ['A：公共数据契约。B：Root Agent 规划协议与 Plan Compiler / Validator。', 'C：Provider Research Agents 适配。D：项目专用 Search Scout、Source Curator、Evidence Miner 委派，以及候选分片与双层重规划反馈。', 'E：Agentic Docs MCP 与关键文档深挖。F：证据合并与综合。', 'G：在隔离 Preview 环境中，以一次或多次有边界的 deep 运行完成两项调研；多次运行由外层 Goal 编排，不增加第四种模式。'],
           inputs: ['confirmed design', 'current preview baseline'], outputs: ['implemented preview', 'acceptance research report'], constraints: ['G 只能在 A–F 通过工程测试后启动。', 'G 不包含 Benchmark 实跑、最终选型或跨 Harness 适配。', '替换 macOS、合并 lwj_dev、push 或跨机器同步都需要后续明确授权。'],
           phase: ['A–G', '完整路线', '当前只有最小 AnySearch 外部委派基线；整张流程图尚未代码化。'], related: ['planner', 'plan-compiler', 'normalize', 'benchmark']
         },
         benchmark: {
-          path: '验收调研', status: 'gated', statusText: 'A–F 后启动', title: '架构复盘与 Benchmark 推荐', summary: '新版 CLI 完成后，用 max 模式产出一份调研报告，只回答两个问题：现有框架是否还有更好的设计；哪些 Benchmark 值得后续考虑，以及它们怎样评分、复现成本多高。',
+          path: '验收调研', status: 'gated', statusText: 'A–F 后启动', title: '架构复盘与 Benchmark 推荐', summary: '新版 CLI 完成后，以 deep 模式产出一份调研报告，只回答两个问题：现有框架是否还有更好的设计；哪些 Benchmark 值得后续考虑，以及它们怎样评分、复现成本多高。一次运行覆盖不足时，由外层 Goal 编排多次有边界的 deep 运行。',
           principle: '验收交付的是有证据的建议，不是 Benchmark 最终选型，也不是实际跑分。',
           sources: [
             { kind: '工程经验参考', label: '中型探索任务的 MultiAgent 架构设计漫谈（1）', url: 'https://mp.weixin.qq.com/s/Osm8jzocOBNvkxIXSgdiNQ', note: '用于检查角色拆分、上下文隔离、任务 Schema、正式消息和全局状态管理。' },
