@@ -102,7 +102,7 @@ flowchart TD
     AC --> DC
     AU --> G
 
-    subgraph NR[Native Research: run only when APIs and entitlements are available]
+    subgraph NR[Provider Research Agents: run only when APIs and entitlements are available]
       L{Research depth}
       FM[Max<br/>Firecrawl Agent with explicit credit ceiling]
       JM[Max<br/>Jina DeepSearch with token ceiling]
