@@ -396,7 +396,7 @@ def test_jina_and_zhipu_mcp_contract_public_and_packaged_assets_match():
         assert marker in readme_zh
 
 
-def test_streaming_and_anysearch_contract_public_and_packaged_assets_match():
+def test_streaming_and_external_anysearch_contract_public_and_packaged_assets_match():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
     provider_contract = (ROOT / ".trellis/spec/backend/provider-capability-contract.md").read_text(encoding="utf-8")
@@ -409,13 +409,11 @@ def test_streaming_and_anysearch_contract_public_and_packaged_assets_match():
         "OPENAI_COMPATIBLE_STREAM",
         "--stream",
         "--no-stream",
-        "ANYSEARCH_API_URL",
         "ANYSEARCH_API_KEY",
-        "ANYSEARCH_TIMEOUT_SECONDS",
-        "anysearch-domains",
-        "anysearch-search",
-        "anysearch-extract",
-        "anysearch-batch",
+        "skills/anysearch/SKILL.md",
+        "external Skill",
+        "bundled snapshot",
+        "global `$anysearch` Skill",
         "SCIVERSE_API_TOKEN",
         "SCIVERSE_API_URL",
         "SCIVERSE_TIMEOUT_SECONDS",
@@ -425,7 +423,7 @@ def test_streaming_and_anysearch_contract_public_and_packaged_assets_match():
         "sciverse-read",
         "sciverse-relations",
         "vertical_search",
-        "not part of the `web_search` fallback",
+        "not a registered provider",
         "not `docs_search`",
         "not required by the `standard` minimum profile",
     ]
@@ -449,11 +447,9 @@ def test_streaming_and_anysearch_contract_public_and_packaged_assets_match():
 
     zh_required_markers = [
         "OPENAI_COMPATIBLE_STREAM",
-        "ANYSEARCH_API_URL",
         "ANYSEARCH_API_KEY",
-        "ANYSEARCH_TIMEOUT_SECONDS",
-        "anysearch-domains",
-        "anysearch-search",
+        "内置 AnySearch 快照",
+        "全局 `$anysearch` Skill",
         "SCIVERSE_API_TOKEN",
         "SCIVERSE_API_URL",
         "SCIVERSE_TIMEOUT_SECONDS",
@@ -461,7 +457,7 @@ def test_streaming_and_anysearch_contract_public_and_packaged_assets_match():
         "sciverse-search",
         "sciverse-relations",
         "vertical_search",
-        "不进入 `web_search` 兜底链",
+        "不是 Smart Search provider",
         "不是 `docs_search`",
         "不是 `standard` 最低配置要求",
     ]

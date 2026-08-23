@@ -9,6 +9,7 @@ from typing import Any
 
 
 SKILL_NAME = "smart-search-cli"
+PRESERVED_LOCAL_FILES = {".env", "runtime.conf"}
 PACKAGE_ROOT_ENV = "SMART_SEARCH_PACKAGE_ROOT"
 
 
@@ -22,6 +23,9 @@ class SkillTarget:
     @property
     def skill_relative_path(self) -> str:
         return f"{self.relative_root}/{SKILL_NAME}"
+
+    def skill_relative_path_for(self, skill_name: str) -> str:
+        return f"{self.relative_root}/{skill_name}"
 
 
 SKILL_TARGETS: tuple[SkillTarget, ...] = (
@@ -94,9 +98,9 @@ def parse_skill_targets(raw: str) -> list[str]:
     return selected
 
 
-def _resource_skill_root() -> Any:
+def _resource_skill_root(skill_name: str = SKILL_NAME) -> Any:
     try:
-        root = resources.files("smart_search").joinpath("assets", "skills", SKILL_NAME)
+        root = resources.files("smart_search").joinpath("assets", "skills", skill_name)
         if root.is_dir():
             return root
     except (FileNotFoundError, ModuleNotFoundError, AttributeError):
@@ -104,20 +108,20 @@ def _resource_skill_root() -> Any:
     return None
 
 
-def _filesystem_skill_root() -> Path | None:
+def _filesystem_skill_root(skill_name: str = SKILL_NAME) -> Path | None:
     candidates: list[Path] = []
     package_root = os.getenv(PACKAGE_ROOT_ENV, "").strip()
     if package_root:
         base = Path(package_root)
         candidates.extend([
-            base / "src" / "smart_search" / "assets" / "skills" / SKILL_NAME,
-            base / "skills" / SKILL_NAME,
+            base / "src" / "smart_search" / "assets" / "skills" / skill_name,
+            base / "skills" / skill_name,
         ])
 
     repo_root = Path(__file__).resolve().parents[2]
     candidates.extend([
-        repo_root / "src" / "smart_search" / "assets" / "skills" / SKILL_NAME,
-        repo_root / "skills" / SKILL_NAME,
+        repo_root / "src" / "smart_search" / "assets" / "skills" / skill_name,
+        repo_root / "skills" / skill_name,
     ])
 
     for candidate in candidates:
@@ -149,25 +153,29 @@ def _iter_filesystem_files(root: Path) -> list[tuple[str, bytes]]:
     ]
 
 
-def _load_skill_files(source_root: Path | None = None) -> list[tuple[str, bytes]]:
+def _load_skill_files(
+    source_root: Path | None = None,
+    *,
+    skill_name: str = SKILL_NAME,
+) -> list[tuple[str, bytes]]:
     if source_root is not None:
         if not source_root.is_dir():
             raise SkillInstallError(f"Skill source directory not found: {source_root}")
         return _iter_filesystem_files(source_root)
 
-    resource_root = _resource_skill_root()
+    resource_root = _resource_skill_root(skill_name)
     if resource_root is not None:
         files = _iter_resource_files(resource_root)
         if files:
             return files
 
-    filesystem_root = _filesystem_skill_root()
+    filesystem_root = _filesystem_skill_root(skill_name)
     if filesystem_root is not None:
         files = _iter_filesystem_files(filesystem_root)
         if files:
             return files
 
-    raise SkillInstallError("Bundled smart-search-cli skill files were not found.")
+    raise SkillInstallError(f"Bundled {skill_name} skill files were not found.")
 
 
 def _skill_digest(files: list[tuple[str, bytes]]) -> str:
@@ -186,22 +194,26 @@ def _target_installed_files(path: Path) -> list[tuple[str, bytes]]:
     return _iter_filesystem_files(path)
 
 
-def status_skill_targets(
-    target_ids: list[str],
+def _status_for_skill(
     *,
-    project_root: str | Path | None = None,
-    source_root: str | Path | None = None,
+    skill_name: str,
+    root: Path,
+    selected: list[SkillTarget],
+    source: Path | None = None,
+    preserved_files: set[str] | None = None,
 ) -> dict[str, Any]:
-    root = Path(project_root).expanduser().resolve() if project_root else Path.home().expanduser().resolve()
-    selected = [SKILL_TARGET_BY_ID[target_id] for target_id in target_ids]
-    source = Path(source_root).expanduser().resolve() if source_root is not None else None
-    source_files = _load_skill_files(source)
+    preserved = preserved_files or set()
+    source_files = [
+        (rel_path, content)
+        for rel_path, content in _load_skill_files(source, skill_name=skill_name)
+        if Path(rel_path).name not in preserved
+    ]
     source_by_path = {rel_path: content for rel_path, content in source_files}
     bundled_digest = _skill_digest(source_files)
     targets: list[dict[str, Any]] = []
 
     for target in selected:
-        dest = root / Path(target.skill_relative_path)
+        dest = root / Path(target.skill_relative_path_for(skill_name))
         item: dict[str, Any] = {
             "target": target.target_id,
             "label": target.label,
@@ -220,6 +232,11 @@ def status_skill_targets(
         try:
             installed_files = _target_installed_files(dest)
             installed_by_path = {rel_path: content for rel_path, content in installed_files}
+            installed_managed_files = [
+                (rel_path, content)
+                for rel_path, content in installed_files
+                if Path(rel_path).name not in preserved
+            ]
             item["installed_files"] = len(installed_files)
             if not dest.exists():
                 targets.append(item)
@@ -230,8 +247,12 @@ def status_skill_targets(
                 targets.append(item)
                 continue
 
-            installed_digest = _skill_digest(installed_files)
-            extra_files = sorted(rel_path for rel_path in installed_by_path if rel_path not in source_by_path)
+            installed_digest = _skill_digest(installed_managed_files)
+            extra_files = sorted(
+                rel_path
+                for rel_path in installed_by_path
+                if rel_path not in source_by_path and Path(rel_path).name not in preserved
+            )
             missing_files = sorted(rel_path for rel_path in source_by_path if rel_path not in installed_by_path)
             stale_files = sorted(
                 rel_path
@@ -270,12 +291,74 @@ def status_skill_targets(
         "ok": not any(item.get("status") == "error" for item in targets),
         "root": str(root),
         "selected": [target.target_id for target in selected],
-        "skill": SKILL_NAME,
+        "skill": skill_name,
         "bundled_files": len(source_files),
         "bundled_hash": bundled_digest,
         "targets": targets,
         "status_counts": status_counts,
     }
+
+
+def status_skill_targets(
+    target_ids: list[str],
+    *,
+    project_root: str | Path | None = None,
+    source_root: str | Path | None = None,
+) -> dict[str, Any]:
+    root = Path(project_root).expanduser().resolve() if project_root else Path.home().expanduser().resolve()
+    selected = [SKILL_TARGET_BY_ID[target_id] for target_id in target_ids]
+    source = Path(source_root).expanduser().resolve() if source_root is not None else None
+    return _status_for_skill(
+        skill_name=SKILL_NAME,
+        root=root,
+        selected=selected,
+        source=source,
+        preserved_files=PRESERVED_LOCAL_FILES,
+    )
+
+
+def _install_skill(
+    *,
+    skill_name: str,
+    files: list[tuple[str, bytes]],
+    root: Path,
+    selected: list[SkillTarget],
+    preserved_files: set[str] | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+    installed: list[dict[str, Any]] = []
+    failed: list[dict[str, str]] = []
+    preserved = preserved_files or set()
+
+    for target in selected:
+        dest = root / Path(target.skill_relative_path_for(skill_name))
+        try:
+            for rel_path, content in files:
+                if Path(rel_path).name in preserved:
+                    continue
+                file_path = dest / Path(rel_path)
+                file_path.parent.mkdir(parents=True, exist_ok=True)
+                file_path.write_bytes(content)
+            installed.append(
+                {
+                    "skill": skill_name,
+                    "target": target.target_id,
+                    "label": target.label,
+                    "path": str(dest),
+                    "files": len([rel_path for rel_path, _ in files if Path(rel_path).name not in preserved]),
+                    "preserved_files": sorted(preserved),
+                }
+            )
+        except OSError as e:
+            failed.append(
+                {
+                    "skill": skill_name,
+                    "target": target.target_id,
+                    "label": target.label,
+                    "path": str(dest),
+                    "error": str(e),
+                }
+            )
+    return installed, failed
 
 
 def install_skill_targets(
@@ -300,34 +383,14 @@ def install_skill_targets(
         }
 
     source = Path(source_root).expanduser().resolve() if source_root is not None else None
-    files = _load_skill_files(source)
-    installed: list[dict[str, Any]] = []
-    failed: list[dict[str, str]] = []
-
-    for target in selected:
-        dest = root / Path(target.skill_relative_path)
-        try:
-            for rel_path, content in files:
-                file_path = dest / Path(rel_path)
-                file_path.parent.mkdir(parents=True, exist_ok=True)
-                file_path.write_bytes(content)
-            installed.append(
-                {
-                    "target": target.target_id,
-                    "label": target.label,
-                    "path": str(dest),
-                    "files": len(files),
-                }
-            )
-        except OSError as e:
-            failed.append(
-                {
-                    "target": target.target_id,
-                    "label": target.label,
-                    "path": str(dest),
-                    "error": str(e),
-                }
-            )
+    files = _load_skill_files(source, skill_name=SKILL_NAME)
+    installed, failed = _install_skill(
+        skill_name=SKILL_NAME,
+        files=files,
+        root=root,
+        selected=selected,
+        preserved_files=PRESERVED_LOCAL_FILES,
+    )
 
     return {
         "ok": not failed,

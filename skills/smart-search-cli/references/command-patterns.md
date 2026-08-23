@@ -34,11 +34,6 @@ smart-search exa-similar "https://example.com/article" --num-results 5 --format 
 smart-search context7-library "react" "hooks" --format json
 smart-search context7-docs "/reactjs/react.dev" "useEffect cleanup" --format json
 smart-search zhipu-search "today China AI news" --count 5 --format json
-smart-search anysearch-domains security --format json
-smart-search anysearch-search "CVE-2024-3094" --domain security --sub-domain vuln --param type=cve --param value=CVE-2024-3094 --max-results 3 --format json
-smart-search anysearch-search "CVE-2024-3094" --domain security.cve --sub-domain-params '{"type":"legacy","value":"old"}' --param type=cve --param value=CVE-2024-3094 --format json
-smart-search anysearch-extract "https://example.com/source" --max-length 12000 --format json
-smart-search anysearch-batch "AAPL" "RAG papers" --max-results 2 --format json
 smart-search sciverse-catalog --collection papers --format json
 smart-search sciverse-search "transformer retrieval" --year-from 2020 --page-size 5 --format json
 smart-search sciverse-semantic "attention mechanism" --top-k 3 --mode balanced --format json
@@ -59,7 +54,6 @@ smart-search route "React useEffect API docs" --format markdown
 smart-search setup --non-interactive --zhipu-api-url "https://open.bigmodel.cn/api" --zhipu-search-engine "search_std"
 smart-search setup --non-interactive --openai-compatible-stream true
 smart-search setup --non-interactive --openai-compatible-fallback-models "model-a,model-b"
-smart-search setup --non-interactive --anysearch-api-url "https://api.anysearch.com/mcp" --anysearch-key "key"
 smart-search setup --non-interactive --sciverse-token "key" --sciverse-api-url "https://api.sciverse.space"
 smart-search setup --non-interactive --tavily-api-url "https://api.tavily.com" --tavily-key "key"
 smart-search --version
@@ -74,10 +68,7 @@ smart-search config set OPENAI_COMPATIBLE_API_KEY "key" --format json
 smart-search config set OPENAI_COMPATIBLE_MODEL "model-id" --format json
 smart-search config set OPENAI_COMPATIBLE_FALLBACK_MODELS "model-a,model-b" --format json
 smart-search config set OPENAI_COMPATIBLE_STREAM "true" --format json
-smart-search config set ANYSEARCH_API_URL "https://api.anysearch.com/mcp" --format json
 smart-search config set SCIVERSE_API_TOKEN "key" --format json
-smart-search config set ANYSEARCH_API_KEY "key" --format json
-smart-search config set ANYSEARCH_TIMEOUT_SECONDS "30" --format json
 smart-search config set SMART_SEARCH_INTENT_ROUTER "hybrid" --format json
 smart-search config set INTENT_EMBEDDING_API_URL "https://api.siliconflow.cn/v1/embeddings" --format json
 smart-search config set INTENT_EMBEDDING_API_KEY "key" --format json

@@ -1,0 +1,13 @@
+{
+  "fallback_reason": "",
+  "preferred_commit": "7ed4aa1a1e5794f93d8e7303472651a64ce997d2",
+  "preferred_ref": "main",
+  "preferred_repository": "https://github.com/whycantfindaname/jason-liao-skills.git",
+  "schema_version": 1,
+  "selected_commit": "7ed4aa1a1e5794f93d8e7303472651a64ce997d2",
+  "selected_commit_date": "2026-08-23T17:35:36+08:00",
+  "selected_ref": "main",
+  "selected_repository": "https://github.com/whycantfindaname/jason-liao-skills.git",
+  "selected_source": "jason-liao-skills",
+  "skill_version": "3.1.0"
+}

@@ -72,18 +72,6 @@ smart-search exa-search QUERY
   [--exclude-domains DOMAIN...]
   [--format json|markdown|content]
 smart-search zhipu-search QUERY --format json|markdown|content
-smart-search anysearch-domains [DOMAIN] --format json|markdown|content
-smart-search anysearch-search QUERY
-  [--domain DOMAIN]
-  [--sub-domain SUBDOMAIN]
-  [--sub-domain-params JSON_OBJECT]
-  [--param KEY=VALUE]
-  [--max-results N]
-  [--format json|markdown|content]
-smart-search anysearch-extract URL [--max-length N] --format json|markdown|content
-smart-search anysearch-batch QUERY...
-  [--max-results N]
-  [--format json|markdown|content]
 smart-search sciverse-catalog
   [--collection papers|authors|sources]
   [--include-sample-values]
@@ -153,7 +141,7 @@ Capabilities:
 | `web_search` | `zhipu`, `zhipu-mcp`, `tavily`, `firecrawl` | General web-source reinforcement |
 | `docs_search` | `context7`, `exa` by intent | Documentation, SDK, API, library, and framework lookup |
 | `web_fetch` | `tavily`, `jina`, `zhipu-mcp-reader`, `firecrawl` | Known URL content extraction |
-| `vertical_search` | `anysearch`; `sciverse` is explicit-only and route-disabled in v1 | Experimental structured/vertical search evidence |
+| `vertical_search` | delegated `$anysearch` Skill; `sciverse` is explicit-only and route-disabled in v1 | Agent-level supplementation plus explicit structured academic search |
 | `synthesis` | currently successful `main_search` provider | Final answer synthesis |
 
 Deep Research planner orchestration:
@@ -224,7 +212,8 @@ Deep Research planner orchestration:
   searches; Zhipu MCP only as the separate Coding Plan quota route; Tavily for
   broad discovery and site maps; Jina for known public URL/PDF/arXiv clean
   extraction; Firecrawl for JS-heavy/dynamic/browser-like/OCR/PDF/structured
-  extraction fallback; AnySearch only when vertical intent is clear; Sciverse
+  extraction fallback; AnySearch is delegated at agent level when it can add
+  useful evidence and is never inserted into provider fallback; Sciverse
   remains explicit-only for academic catalog/search/semantic/read/relations and
   must not participate in default `research` fallback.
 - Automatic Context7 candidate resolution must not rely on a fixed library id.
@@ -278,12 +267,6 @@ Provider configuration:
 - Official xAI calls use the Responses API `/responses` route through `XAI_*`.
 - Compatible relays/gateways use Chat Completions `/chat/completions` through
   `OPENAI_COMPATIBLE_*`.
-- `ANYSEARCH_API_URL` configures the experimental AnySearch JSON-RPC endpoint
-  and defaults to `https://api.anysearch.com/mcp`.
-- `ANYSEARCH_API_KEY` is optional. When present, AnySearch requests send
-  `Authorization: Bearer <key>`; when absent, requests are anonymous.
-- `ANYSEARCH_TIMEOUT_SECONDS` configures the AnySearch HTTP timeout and
-  defaults to `30`.
 - `SCIVERSE_API_TOKEN` configures the explicit experimental Sciverse academic
   provider. It is required for every `sciverse-*` command; when absent, commands
   must return `error_type=config_error` without sending a network request.
@@ -443,28 +426,19 @@ Intent router contract:
 
 AnySearch boundary:
 
-- AnySearch is an experimental `vertical_search` provider exposed only through
-  explicit `anysearch-*` CLI commands and capability diagnostics.
-- Do not insert AnySearch into `web_search`, `docs_search`, `web_fetch`, or
-  `main_search` fallback chains without a separate acceptance/routing task.
-- AnySearch uses JSON-RPC 2.0 `tools/call` with tool names `get_sub_domains`,
-  `search`, `extract`, and `batch_search`.
-- AnySearch parameterized vertical searches pass `sub_domain_params` as a JSON
-  object from the CLI to the provider without string flattening. Normalized
-  output may expose parameter keys, but must not echo sensitive values.
-- `--sub-domain-params` is decoded before repeatable `--param KEY=VALUE`
-  entries, and later repeated values override matching JSON keys. Invalid JSON,
-  non-object JSON, a missing `=`, or an empty key must return
-  `error_type=parameter_error` before an AnySearch network call.
-- AnySearch search/extract results must preserve raw markdown/text content.
-  URL/title/snippet candidates should be extracted when present, but
-  structured evidence without URLs must remain in the result instead of being
-  discarded.
-- AnySearch `extract` sends only `{url}` upstream. A positive `--max-length`
-  truncates successful normalized `content`, `raw_content`, and result text
-  fields locally; zero or negative values preserve the successful payload.
-- `anysearch-batch` accepts at most five queries. Reject larger batches before
-  sending a network request.
+- AnySearch is an external Skill delegated by the agent, not a Smart Search
+  provider or CLI command family, and not a registered provider.
+- Resolve `skills/anysearch/SKILL.md` inside the installed Smart Search Skill
+  first, then a separately installed global `$anysearch` Skill. If neither is
+  usable, continue with other Smart Search sources.
+- Read the resolved Skill before calling it. Smart Search may describe the
+  evidence gap but must not hard-code the AnySearch operation or parameters.
+- The bundled snapshot is sourced from
+  `jason-liao-skills/main/skill-packages/anysearch`; official AnySearch is used
+  only when the preferred repository is reachable and that package is absent.
+- `ANYSEARCH_API_KEY` belongs to machine-private configuration. Local `.env`
+  and `runtime.conf` files are preserved across snapshot refresh and excluded
+  from Git.
 
 Sciverse boundary:
 
@@ -623,10 +597,9 @@ Output contracts:
   preserving the base attempt fields. `transport_fallback_used` reports
   stream-to-non-stream recovery separately; `fallback_used` continues to mean
   provider or model fallback and must not be set by transport fallback alone.
-- AnySearch command output must include `provider="anysearch"`, `tool`,
-  `content`/`raw_content` when available, `results`, and `elapsed_ms` on
-  success. Failures must include stable `ok=false`, `error_type`, `error`,
-  `provider`, `tool`, and `elapsed_ms` fields.
+- Smart Search routing metadata may expose
+  `execution="external_skill"` and `delegated_skill="anysearch"`; the
+  AnySearch payload itself follows the bundled Skill's current contract.
 - Current/realtime web routing must expose `web_current_intent` while keeping
   `zh_current_intent` as a backward-compatible alias, and should list
   supplemental capability paths under `routing_decision.supplemental_paths`.
@@ -843,12 +816,7 @@ smart-search doctor --format json
 | `OPENAI_COMPATIBLE_STREAM` is missing | Treat as `false`; do not send `stream: true` |
 | `OPENAI_COMPATIBLE_STREAM` or `--stream` is true | Send `stream: true` only to OpenAI-compatible `search()` / `fetch()` and parse SSE deltas, ignoring `[DONE]` |
 | `--no-stream` is set | Force non-streaming OpenAI-compatible `search()` for that invocation even when config is true |
-| AnySearch `result.isError=true` | Return `ok=false`, `error_type: "provider_error"`, and do not treat the response as a successful source |
-| AnySearch HTTP 401/403 | Return `error_type: "auth_error"` with a masked/non-secret message |
-| AnySearch timeout | Return `error_type: "timeout"` |
-| AnySearch JSON-RPC `error` object | Return `error_type: "provider_error"` with the provider message |
-| AnySearch `--sub-domain-params` / `--param` is invalid | Return `error_type: "parameter_error"` before a network request |
-| `anysearch-batch` receives more than five queries | Return `error_type: "parameter_error"` without a network request |
+| Bundled and global AnySearch Skills are both unavailable or unusable | Record delegated Skill unavailability and continue with remaining Smart Search routes |
 | Exa `--include-domains` / `--exclude-domains` receives comma-separated, whitespace-separated, or PowerShell-split values | Normalize to a flat domain list before sending `includeDomains` / `excludeDomains` to Exa |
 | Exa returns HTTP 400 or 422 | Return `error_type: "parameter_error"` and preserve the Exa response body excerpt for diagnosis |
 | Provider HTTP/network/timeout/schema error | Record `provider_attempts[].status="error"` and try next same-capability provider when fallback is `auto` |
@@ -1012,13 +980,11 @@ When this contract changes, add or update tests that assert:
 - `search --max-try` defaults to one, rejects values below one, retries only
   explicit terminal xAI 504 results, stops on other failures, and annotates
   aggregated provider attempts with their logical attempt number;
-- AnySearch config keys are listed, settable, masked where secret, and optional
-  for the `standard` minimum profile;
-- AnySearch capability status is `vertical_search`, `experimental=true`, and
-  does not change required minimum capabilities;
-- AnySearch JSON-RPC success, `result.isError=true`, JSON-RPC error, HTTP
-  error, timeout, anonymous request, authenticated header, raw markdown parsing,
-  structured evidence without URL, and batch limit are covered;
+- AnySearch does not appear in Smart Search config keys or provider fallback;
+- AnySearch capability status records delegated Skill metadata and does not
+  change required minimum capabilities;
+- bundled-first resolution, global fallback, unavailable degradation, snapshot
+  provenance, and preservation of private local configuration are covered;
 - Sciverse config keys are listed, settable, masked where secret, and optional
   for the `standard` minimum profile;
 - Sciverse capability status is `vertical_search`, `experimental=true`,
@@ -1254,9 +1220,9 @@ async def call_jina_reader(url: str) -> dict[str, Any]:
     return await _decode_provider_json(raw, provider="jina")
 ```
 
-Add wrapper-level tests for each provider family (`Jina`, `AnySearch`, and
-`Zhipu MCP`) so future async helper changes cannot silently break the public
-CLI/service contract.
+Add wrapper-level tests for internal provider families such as `Jina` and
+`Zhipu MCP`, and separate contract tests for AnySearch Skill delegation, so
+future changes cannot silently cross the provider/Skill boundary.
 
 ### Wrong
 

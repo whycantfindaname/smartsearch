@@ -62,7 +62,19 @@ function assertPackContents(files) {
     );
 
   assert.deepEqual(unexpected, [], "tarball contains files outside package.json files declarations");
-  for (const requiredPath of ["package.json", "pyproject.toml", "npm/bin/smart-search.js", "src/smart_search/cli.py"]) {
+  const privateRuntimeFiles = files
+    .map((file) => file.path)
+    .filter((filePath) => filePath.endsWith("/.env") || filePath.endsWith("/runtime.conf"));
+  assert.deepEqual(privateRuntimeFiles, [], "tarball must not contain AnySearch private runtime files");
+  for (const requiredPath of [
+    "package.json",
+    "pyproject.toml",
+    "npm/bin/smart-search.js",
+    "src/smart_search/cli.py",
+    "skills/smart-search-cli/skills/anysearch/SKILL.md",
+    "skills/smart-search-cli/skills/anysearch-source.json",
+    "src/smart_search/assets/skills/smart-search-cli/skills/anysearch/SKILL.md"
+  ]) {
     assert.ok(files.some((file) => file.path === requiredPath), `tarball is missing ${requiredPath}`);
   }
 }

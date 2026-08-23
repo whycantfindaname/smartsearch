@@ -77,9 +77,6 @@ class Config:
         "TAVILY_TIMEOUT_SECONDS",
         "FIRECRAWL_API_KEY",
         "FIRECRAWL_API_URL",
-        "ANYSEARCH_API_KEY",
-        "ANYSEARCH_API_URL",
-        "ANYSEARCH_TIMEOUT_SECONDS",
         "SCIVERSE_API_TOKEN",
         "SCIVERSE_API_URL",
         "SCIVERSE_TIMEOUT_SECONDS",
@@ -552,18 +549,6 @@ class Config:
         return self._get_config_value("FIRECRAWL_API_KEY")
 
     @property
-    def anysearch_api_url(self) -> str:
-        return self._get_config_value("ANYSEARCH_API_URL", "https://api.anysearch.com/mcp") or "https://api.anysearch.com/mcp"
-
-    @property
-    def anysearch_api_key(self) -> str | None:
-        return self._get_config_value("ANYSEARCH_API_KEY")
-
-    @property
-    def anysearch_timeout(self) -> float:
-        return float(self._get_config_value("ANYSEARCH_TIMEOUT_SECONDS", "30") or "30")
-
-    @property
     def sciverse_api_url(self) -> str:
         return self._get_config_value("SCIVERSE_API_URL", "https://api.sciverse.space") or "https://api.sciverse.space"
 
@@ -813,9 +798,6 @@ class Config:
             "TAVILY_TIMEOUT_SECONDS": self.tavily_timeout,
             "FIRECRAWL_API_URL": self.firecrawl_api_url,
             "FIRECRAWL_API_KEY": self._mask_api_key(self.firecrawl_api_key) if self.firecrawl_api_key else "未配置",
-            "ANYSEARCH_API_URL": self.anysearch_api_url,
-            "ANYSEARCH_API_KEY": self._mask_api_key(self.anysearch_api_key) if self.anysearch_api_key else "未配置",
-            "ANYSEARCH_TIMEOUT_SECONDS": self.anysearch_timeout,
             "SCIVERSE_API_URL": self.sciverse_api_url,
             "SCIVERSE_API_TOKEN": self._mask_api_key(self.sciverse_api_token) if self.sciverse_api_token else "未配置",
             "SCIVERSE_TIMEOUT_SECONDS": self.sciverse_timeout,

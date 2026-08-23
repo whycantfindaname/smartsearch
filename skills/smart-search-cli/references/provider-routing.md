@@ -52,7 +52,7 @@ Intent router rules:
 - `XAI_SOFT_TIMEOUT_SECONDS`, `XAI_STATUS_POLL_SECONDS`, and `XAI_HARD_TIMEOUT_SECONDS` default to `120`, `15`, and `7200` seconds.
 - Chat Completions mode must not send xAI `web_search` / `x_search` tools or legacy `search_parameters`; xAI Chat Completions Live Search is deprecated.
 - The standard minimum profile requires one configured provider in each of `main_search`, `docs_search`, and fetch capability. Missing required capabilities should be treated as a hard configuration failure.
-- AnySearch is reported only as optional experimental `vertical_search`; it is not part of the `web_search` fallback and is not required by the `standard` minimum profile.
+- AnySearch is reported as an optional delegated Skill for `vertical_search`; it is not a registered provider, does not join any CLI fallback chain, and is not required by the `standard` minimum profile.
 - Sciverse is reported only as optional experimental explicit-only `vertical_search`; it is not `docs_search`, not part of default `search` / `research` fallback, and not required by the `standard` minimum profile.
 - Jina Reader is `web_fetch` only, not a general search provider. `JINA_API_KEY` is required before Jina satisfies the standard minimum profile; anonymous `r.jina.ai` is explicit/experimental fetch behavior.
 - Same-capability fallback is allowed; cross-capability fallback is not. Context7 is not used for unrelated broad web queries, and page extraction providers are not used as docs search providers.
@@ -69,7 +69,7 @@ Intent router rules:
 - `map` currently uses Tavily only.
 - `exa-search` and `exa-similar` use Exa only.
 - `context7-library` and `context7-docs` use Context7 only.
-- `anysearch-domains`, `anysearch-search`, `anysearch-extract`, and `anysearch-batch` use AnySearch only. Treat results as acceptance evidence until the target vertical domain is reviewed.
+- AnySearch runs outside the Smart Search CLI. Resolve the bundled `skills/anysearch/SKILL.md` first, then a separately installed global `$anysearch` Skill. The model chooses the operation and parameters described by the resolved Skill.
 - `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, and `sciverse-relations` use Sciverse only. They are explicit academic commands and must not be inserted into default provider fallback.
 - `zhipu-search` uses Zhipu only.
 - `zhipu-mcp-search`, `zhipu-mcp-reader`, and `zhipu-mcp-*` zread commands use Zhipu Coding Plan Remote MCP only.
@@ -110,17 +110,12 @@ Jina Reader:
 
 AnySearch:
 
-- AnySearch uses JSON-RPC 2.0 `tools/call` at `ANYSEARCH_API_URL`, default `https://api.anysearch.com/mcp`.
-- `ANYSEARCH_API_KEY` is optional. If configured, requests include `Authorization: Bearer ...`; if missing, anonymous requests are allowed.
-- `ANYSEARCH_TIMEOUT_SECONDS` defaults to `30`.
-- Live MCP tools are `search`, `batch_search`, `extract`, and `get_sub_domains`. `anysearch-domains` maps to `get_sub_domains` (not the removed `list_domains` tool).
-- `anysearch-domains DOMAIN` calls the live `get_sub_domains` tool; without `DOMAIN`, it reads the `tools/list` schema for the available domains.
-- HTTP 200 responses with `result.isError=true` must return `ok=false`, `error_type=provider_error`, and no successful source results.
-- Markdown URL/title/snippet candidates should be parsed into `results`, while raw text remains in `content` and `raw_content`.
-- Structured results without URLs must be preserved as raw/structured evidence, not dropped.
-- Dotted vertical domain shorthand such as `code.doc` is allowed for simple subdomains and must be normalized to `domain=code` plus `sub_domain=doc`; parameterized subdomains parse `--sub-domain-params` JSON first, then repeatable `--param KEY=VALUE` entries override matching keys. Invalid JSON, non-object JSON, a missing `=`, or an empty key fails before the network request.
-- `anysearch-extract --max-length` sends only `url` to the live tool. A positive value truncates successful top-level and result text fields locally; zero or negative values preserve the normalized payload.
-- `anysearch-batch` accepts at most 5 CLI query strings and returns `error_type=parameter_error` without sending a request when the limit is exceeded.
+- AnySearch is an external Skill, not a registered provider. Resolve the bundled `skills/anysearch/SKILL.md` first, then a separately installed global `$anysearch` Skill.
+- The bundled snapshot is an unchanged copy of `jason-liao-skills/main/skill-packages/anysearch`. `scripts/sync_anysearch_skill.py` refreshes both distributable Smart Search Skill trees from GitHub.
+- The official `anysearch-ai/anysearch-skill` repository is a fallback only when the preferred repository is reachable and the package is absent. A checkout, network, or authentication failure preserves the existing snapshot and must not silently switch sources.
+- Runtime resolution order is bundled snapshot, separately installed global Skill, then unavailable. Missing files, credentials, quota, network, or provider failures degrade to other Smart Search sources.
+- Read the resolved AnySearch `SKILL.md` before execution. Smart Search describes when delegation may help but does not prescribe a fixed AnySearch command, domain, or parameter sequence.
+- `ANYSEARCH_API_KEY` comes from the machine's private configuration. A local ignored `.env` may live in the embedded snapshot for this macOS Preview, but the key must never be committed or copied into tracked provenance.
 
 Sciverse:
 
@@ -150,7 +145,7 @@ Exa domain filters:
 ## Provider Output Details
 
 - Exa HTTP `400` or `422` failures are returned as `ok=false` with `error_type=parameter_error`; use this to distinguish bad CLI/domain/date/category arguments from upstream network failures.
-- AnySearch experimental output should preserve structured results without URLs as raw/structured evidence.
+- AnySearch results enter agent-level source merging as a `DiscoveryCandidate` or extracted content. Structured items without URLs remain candidate data, not claim-level proof.
 - Sciverse experimental output should preserve raw response data under `raw` while exposing normalized `fields`, `results`, `hits`, `text`, or `items` depending on the command.
 - Diagnostic output should report Firecrawl status as whether `FIRECRAWL_API_KEY` is configured; it is not currently a live Firecrawl request.
 

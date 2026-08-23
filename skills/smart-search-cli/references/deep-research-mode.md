@@ -137,7 +137,7 @@ Use this shape as the planning artifact:
 
 ## Step Contract
 
-Allowed `tool` values are `search`, `exa-search`, `exa-similar`, `zhipu-search`, `context7-library`, `context7-docs`, `fetch`, and `map`; these are the only valid `steps[].tool` values and map to existing CLI commands only. `doctor` is a `preflight` action, not a `steps[]` item. Simple plans may have one subquestion; complex plans should use 2-6 subquestions unless the user explicitly asks for exhaustive coverage.
+Allowed `tool` values are `search`, `exa-search`, `exa-similar`, `zhipu-search`, `context7-library`, `context7-docs`, `fetch`, and `map`; these are the only valid CLI `steps[].tool` values and map to existing Smart Search commands. Agent-level AnySearch delegation is recorded separately from `steps[]` because it executes another Skill rather than a Smart Search provider. `doctor` is a `preflight` action, not a `steps[]` item. Simple plans may have one subquestion; complex plans should use 2-6 subquestions unless the user explicitly asks for exhaustive coverage.
 
 Each `steps[]` item must include `id`, `subquestion_id`, `tool`, `purpose`, `command`, and `output_path`. `steps[].command` and `steps[].output_path` are one contract: the `--output` path embedded in the executable command must match `output_path`, otherwise the AI agent cannot reliably find saved evidence.
 
@@ -151,7 +151,7 @@ Prefer PowerShell-safe quoted commands in generated plans because Windows users 
 - `exa-search`: low-noise source discovery for official domains, papers, product pages, known domains, and trusted pages. Do not treat Exa as the universal second hop for every high-risk or verification task.
 - `exa-similar`: adjacent-source discovery when a known reliable URL is available.
 - `search --extra-sources N`: Tavily/Firecrawl horizontal candidate collection for breadth. Treat those candidates as discovery until fetched.
-- `anysearch-domains` and `anysearch-search`: experimental vertical search. Inspect domains first, then search a selected domain; do not insert it into the default fallback chain.
+- `$anysearch`: optional agent-level supplementation. Resolve the bundled `skills/anysearch/SKILL.md` first, then a separately installed global Skill. Read the resolved Skill and let the model choose its supported operation and parameters; do not insert AnySearch into a Smart Search provider fallback chain.
 - `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, and `sciverse-relations`: explicit experimental academic commands. Use them directly when the task needs Sciverse academic fields, semantic paper hits, document chunks, or citation/reference relations; do not insert Sciverse into default Deep Research fallback.
 - `fetch`: page-content evidence. Key claims require fetched page text under `fetch_before_claim`.
 - `map`: site structure exploration before many fetches from one site; not claim evidence by itself.
@@ -177,7 +177,7 @@ Research provider advantage routing:
 - Tavily: broad source discovery and site map.
 - Jina: known public URL, PDF, and arXiv clean extraction; ReaderLM-v2 requires `JINA_API_KEY`.
 - Firecrawl: robust fetch fallback, JS-heavy/dynamic pages, browser-like extraction, OCR/PDF/structured extraction.
-- AnySearch: explicit vertical intent only, such as CVE, finance, legal, academic, and repository/codebase search.
+- AnySearch: agent-level supplementation when general, vertical, parallel batch, or URL extraction capabilities can close an evidence gap. Missing or unusable AnySearch must degrade to the remaining Smart Search workflow.
 - Sciverse: explicit-only academic provider in this release; use direct `sciverse-*` commands rather than `research` fallback.
 
 Safe research overrides are `SMART_SEARCH_RESEARCH_PREFERRED_PROVIDERS` and `SMART_SEARCH_RESEARCH_DISABLED_PROVIDERS`. They may reorder or disable providers only inside capabilities the provider already supports; they must not move a provider across capability boundaries.

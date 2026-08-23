@@ -31,6 +31,20 @@ smart_search = [
     "assets/skills/smart-search-cli/SKILL.md",
     "assets/skills/smart-search-cli/agents/*.yaml",
     "assets/skills/smart-search-cli/references/*.md",
+    "assets/skills/smart-search-cli/skills/anysearch-source.json",
+    "assets/skills/smart-search-cli/skills/anysearch/.env.example",
+    "assets/skills/smart-search-cli/skills/anysearch/LICENSE",
+    "assets/skills/smart-search-cli/skills/anysearch/NOTICE",
+    "assets/skills/smart-search-cli/skills/anysearch/README.md",
+    "assets/skills/smart-search-cli/skills/anysearch/SKILL.md",
+    "assets/skills/smart-search-cli/skills/anysearch/requirements.txt",
+    "assets/skills/smart-search-cli/skills/anysearch/runtime.conf.example",
+    "assets/skills/smart-search-cli/skills/anysearch/scripts/*.js",
+    "assets/skills/smart-search-cli/skills/anysearch/scripts/*.ps1",
+    "assets/skills/smart-search-cli/skills/anysearch/scripts/*.py",
+    "assets/skills/smart-search-cli/skills/anysearch/scripts/*.sh",
+    "assets/skills/smart-search-cli/skills/anysearch/scripts/shared/*.json",
+    "assets/skills/smart-search-cli/skills/anysearch/scripts/shared/*.md",
 ]
 
 [project.scripts]

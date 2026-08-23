@@ -17,8 +17,10 @@
   "files": [
     "npm/",
     "skills/smart-search-cli/**",
+    "!skills/smart-search-cli/skills/anysearch/.env",
     "src/smart_search/**/*.py",
     "src/smart_search/assets/skills/smart-search-cli/**",
+    "!src/smart_search/assets/skills/smart-search-cli/skills/anysearch/.env",
     "pyproject.toml",
     "README.md",
     "README.zh-CN.md",

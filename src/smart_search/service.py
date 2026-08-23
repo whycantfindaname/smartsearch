@@ -34,7 +34,6 @@ from .intent_router import (
     _semantic_summary,
 )
 from .logger import log_info
-from .providers.anysearch import AnySearchProvider
 from .providers.context7 import Context7Provider
 from .providers.exa import ExaSearchProvider
 from .providers.jina import JinaReaderProvider
@@ -165,7 +164,7 @@ RESEARCH_PROFILE_ORDER = {
     "web_search": ["zhipu", "zhipu-mcp", "tavily", "firecrawl"],
     "docs_search": ["context7", "exa"],
     "web_fetch": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl"],
-    "vertical_search": ["anysearch"],
+    "vertical_search": [],
     "site_map": ["tavily"],
     "synthesis": ["main-search"],
 }
@@ -261,16 +260,6 @@ PROVIDER_PROFILES: dict[str, dict[str, Any]] = {
         "minimum_profile_role": "web_fetch",
         "quality_filters": ["non-empty normalized result", "non-empty extracted content"],
         "route_reasons": ["JS-heavy fetch", "dynamic/browser-like extraction", "robust fetch fallback"],
-    },
-    "anysearch": {
-        "capability": "vertical_search",
-        "strengths": ["CVE", "finance", "legal", "academic", "code/docs", "structured vertical domains"],
-        "exclusions": ["generic default fallback", "standard minimum profile"],
-        "fallback_group": "vertical_search",
-        "minimum_profile_role": "",
-        "quality_filters": ["vertical intent required", "URL required before evidence citation"],
-        "route_reasons": ["vertical domain discovery"],
-        "experimental": True,
     },
     "sciverse": {
         "capability": "vertical_search",
@@ -780,8 +769,6 @@ def _provider_configured(provider: str) -> bool:
         return bool(config.zhipu_mcp_api_key)
     if provider == "firecrawl":
         return bool(config.firecrawl_api_key)
-    if provider == "anysearch":
-        return bool(config.anysearch_api_key)
     if provider == "sciverse":
         return bool(config.sciverse_api_token)
     if provider == "main-search":
@@ -922,10 +909,11 @@ def _research_capability_routes(
         "reason": "JS-heavy fetch" if signals["js_heavy_intent"] else ("known URL/PDF extraction" if signals["known_url"] or signals["pdf_or_arxiv_intent"] else "evidence extraction"),
     }
 
-    vertical = _configured_for_capability("vertical_search", capability_status)
     routes["capabilities"]["vertical_search"] = {
-        "providers": _apply_research_overrides("vertical_search", vertical) if signals["vertical_intent"] else [],
+        "providers": [],
         "reason": "vertical intent matched" if signals["vertical_intent"] else "vertical intent absent",
+        "execution": "external_skill" if signals["vertical_intent"] else "not_selected",
+        "delegated_skill": "anysearch" if signals["vertical_intent"] else "",
         "experimental": True,
     }
 
@@ -1568,17 +1556,6 @@ async def research(
         else:
             provider_attempts.append(_attempt("docs_search", "exa", "error", exa_start, error_type=data.get("error_type", ""), error=data.get("error", "")))
 
-    if signals["vertical_intent"] and routes["capabilities"]["vertical_search"]["providers"]:
-        vertical_start = time.time()
-        data = await anysearch_search(question, max_results=5)
-        if data.get("ok"):
-            sources = _normalize_source_results(data.get("results"), "anysearch")
-            provider_attempts.append(_attempt("vertical_search", "anysearch", "ok" if sources else "empty", vertical_start, result_count=len(sources)))
-            discovery_sources.extend(sources)
-            stage_results.append({"stage": "vertical_discovery", "provider": "anysearch", "ok": bool(sources), "result_count": len(sources)})
-        else:
-            provider_attempts.append(_attempt("vertical_search", "anysearch", "error", vertical_start, error_type=data.get("error_type", ""), error=data.get("error", "")))
-
     candidates = _select_candidate_urls(discovery_sources, limit=6)
     fetched_urls = {item.get("url") for item in evidence_items}
     no_new_evidence = True
@@ -1699,15 +1676,15 @@ def get_capability_status() -> dict[str, Any]:
             "configured": [
                 name
                 for name, enabled in [
-                    ("anysearch", bool(config.anysearch_api_key)),
                     ("sciverse", bool(config.sciverse_api_token)),
                 ]
                 if enabled
             ],
-            "fallback_chain": ["anysearch"],
+            "fallback_chain": [],
             "experimental": True,
             "explicit_only": ["sciverse"],
-            "route_enabled": {"anysearch": True, "sciverse": False},
+            "route_enabled": {"sciverse": False},
+            "delegated_skills": ["anysearch"],
         },
     }
     for capability in ("web_search", "docs_search", "web_fetch", "vertical_search"):
@@ -2065,37 +2042,6 @@ async def _run_docs_search_fallback(
                     attempts.append(_attempt("docs_search", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", "")))
         except Exception as e:
             attempts.append(_attempt_from_exception("docs_search", provider, start, e))
-    return [], attempts
-
-
-async def _run_vertical_search_fallback(
-    query: str,
-    providers: str = "auto",
-    fallback: str = "auto",
-) -> tuple[list[dict], list[dict]]:
-    provider_filter = _parse_provider_filter(providers)
-    attempts: list[dict] = []
-    configured: list[str] = []
-    if config.anysearch_api_key:
-        configured.append("anysearch")
-    if provider_filter is not None:
-        configured = [p for p in configured if p in provider_filter]
-    if fallback == "off":
-        configured = configured[:1]
-
-    for provider in configured:
-        start = time.time()
-        try:
-            data = await anysearch_search(query, max_results=5)
-            if data.get("ok"):
-                sources = _normalize_source_results(data.get("results"), "anysearch")
-                if sources:
-                    attempts.append(_attempt("vertical_search", provider, "ok", start, result_count=len(sources)))
-                    return sources, attempts
-            status = _attempt_status_for_result(data)
-            attempts.append(_attempt("vertical_search", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", "")))
-        except Exception as e:
-            attempts.append(_attempt_from_exception("vertical_search", provider, start, e))
     return [], attempts
 
 
@@ -2610,11 +2556,6 @@ async def search(
             provider_attempts.extend(fetch_attempts)
             if fetch_result:
                 supplemental_sources.append({"url": fetch_result["url"], "provider": fetch_result["provider"], "description": fetch_result["content"][:300]})
-        if "vertical_search" in supplemental_paths:
-            vertical_sources, vertical_attempts = await _run_vertical_search_fallback(query, providers=providers, fallback=fallback_mode)
-            provider_attempts.extend(vertical_attempts)
-            supplemental_sources.extend(vertical_sources)
-
     extra_source_items = merge_sources(extra_source_items, supplemental_sources)
     sources = merge_sources(primary_sources, extra_source_items)
     ok = bool(answer or sources)
@@ -3315,49 +3256,15 @@ async def exa_search(
     return data
 
 
-def _anysearch_provider() -> AnySearchProvider:
-    return AnySearchProvider(config.anysearch_api_url, config.anysearch_api_key, config.anysearch_timeout)
-
-
 def _sciverse_provider() -> SciverseProvider:
     return SciverseProvider(config.sciverse_api_url, config.sciverse_api_token, config.sciverse_timeout)
 
 
-async def _decode_provider_json(raw: str, provider: str = "anysearch") -> dict[str, Any]:
+async def _decode_provider_json(raw: str, provider: str) -> dict[str, Any]:
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
         return {"ok": False, "provider": provider, "error_type": "parse_error", "error": raw}
-
-
-async def anysearch_domains(domain: str = "") -> dict[str, Any]:
-    return await _decode_provider_json(await _anysearch_provider().get_sub_domains(domain))
-
-
-async def anysearch_search(
-    query: str,
-    domain: str = "",
-    sub_domain: str = "",
-    max_results: int = 5,
-    sub_domain_params: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    return await _decode_provider_json(
-        await _anysearch_provider().vertical_search(
-            query=query,
-            domain=domain,
-            sub_domain=sub_domain,
-            max_results=max_results,
-            sub_domain_params=sub_domain_params,
-        )
-    )
-
-
-async def anysearch_extract(url: str, max_length: int = 20000) -> dict[str, Any]:
-    return await _decode_provider_json(await _anysearch_provider().extract(url, max_length=max_length))
-
-
-async def anysearch_batch(queries: list[str], max_results: int = 3) -> dict[str, Any]:
-    return await _decode_provider_json(await _anysearch_provider().batch_search(queries, max_results=max_results))
 
 
 async def sciverse_catalog(
@@ -4349,11 +4256,12 @@ async def _smoke_mock(start: float) -> dict[str, Any]:
         "web_fetch": {"configured": ["tavily"], "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl"], "ok": True},
         "vertical_search": {
             "configured": [],
-            "fallback_chain": ["anysearch"],
+            "fallback_chain": [],
             "ok": False,
             "experimental": True,
             "explicit_only": ["sciverse"],
-            "route_enabled": {"anysearch": True, "sciverse": False},
+            "route_enabled": {"sciverse": False},
+            "delegated_skills": ["anysearch"],
         },
     }
     minimum = _minimum_profile_result("standard", minimum_status)
@@ -4580,12 +4488,13 @@ async def _smoke_mock(start: float) -> dict[str, Any]:
             "ok": True,
         },
         "vertical_search": {
-            "configured": ["anysearch"],
-            "fallback_chain": ["anysearch"],
-            "ok": True,
+            "configured": [],
+            "fallback_chain": [],
+            "ok": False,
             "experimental": True,
             "explicit_only": ["sciverse"],
-            "route_enabled": {"anysearch": True, "sciverse": False},
+            "route_enabled": {"sciverse": False},
+            "delegated_skills": ["anysearch"],
         },
     }
     docs_routes = _research_capability_routes("React useEffect API docs", docs_plan, "auto", capability_status=mock_research_status)
@@ -4625,8 +4534,10 @@ async def _smoke_mock(start: float) -> dict[str, Any]:
     )
     cases.append(
         _case(
-            "research router vertical intent uses anysearch only when matched",
-            vertical_routes["capabilities"]["vertical_search"]["providers"] == ["anysearch"],
+            "research router delegates vertical intent to anysearch skill",
+            vertical_routes["capabilities"]["vertical_search"]["providers"] == []
+            and vertical_routes["capabilities"]["vertical_search"]["execution"] == "external_skill"
+            and vertical_routes["capabilities"]["vertical_search"]["delegated_skill"] == "anysearch",
             {"routing_decision": vertical_routes},
         )
     )

@@ -119,9 +119,10 @@
 - 文档与网页 Provider：`exa-search`、`exa-similar`、`context7-library`、
   `context7-docs`、`zhipu-search`、`zhipu-mcp-search`、`zhipu-mcp-reader`，以及
   `zhipu-mcp-search-doc`、`zhipu-mcp-repo-structure`、`zhipu-mcp-read-file`。
-- 实验性垂直 Provider：`anysearch-domains`、`anysearch-search`、
-  `anysearch-extract`、`anysearch-batch`，以及显式的 `sciverse-catalog`、
-  `sciverse-search`、`sciverse-semantic`、`sciverse-read`、`sciverse-relations`。
+- 实验性垂直能力：AnySearch 由 Agent 委托给 Smart Search Skill 内置快照或全局
+  `$anysearch` Skill，不属于 CLI Provider；Sciverse 继续通过显式的
+  `sciverse-catalog`、`sciverse-search`、`sciverse-semantic`、`sciverse-read`、
+  `sciverse-relations` 命令提供。
 - 配置、诊断与维护：`doctor`、`diagnose openai-compatible`、`setup`、
   `config path|list|set|unset`、`model current|set`、`skills status|update`、
   `smoke` 和 `regression`。
