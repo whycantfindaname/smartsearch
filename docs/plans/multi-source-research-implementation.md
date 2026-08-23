@@ -40,7 +40,7 @@
 | --- | --- | --- |
 | `quick` | Smart Search 基础搜索 | 不调用 |
 | `standard` | Smart Search 基础搜索；Planner 判断有必要时委派 AnySearch | 不调用 |
-| `deep` | 始终执行 Smart Search Research；Planner 从当前可用的 Native Research 中选择 | 最多并行 2 个 |
+| `deep` | 始终执行 Smart Search Research；Planner 从当前可用的 Native Research 中选择 | 默认总共最多选择并执行 2 个 |
 
 - 超过 2 个 Native Research 只在用户显式指定时执行。
 - Provider 数量不是质量目标；Planner 应按问题类型和互补性选择来源。
@@ -71,6 +71,7 @@
 - Smart Search 只向 Agent 说明何时适合委派 AnySearch，以及 AnySearch 已具备的能力；不硬编码 Agent 必须调用某个具体子命令，由模型阅读 Skill 后自行选择。
 - 若运行环境没有可用 AnySearch Skill，则记录委派不可用并继续其他搜索路径。
 - `ANYSEARCH_API_KEY` 随内置快照的私有 `.env` 提供，同时保持 Git、npm 包和 wheel 中不包含明文密钥。
+- Agent 将 AnySearch 结果交给公共合并管线时使用最小 JSON 协议：顶层包含原始 `query`，每条来源包含 `title`、`url`、`content`，并可选包含 `published_at`。Preview 不为该协议增加运行目录、恢复命令或状态机。
 
 ## 3. 目标执行流程
 
@@ -92,7 +93,7 @@
 - [`docs/architecture/multi-source-search-flow-anysearch.drawio`](../architecture/multi-source-search-flow-anysearch.drawio)
 - [`docs/architecture/multi-source-search-flow-anysearch.png`](../architecture/multi-source-search-flow-anysearch.png)
 
-Skill 正文中的 Mermaid 必须与本计划和 Draw.io 的逻辑一致，但可以压缩视觉细节。
+当前 Draw.io 和 Skill Mermaid 是实现前草图，仍需在阶段 B 按本计划修正模式门控。修正后两者必须与本计划一致，但 Mermaid 可以压缩视觉细节。
 
 ## 4. 统一数据契约
 
@@ -154,10 +155,11 @@ Skill 正文中的 Mermaid 必须与本计划和 Draw.io 的逻辑一致，但�
 
 ## 5. 分阶段实现
 
-### 阶段 A：公共契约与持久运行目录
+### 阶段 A：公共数据契约
 
 - 定义上述核心模型及 JSON 序列化格式。
-- 为每次 Research 建立可恢复的运行目录，保存计划、状态、原始产物和合并产物。
+- 定义 AnySearch 最小 JSON 结果协议及公共合并入口。
+- 保存计划、原始产物和合并产物；Preview 不实现暂停、恢复或持久状态机。
 - 先以契约测试固定输入输出，再迁移现有 Research 结果。
 
 ### 阶段 B：统一 Planner
@@ -165,6 +167,7 @@ Skill 正文中的 Mermaid 必须与本计划和 Draw.io 的逻辑一致，但�
 - 在现有 Planner 上加入执行单元类型、能力探测、模式预算和最多 2 个 Native Research 的约束。
 - 保持 `deep` 只规划、`research` 规划后执行。
 - Planner 输出必须可解释：说明为何选择或跳过某项能力。
+- 同步修正 Draw.io、渲染图和 Skill Mermaid：产品模式只保留 `quick | standard | deep`，并明确各模式的 AnySearch 与 Native Research 门控。
 
 ### 阶段 C：Native Research 适配器
 
@@ -172,12 +175,11 @@ Skill 正文中的 Mermaid 必须与本计划和 Draw.io 的逻辑一致，但�
 - 统一超时、状态、原始响应保存和 `ResearchArtifact` 转换。
 - 不为未通过套餐验证的功能编写默认执行路径。
 
-### 阶段 D：Agent 委派与恢复执行
+### 阶段 D：Agent 委派与结果合并
 
 - Planner 输出 AnySearch 委派步骤和输入契约。
-- Smart Search 在需要 Agent 执行时进入可恢复的等待状态。
-- Agent 自主选择 AnySearch Skill 功能并写回符合契约的产物。
-- Smart Search 恢复该次运行，把 AnySearch 结果送入同一合并管线。
+- Agent 自主选择 AnySearch Skill 功能，并按最小 JSON 协议返回结果。
+- 公共合并入口把 AnySearch 结果送入与其他来源相同的证据处理流程。
 
 ### 阶段 E：证据合并与综合
 
@@ -187,130 +189,63 @@ Skill 正文中的 Mermaid 必须与本计划和 Draw.io 的逻辑一致，但�
 - 处理来源冲突、时效差异和证据缺口。
 - 使用统一权重生成一次性带引用结论。
 
-### 阶段 F：Benchmark 调研与评测设计
+### 阶段 F：更新 Preview CLI 后启动 max Benchmark 调研
 
-- 本阶段只能在阶段 A 至 E 全部实现并通过工程测试后启动。
-- 冻结待验收的代码版本、配置、Provider 清单和模型版本，避免调研期间继续改变被测对象。
-- 以 `max` 强度启动一次独立的 Benchmark 深度调研；这里的 `max` 表示验收调研的覆盖程度和证据要求，不是 Smart Search 面向用户的第四种运行模式。
-- 全面调研各 Provider、搜索工具和 Deep Research 系统公开使用的 benchmark、数据集、评测脚本和指标。
-- 工具范围至少覆盖 Smart Search 当前接入或计划接入的 AnySearch、Exa、Tavily、Firecrawl、Jina、Context7、Sciverse、主搜索模型及其 Native Research 能力；某个工具没有公开 benchmark 时也要记录“未找到”和检索范围。
-- 记录每项公开结果的题集版本、样本数、任务类型、检索深度、驱动模型、Reader、Judge、时间、成本和厂商关系。
-- 选择能够在统一 harness 中复现的公开题集，建立 Smart Search 自己的分轨评测套件。
-- 分别运行无搜索、单一 Provider、简单多源并集、完整 Smart Search 和关键组件消融实验。
-- 输出分轨能力表、质量—延迟—成本曲线、失败案例和置信区间，不用单一总分掩盖不同能力。
+- 本阶段只能在阶段 A 至 E 的代码完成并通过工程测试后启动。
+- 构建并安装本分支的 Smart Search CLI 到隔离的 Preview 验收环境，使后续调研使用这次实现的新功能；该操作不替换 macOS 当前激活版本。
+- 使用更新后的 Preview CLI，以 `max` 调研强度搜索和读取 Benchmark 的官方文档、论文、数据集、评测脚本与复现说明。这里的 `max` 表示验收调研的深度，不是 Smart Search 面向用户的第四种运行模式。
+- 调研哪些 Search、Agentic Search 和 Deep Research Benchmark 适合测试这次新增的多源搜索功能，以及各 Benchmark 应如何运行。
+- 调研 Codex CLI 作为 Harness 时，能否让每道题在独立会话中调用 `smart-search-cli` Skill 完成搜索并接受官方评分。
+- 调研同一测试方法迁移到 Claude Code、Pi 或其他 Harness 时需要哪些适配，以及 Harness 和模型差异会怎样影响结果解释。
+- 调研完成前不预先确定 Benchmark 名称、测试组合、指标、阈值或 Harness 实现。
 
-### 阶段 G：端到端工程验收与人工决策
+### 阶段 G：运行选定 Benchmark 并提交验收结果
 
-- 完成离线契约测试、Provider mock 测试和有限 live smoke test。
-- 验证源码、wheel、npm 包及安装后运行行为。
-- 验证私有 `.env` 不进入 Git 或发布包。
-- 根据阶段 F 的调研结果完成 Benchmark 基线和发布候选运行，保存原始结果与复现实验命令。
-- 提交完整验收报告、原始结果、失败案例、替换建议和回滚说明，保持 macOS 当前激活的 `smart-search-cli` 不变。
-- 用户审阅验收结果并明确同意替换后，另行建立 macOS 替换任务；验收通过本身不构成替换授权。
+- 根据阶段 F 的调研结论选择少量适合、公开且能够复现的 Benchmark。
+- 只测试本次新增的多源搜索功能，不强制运行无搜索、单 Provider、旧版 Smart Search、`Naive Union` 或组件消融对照。
+- 使用调研确认的 Harness 和 Benchmark 官方评分方法逐题运行，保存问题、Skill 调用记录、答案、引用、评分、延迟、token、费用和失败信息。
+- 提交调研报告、运行方法、原始结果、失败案例、替换建议和回滚说明，保持 macOS 当前激活的 `smart-search-cli` 不变。
+- 用户审阅验收结果并明确同意替换后，另行建立 macOS 替换任务；验收完成本身不构成替换授权。
 - macOS 替换完成并稳定运行后，再由用户决定是否合并到 `lwj_dev` 并同步其他机器；本计划不授权自动替换、push 或跨机器部署。
 
-## 6. Benchmark 调研与评测方案
+## 6. Benchmark 调研任务
 
-### 6.1 调研产物
+### 6.1 启动条件
 
-Benchmark 调研必须形成一张可追溯的对照表，每行记录：
+max Benchmark 调研必须同时满足：
 
-- 工具与被测能力；
-- benchmark 名称、版本、任务数和数据许可；
-- 任务类型与 gold answer 的来源；
-- 指标及其计算方式；
-- 每题允许的搜索调用次数、返回结果数和停止条件；
-- 固定的驱动 Agent、Reader、Judge 及其版本；
-- 是否使用 LLM-as-a-Judge；
-- 延迟、token、API 调用和费用的统计口径；
-- 公开代码、数据和结果链接；
-- 复现状态；
-- 厂商自测、独立评测或学术评测；
-- 已知偏差、数据污染风险和适用边界。
+1. 阶段 A 至 E 的功能已经实现。
+2. 工程测试、打包测试和有限 live smoke test 已通过。
+3. 本分支的 Smart Search CLI 已安装到隔离的 Preview 验收环境。
+4. 调研会话能够实际调用该 Preview CLI 的新多源搜索功能。
 
-max 调研按五条独立路线执行：
+### 6.2 调研问题
 
-1. 厂商路线：逐一核对各搜索工具自己的 benchmark、方法、代码和公开数据。
-2. 独立路线：查找第三方 Search API 排行榜和 provider-swap 评测，识别与厂商自测不一致的结果。
-3. 学术路线：调研通用检索、时效问答、多跳搜索、Agentic Search 和 Deep Research benchmark。
-4. 复现路线：检查数据许可、脚本可运行性、费用、所需模型和潜在数据污染，确定哪些评测能够成为发布门禁。
-5. 映射路线：把候选 benchmark 映射到 Smart Search 的发现、排序、证据、研究和工程效率五类能力，并设计单源、多源和组件消融实验。
+max 调研需要回答：
 
-各路线完成后由主 Agent 合并证据，再使用一个独立 Reviewer 检查厂商偏差、对照不匹配、指标误用、遗漏工具和无法复现的结论。调研报告通过审查后才进入实际 Benchmark 运行。
+1. 哪些公开 Benchmark 与这次新增的多源搜索功能相关并值得实际运行？
+2. 每个候选 Benchmark 测量什么能力，数据、语料和官方评分程序是否可获取？
+3. 如何使用 Codex CLI 作为 Harness，让 Benchmark 的每个问题分别调用 `smart-search-cli` Skill 搜索并返回可评分答案？
+4. 如何确认 Agent 确实调用了新功能，并保存必要的调用记录和运行结果？
+5. 同一方法能否迁移到 Claude Code、Pi 或其他 Harness？需要替换哪些启动、Skill 加载和结果采集接口？
+6. Harness、模型、提示词和运行预算的差异会如何限制不同结果之间的比较？
+7. 选定 Benchmark 的运行成本、预计时间、并发限制和失败恢复方式是什么？
 
-max 调研至少应核对以下 Benchmark 类型和公开入口；这些条目是调研范围，不代表当前已经完成核验或决定采用：
+用户提供的 Firecrawl Developer Index 和 Mistral Agentic Search 页面只作为后续 max 调研的起始线索，不代表已经选定对应 Benchmark。
 
-- [Firecrawl DevDex](https://www.firecrawl.dev/benchmarks/devdex)：代码仓库发现、Issue/PR 定位和文档检索；固定 gold URL，使用 Recall@10 与 MRR@10。
-- [Exa Search Benchmarks](https://github.com/exa-labs/benchmarks)：WebCode、People、Company 和 Publication Retrieval 等分轨评测。
-- [Tavily Search Evals](https://github.com/tavily-ai/tavily-search-evals)：SimpleQA 和文档相关性等统一搜索 API 评测。
-- [AnySearch Accuracy Benchmark](https://anysearch.com/home)：FRAMES、FreshQA 和 WebWalkerQA；需要进一步核对可复现数据、脚本和完整方法。
-- [Artificial Analysis Search API Methodology](https://artificialanalysis.ai/methodology/search-api)：固定 Agent、只替换 Search API 的 provider-swap 设计。
-- [DeepResearch Bench](https://deepresearch-bench.github.io/)：面向研究报告的质量、引用和检索能力评测。
-- [Deep Research Bench II](https://arxiv.org/abs/2601.08536)：使用专家报告生成的细粒度 rubric 评估信息召回、分析与表达。
+### 6.3 调研交付物
 
-max 调研需要核对每个入口的原始方法、代码、数据和许可证。厂商公布的分数不能直接横向合并，因为各评测的模型、查询集、调用预算、结果数、Reader、Judge 和运行时间可能不同。
+调研完成后提交：
 
-### 6.2 Smart Search 的评测层级
+- 候选 Benchmark 对照表及来源；
+- 推荐实际运行的少量 Benchmark 和选择理由；
+- 每个 Benchmark 在 Codex CLI 中逐题调用 Skill 的运行方案；
+- Claude Code、Pi 和其他适用 Harness 的迁移判断；
+- 预计成本、时间、依赖和复现条件；
+- 尚不能运行的 Benchmark 及其阻碍；
+- 后续实际 Benchmark 运行计划。
 
-Smart Search 需要分别回答五个问题：
-
-| 能力层级 | 核心问题 | 主要指标 |
-| --- | --- | --- |
-| 发现能力 | 能否找到正确来源 | Recall@k、Success@k、覆盖率 |
-| 排序能力 | 正确来源是否排在前面 | MRR@k、nDCG@k |
-| 证据能力 | 来源是否真正支持主张 | Citation precision、Citation recall、引用完整率 |
-| 研究能力 | 能否分解问题、补足缺口并形成可靠结论 | 答案准确率、Claim 覆盖率、冲突识别率、报告 rubric 得分 |
-| 工程效率 | 提升是否值得额外资源 | P50/P95 延迟、每题成本、API 调用数、token、失败率 |
-
-搜索能力和写作能力必须分开报告。检索到正确来源但综合模型答错，属于 Reader 或 synthesis 失败；没有检索到正确来源，才属于搜索失败。
-
-### 6.3 计划采用的 Benchmark 组合
-
-最终套件按能力分轨，不把所有任务压成一个排行榜：
-
-1. **开发者检索**：优先复现 DevDex；补充 Exa WebCode 中可公开复现的文档与代码内容评测。
-2. **一般事实检索**：使用 SimpleQA Verified 或同类固定答案集，测量搜索给固定 Reader 带来的准确率提升。
-3. **时效性检索**：使用 FreshQA，并增加带明确采集日期的滚动题集；旧答案必须按运行日期重新核验。
-4. **多跳和复杂检索**：使用 FRAMES、WebWalkerQA、BrowseComp 或 DeepSearchQA 中可合法、可复现的子集。
-5. **学术检索**：使用 Publication Retrieval 或自建 DOI gold 集，覆盖已知论文、模糊回忆、方法追踪和引用关系。
-6. **研究报告**：使用 DeepResearch Bench 类任务评估信息覆盖、引用正确性、分析和表达；该轨与纯检索分数分开。
-7. **项目真实任务集**：从 Smart Search 的真实使用场景抽取代码、API 文档、论文、中文时效信息和综合研究任务，建立冻结测试集与后续滚动测试集。
-
-公开 benchmark 只有在数据、脚本和许可证允许本地复现时才进入正式验收。只能看到排行榜、无法重跑的方法保留在调研报告中，不作为发布门禁。
-
-### 6.4 统一对照实验
-
-所有方案在匹配条件下运行：同一题集版本、同一 Agent/Reader/Judge、同一提示词、同一最大搜索次数、同一 top-k、同一超时、同一日期窗口和同一输出格式。每次运行保存模型版本、Provider 版本、配置、随机种子、原始检索结果和费用。
-
-每个轨道至少比较：
-
-1. `No Search`：测量模型记忆基线和题目污染。
-2. 每个可用的单一 Provider 或 Native Research：测量单源能力。
-3. `Naive Union`：多源结果简单合并，只测量增加来源数量的收益。
-4. `Smart Search quick`。
-5. `Smart Search standard`。
-6. `Smart Search deep`。
-7. `Smart Search deep` 的组件消融：分别关闭 Planner、AnySearch、Native Research、去重、原始来源回读和 Claim Ledger。
-
-这组比较可以把三类增益分开：
-
-- **来源增益**：最佳单源与 `Naive Union` 的差异；
-- **编排增益**：`Naive Union` 与完整 Planner 的差异；
-- **证据合并增益**：关闭与开启去重、来源回读、Claim Ledger 时的差异。
-
-只有质量提高且额外成本、延迟和失败率处于可接受范围时，才认定多源方案带来有效增益。增加搜索次数本身不算能力提升。
-
-### 6.5 结果判定
-
-发布判断采用分轨门槛和 Pareto 比较：
-
-- `quick` 关注低延迟与基础准确率，不能因多源调度显著变慢。
-- `standard` 应在一般事实、时效性和项目真实任务上稳定优于最佳单源，或在相近质量下显著降低成本或失败率。
-- `deep` 应在复杂检索和研究报告轨道上提高证据覆盖、引用正确性和 Claim 覆盖率；其延迟和成本单独报告。
-- 任一总体提升都必须同时报告各任务轨道、95% 置信区间和失败案例，避免平均数掩盖代码、学术、中文或时效任务的退化。
-- Planner 选择策略只有在相同题目上优于固定 Provider 组合，或以更低成本达到相近质量时才算有效。
-
-正式阈值在完成 benchmark 全面调研和首轮基线后确定。当前不预先填写任意百分比，以免把没有经验依据的数字写成发布标准。
+调研结论形成后再决定具体 Benchmark、指标、Runner 和 Harness Adapter。本计划不在代码实现前预设这些内容。
 
 ## 7. 验收标准
 
@@ -319,7 +254,7 @@ Smart Search 需要分别回答五个问题：
 - `deep` 在无网络请求的情况下产出完整可执行计划。
 - `quick` 不调用 Native Research 或 AnySearch。
 - `standard` 只在 Planner 判断需要时委派 AnySearch，不调用 Native Research。
-- `deep` 始终包含 Smart Search Research，默认最多并行 2 个已验证可用的 Native Research。
+- `deep` 始终包含 Smart Search Research，默认总共最多选择并执行 2 个已验证可用的 Native Research；超过 2 个必须由用户显式指定。
 - AnySearch 始终作为外部 Skill 委派，不恢复为内部 Provider 或重复实现。
 - AnySearch 不存在、Provider 失败或套餐不可用时，流程可降级并说明覆盖缺口。
 - 所有执行结果都能追溯到 `ProviderRun` 和原始产物。
@@ -332,14 +267,11 @@ Smart Search 需要分别回答五个问题：
 
 ### 7.2 Benchmark 验收
 
-- 阶段 A 至 E 已完成，发布候选版本及其配置已经冻结，随后才启动 max Benchmark 调研。
-- 完成搜索工具 Benchmark 全面调研表，并回读公开方法、代码和数据，而不是只记录厂商宣传分数。
-- 至少覆盖开发者检索、一般事实、时效、多跳、学术、研究报告和项目真实任务七个轨道。
-- 同一 harness 中完成 No Search、单源、Naive Union、三种 Smart Search 模式和关键组件消融。
-- 结果可复现到题目级，包含检索结果、最终答案、引用、延迟、token、API 调用和成本。
-- 分别报告检索、证据、研究和工程效率，不用一个综合分数替代分轨判断。
-- 完成统计不确定性、污染检查、失败案例和回归分析。
-- 基线与发布候选的差异满足首轮评测后确定的分轨门槛；任何关键轨道退化必须在验收报告中解释和裁决。
+- 阶段 A 至 E 已完成并通过工程测试，随后把本分支 CLI 安装到隔离的 Preview 验收环境。
+- 使用该 Preview CLI 的新多源搜索功能，以 `max` 调研强度完成 Benchmark 文档调研。
+- 调研报告明确哪些 Benchmark 值得运行、怎样运行、Codex CLI Harness 是否可行，以及 Claude Code、Pi 等 Harness 是否能够复用。
+- 根据调研结论选择少量 Benchmark，只运行本次新增的多源搜索功能。
+- 结果可复现到题目级，包含 Skill 调用记录、答案、引用、官方评分、延迟、token、费用和失败信息。
 - Benchmark 验收结束后只提交报告并等待用户决定；未经用户看完结果后明确授权，不替换 macOS 当前激活版本。
 
 ## 8. 当前实现状态
@@ -350,26 +282,25 @@ Smart Search 需要分别回答五个问题：
 - 删除 Smart Search 内部 AnySearch Provider、配置和专属 CLI 命令。
 - AnySearch 外部 Skill 委派的路由元数据。
 - 内置 AnySearch Skill 快照、同步脚本、私有配置隔离和打包规则。
-- Draw.io 流程图、Skill 中的 Mermaid 目标图。
-- 最小 Preview 的单元测试、打包测试和 macOS 激活验证。
+- Draw.io 流程图和 Skill Mermaid 草图已经存在；模式门控仍待阶段 B 修正。
+- 最小 Preview 的单元测试与打包测试；当前 macOS 激活状态需在最终验收时现场回读。
 
 ### 尚未实现
 
 - Multi-Research Planner 的统一可执行调度。
 - Native Research 的并行执行与 entitlement 动态筛选。
-- Agent 委派的暂停、产物回传和恢复协议。
+- Agent 委派、AnySearch 最小 JSON 回传和公共合并入口。
 - `ProviderRun`、`DiscoveryCandidate`、`ResearchArtifact`、`EvidenceItem` 和 `Claim Ledger` 的完整代码实现。
 - 实体去重、原始来源回读、冲突处理和统一加权综合。
 - 整张流程图对应的端到端执行与验收。
-- Benchmark 全面调研报告、统一 harness、基线结果和分轨发布门槛。
+- Benchmark max 调研报告、选定 Benchmark 的运行方法与实际验收结果。
 
 ## 9. 尚待确认的关键问题
 
 这些问题会改变接口或执行模型，必须在对应阶段编码前确认：
 
-1. Agent 回传 AnySearch 结果的最简交互形式；当前不限定“运行目录 + 恢复命令”。
-2. Native Research 的精确选择优先级，以及用户显式选择多个能力时的 CLI 表达方式。
-3. 最终综合沿用当前 Smart Search 的合成模型，还是允许 Planner 独立选择合成 Provider。
-4. Benchmark 全面调研完成后，各能力轨道的发布阈值和项目真实任务集权重。
+1. Native Research 的精确选择优先级，以及用户显式选择多个能力时的 CLI 表达方式。
+2. 最终综合沿用当前 Smart Search 的合成模型，还是允许 Planner 独立选择合成 Provider。
+3. max Benchmark 调研完成后，具体选择哪些 Benchmark，以及 Codex CLI、Claude Code、Pi 的 Harness 实现方式。
 
-第 1 项决定混合执行的接口，第 4 项决定最终发布门槛。两项都应以实际原型或基线数据为依据，不在当前阶段凭空确定。
+第 1、2 项在对应实现阶段根据现有代码确定；第 3 项只能在新版 Preview CLI 完成后通过 max 调研确定。
