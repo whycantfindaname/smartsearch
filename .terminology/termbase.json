@@ -74,6 +74,182 @@
           "checked_at": "2026-08-23"
         }
       ]
+    },
+    {
+      "concept_id": "project-agent",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "由 Smart Search 仓库定义角色合同并由当前 Harness 启动的项目专用 Agent；当前包括 Search Scout、Source Curator 和 Evidence Miner。",
+      "scope_note": "Project Agent 不包括 Root Agent、Provider Research Agent、AnySearch 或 Infra 中的全局 worker subagent；其角色边界以仓库内 Agent 定义为准。",
+      "labels": {
+        "en": {
+          "preferred": "Project Agent",
+          "alternatives": [],
+          "deprecated": []
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "Project Agent",
+          "search_query": "Project Agent Smart Search role contract",
+          "source_url": "project:skills/smart-search-cli/SKILL.md#multi-source-research-flow",
+          "observed_usage": "The implemented Skill distinguishes repository-defined project Agents from the Root Agent, Provider Research Agents, external Skills, and global infrastructure roles.",
+          "checked_at": "2026-08-25"
+        }
+      ]
+    },
+    {
+      "concept_id": "search-scout",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "在 Root Agent 授权的 SearchTask 范围内自主组合可用搜索能力，并以 DelegateResult 返回候选来源、原始产物引用、覆盖缺口和建议的 Smart Search 项目专用 Agent。",
+      "scope_note": "Search Scout 不选择最终关键文档，不生成最终结论，也不能创建后续任务或派生 Subagent；只有 Root Agent 能根据其建议重规划。",
+      "labels": {
+        "en": {
+          "preferred": "Search Scout",
+          "alternatives": [],
+          "deprecated": []
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "Search Scout",
+          "search_query": "Search Scout Smart Search SearchTask DelegateResult",
+          "source_url": "project:skills/smart-search-cli/SKILL.md#multi-source-research-flow",
+          "observed_usage": "The implemented research flow assigns Root-authored SearchTask work to Search Scouts and requires them to return candidates, gaps, suggestions, and artifact references through DelegateResult.",
+          "checked_at": "2026-08-25"
+        }
+      ]
+    },
+    {
+      "concept_id": "evidence-miner",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "围绕 EvidenceMiningTask 对已登记关键文档进行迭代读取，并返回带原文位置、快照身份和立场信息的 EvidenceItem 的 Smart Search 项目专用 Agent。",
+      "scope_note": "Evidence Miner 只能读取任务授权的 artifact，不能扩大来源范围、删除内容、创建后续任务或综合最终结论。",
+      "labels": {
+        "en": {
+          "preferred": "Evidence Miner",
+          "alternatives": [],
+          "deprecated": []
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "Evidence Miner",
+          "search_query": "Evidence Miner Smart Search registered artifacts",
+          "source_url": "project:skills/smart-search-cli/SKILL.md#multi-source-research-flow",
+          "observed_usage": "The implemented flow limits Evidence Miners to registered artifacts and requires locator-backed EvidenceItem output for Root synthesis.",
+          "checked_at": "2026-08-25"
+        }
+      ]
+    },
+    {
+      "concept_id": "provider-research-agent",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "由外部搜索 Provider 提供的原生研究能力在 Smart Search 中对应的独立运行单元；当前包括 Firecrawl Agent、Jina DeepSearch、Exa Agent 和 Tavily Research。",
+      "scope_note": "Provider Research Agent 不是 Smart Search 项目 Subagent。每一路具有独立的提交、等待、错误、用量和产物记录，并且只有在 configured、reachable、entitled 时才会尝试运行。",
+      "labels": {
+        "en": {
+          "preferred": "Provider Research Agent",
+          "alternatives": [],
+          "deprecated": [
+            {
+              "term": "Native Research",
+              "replacement": "Provider Research Agent",
+              "reason": "The old name does not distinguish an external provider-managed research capability from a Smart Search project Agent."
+            }
+          ]
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "Provider Research Agent",
+          "search_query": "Provider Research Agent Smart Search provider lifecycle",
+          "source_url": "project:skills/smart-search-cli/SKILL.md#multi-source-research-flow",
+          "observed_usage": "The accepted implementation names Firecrawl Agent, Jina DeepSearch, Exa Agent, and Tavily Research as Provider Research Agents and records each provider lifecycle independently.",
+          "checked_at": "2026-08-25"
+        }
+      ]
+    },
+    {
+      "concept_id": "research-run",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "由调用方持有的结构化研究运行状态，聚合 ResearchFrame、ClaimSpec、任务与委派引用、能力快照、执行尝试、证据缺口和 Root Agent 的下一步决定。",
+      "scope_note": "ResearchRun 是可序列化的 dossier，不是后台常驻进程，也不等于物化后的 Research Workspace；Smart Search 不保持一个暂停进程等待外部委派。",
+      "labels": {
+        "en": {
+          "preferred": "ResearchRun",
+          "alternatives": [],
+          "deprecated": []
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "ResearchRun",
+          "search_query": "ResearchRun Smart Search caller-held dossier",
+          "source_url": "project:README.zh-CN.md#agentic-research-preview",
+          "observed_usage": "The Preview exposes deterministic ResearchRun operations through structured JSON dossiers controlled by the calling Agent.",
+          "checked_at": "2026-08-25"
+        }
+      ]
+    },
+    {
+      "concept_id": "research-workspace",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "ResearchRun 物化后形成的持久化研究目录，保存结构化 dossier、Trace、Artifact、Evidence、Claim、检查点及供人阅读的 Markdown 与只读可视化投影。",
+      "scope_note": "Research Workspace 是持久化与检查界面，不是第二套运行状态源；结构化 Dossier、Trace、Artifact、Evidence 和 Claim 记录保持权威，Markdown 与可视化页面只是投影。",
+      "labels": {
+        "en": {
+          "preferred": "Research Workspace",
+          "alternatives": [],
+          "deprecated": []
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "Research Workspace",
+          "search_query": "Research Workspace Smart Search materialized run",
+          "source_url": "project:README.zh-CN.md#agentic-research-preview",
+          "observed_usage": "The Preview materializes caller-held research state into a durable Research Workspace and serves that workspace through a read-only local visualizer.",
+          "checked_at": "2026-08-25"
+        }
+      ]
+    },
+    {
+      "concept_id": "research-trace",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "按运行追加写入的可观测事件链，通过稳定 ID 连接任务、步骤、执行尝试、Provider 状态、产物和引用验证。",
+      "scope_note": "Research Trace 不保存隐藏思维链。`public_trace.jsonl` 是只包含公开身份与事件元数据的投影，不替代结构化 Trace 权威记录。",
+      "labels": {
+        "en": {
+          "preferred": "Research Trace",
+          "alternatives": [
+            "Trace"
+          ],
+          "deprecated": []
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "Research Trace",
+          "search_query": "Research Trace Smart Search append-only public trace",
+          "source_url": "project:skills/smart-search-cli/SKILL.md#multi-source-research-flow",
+          "observed_usage": "The implemented runtime stores append-only Trace records as authoritative structured data and exposes only metadata-safe public Trace projections without hidden reasoning.",
+          "checked_at": "2026-08-25"
+        }
+      ]
     }
   ]
 }
