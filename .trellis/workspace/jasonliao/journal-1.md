@@ -28,3 +28,24 @@ Initialized Trellis governance, completed the Agentic Research Preview runtime a
 ### Status
 
 [OK] **Completed**
+
+
+## Session 2: Add Agentic Research project terminology
+
+**Date**: 2026-08-25
+**Task**: Add Agentic Research project terminology
+**Branch**: `preview/multi-source-agentic-research`
+
+### Summary
+
+Added seven accepted Smart Search Agentic Research concepts, deprecated Native Research in favor of Provider Research Agent, and validated the project termbase and related documentation.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b1795ed` | (see git log) |
+
+### Status
+
+[OK] **Completed**
