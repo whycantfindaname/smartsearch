@@ -248,6 +248,42 @@ smart-search deep "https://example.com/source" --format json
 
 看到输出里有 `mode=deep_research`、`decomposition`、多步 `steps`、`evidence_policy=fetch_before_claim`、`preflight.executed_by_deep_command=false`，就说明已经进入 Deep Research 计划模式。
 
+## Agentic Research Preview
+
+Preview 增加了一套由调用方控制的研究运行时，不改变默认 `search`、`deep` 和
+`research` 的行为。它面向负责规划与综合的 Root Agent；Smart Search 负责执行
+确定性的 ResearchRun 操作，并保存可审计的 Research Workspace。
+
+```bash
+# 查看当前已配置、可访问且账号有权限使用的研究能力。
+smart-search research-run capabilities --format json
+
+# 使用明确指定的 Python 3.12 安装并检查隔离的文档 Sidecar。
+smart-search research-environment install --python /absolute/path/to/python3.12 --format json
+smart-search research-environment doctor --format json
+
+# 在只读本地页面中打开已经物化的 Research Workspace。
+smart-search research-view /path/to/research-workspace --port 8080
+```
+
+`research-run` 还提供 `create`、`execute`、`import`、添加任务、文档挖掘、
+Claim 处理、Root 决策、引用验证和 `materialize` 等操作。这些命令通过结构化
+JSON dossier 与调用它的 Agent 交换状态，不替代面向用户的 `research` 命令。
+
+Dossier、append-only Trace、Artifact Registry、EvidenceItem 和 Claim 记录是
+权威数据；Markdown 与可视化页面只是便于阅读的投影，不保存隐藏推理。只有能力
+已经配置、当前可访问，并且账号有权使用时，Provider Research Agent 才会发起
+尝试。AnySearch 和 MinerU 继续作为外部 Skill 使用，凭据不复制到 Smart Search
+配置中。
+
+文档 Sidecar 必须由明确指定的 Python 3.12 解释器创建独立虚拟环境，默认位置是
+`$SMART_SEARCH_CONFIG_DIR/research-sidecar`。只有健康检查通过后，Smart Search
+才保存 `SMART_SEARCH_SIDECAR_PYTHON`；依赖不会安装到用户提供的解释器本身。
+
+完整契约和编排说明见 [Research Runtime Configuration](docs/architecture/research-runtime-config.md)、
+[Agentic Research architecture](skills/smart-search-cli/references/agentic-research-architecture.md)
+以及 [smart-search-cli Skill](skills/smart-search-cli/SKILL.md)。
+
 ## API 和 Key 申请入口
 
 普通用户优先用 `smart-search setup` 配置。环境变量仍然支持 CI 和高级用户。
@@ -441,6 +477,9 @@ xAI 的 hard deadline 覆盖连接尝试、重试等待、响应等待和状态�
 | `route` | `rt` | 只解释需要哪些 capability，不调用 provider |
 | `deep` | `dr` | Deep Research 离线计划 |
 | `research` | `rs` | live Deep Research 执行 |
+| `research-run` | `rr` | 面向 Agent 的确定性 ResearchRun dossier 操作 |
+| `research-view` | `rv` | 只读本地 Research Workspace 可视化页面 |
+| `research-environment` | `research-env`、`renv` | 安装或检查隔离的 Python 3.12 文档 Sidecar |
 | `fetch` | `f` | 抓一个 URL 正文 |
 | `map` | `m` | 读取站点结构 |
 | `exa-search` | `exa`、`x` | Exa 来源发现 |

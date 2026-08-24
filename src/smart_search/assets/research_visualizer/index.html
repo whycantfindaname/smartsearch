@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Smart Search · Research Workspace</title>
+  <style>
+    :root {
+      --paper: #edf2f5;
+      --surface: #f8fafb;
+      --surface-strong: #ffffff;
+      --ink: #16232d;
+      --muted: #60707b;
+      --rule: #c9d3d9;
+      --rule-strong: #93a5b0;
+      --blue: #155aa8;
+      --blue-pale: #dceaf8;
+      --cyan: #167889;
+      --amber: #a45b12;
+      --amber-pale: #f8ead5;
+      --red: #a43b35;
+      --green: #2e6c55;
+      --shadow: 0 18px 45px rgba(32, 53, 65, 0.09);
+      --display: "Avenir Next Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+      --body: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--paper); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background-color: var(--paper);
+      font-family: var(--body);
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+    a { color: var(--blue); }
+    :focus-visible { outline: 3px solid #f3a942; outline-offset: 3px; }
+
+    .masthead {
+      min-height: 82px;
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 24px;
+      align-items: center;
+      padding: 14px 24px;
+      background: rgba(248, 250, 251, 0.96);
+      border-bottom: 1px solid var(--rule-strong);
+    }
+
+    .identity { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .mark {
+      width: 44px;
+      height: 44px;
+      position: relative;
+      flex: 0 0 auto;
+      border: 2px solid var(--ink);
+    }
+    .mark::before, .mark::after { content: ""; position: absolute; background: var(--blue); }
+    .mark::before { width: 2px; height: 52px; left: 19px; top: -6px; transform: rotate(45deg); }
+    .mark::after { width: 52px; height: 2px; left: -6px; top: 19px; transform: rotate(45deg); }
+    .eyebrow {
+      margin: 0 0 3px;
+      color: var(--blue);
+      font: 700 0.7rem/1 var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    h1 {
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font: 650 clamp(1.35rem, 2vw, 1.8rem)/1.05 var(--display);
+      letter-spacing: 0.015em;
+    }
+
+    .run-strip { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px 18px; }
+    .run-fact { min-width: 90px; }
+    .run-fact span { display: block; color: var(--muted); font: 650 0.62rem/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; }
+    .run-fact strong { display: block; margin-top: 4px; font: 650 0.82rem/1.15 var(--mono); }
+    .live-dot { color: var(--green); }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(340px, 39vw) minmax(0, 1fr);
+      min-height: calc(100vh - 82px);
+    }
+
+    .pipeline-shell {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: calc(100vh - 82px);
+      overflow: auto;
+      padding: 24px clamp(20px, 3vw, 42px) 30px;
+      background: rgba(237, 242, 245, 0.95);
+      border-right: 1px solid var(--rule-strong);
+    }
+    .section-kicker { margin: 0; color: var(--muted); font: 700 0.66rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.13em; }
+    .pipeline-title { margin: 7px 0 6px; font: 650 1.45rem/1.1 var(--display); }
+    .pipeline-lede { margin: 0 0 22px; max-width: 54ch; color: var(--muted); font-size: 0.83rem; line-height: 1.5; }
+
+    .pipeline { position: relative; margin: 0; padding: 0; list-style: none; }
+    .pipeline::before {
+      content: "";
+      position: absolute;
+      top: 20px;
+      bottom: 20px;
+      left: 22px;
+      width: 2px;
+      background: var(--rule-strong);
+    }
+    .pipeline-item { position: relative; padding: 0 0 12px; }
+    .pipeline-item:last-child { padding-bottom: 0; }
+    .pipeline-node {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: start;
+      padding: 11px 10px 11px 0;
+      border: 1px solid transparent;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+    .pipeline-node:hover { background: rgba(255, 255, 255, 0.65); border-color: var(--rule); }
+    .pipeline-node[aria-current="step"] { background: var(--surface-strong); border-color: var(--ink); box-shadow: var(--shadow); }
+    .node-index {
+      z-index: 1;
+      width: 46px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      background: var(--paper);
+      border: 2px solid var(--rule-strong);
+      font: 750 0.74rem/1 var(--mono);
+    }
+    .status-complete .node-index { border-color: var(--green); color: var(--green); }
+    .status-active .node-index { border-color: var(--blue); color: var(--blue); }
+    .status-degraded .node-index { border-color: var(--amber); color: var(--amber); }
+    .node-copy strong { display: block; margin: 1px 0 6px; font: 650 1rem/1.1 var(--display); }
+    .node-metrics { display: flex; flex-wrap: wrap; gap: 5px 12px; color: var(--muted); font: 0.68rem/1.25 var(--mono); }
+    .node-metrics b { color: var(--ink); font-weight: 750; }
+    .status-label { margin-top: 2px; color: var(--muted); font: 700 0.58rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; }
+    .status-active .status-label { color: var(--blue); }
+    .status-degraded .status-label { color: var(--amber); }
+    .status-complete .status-label { color: var(--green); }
+
+    .lab-key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin-top: 22px;
+      padding-top: 15px;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font: 0.65rem/1.2 var(--mono);
+    }
+    .key-dot { width: 8px; height: 8px; display: inline-block; margin-right: 6px; border: 2px solid currentColor; }
+
+    .inspection {
+      min-width: 0;
+      padding: 0 clamp(20px, 4vw, 56px) 50px;
+      background: rgba(248, 250, 251, 0.86);
+    }
+    .tabs {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      gap: 3px;
+      padding: 16px 0 0;
+      background: rgba(248, 250, 251, 0.96);
+      border-bottom: 1px solid var(--rule-strong);
+    }
+    .tab {
+      padding: 10px 14px;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font: 750 0.68rem/1 var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      cursor: pointer;
+    }
+    .tab[aria-selected="true"] { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-panel { padding-top: 26px; }
+    .tab-panel[hidden] { display: none; }
+    .panel-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+    .panel-heading h2 { margin: 5px 0 0; font: 650 clamp(1.7rem, 4vw, 2.7rem)/0.98 var(--display); }
+    .panel-heading p { max-width: 54ch; margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
+
+    .count-rack {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(90px, 1fr));
+      margin: 18px 0 26px;
+      border-top: 1px solid var(--rule-strong);
+      border-left: 1px solid var(--rule-strong);
+    }
+    .count-cell { min-height: 82px; padding: 12px; background: rgba(255,255,255,0.65); border-right: 1px solid var(--rule-strong); border-bottom: 1px solid var(--rule-strong); }
+    .count-cell b { display: block; font: 650 1.55rem/1 var(--display); }
+    .count-cell span { display: block; margin-top: 7px; color: var(--muted); font: 650 0.61rem/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.07em; }
+
+    .module-note { padding: 16px 18px; background: var(--blue-pale); border-left: 4px solid var(--blue); font-size: 0.86rem; line-height: 1.55; }
+    .module-note p { margin: 0; }
+    .subhead { margin: 28px 0 10px; font: 700 0.7rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; }
+
+    .task-table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.58); font-size: 0.78rem; }
+    .task-table th, .task-table td { padding: 10px 8px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+    .task-table th { color: var(--muted); font: 700 0.6rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.07em; }
+    .task-open { padding: 0; border: 0; background: transparent; color: var(--blue); font-weight: 650; cursor: pointer; text-align: left; }
+    .mono { font-family: var(--mono); font-size: 0.72rem; }
+    .pill { display: inline-block; padding: 3px 6px; border: 1px solid var(--rule-strong); font: 650 0.58rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.04em; }
+    .pill.failed, .pill.timeout, .pill.entitlement_failure, .pill.missing_key { color: var(--amber); border-color: var(--amber); background: var(--amber-pale); }
+    .pill.success, .pill.succeeded, .pill.completed, .pill.complete { color: var(--green); border-color: var(--green); }
+
+    .failure-list, .evidence-list, .activity-list { display: grid; gap: 10px; }
+    .failure-row { display: grid; grid-template-columns: minmax(100px, 0.25fr) minmax(0, 1fr); gap: 14px; padding: 12px 14px; border: 1px solid #d4b68f; background: var(--amber-pale); }
+    .failure-row strong { font-size: 0.8rem; }
+    .failure-row p { margin: 3px 0 0; color: #714513; font-size: 0.75rem; line-height: 1.45; }
+
+    .activity-row { position: relative; display: grid; grid-template-columns: 105px minmax(0,1fr); gap: 16px; padding: 13px 0 13px 18px; border-left: 1px solid var(--rule-strong); }
+    .activity-row::before { content: ""; position: absolute; left: -5px; top: 18px; width: 8px; height: 8px; background: var(--surface); border: 1px solid var(--blue); }
+    .activity-row time, .activity-row .activity-source { color: var(--muted); font: 0.62rem/1.4 var(--mono); }
+    .activity-row strong { display: block; font-size: 0.8rem; }
+    .activity-row p { margin: 4px 0 0; color: var(--muted); font-size: 0.77rem; line-height: 1.48; }
+
+    .evidence-toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+    .filter-input { min-width: min(360px, 100%); padding: 9px 11px; color: var(--ink); background: var(--surface-strong); border: 1px solid var(--rule-strong); }
+    .filter-button { padding: 9px 11px; background: transparent; border: 1px solid var(--rule-strong); cursor: pointer; }
+    .filter-button[aria-pressed="true"] { color: white; background: var(--blue); border-color: var(--blue); }
+    .evidence-row { display: grid; grid-template-columns: 88px minmax(0,1fr); border: 1px solid var(--rule); background: rgba(255,255,255,0.72); }
+    .evidence-stance { padding: 14px 10px; color: var(--green); border-right: 1px solid var(--rule); font: 750 0.63rem/1.2 var(--mono); text-transform: uppercase; }
+    .evidence-stance.contradict { color: var(--red); }
+    .evidence-stance.qualify { color: var(--amber); }
+    .evidence-body { min-width: 0; padding: 13px 14px; }
+    .evidence-body a { display: block; overflow-wrap: anywhere; font: 650 0.74rem/1.4 var(--mono); }
+    .evidence-body p { margin: 8px 0; font-size: 0.8rem; line-height: 1.5; }
+    .evidence-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font: 0.62rem/1.3 var(--mono); }
+
+    .report-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .plain-button { padding: 9px 12px; border: 1px solid var(--ink); background: var(--surface-strong); cursor: pointer; font: 700 0.68rem/1 var(--mono); }
+    .markdown { max-width: 82ch; padding: 22px clamp(18px, 4vw, 38px); background: var(--surface-strong); border: 1px solid var(--rule-strong); box-shadow: var(--shadow); font-size: 0.9rem; line-height: 1.7; }
+    .markdown h1, .markdown h2, .markdown h3 { font-family: var(--display); line-height: 1.15; }
+    .markdown h1 { font-size: 2rem; }
+    .markdown h2 { margin-top: 1.8em; padding-bottom: 0.25em; border-bottom: 1px solid var(--rule); }
+    .markdown code { padding: 0.1em 0.3em; background: var(--paper); font-family: var(--mono); font-size: 0.85em; }
+    .markdown pre { overflow: auto; padding: 14px; background: var(--ink); color: white; }
+    .markdown blockquote { margin-left: 0; padding-left: 16px; color: var(--muted); border-left: 3px solid var(--cyan); }
+
+    .drawer {
+      position: fixed;
+      z-index: 20;
+      inset: 0 0 0 auto;
+      width: min(620px, 92vw);
+      padding: 22px;
+      overflow: auto;
+      background: var(--surface-strong);
+      border-left: 1px solid var(--ink);
+      box-shadow: -20px 0 55px rgba(25, 44, 54, 0.18);
+    }
+    .drawer[hidden] { display: none; }
+    .drawer-head { display: flex; justify-content: space-between; gap: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+    .drawer-head h2 { margin: 0; font: 650 1.55rem/1 var(--display); }
+    .drawer-close { width: 36px; height: 36px; border: 1px solid var(--ink); background: transparent; cursor: pointer; }
+    .drawer-grid { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 8px 16px; margin: 20px 0; font-size: 0.8rem; }
+    .drawer-grid dt { color: var(--muted); font-family: var(--mono); }
+    .drawer-grid dd { margin: 0; overflow-wrap: anywhere; }
+
+    .empty { padding: 22px; color: var(--muted); background: rgba(255,255,255,0.6); border: 1px dashed var(--rule-strong); font-size: 0.82rem; line-height: 1.5; }
+    .error-banner { margin: 20px; padding: 16px; color: #6d2723; background: #f7dfdd; border: 1px solid var(--red); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    @media (max-width: 900px) {
+      .masthead { grid-template-columns: 1fr; }
+      .run-strip { justify-content: flex-start; }
+      .workspace { display: block; }
+      .pipeline-shell { position: sticky; top: 0; z-index: 10; height: auto; max-height: 43vh; border-right: 0; border-bottom: 1px solid var(--rule-strong); }
+      .pipeline-lede, .lab-key { display: none; }
+      .pipeline { display: grid; grid-template-columns: repeat(6, minmax(155px, 1fr)); overflow-x: auto; padding-bottom: 6px; }
+      .pipeline::before { top: 20px; left: 22px; right: 22px; bottom: auto; width: auto; height: 2px; }
+      .pipeline-item { padding: 0 8px 0 0; }
+      .pipeline-node { grid-template-columns: 46px minmax(88px, 1fr); }
+      .status-label { grid-column: 2; }
+      .inspection { padding-bottom: 40px; }
+      .tabs { overflow-x: auto; }
+    }
+
+    @media (max-width: 620px) {
+      .masthead { padding: 12px 16px; }
+      .mark { display: none; }
+      .pipeline-shell { padding: 15px 14px; }
+      .inspection { padding-inline: 14px; }
+      .count-rack { grid-template-columns: repeat(2, 1fr); }
+      .panel-heading { display: block; }
+      .panel-heading p { margin-top: 10px; }
+      .failure-row, .activity-row, .evidence-row { grid-template-columns: 1fr; }
+      .activity-row { padding-left: 18px; }
+      .evidence-stance { border-right: 0; border-bottom: 1px solid var(--rule); }
+      .task-table th:nth-child(3), .task-table td:nth-child(3) { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="identity">
+      <div class="mark" aria-hidden="true"></div>
+      <div style="min-width:0">
+        <p class="eyebrow">Smart Search / evidence laboratory</p>
+        <h1 id="project-name">Research Workspace</h1>
+      </div>
+    </div>
+    <div class="run-strip" aria-label="Run identity">
+      <div class="run-fact"><span>Run</span><strong id="run-id">—</strong></div>
+      <div class="run-fact"><span>Mode</span><strong id="run-mode">—</strong></div>
+      <div class="run-fact"><span>State</span><strong id="run-status" class="live-dot">Loading</strong></div>
+      <div class="run-fact"><span>Last check</span><strong id="last-check">—</strong></div>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="pipeline-shell" aria-labelledby="pipeline-heading">
+      <p class="section-kicker">Primary instrument</p>
+      <h2 class="pipeline-title" id="pipeline-heading">Research pipeline</h2>
+      <p class="pipeline-lede">The Root-led path stays in view. Select a module to inspect its tasks, attempts, gaps, and outputs without exposing raw runtime artifacts.</p>
+      <ol class="pipeline" id="pipeline" aria-label="Root-led research pipeline"></ol>
+      <div class="lab-key" aria-label="Pipeline status key">
+        <span style="color:var(--green)"><i class="key-dot"></i>Complete</span>
+        <span style="color:var(--blue)"><i class="key-dot"></i>Active</span>
+        <span style="color:var(--amber)"><i class="key-dot"></i>Degraded path</span>
+        <span><i class="key-dot"></i>Waiting</span>
+      </div>
+    </aside>
+
+    <section class="inspection" aria-label="Research inspection desk">
+      <nav class="tabs" role="tablist" aria-label="Workspace views">
+        <button class="tab" role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="true">Module detail</button>
+        <button class="tab" role="tab" id="tab-activity" aria-controls="panel-activity" aria-selected="false">Public activity</button>
+        <button class="tab" role="tab" id="tab-evidence" aria-controls="panel-evidence" aria-selected="false">Evidence register</button>
+        <button class="tab" role="tab" id="tab-report" aria-controls="panel-report" aria-selected="false">Final report</button>
+      </nav>
+
+      <section class="tab-panel" role="tabpanel" id="panel-overview" aria-labelledby="tab-overview">
+        <div id="overview-content" aria-live="polite"><div class="empty">Reading the public workspace projection…</div></div>
+      </section>
+
+      <section class="tab-panel" role="tabpanel" id="panel-activity" aria-labelledby="tab-activity" hidden>
+        <div class="panel-heading">
+          <div><p class="section-kicker">Observable execution</p><h2>Public activity</h2></div>
+          <p>Entries come from <code>main_log.md</code> and metadata-only Trace events explicitly declared public by the manifest. Hidden reasoning is never displayed.</p>
+        </div>
+        <div id="activity-content" class="activity-list"><div class="empty">Loading activity…</div></div>
+      </section>
+
+      <section class="tab-panel" role="tabpanel" id="panel-evidence" aria-labelledby="tab-evidence" hidden>
+        <div class="panel-heading">
+          <div><p class="section-kicker">Claim-facing sources</p><h2>Evidence register</h2></div>
+          <p>Every row keeps the source URL, stance, typed locator summary, and task association together.</p>
+        </div>
+        <div class="evidence-toolbar" aria-label="Evidence filters">
+          <label><span class="sr-only">Filter evidence</span><input class="filter-input" id="evidence-query" type="search" placeholder="Filter by URL, task, claim, or excerpt"></label>
+          <button class="filter-button" data-stance="all" aria-pressed="true">All</button>
+          <button class="filter-button" data-stance="support" aria-pressed="false">Support</button>
+          <button class="filter-button" data-stance="contradict" aria-pressed="false">Contradict</button>
+          <button class="filter-button" data-stance="qualify" aria-pressed="false">Qualify</button>
+        </div>
+        <div id="evidence-content" class="evidence-list"></div>
+      </section>
+
+      <section class="tab-panel" role="tabpanel" id="panel-report" aria-labelledby="tab-report" hidden>
+        <div class="panel-heading">
+          <div><p class="section-kicker">Root synthesis</p><h2>Final report</h2></div>
+          <p>The viewer renders the selected final Markdown source locally. Raw artifacts and runtime directories remain outside the server surface.</p>
+        </div>
+        <div class="report-actions"><button class="plain-button" id="load-report">Load final synthesis</button></div>
+        <article id="report-content" class="markdown"><p>Load the report when <code>final_synthesis.md</code> is available.</p></article>
+      </section>
+    </section>
+  </main>
+
+  <aside class="drawer" id="task-drawer" aria-labelledby="drawer-title" hidden>
+    <div class="drawer-head"><h2 id="drawer-title">Task detail</h2><button class="drawer-close" id="drawer-close" aria-label="Close task detail">×</button></div>
+    <div id="drawer-content"></div>
+  </aside>
+
+  <script>
+    "use strict";
+
+    const state = { summary: null, selectedNode: "root-plan", activeTab: "overview", evidenceStance: "all", reportLoaded: false };
+    const stageTasks = {
+      "root-plan": () => state.summary.tasks,
+      discovery: () => state.summary.tasks.filter(t => /scout|search|discover|anysearch/i.test(`${t.role} ${t.name}`)),
+      curation: () => state.summary.tasks.filter(t => /curator|curat/i.test(`${t.role} ${t.name}`)),
+      mining: () => state.summary.tasks.filter(t => /miner|evidence|document/i.test(`${t.role} ${t.name}`)),
+      claims: () => state.summary.tasks.filter(t => /claim|citation|verify/i.test(`${t.role} ${t.name}`)),
+      synthesis: () => state.summary.tasks.filter(t => /synth|report|final/i.test(`${t.role} ${t.name}`))
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
+    }
+
+    function safeUrl(value) {
+      try {
+        const url = new URL(value);
+        return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+      } catch (_) { return ""; }
+    }
+
+    function statusPill(status) {
+      const clean = String(status || "unknown").toLowerCase();
+      return `<span class="pill ${escapeHtml(clean)}">${escapeHtml(clean.replaceAll("_", " "))}</span>`;
+    }
+
+    async function fetchJson(path) {
+      const response = await fetch(path, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Request failed (${response.status})`);
+      return response.json();
+    }
+
+    function renderPipeline() {
+      const pipeline = document.getElementById("pipeline");
+      pipeline.innerHTML = state.summary.pipeline.map(node => `
+        <li class="pipeline-item status-${escapeHtml(node.status)}">
+          <button class="pipeline-node" data-node="${escapeHtml(node.id)}" ${node.id === state.selectedNode ? 'aria-current="step"' : ""} aria-label="Inspect ${escapeHtml(node.label)}, ${escapeHtml(node.status)}">
+            <span class="node-index">${escapeHtml(node.index)}</span>
+            <span class="node-copy"><strong>${escapeHtml(node.label)}</strong><span class="node-metrics">${node.metrics.map(metric => `<span><b>${escapeHtml(metric.value)}</b> ${escapeHtml(metric.label)}</span>`).join("")}</span></span>
+            <span class="status-label">${escapeHtml(node.status)}</span>
+          </button>
+        </li>`).join("");
+      pipeline.querySelectorAll("button[data-node]").forEach(button => button.addEventListener("click", () => {
+        state.selectedNode = button.dataset.node;
+        renderPipeline();
+        renderOverview();
+        activateTab("overview");
+      }));
+    }
+
+    function renderCounts() {
+      const c = state.summary.counts;
+      return `<div class="count-rack" aria-label="Run counts">
+        ${[[c.tasks,"Tasks"],[c.provider_attempts,"Provider attempts"],[c.agents,"Agents"],[c.candidates,"Candidates"],[c.proposals,"Proposals"],[c.evidence,"Evidence items"],[c.claims,"Claims"],[c.citations,"Citations"]]
+          .map(([value,label]) => `<div class="count-cell"><b>${escapeHtml(value)}</b><span>${escapeHtml(label)}</span></div>`).join("")}
+      </div>`;
+    }
+
+    function renderTaskTable(tasks) {
+      if (!tasks.length) return '<div class="empty">No task directory is associated with this module yet. The module can still contain deterministic kernel output.</div>';
+      return `<table class="task-table"><thead><tr><th>Task</th><th>Status</th><th>Role</th><th>Claim</th></tr></thead><tbody>${tasks.map(task => `
+        <tr><td><button class="task-open" data-task="${escapeHtml(task.task_id)}">${escapeHtml(task.name)}</button><div class="mono">${escapeHtml(task.task_id)}</div></td><td>${statusPill(task.status)}</td><td>${escapeHtml(task.role || "deterministic")}</td><td class="mono">${escapeHtml(task.claim_spec_id || "—")}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function renderFailures() {
+      const failures = state.summary.failures;
+      if (!failures.length) return '<div class="empty">No failed, timed-out, unavailable, or degraded attempts are present in the public dossier.</div>';
+      return `<div class="failure-list">${failures.map(item => `<div class="failure-row"><div><strong>${escapeHtml(item.provider)}</strong><div>${statusPill(item.status)}</div></div><div><strong>${escapeHtml(item.capability || item.task_id || "Independent attempt")}</strong><p>${escapeHtml(item.reason)}. Sibling paths remain independently observable.</p></div></div>`).join("")}</div>`;
+    }
+
+    function renderOverview() {
+      const node = state.summary.pipeline.find(item => item.id === state.selectedNode) || state.summary.pipeline[0];
+      const tasks = (stageTasks[node.id] || stageTasks["root-plan"])();
+      const failures = node.id === "discovery" ? `<h3 class="subhead">Independent failures and degradation</h3>${renderFailures()}` : "";
+      const gaps = state.summary.gaps.length ? `<h3 class="subhead">Open evidence gaps</h3><ul>${state.summary.gaps.map(gap => `<li>${escapeHtml(gap)}</li>`).join("")}</ul>` : "";
+      const decision = state.summary.root_decision || state.summary.stop_reason;
+      document.getElementById("overview-content").innerHTML = `
+        <div class="panel-heading"><div><p class="section-kicker">Module ${escapeHtml(node.index)} · ${escapeHtml(node.status)}</p><h2>${escapeHtml(node.label)}</h2></div><p>${escapeHtml(node.description)}</p></div>
+        ${renderCounts()}
+        <div class="module-note"><p><strong>How this module ran.</strong> ${escapeHtml(decision || "The public dossier records outputs and attempt state; no hidden chain-of-thought is exposed.")}</p></div>
+        <h3 class="subhead">Associated tasks</h3>${renderTaskTable(tasks)}${failures}${gaps}`;
+      document.querySelectorAll(".task-open").forEach(button => button.addEventListener("click", () => openTask(button.dataset.task)));
+    }
+
+    function renderEvidence() {
+      const query = document.getElementById("evidence-query").value.trim().toLowerCase();
+      const items = state.summary.evidence.filter(item => {
+        const stanceMatch = state.evidenceStance === "all" || item.stance === state.evidenceStance;
+        const haystack = `${item.url} ${item.task_id} ${item.claim_spec_id} ${item.summary} ${item.locator}`.toLowerCase();
+        return stanceMatch && (!query || haystack.includes(query));
+      });
+      document.getElementById("evidence-content").innerHTML = items.length ? items.map(item => {
+        const url = safeUrl(item.url);
+        const link = url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.url)}</a>` : `<span class="mono">${escapeHtml(item.url || "No public URL")}</span>`;
+        return `<article class="evidence-row"><div class="evidence-stance ${escapeHtml(item.stance)}">${escapeHtml(item.stance)}<br><span style="color:var(--muted)">${escapeHtml(item.role)}</span></div><div class="evidence-body">${link}<p>${escapeHtml(item.summary || "Evidence text is not included in the public projection.")}</p><div class="evidence-meta"><span>${escapeHtml(item.locator)}</span><span>task ${escapeHtml(item.task_id || "—")}</span><span>claim ${escapeHtml(item.claim_spec_id || "—")}</span></div></div></article>`;
+      }).join("") : '<div class="empty">No evidence matches this filter. Missing evidence is shown as a gap, not converted into a source claim.</div>';
+    }
+
+    async function renderActivity() {
+      const container = document.getElementById("activity-content");
+      try {
+        const activity = await fetchJson("/api/activity");
+        const rows = [...activity.log, ...activity.trace];
+        container.innerHTML = rows.length ? rows.map(item => `<article class="activity-row"><div><div class="activity-source">${escapeHtml(item.source)}</div><time>${escapeHtml(item.timestamp || "run log")}</time></div><div><strong>${escapeHtml(item.stage)}</strong><p>${escapeHtml(item.detail || "Metadata event")}</p></div></article>`).join("") : `<div class="empty">No public activity entries are available. Trace data appears only when the manifest explicitly declares a safe public trace path.</div>`;
+      } catch (error) { container.innerHTML = `<div class="empty">Activity could not be read: ${escapeHtml(error.message)}</div>`; }
+    }
+
+    function inlineMarkdown(text) {
+      let safe = escapeHtml(text);
+      safe = safe.replace(/`([^`]+)`/g, "<code>$1</code>");
+      safe = safe.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, label, url) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+      safe = safe.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      return safe;
+    }
+
+    function renderMarkdown(source) {
+      const lines = source.replace(/\r\n/g, "\n").split("\n");
+      const output = [];
+      let list = null;
+      let inCode = false;
+      let code = [];
+      const closeList = () => { if (list) { output.push(`</${list}>`); list = null; } };
+      for (const line of lines) {
+        if (line.startsWith("```")) {
+          closeList();
+          if (inCode) { output.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`); code = []; }
+          inCode = !inCode;
+          continue;
+        }
+        if (inCode) { code.push(line); continue; }
+        const heading = line.match(/^(#{1,3})\s+(.+)$/);
+        if (heading) { closeList(); const level = heading[1].length; output.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`); continue; }
+        const bullet = line.match(/^[-*]\s+(.+)$/);
+        const ordered = line.match(/^\d+\.\s+(.+)$/);
+        if (bullet || ordered) {
+          const wanted = ordered ? "ol" : "ul";
+          if (list !== wanted) { closeList(); output.push(`<${wanted}>`); list = wanted; }
+          output.push(`<li>${inlineMarkdown((bullet || ordered)[1])}</li>`);
+          continue;
+        }
+        closeList();
+        if (line.startsWith("> ")) output.push(`<blockquote>${inlineMarkdown(line.slice(2))}</blockquote>`);
+        else if (line.trim()) output.push(`<p>${inlineMarkdown(line)}</p>`);
+      }
+      closeList();
+      if (inCode) output.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+      return output.join("\n");
+    }
+
+    async function loadReport() {
+      const target = document.getElementById("report-content");
+      if (!state.summary.workspace.has_final_report) { target.innerHTML = '<p>Final synthesis is not available yet. The pipeline remains partial.</p>'; return; }
+      try {
+        const response = await fetch("/api/documents/final_synthesis", { cache: "no-store" });
+        if (!response.ok) throw new Error(`Request failed (${response.status})`);
+        target.innerHTML = renderMarkdown(await response.text());
+        state.reportLoaded = true;
+      } catch (error) { target.innerHTML = `<p>Report could not be read: ${escapeHtml(error.message)}</p>`; }
+    }
+
+    async function openTask(taskId) {
+      const drawer = document.getElementById("task-drawer");
+      const content = document.getElementById("drawer-content");
+      drawer.hidden = false;
+      content.innerHTML = '<div class="empty">Loading public task detail…</div>';
+      document.getElementById("drawer-close").focus();
+      try {
+        const task = await fetchJson(`/api/tasks/${encodeURIComponent(taskId)}`);
+        document.getElementById("drawer-title").textContent = task.name;
+        const attempts = task.attempts.length ? `<h3 class="subhead">Attempts</h3>${task.attempts.map(item => `<div class="failure-row" style="background:var(--surface)"><div><strong>${escapeHtml(item.provider || item.execution_kind)}</strong>${statusPill(item.status)}</div><div><strong>${escapeHtml(item.capability)}</strong><p>${escapeHtml(item.reason || `${item.started_at} → ${item.completed_at}`)}</p></div></div>`).join("")}` : "";
+        content.innerHTML = `<dl class="drawer-grid"><dt>Task ID</dt><dd class="mono">${escapeHtml(task.task_id)}</dd><dt>Role</dt><dd>${escapeHtml(task.role || "deterministic")}</dd><dt>Status</dt><dd>${statusPill(task.status)}</dd><dt>Objective</dt><dd>${escapeHtml(task.objective || "Not stated in public task spec")}</dd><dt>Expected output</dt><dd>${escapeHtml(task.expected_output || "—")}</dd><dt>Capabilities</dt><dd>${escapeHtml(task.allowed_capabilities.join(", ") || "—")}</dd></dl>${task.gaps.length ? `<h3 class="subhead">Gaps</h3><ul>${task.gaps.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}${attempts}`;
+      } catch (error) { content.innerHTML = `<div class="empty">Task detail could not be read: ${escapeHtml(error.message)}</div>`; }
+    }
+
+    function closeDrawer() { document.getElementById("task-drawer").hidden = true; }
+
+    function activateTab(name) {
+      state.activeTab = name;
+      document.querySelectorAll('[role="tab"]').forEach(tab => tab.setAttribute("aria-selected", String(tab.id === `tab-${name}`)));
+      document.querySelectorAll('[role="tabpanel"]').forEach(panel => panel.hidden = panel.id !== `panel-${name}`);
+      if (name === "activity") renderActivity();
+      if (name === "evidence") renderEvidence();
+    }
+
+    function bindControls() {
+      document.querySelectorAll('[role="tab"]').forEach(tab => tab.addEventListener("click", () => activateTab(tab.id.replace("tab-", ""))));
+      document.querySelectorAll('[role="tab"]').forEach(tab => tab.addEventListener("keydown", event => {
+        if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        const tabs = [...document.querySelectorAll('[role="tab"]')];
+        const offset = event.key === "ArrowRight" ? 1 : -1;
+        const next = tabs[(tabs.indexOf(tab) + offset + tabs.length) % tabs.length];
+        next.focus(); next.click(); event.preventDefault();
+      }));
+      document.getElementById("evidence-query").addEventListener("input", renderEvidence);
+      document.querySelectorAll(".filter-button").forEach(button => button.addEventListener("click", () => {
+        state.evidenceStance = button.dataset.stance;
+        document.querySelectorAll(".filter-button").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+        renderEvidence();
+      }));
+      document.getElementById("load-report").addEventListener("click", loadReport);
+      document.getElementById("drawer-close").addEventListener("click", closeDrawer);
+      document.addEventListener("keydown", event => { if (event.key === "Escape") closeDrawer(); });
+    }
+
+    async function initialize() {
+      bindControls();
+      try {
+        state.summary = await fetchJson("/api/summary");
+        document.getElementById("project-name").textContent = state.summary.workspace.project_name;
+        document.getElementById("run-id").textContent = state.summary.workspace.run_id || "unassigned";
+        document.getElementById("run-mode").textContent = state.summary.workspace.mode || "unspecified";
+        document.getElementById("run-status").textContent = state.summary.workspace.status;
+        document.getElementById("last-check").textContent = new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+        renderPipeline(); renderOverview(); renderEvidence();
+      } catch (error) {
+        document.querySelector("main").innerHTML = `<div class="error-banner" role="alert"><strong>Workspace projection unavailable.</strong><br>${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    initialize();
+  </script>
+</body>
+</html>

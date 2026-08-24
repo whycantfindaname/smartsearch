@@ -170,3 +170,89 @@ def test_save_unwritable_raises_with_hint(monkeypatch, tmp_path):
     with pytest.raises(ValueError) as exc:
         config._save_config_file({"x": 1})
     assert "无法保存" in str(exc.value)
+
+
+def test_document_embedding_defaults_reuse_existing_intent_embedding_config(monkeypatch, tmp_path):
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path / "config"))
+    monkeypatch.setenv("INTENT_EMBEDDING_API_URL", "https://embedding.example/v1/embeddings")
+    monkeypatch.setenv("INTENT_EMBEDDING_API_KEY", "secret-value")
+    monkeypatch.setenv("INTENT_EMBEDDING_MODEL", "example-embedding")
+    monkeypatch.delenv("SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE", raising=False)
+    config = _fresh_config_file(monkeypatch)
+
+    document = config.document_embedding_config()
+
+    assert document == {
+        "source": "intent",
+        "api_url": "https://embedding.example/v1/embeddings",
+        "api_key": "secret-value",
+        "model": "example-embedding",
+        "dimensions": 0,
+        "normalize": True,
+        "configured": True,
+    }
+    assert "SMART_SEARCH_DOCUMENT_EMBEDDING_API_KEY" not in config._CONFIG_KEYS
+
+
+def test_document_sidecar_config_is_non_secret_and_visible_in_masked_info(monkeypatch, tmp_path):
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path / "config"))
+    monkeypatch.setenv("SMART_SEARCH_SIDECAR_PYTHON", "/opt/python3.12")
+    monkeypatch.setenv("SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS", "180")
+    monkeypatch.setenv("SMART_SEARCH_DOCUMENT_SPLITTER", "character")
+    monkeypatch.setenv("SMART_SEARCH_DOCUMENT_CHUNK_SIZE", "2048")
+    config = _fresh_config_file(monkeypatch)
+
+    info = config.get_config_info()
+
+    assert info["SMART_SEARCH_SIDECAR_PYTHON"] == "/opt/python3.12"
+    assert info["SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS"] == 180.0
+    assert info["SMART_SEARCH_DOCUMENT_SPLITTER"] == "character"
+    assert info["SMART_SEARCH_DOCUMENT_CHUNK_SIZE"] == 2048
+    assert info["config_sources"]["SMART_SEARCH_SIDECAR_PYTHON"] == "environment"
+
+
+def test_default_sidecar_environment_is_scoped_to_config_dir(monkeypatch, tmp_path):
+    target = tmp_path / "preview-config"
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(target))
+    monkeypatch.delenv("SMART_SEARCH_SIDECAR_PYTHON", raising=False)
+    config = _fresh_config_file(monkeypatch)
+
+    assert Path(config.sidecar_python).is_relative_to(target / "research-sidecar")
+
+
+def test_jina_research_urls_are_visible_and_invalid_values_fail_config_set(monkeypatch, tmp_path):
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path / "config"))
+    config = _fresh_config_file(monkeypatch)
+
+    config.set_config_value("JINA_SEARCH_API_URL", "https://search.example/v1")
+    config.set_config_value("JINA_RERANK_API_URL", "https://rerank.example/v1")
+    info = config.get_config_info()
+
+    assert info["JINA_SEARCH_API_URL"] == "https://search.example/v1"
+    assert info["JINA_RERANK_API_URL"] == "https://rerank.example/v1"
+    assert info["config_sources"]["JINA_SEARCH_API_URL"] == "config_file"
+    with pytest.raises(ValueError, match="absolute HTTP"):
+        config.set_config_value("JINA_SEARCH_API_URL", "ftp://search.example")
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE", "mistral"),
+        ("SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS", "-1"),
+        ("SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE", "sometimes"),
+        ("SMART_SEARCH_DOCUMENT_SPLITTER", "semantic-magic"),
+        ("SMART_SEARCH_DOCUMENT_CHUNK_SIZE", "32"),
+        ("SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS", "0"),
+        ("SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS", "nan"),
+    ],
+)
+def test_invalid_document_sidecar_config_is_reported(monkeypatch, tmp_path, key, value):
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path / "config"))
+    monkeypatch.setenv(key, value)
+    config = _fresh_config_file(monkeypatch)
+
+    info = config.get_config_info()
+
+    assert info["config_parameter_errors"]
+    assert info["config_status"].startswith("config_error:")

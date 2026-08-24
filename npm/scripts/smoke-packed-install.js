@@ -44,11 +44,14 @@ function assertPackContents(files) {
     "LICENSE",
     "README.md",
     "README.zh-CN.md",
+    "THIRD_PARTY_NOTICES.md",
     "package.json",
     "pyproject.toml"
   ]);
   const allowedPrefixes = [
     "npm/",
+    "src/smart_search/assets/research_visualizer/",
+    "src/smart_search/assets/sidecar/",
     "skills/smart-search-cli/",
     "src/smart_search/assets/skills/smart-search-cli/"
   ];
@@ -66,11 +69,25 @@ function assertPackContents(files) {
     .map((file) => file.path)
     .filter((filePath) => filePath.endsWith("/.env") || filePath.endsWith("/runtime.conf"));
   assert.deepEqual(privateRuntimeFiles, [], "tarball must not contain AnySearch private runtime files");
+  const compiledPythonFiles = files
+    .map((file) => file.path)
+    .filter(
+      (filePath) =>
+        /(^|\/)__pycache__(\/|$)/.test(filePath) ||
+        filePath.endsWith(".pyc") ||
+        filePath.endsWith(".pyo")
+    );
+  assert.deepEqual(compiledPythonFiles, [], "tarball must not contain compiled Python cache files");
   for (const requiredPath of [
     "package.json",
     "pyproject.toml",
     "npm/bin/smart-search.js",
     "src/smart_search/cli.py",
+    "src/smart_search/assets/research_visualizer/index.html",
+    "src/smart_search/assets/research_visualizer/NOTICE.md",
+    "src/smart_search/assets/sidecar/pyproject.toml",
+    "src/smart_search/assets/sidecar/src/smart_search_sidecar/protocol.py",
+    "THIRD_PARTY_NOTICES.md",
     "skills/smart-search-cli/skills/anysearch/SKILL.md",
     "skills/smart-search-cli/skills/anysearch-source.json",
     "src/smart_search/assets/skills/smart-search-cli/skills/anysearch/SKILL.md"
@@ -114,6 +131,14 @@ function main() {
   const installedRoot = path.join(installPrefix, "node_modules", "@konbakuyomu", "smart-search");
   const wrapperPath = path.join(installedRoot, "npm", "bin", "smart-search.js");
   assert.ok(fs.existsSync(wrapperPath), "packed install is missing the smart-search wrapper");
+  assert.ok(
+    fs.existsSync(path.join(installedRoot, "src", "smart_search", "assets", "sidecar", "pyproject.toml")),
+    "packed install is missing the Python 3.12 sidecar source"
+  );
+  assert.ok(
+    fs.existsSync(path.join(installedRoot, "src", "smart_search", "assets", "research_visualizer", "index.html")),
+    "packed install is missing the Research Workspace visualizer"
+  );
 
   const isolatedEnv = {
     ...process.env,

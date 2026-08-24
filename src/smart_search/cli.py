@@ -4,15 +4,21 @@ import contextlib
 import getpass
 import inspect
 import json
+import os
 import random
 from importlib import metadata
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
-from . import service
+from . import research_runtime, service
+from .assets.research_visualizer import WorkspaceError as ResearchVisualizerError
+from .assets.research_visualizer import serve as serve_research_workspace
+from .research_contracts import ClaimSpec, ContractValidationError, EvidenceMiningTask, ResearchFrame, SearchTask
+from .research_workspace import ResearchWorkspace
 from .embedding_presets import (
     QWEN3_EMBEDDING_8B_PRESET,
     embedding_preset_for_model,
@@ -55,6 +61,9 @@ COMMAND_ALIASES = {
     "context7-docs": ["c7d", "c7docs", "ctx7-docs"],
     "deep": ["dr"],
     "research": ["rs"],
+    "research-run": ["rr"],
+    "research-view": ["rv"],
+    "research-environment": ["research-env", "renv"],
     "route-calibrate": ["route-cal", "rcal"],
     "smoke": ["sm"],
     "doctor": ["d"],
@@ -99,6 +108,18 @@ ZHIPU_SEARCH_ENGINE_CHOICES = [
     "search_pro_sogou",
     "search_pro_quark",
 ]
+
+RESEARCH_CONFIG_KEYS = (
+    "JINA_SEARCH_API_URL",
+    "JINA_RERANK_API_URL",
+    "SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE",
+    "SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS",
+    "SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE",
+    "SMART_SEARCH_DOCUMENT_SPLITTER",
+    "SMART_SEARCH_DOCUMENT_CHUNK_SIZE",
+    "SMART_SEARCH_SIDECAR_PYTHON",
+    "SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS",
+)
 
 _STATIC_SMART_SEARCH_BANNER = r"""
  ____                       _     ____                      _
@@ -545,6 +566,26 @@ def _format_doctor_markdown(data: dict[str, Any]) -> str:
                 lines.extend(_markdown_code_block("\n".join(str(command) for command in commands)))
         if router.get("error"):
             lines.append(f"Intent router error: {router.get('error')}")
+
+    research_environment = data.get("research_environment") or {}
+    if research_environment:
+        health = research_environment.get("health") or {}
+        lines.extend(
+            [
+                "",
+                "## Research Sidecar Environment",
+                "",
+                f"- Status: {_status_label(research_environment.get('ok'))}",
+                f"- Python: `{research_environment.get('python', '')}`",
+                f"- Protocol: `{health.get('protocol', '')}`",
+                f"- Sidecar version: `{health.get('sidecar_version', '')}`",
+                f"- Mistral API used: {_yes_no(health.get('mistral_api_used'))}",
+                f"- Vespa used: {_yes_no(health.get('vespa_used'))}",
+                f"- Docker required: {_yes_no(health.get('docker_required'))}",
+            ]
+        )
+        if research_environment.get("error"):
+            lines.append(f"- Error: {research_environment.get('error')}")
 
     lines.extend(_error_lines(data))
     return "\n".join(lines).strip() + "\n"
@@ -999,6 +1040,31 @@ def _format_markdown(command: str, data: dict[str, Any]) -> str:
         return "\n".join(lines).strip() + "\n"
     if command == "doctor":
         return _format_doctor_markdown(data)
+    if command == "research-environment":
+        environment = data.get("research_environment", data)
+        lines = [
+            "# Research Sidecar Environment",
+            "",
+            f"Status: {_status_label(environment.get('ok'))}",
+            f"Python: `{environment.get('python', '')}`",
+            f"Environment: `{environment.get('environment_dir', '')}`",
+        ]
+        health = environment.get("health") or {}
+        if health:
+            lines.extend(
+                [
+                    f"Protocol: `{health.get('protocol', '')}`",
+                    f"Sidecar version: `{health.get('sidecar_version', '')}`",
+                    f"Mistral API used: {_yes_no(health.get('mistral_api_used'))}",
+                    f"Vespa used: {_yes_no(health.get('vespa_used'))}",
+                    f"Docker required: {_yes_no(health.get('docker_required'))}",
+                ]
+            )
+        if environment.get("install_command"):
+            lines.extend(["", "## Install", ""])
+            lines.extend(_markdown_code_block(environment["install_command"]))
+        lines.extend(_error_lines(environment))
+        return "\n".join(lines).strip() + "\n"
     if command == "diagnose":
         return _format_diagnose_markdown(data)
     if command == "smoke":
@@ -1124,6 +1190,9 @@ def _format_content(command: str, data: dict[str, Any]) -> str:
                 f"threshold={router.get('embedding_preset_threshold')} "
                 f"margin={router.get('embedding_preset_margin')}"
             )
+        research_environment = data.get("research_environment") or {}
+        if research_environment:
+            lines.append(f"Research sidecar: {_status_label(research_environment.get('ok'))}")
         if data.get("error"):
             lines.append(f"Error: {_error_summary(data)}")
         return "\n".join(lines).strip() + "\n"
@@ -1333,6 +1402,27 @@ def _parse_json_array_arg(value: str, option_name: str) -> list[Any] | None:
         raise ValueError(f"{option_name} must be a JSON array: {exc.msg}") from exc
     if not isinstance(data, list):
         raise ValueError(f"{option_name} must be a JSON array")
+    return data
+
+
+def _read_json_input(value: str, option_name: str = "--input") -> dict[str, Any]:
+    if value == "-":
+        raw = sys.stdin.read()
+    elif value.startswith("@"):
+        raw = Path(value[1:]).read_text(encoding="utf-8")
+    else:
+        candidate = Path(value)
+        try:
+            is_file = candidate.is_file()
+        except OSError:
+            is_file = False
+        raw = candidate.read_text(encoding="utf-8") if is_file else value
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{option_name} must contain a JSON object: {exc.msg}") from exc
+    if not isinstance(data, dict):
+        raise ValueError(f"{option_name} must contain a JSON object")
     return data
 
 
@@ -2426,6 +2516,13 @@ def _run_advanced_setup_prompts(values: dict[str, str], current: dict[str, str],
         ("INTENT_CLASSIFIER_API_KEY", "Intent classifier API key", True),
         ("INTENT_CLASSIFIER_MODEL", "Intent classifier model", True),
         ("INTENT_ROUTER_TIMEOUT_SECONDS", "Intent router timeout seconds", True),
+        ("SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE", "Document embedding source (intent/openai-compatible/off)", True),
+        ("SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS", "Document embedding dimensions (0=auto-detect)", True),
+        ("SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE", "Normalize document embeddings (true/false)", True),
+        ("SMART_SEARCH_DOCUMENT_SPLITTER", "Document splitter (markdown/character)", True),
+        ("SMART_SEARCH_DOCUMENT_CHUNK_SIZE", "Document chunk size in characters", True),
+        ("SMART_SEARCH_SIDECAR_PYTHON", "Python 3.12 executable for Search Toolkit sidecar", True),
+        ("SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS", "Search Toolkit sidecar timeout seconds", True),
         ("EXA_API_KEY", "Exa API key", True),
         ("CONTEXT7_API_KEY", "Context7 API key", True),
         ("ZHIPU_API_KEY", "Zhipu API key", True),
@@ -2438,6 +2535,8 @@ def _run_advanced_setup_prompts(values: dict[str, str], current: dict[str, str],
         ("ZHIPU_MCP_TIMEOUT_SECONDS", "Zhipu Coding Plan MCP timeout seconds", True),
         ("JINA_API_KEY", "Jina API key", True),
         ("JINA_READER_API_URL", "Jina Reader API URL", True),
+        ("JINA_SEARCH_API_URL", "Jina Search API URL", True),
+        ("JINA_RERANK_API_URL", "Jina Reranker API URL", True),
         ("JINA_RESPOND_WITH", "Jina respond-with mode (optional, e.g. readerlm-v2)", True),
         ("JINA_TIMEOUT_SECONDS", "Jina timeout seconds", True),
         ("TAVILY_API_URL", "Tavily API URL", True),
@@ -2460,6 +2559,8 @@ def _run_advanced_setup_prompts(values: dict[str, str], current: dict[str, str],
             value = _normalize_zhipu_api_url(value)
         elif key == "JINA_READER_API_URL":
             value = _normalize_jina_reader_api_url(value)
+        elif key in {"JINA_SEARCH_API_URL", "JINA_RERANK_API_URL"}:
+            value = _normalize_custom_base_url(value)
         elif key in {"ZHIPU_MCP_SEARCH_API_URL", "ZHIPU_MCP_READER_API_URL", "ZHIPU_MCP_ZREAD_API_URL"}:
             value = _normalize_custom_base_url(value)
         elif key == "SCIVERSE_API_URL":
@@ -2467,7 +2568,350 @@ def _run_advanced_setup_prompts(values: dict[str, str], current: dict[str, str],
         values[key] = value
 
 
+async def _run_research_runtime(args: argparse.Namespace) -> int:
+    try:
+        if args.research_run_command == "capabilities":
+            data = await research_runtime.observe_live_capabilities()
+            return _print_result("research-run", data, args.format, args.output)
+
+        payload = _read_json_input(args.input)
+        artifact_root = Path(args.artifact_root).expanduser()
+        operation = args.research_run_command
+        workspace_dossier: research_runtime.ResearchDossier | None = None
+        citation_verification: dict[str, Any] | None = None
+        if operation == "create":
+            snapshot = payload.get("capability_snapshot")
+            observed_at = str(payload.get("capability_observed_at") or "")
+            if snapshot is None:
+                observation = await research_runtime.observe_live_capabilities()
+                snapshot = observation["snapshot"]
+                observed_at = observation["observed_at"]
+            if not isinstance(snapshot, dict):
+                raise ContractValidationError("capability_snapshot must be an object")
+            dossier = research_runtime.create_dossier(
+                frame=ResearchFrame.from_dict(payload.get("frame", {})),
+                claims=[ClaimSpec.from_dict(item) for item in payload.get("claims", [])],
+                search_tasks=[SearchTask.from_dict(item) for item in payload.get("search_tasks", [])],
+                capability_snapshot=snapshot,
+                capability_observed_at=observed_at or None,
+                artifact_root=artifact_root,
+            )
+            data = {"ok": True, "dossier": dossier.to_dict(), "artifact_root": str(artifact_root.resolve())}
+            workspace_dossier = dossier
+        elif operation == "execute":
+            dossier = research_runtime.ResearchDossier.from_dict(payload.get("dossier", payload))
+            updated = await research_runtime.execute_internal_steps(dossier, artifact_root=artifact_root)
+            data = {"ok": True, "dossier": updated.to_dict(), "artifact_root": str(artifact_root.resolve())}
+            workspace_dossier = updated
+        elif operation == "import":
+            dossier = research_runtime.ResearchDossier.from_dict(payload.get("dossier", {}))
+            result = payload.get("result")
+            if not isinstance(result, dict):
+                raise ContractValidationError("result must be a DelegateResult object")
+            updated = research_runtime.import_delegated_result(
+                dossier,
+                result=result,
+                artifact_root=artifact_root,
+            )
+            data = {"ok": True, "dossier": updated.to_dict(), "artifact_root": str(artifact_root.resolve())}
+            workspace_dossier = updated
+        elif operation == "add-search-tasks":
+            dossier = research_runtime.ResearchDossier.from_dict(payload.get("dossier", {}))
+            tasks = [SearchTask.from_dict(item) for item in payload.get("search_tasks", [])]
+            updated = research_runtime.add_root_search_tasks(dossier, tasks)
+            data = {"ok": True, "dossier": updated.to_dict()}
+            workspace_dossier = updated
+        elif operation == "add-evidence-tasks":
+            dossier = research_runtime.ResearchDossier.from_dict(payload.get("dossier", {}))
+            tasks = [EvidenceMiningTask.from_dict(item) for item in payload.get("evidence_mining_tasks", [])]
+            updated = research_runtime.add_root_evidence_tasks(dossier, tasks)
+            data = {"ok": True, "dossier": updated.to_dict()}
+            workspace_dossier = updated
+        elif operation == "document":
+            dossier = research_runtime.ResearchDossier.from_dict(payload.get("dossier", {}))
+            task = EvidenceMiningTask.from_dict(payload.get("task", {}))
+            operations = payload.get("operations", [])
+            if not isinstance(operations, list):
+                raise ContractValidationError("operations must be a list")
+            if "mineru_results" in payload:
+                raise ContractValidationError(
+                    "mineru_results must be imported through a MinerU DelegateResult before document execution"
+                )
+            data = await research_runtime.execute_document_task(
+                dossier,
+                task=task,
+                operations=operations,
+                artifact_root=artifact_root,
+            )
+            workspace_dossier = research_runtime.ResearchDossier.from_dict(data.get("dossier", {}))
+        elif operation == "claims":
+            dossier = research_runtime.ResearchDossier.from_dict(payload.get("dossier", {}))
+            decisions = payload.get("decisions", [])
+            if not isinstance(decisions, list):
+                raise ContractValidationError("decisions must be a list")
+            updated = research_runtime.derive_root_claim_records(dossier, decisions=decisions)
+            data = {"ok": True, "dossier": updated.to_dict()}
+            workspace_dossier = updated
+        elif operation == "decision":
+            dossier = research_runtime.ResearchDossier.from_dict(payload.get("dossier", {}))
+            updated = research_runtime.update_root_decision(
+                dossier,
+                next_decision=str(payload.get("next_decision") or ""),
+                stop_reason=str(payload.get("stop_reason") or ""),
+            )
+            data = {"ok": True, "dossier": updated.to_dict()}
+            workspace_dossier = updated
+        elif operation == "verify":
+            dossier = research_runtime.ResearchDossier.from_dict(payload.get("dossier", {}))
+            citations = payload.get("citations", [])
+            if not isinstance(citations, list):
+                raise ContractValidationError("citations must be a list")
+            data = research_runtime.verify_final_citations(
+                dossier,
+                citations=citations,
+                artifact_root=artifact_root,
+            )
+            workspace_dossier = dossier
+            citation_verification = data
+        elif operation == "materialize":
+            workspace_dossier = research_runtime.ResearchDossier.from_dict(
+                payload.get("dossier", payload)
+            )
+            supplied_verification = payload.get("citation_verification")
+            if supplied_verification is not None and not isinstance(supplied_verification, dict):
+                raise ContractValidationError("citation_verification must be an object")
+            citation_verification = supplied_verification
+            data = {"ok": True, "run_id": workspace_dossier.run.run_id}
+        else:
+            raise ContractValidationError(f"unknown research-run operation: {operation}")
+
+        workspace_path = str(getattr(args, "workspace", "") or "").strip()
+        checkpoint_labels = list(getattr(args, "checkpoint", []) or [])
+        if checkpoint_labels and not workspace_path:
+            raise ContractValidationError("--checkpoint requires --workspace")
+        if workspace_path:
+            if workspace_dossier is None:
+                raise ContractValidationError("research operation did not return a dossier to materialize")
+            final_synthesis = payload.get("final_synthesis") if operation in {"verify", "materialize"} else None
+            manifest = ResearchWorkspace(
+                workspace_path,
+                artifact_root=artifact_root,
+            ).materialize(
+                workspace_dossier,
+                checkpoint_labels=checkpoint_labels,
+                final_synthesis=final_synthesis,
+                citation_verification=citation_verification,
+            )
+            data["workspace"] = {
+                "root": str(Path(workspace_path).expanduser().resolve()),
+                "manifest": manifest,
+            }
+    except (ContractValidationError, ValueError, OSError) as exc:
+        data = {"ok": False, "error_type": "parameter_error", "error": str(exc)}
+    except research_runtime.SidecarBridgeError as exc:
+        data = {"ok": False, "error_type": "runtime_error", "error": exc.message, "sidecar_error": exc.to_dict()}
+    return _print_result("research-run", data, args.format, args.output)
+
+
+def _run_research_view(args: argparse.Namespace) -> int:
+    try:
+        serve_research_workspace(args.workspace, args.port)
+    except (OSError, ResearchVisualizerError) as exc:
+        _write_stderr(f"research-view: {exc}\n")
+        return EXIT_RUNTIME_ERROR
+    return EXIT_OK
+
+
+def _sidecar_environment_dir(value: str = "") -> Path:
+    if value:
+        return Path(value).expanduser().resolve()
+    return Path(service.config_path()["config_dir"]) / "research-sidecar"
+
+
+def _sidecar_install_source(module_file: str | Path | None = None) -> Path | None:
+    module_path = Path(module_file or __file__).resolve()
+    candidates = (
+        module_path.parents[2] / "sidecar",
+        module_path.parent / "assets" / "sidecar",
+    )
+    required_paths = (
+        Path("pyproject.toml"),
+        Path("src/smart_search_sidecar/__init__.py"),
+    )
+    for candidate in candidates:
+        if all((candidate / relative_path).is_file() for relative_path in required_paths):
+            return candidate
+    return None
+
+
+def _environment_python(environment_dir: Path) -> Path:
+    if os.name == "nt":
+        return environment_dir / "Scripts" / "python.exe"
+    return environment_dir / "bin" / "python"
+
+
+def _sidecar_install_command(python: str, environment_dir: Path) -> str:
+    return (
+        "smart-search research-environment install "
+        f"--python {json.dumps(python)} --environment {json.dumps(str(environment_dir))}"
+    )
+
+
+def _sidecar_health(python: str, *, timeout_seconds: float = 30.0) -> dict[str, Any]:
+    environment_dir = str(Path(python).expanduser().parent.parent) if python else ""
+    result: dict[str, Any] = {
+        "ok": False,
+        "python": python,
+        "environment_dir": environment_dir,
+    }
+    if not python:
+        return {**result, "error_type": "config_error", "error": "SMART_SEARCH_SIDECAR_PYTHON is empty."}
+    try:
+        with tempfile.TemporaryDirectory(prefix="smart-search-sidecar-health-") as state_dir:
+            completed = subprocess.run(
+                [
+                    python,
+                    "-m",
+                    "smart_search_sidecar",
+                    "--state-dir",
+                    state_dir,
+                    "--embedding-base-url",
+                    "http://127.0.0.1:1/v1",
+                    "--embedding-model",
+                    "lexical-only",
+                    "--embedding-dimension",
+                    "1",
+                    "--embedding-normalization",
+                    "none",
+                    "--splitter",
+                    "character",
+                    "--chunk-size",
+                    "256",
+                ],
+                input='{"id":"doctor-1","op":"health"}\n',
+                capture_output=True,
+                text=True,
+                timeout=max(1.0, min(float(timeout_seconds), 30.0)),
+                check=False,
+            )
+    except subprocess.TimeoutExpired:
+        return {**result, "error_type": "timeout", "error": "Sidecar health check timed out."}
+    except OSError as exc:
+        return {
+            **result,
+            "error_type": "config_error",
+            "error": "Configured sidecar Python could not be launched.",
+            "exception_type": type(exc).__name__,
+        }
+    lines = [line for line in completed.stdout.splitlines() if line.strip()]
+    if completed.returncode != 0 or not lines:
+        return {
+            **result,
+            "error_type": "runtime_error",
+            "error": "Sidecar health protocol did not complete successfully.",
+            "returncode": completed.returncode,
+        }
+    try:
+        response = json.loads(lines[-1])
+    except json.JSONDecodeError:
+        return {**result, "error_type": "runtime_error", "error": "Sidecar health response was not valid JSON."}
+    health = response.get("result") if isinstance(response, dict) else None
+    if not isinstance(response, dict) or not response.get("ok") or not isinstance(health, dict) or health.get("status") != "ok":
+        return {**result, "error_type": "runtime_error", "error": "Sidecar reported an unhealthy environment."}
+    return {**result, "ok": True, "health": health}
+
+
+def _configured_sidecar_health() -> dict[str, Any]:
+    try:
+        python = service.config.sidecar_python
+        timeout_seconds = service.config.sidecar_timeout
+    except ValueError as exc:
+        return {"ok": False, "error_type": "config_error", "error": str(exc), "python": ""}
+    return _sidecar_health(python, timeout_seconds=timeout_seconds)
+
+
+def _run_research_environment(args: argparse.Namespace) -> int:
+    environment_dir = _sidecar_environment_dir(args.environment)
+    if args.research_environment_command == "doctor":
+        python = args.python or service.config.sidecar_python
+        data = _sidecar_health(python, timeout_seconds=service.config.sidecar_timeout)
+        if not data.get("ok"):
+            data["install_command"] = _sidecar_install_command(args.python or "<python3.12>", environment_dir)
+        return _print_result("research-environment", data, args.format, args.output)
+
+    source_dir = _sidecar_install_source()
+    if source_dir is None:
+        data = {
+            "ok": False,
+            "error_type": "config_error",
+            "error": "The sidecar installation source is unavailable from this checkout or installed package.",
+        }
+        return _print_result("research-environment", data, args.format, args.output)
+    try:
+        version_check = subprocess.run(
+            [args.python, "-c", "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        data = {
+            "ok": False,
+            "error_type": "config_error",
+            "error": "The selected Python 3.12 interpreter could not be launched.",
+            "exception_type": type(exc).__name__,
+        }
+        return _print_result("research-environment", data, args.format, args.output)
+    if version_check.returncode != 0 or version_check.stdout.strip() != "3.12":
+        data = {
+            "ok": False,
+            "error_type": "config_error",
+            "error": "The sidecar requires an explicit Python 3.12 interpreter.",
+            "observed_python": version_check.stdout.strip(),
+        }
+        return _print_result("research-environment", data, args.format, args.output)
+
+    python = _environment_python(environment_dir)
+    commands = (
+        [args.python, "-m", "venv", str(environment_dir)],
+        [str(python), "-m", "pip", "install", "--disable-pip-version-check", str(source_dir)],
+    )
+    for command in commands:
+        try:
+            completed = subprocess.run(command, capture_output=True, text=True, timeout=args.install_timeout, check=False)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            data = {
+                "ok": False,
+                "error_type": "runtime_error",
+                "error": "Failed to create the isolated sidecar environment.",
+                "exception_type": type(exc).__name__,
+                "environment_dir": str(environment_dir),
+            }
+            return _print_result("research-environment", data, args.format, args.output)
+        if completed.returncode != 0:
+            data = {
+                "ok": False,
+                "error_type": "runtime_error",
+                "error": "Failed to install the sidecar package into its isolated environment.",
+                "returncode": completed.returncode,
+                "environment_dir": str(environment_dir),
+            }
+            return _print_result("research-environment", data, args.format, args.output)
+    data = _sidecar_health(str(python), timeout_seconds=service.config.sidecar_timeout)
+    if data.get("ok"):
+        saved = service.config_set("SMART_SEARCH_SIDECAR_PYTHON", str(python))
+        if not saved.get("ok"):
+            data = {**saved, "environment_dir": str(environment_dir), "health": data.get("health", {})}
+        else:
+            data["saved_config_file"] = saved.get("config_file", "")
+            data["saved_key"] = "SMART_SEARCH_SIDECAR_PYTHON"
+    return _print_result("research-environment", data, args.format, args.output)
+
+
 async def _run_async(args: argparse.Namespace) -> int:
+    if args.command == "research-run":
+        return await _run_research_runtime(args)
     if args.command == "search":
         search_kwargs = {
             "platform": args.platform,
@@ -2654,6 +3098,7 @@ async def _run_async(args: argparse.Namespace) -> int:
         return _print_result("smoke", data, args.format, args.output)
     if args.command == "doctor":
         data = await service.doctor()
+        data["research_environment"] = _configured_sidecar_health()
         return _print_result("doctor", data, args.format, args.output)
     if args.command == "diagnose":
         if args.diagnose_target == "openai-compatible":
@@ -2683,6 +3128,14 @@ def _run_config(args: argparse.Namespace) -> int:
         data = service.config_path()
     elif args.config_command == "list":
         data = service.config_list(show_secrets=False)
+        effective = service.config.get_config_info()
+        data["effective_research_config"] = {
+            key: {
+                "value": effective.get(key, ""),
+                "source": (effective.get("config_sources") or {}).get(key, "default"),
+            }
+            for key in RESEARCH_CONFIG_KEYS
+        }
     elif args.config_command == "set":
         data = service.config_set(args.key, args.value)
     elif args.config_command == "unset":
@@ -2756,6 +3209,13 @@ def _run_setup(args: argparse.Namespace) -> int:
         "INTENT_CLASSIFIER_API_KEY": args.intent_classifier_api_key,
         "INTENT_CLASSIFIER_MODEL": args.intent_classifier_model,
         "INTENT_ROUTER_TIMEOUT_SECONDS": args.intent_router_timeout,
+        "SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE": args.document_embedding_source,
+        "SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS": args.document_embedding_dimensions,
+        "SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE": args.document_embedding_normalize,
+        "SMART_SEARCH_DOCUMENT_SPLITTER": args.document_splitter,
+        "SMART_SEARCH_DOCUMENT_CHUNK_SIZE": args.document_chunk_size,
+        "SMART_SEARCH_SIDECAR_PYTHON": args.sidecar_python,
+        "SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS": args.sidecar_timeout,
         "EXA_API_KEY": args.exa_key,
         "CONTEXT7_API_KEY": args.context7_key,
         "ZHIPU_API_KEY": args.zhipu_key,
@@ -2768,6 +3228,8 @@ def _run_setup(args: argparse.Namespace) -> int:
         "ZHIPU_MCP_TIMEOUT_SECONDS": args.zhipu_mcp_timeout,
         "JINA_API_KEY": args.jina_key,
         "JINA_READER_API_URL": _normalize_jina_reader_api_url(args.jina_reader_api_url),
+        "JINA_SEARCH_API_URL": _normalize_custom_base_url(args.jina_search_api_url),
+        "JINA_RERANK_API_URL": _normalize_custom_base_url(args.jina_rerank_api_url),
         "JINA_RESPOND_WITH": args.jina_respond_with,
         "JINA_TIMEOUT_SECONDS": args.jina_timeout,
         "TAVILY_API_URL": _normalize_tavily_flag_api_url(args.tavily_api_url, args.tavily_key),
@@ -2799,6 +3261,20 @@ def _run_setup(args: argparse.Namespace) -> int:
         current_for_setup = service.config_list(show_secrets=True)["values"]
         if _has_embedding_setup_values(values):
             setup_warnings.extend(_apply_embedding_setup_preset(values, current_for_setup, interactive=False, lang=lang))
+
+    try:
+        for key, value in values.items():
+            if value:
+                service.config._validate_research_config_value(key, value)
+    except ValueError as exc:
+        data = {
+            "ok": False,
+            "error_type": "parameter_error",
+            "error": str(exc),
+            "config_file": service.config_path()["config_file"],
+            "saved": {},
+        }
+        return _print_result("setup", data, args.format, args.output)
 
     saved: dict[str, str] = {}
     for key, value in values.items():
@@ -3153,6 +3629,104 @@ def build_parser() -> argparse.ArgumentParser:
     research_parser.add_argument("--fallback", choices=["auto", "off"], default="auto")
     _add_format_args(research_parser)
 
+    research_run_parser = sub.add_parser(
+        "research-run",
+        aliases=COMMAND_ALIASES["research-run"],
+        help="Run deterministic operations on a caller-held ResearchRun dossier.",
+    )
+    research_run_parser.set_defaults(command="research-run")
+    research_run_sub = research_run_parser.add_subparsers(
+        dest="research_run_command",
+        required=True,
+        parser_class=SmartSearchArgumentParser,
+    )
+    for operation in (
+        "create",
+        "execute",
+        "import",
+        "add-search-tasks",
+        "add-evidence-tasks",
+        "document",
+        "claims",
+        "decision",
+        "verify",
+        "materialize",
+    ):
+        operation_parser = research_run_sub.add_parser(operation)
+        operation_parser.set_defaults(research_run_command=operation)
+        operation_parser.add_argument(
+            "--input",
+            required=True,
+            help="JSON object, file path, @file, or - for stdin.",
+        )
+        operation_parser.add_argument(
+            "--artifact-root",
+            required=True,
+            help="Parent directory for run-local append-only artifacts and Trace.",
+        )
+        operation_parser.add_argument(
+            "--workspace",
+            required=operation == "materialize",
+            default="",
+            help="Persist human-readable and structured run projections in this workspace directory.",
+        )
+        operation_parser.add_argument(
+            "--checkpoint",
+            action="append",
+            default=[],
+            help="Write an immutable named dossier checkpoint; repeat for multiple labels.",
+        )
+        _add_format_args(operation_parser)
+    capabilities_parser = research_run_sub.add_parser("capabilities")
+    capabilities_parser.set_defaults(research_run_command="capabilities")
+    _add_format_args(capabilities_parser)
+
+    research_view_parser = sub.add_parser(
+        "research-view",
+        aliases=COMMAND_ALIASES["research-view"],
+        help="Serve a read-only Research Workspace visualizer on 127.0.0.1.",
+    )
+    research_view_parser.set_defaults(command="research-view")
+    research_view_parser.add_argument("workspace", help="Research Workspace directory.")
+    research_view_parser.add_argument("--port", type=int, default=8080)
+
+    research_environment_parser = sub.add_parser(
+        "research-environment",
+        aliases=COMMAND_ALIASES["research-environment"],
+        help="Install or health-check the isolated Python 3.12 document sidecar.",
+    )
+    research_environment_parser.set_defaults(command="research-environment")
+    research_environment_sub = research_environment_parser.add_subparsers(
+        dest="research_environment_command",
+        required=True,
+        parser_class=SmartSearchArgumentParser,
+    )
+    research_environment_install = research_environment_sub.add_parser("install")
+    research_environment_install.add_argument(
+        "--python",
+        required=True,
+        help="Explicit Python 3.12 interpreter used only to create the isolated environment.",
+    )
+    research_environment_install.add_argument(
+        "--environment",
+        default="",
+        help="Environment path; defaults to <SMART_SEARCH_CONFIG_DIR>/research-sidecar.",
+    )
+    research_environment_install.add_argument("--install-timeout", type=float, default=600.0)
+    _add_format_args(research_environment_install)
+    research_environment_doctor = research_environment_sub.add_parser("doctor")
+    research_environment_doctor.add_argument(
+        "--python",
+        default="",
+        help="Override SMART_SEARCH_SIDECAR_PYTHON for this health check.",
+    )
+    research_environment_doctor.add_argument(
+        "--environment",
+        default="",
+        help="Environment path used in the install recommendation.",
+    )
+    _add_format_args(research_environment_doctor)
+
     smoke_parser = sub.add_parser(
         "smoke", aliases=COMMAND_ALIASES["smoke"], help="Run provider routing and fallback smoke checks."
     )
@@ -3272,6 +3846,13 @@ def build_parser() -> argparse.ArgumentParser:
     setup_parser.add_argument("--intent-classifier-api-key", default="", help="Save INTENT_CLASSIFIER_API_KEY.")
     setup_parser.add_argument("--intent-classifier-model", default="", help="Save INTENT_CLASSIFIER_MODEL.")
     setup_parser.add_argument("--intent-router-timeout", default="", help="Save INTENT_ROUTER_TIMEOUT_SECONDS.")
+    setup_parser.add_argument("--document-embedding-source", default="", help="Save SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE.")
+    setup_parser.add_argument("--document-embedding-dimensions", default="", help="Save SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS (0 auto-detects).")
+    setup_parser.add_argument("--document-embedding-normalize", default="", help="Save SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE.")
+    setup_parser.add_argument("--document-splitter", default="", help="Save SMART_SEARCH_DOCUMENT_SPLITTER.")
+    setup_parser.add_argument("--document-chunk-size", default="", help="Save SMART_SEARCH_DOCUMENT_CHUNK_SIZE.")
+    setup_parser.add_argument("--sidecar-python", default="", help="Save SMART_SEARCH_SIDECAR_PYTHON.")
+    setup_parser.add_argument("--sidecar-timeout", default="", help="Save SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS.")
     setup_parser.add_argument("--exa-key", default="", help="Save EXA_API_KEY.")
     setup_parser.add_argument("--context7-key", default="", help="Save CONTEXT7_API_KEY.")
     setup_parser.add_argument("--zhipu-key", default="", help="Save ZHIPU_API_KEY.")
@@ -3284,6 +3865,8 @@ def build_parser() -> argparse.ArgumentParser:
     setup_parser.add_argument("--zhipu-mcp-timeout", default="", help="Save ZHIPU_MCP_TIMEOUT_SECONDS.")
     setup_parser.add_argument("--jina-key", default="", help="Save JINA_API_KEY.")
     setup_parser.add_argument("--jina-reader-api-url", default="", help="Save JINA_READER_API_URL.")
+    setup_parser.add_argument("--jina-search-api-url", default="", help="Save JINA_SEARCH_API_URL.")
+    setup_parser.add_argument("--jina-rerank-api-url", default="", help="Save JINA_RERANK_API_URL.")
     setup_parser.add_argument("--jina-respond-with", default="", help="Save JINA_RESPOND_WITH, e.g. readerlm-v2.")
     setup_parser.add_argument("--jina-timeout", default="", help="Save JINA_TIMEOUT_SECONDS.")
     setup_parser.add_argument("--tavily-api-url", default="", help="Save TAVILY_API_URL.")
@@ -3331,6 +3914,10 @@ def main(argv: list[str] | None = None) -> int:
             return _run_regression()
         if args.command == "setup":
             return _run_setup(args)
+        if args.command == "research-environment":
+            return _run_research_environment(args)
+        if args.command == "research-view":
+            return _run_research_view(args)
         if args.command == "skills":
             return _run_skills(args)
         if args.command == "config":

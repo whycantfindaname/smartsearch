@@ -43,6 +43,22 @@ from .providers.xai_responses import XAIRequestHardTimeout, XAIRequestOutcomeUnk
 from .providers.zhipu import ZhipuWebSearchProvider
 from .providers.zhipu_mcp import ZhipuMCPProvider
 from .provider_errors import ProviderCallError, classify_provider_exception, provider_call_error, sanitize_provider_error_message
+from .provider_capabilities import (
+    CapabilityCall,
+    ExaDeepSearchAdapter,
+    FirecrawlV2Adapter,
+    JinaCapabilityAdapter,
+    TavilyCapabilityAdapter,
+    gather_capability_calls,
+)
+from .research_providers import (
+    ExaResearchAdapter,
+    FirecrawlResearchAdapter,
+    JinaDeepSearchAdapter,
+    TavilyResearchAdapter,
+    capability_inventory as provider_research_capability_inventory,
+    run_deep_provider_agents,
+)
 from .sources import merge_sources, new_session_id, split_answer_and_sources
 from .utils import search_prompt
 
@@ -198,6 +214,7 @@ PROVIDER_PROFILES: dict[str, dict[str, Any]] = {
     },
     "exa": {
         "capability": "docs_search",
+        "capabilities": ["docs_search", "academic_search", "code_search", "deep_search", "provider_research"],
         "strengths": ["official domains", "papers", "product pages", "trusted low-noise discovery", "similar pages"],
         "exclusions": ["default second hop for every high-risk claim"],
         "fallback_group": "docs_search",
@@ -225,7 +242,7 @@ PROVIDER_PROFILES: dict[str, dict[str, Any]] = {
     },
     "tavily": {
         "capability": "web_search",
-        "capabilities": ["web_search", "web_fetch", "site_map"],
+        "capabilities": ["web_search", "web_fetch", "site_map", "crawl", "extract", "provider_research"],
         "strengths": ["broad source discovery", "site map", "URL extract"],
         "exclusions": ["docs semantic replacement"],
         "fallback_group": "web_search/web_fetch/site_map",
@@ -235,6 +252,7 @@ PROVIDER_PROFILES: dict[str, dict[str, Any]] = {
     },
     "jina": {
         "capability": "web_fetch",
+        "capabilities": ["web_search", "web_fetch", "deep_search", "rerank", "provider_research"],
         "strengths": ["known public URL", "PDF", "arXiv", "clean markdown", "ReaderLM-v2 with key"],
         "exclusions": ["general search provider", "anonymous standard minimum profile"],
         "fallback_group": "web_fetch",
@@ -253,7 +271,16 @@ PROVIDER_PROFILES: dict[str, dict[str, Any]] = {
     },
     "firecrawl": {
         "capability": "web_fetch",
-        "capabilities": ["web_search", "web_fetch"],
+        "capabilities": [
+            "web_search",
+            "web_fetch",
+            "academic_search",
+            "developer_search",
+            "crawl",
+            "extract",
+            "batch",
+            "provider_research",
+        ],
         "strengths": ["robust scrape fallback", "JS-heavy pages", "dynamic pages", "OCR/PDF/structured extraction"],
         "exclusions": ["docs semantic replacement"],
         "fallback_group": "web_search/web_fetch",
@@ -1627,6 +1654,168 @@ async def research(
     return result
 
 
+def _provider_research_agent_adapters() -> list[Any]:
+    """Build all four provider-hosted Research Agent adapters."""
+    return [
+        FirecrawlResearchAdapter(config.firecrawl_api_key or "", base_url=config.firecrawl_api_url),
+        TavilyResearchAdapter(
+            config.tavily_api_key if config.tavily_enabled else "",
+            base_url=config.tavily_api_url,
+        ),
+        ExaResearchAdapter(config.exa_api_key or "", base_url=config.exa_base_url, operation="agent"),
+        JinaDeepSearchAdapter(config.jina_api_key or ""),
+    ]
+
+
+def get_provider_research_agent_status(
+    attempts: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    return provider_research_capability_inventory(
+        _provider_research_agent_adapters(),
+        attempts or [],
+    )
+
+
+async def run_provider_research_agents(
+    query: str,
+    *,
+    timeout_seconds: float = 120.0,
+    attempt_no: int = 1,
+    run_id: str = "",
+    task_id: str = "",
+    step_id: str = "",
+) -> dict[str, Any]:
+    """Run all configured Provider Research Agents independently and concurrently."""
+    result = await run_deep_provider_agents(
+        query,
+        _provider_research_agent_adapters(),
+        timeout_seconds=timeout_seconds,
+        attempt_no=attempt_no,
+        run_id=run_id,
+        task_id=task_id,
+        step_id=step_id,
+    )
+    result["capability_status"] = get_provider_research_agent_status(result.get("attempts") or [])
+    return result
+
+
+async def run_extended_provider_capability(
+    tool: str,
+    arguments: dict[str, Any],
+    *,
+    providers: list[str],
+    timeout_seconds: float = 120.0,
+) -> dict[str, Any]:
+    """Run every Root-selected extended provider operation independently."""
+
+    calls: list[CapabilityCall] = []
+    for provider in providers:
+        if provider == "firecrawl" and tool in {
+            "crawl",
+            "extract",
+            "batch",
+            "academic-search",
+            "academic-read",
+            "academic-related",
+            "developer-search",
+        }:
+            adapter = FirecrawlV2Adapter(
+                config.firecrawl_api_key or "",
+                base_url=config.firecrawl_api_url,
+            )
+            operation = {
+                "crawl": "crawl",
+                "extract": "scrape",
+                "batch": "batch_scrape",
+                "academic-search": "research_search",
+                "academic-read": "research_read",
+                "academic-related": "research_related",
+                "developer-search": "developer_search",
+            }[tool]
+            if operation in {"crawl", "scrape"}:
+                operation_arguments = {
+                    "url": arguments["url"],
+                    "options": arguments.get("options", {}),
+                }
+            elif operation == "batch_scrape":
+                operation_arguments = {
+                    "urls": list(arguments.get("urls") or []),
+                    "options": arguments.get("options", {}),
+                }
+            elif operation == "research_search":
+                operation_arguments = {
+                    "query": str(arguments.get("query") or ""),
+                    "options": arguments.get("options", {}),
+                }
+            elif operation == "research_read":
+                operation_arguments = {
+                    "paper_id": str(arguments.get("paper_id") or ""),
+                    "options": arguments.get("options", {}),
+                }
+            elif operation == "research_related":
+                operation_arguments = {
+                    "paper_id": str(arguments.get("paper_id") or ""),
+                    "intent": str(arguments.get("intent") or arguments.get("query") or ""),
+                    "options": arguments.get("options", {}),
+                }
+            else:
+                operation_arguments = {
+                    "query": str(arguments.get("query") or ""),
+                    "options": arguments.get("options", {}),
+                }
+        elif provider == "tavily" and tool in {"crawl", "extract"}:
+            adapter = TavilyCapabilityAdapter(
+                config.tavily_api_key if config.tavily_enabled else "",
+                base_url=config.tavily_api_url,
+            )
+            operation = tool
+            operation_arguments = (
+                {"url": arguments["url"], "options": arguments.get("options", {})}
+                if operation == "crawl"
+                else {"urls": list(arguments.get("urls") or []), "options": arguments.get("options", {})}
+            )
+        elif provider == "exa" and tool == "deep-search":
+            adapter = ExaDeepSearchAdapter(config.exa_api_key or "", base_url=config.exa_base_url)
+            operation = str(arguments.get("search_type") or "deep")
+            operation_arguments = {
+                "query": str(arguments.get("query") or ""),
+                "options": arguments.get("options", {}),
+            }
+        elif provider == "jina" and tool in {"jina-search", "rerank"}:
+            adapter = JinaCapabilityAdapter(
+                config.jina_api_key or "",
+                search_base_url=config.jina_search_api_url,
+                rerank_base_url=config.jina_rerank_api_url,
+            )
+            operation = "search" if tool == "jina-search" else "rerank"
+            operation_arguments = (
+                {"query": str(arguments.get("query") or ""), "options": arguments.get("options", {})}
+                if operation == "search"
+                else {
+                    "query": str(arguments.get("query") or ""),
+                    "documents": list(arguments.get("documents") or []),
+                    "model": str(arguments.get("model") or "jina-reranker-v3.5"),
+                    "options": arguments.get("options", {}),
+                }
+            )
+        else:
+            continue
+        calls.append(
+            CapabilityCall(
+                adapter=adapter,
+                operation=operation,
+                arguments=operation_arguments,
+                timeout_seconds=timeout_seconds,
+            )
+        )
+    attempts = await gather_capability_calls(calls)
+    return {
+        "ok": any(item.get("status") in {"succeeded", "partial"} for item in attempts),
+        "tool": tool,
+        "attempts": attempts,
+    }
+
+
 def get_capability_status() -> dict[str, Any]:
     main_configured = _configured_main_search_provider_ids()
     status = {
@@ -1686,8 +1875,50 @@ def get_capability_status() -> dict[str, Any]:
             "route_enabled": {"sciverse": False},
             "delegated_skills": ["anysearch"],
         },
+        "provider_research": {
+            "configured": [
+                name
+                for name, enabled in [
+                    ("firecrawl", bool(config.firecrawl_api_key)),
+                    ("jina", bool(config.jina_api_key)),
+                    ("exa", bool(config.exa_api_key)),
+                    ("tavily", bool(config.tavily_enabled and config.tavily_api_key)),
+                ]
+                if enabled
+            ],
+            "fallback_chain": [],
+            "execution": "independent_concurrent_attempts",
+            "required_in_deep_plan": ["firecrawl", "jina", "exa", "tavily"],
+            "inventory": get_provider_research_agent_status(),
+        },
+        "academic_search": {
+            "configured": ["firecrawl"] if bool(config.firecrawl_api_key) else [],
+            "fallback_chain": [],
+        },
+        "academic_read": {
+            "configured": ["firecrawl"] if bool(config.firecrawl_api_key) else [],
+            "fallback_chain": [],
+        },
+        "academic_related": {
+            "configured": ["firecrawl"] if bool(config.firecrawl_api_key) else [],
+            "fallback_chain": [],
+        },
+        "developer_search": {
+            "configured": ["firecrawl"] if bool(config.firecrawl_api_key) else [],
+            "fallback_chain": [],
+        },
     }
-    for capability in ("web_search", "docs_search", "web_fetch", "vertical_search"):
+    for capability in (
+        "web_search",
+        "docs_search",
+        "web_fetch",
+        "vertical_search",
+        "provider_research",
+        "academic_search",
+        "academic_read",
+        "academic_related",
+        "developer_search",
+    ):
         status[capability]["ok"] = bool(status[capability]["configured"])
     return status
 
@@ -4014,6 +4245,57 @@ async def _test_jina_connection() -> dict[str, Any]:
     return {"status": status, "message": data.get("error", "Jina Reader 不可用"), "response_time_ms": response_time}
 
 
+async def _test_firecrawl_connection() -> dict[str, Any]:
+    """Probe Firecrawl authentication and current credit availability without spending credits."""
+
+    api_key = config.firecrawl_api_key
+    if not api_key:
+        return {
+            "status": "not_configured",
+            "message": "FIRECRAWL_API_KEY 未设置，Firecrawl 功能不可用",
+        }
+    start = time.time()
+    endpoint = f"{config.firecrawl_api_url.rstrip('/')}/team/credit-usage"
+    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+        response = await client.get(
+            endpoint,
+            headers={"Authorization": f"Bearer {api_key}"},
+        )
+    response_time = _elapsed_ms(start)
+    if response.status_code == 200:
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = {}
+        data = payload.get("data") if isinstance(payload, dict) else None
+        remaining = data.get("remainingCredits") if isinstance(data, dict) else None
+        if isinstance(remaining, (int, float)) and remaining <= 0:
+            return {
+                "status": "entitlement_denied",
+                "message": "Firecrawl API 可达，但当前剩余额度为 0",
+                "response_time_ms": response_time,
+                "remaining_credits": remaining,
+            }
+        return {
+            "status": "ok",
+            "message": "Firecrawl API 与额度状态可用",
+            "response_time_ms": response_time,
+            "remaining_credits": remaining,
+        }
+    status = (
+        "entitlement_denied"
+        if response.status_code in {401, 402, 403}
+        else "rate_limited"
+        if response.status_code == 429
+        else "warning"
+    )
+    return {
+        "status": status,
+        "message": f"HTTP {response.status_code}: {sanitize_provider_error_message(response.text, limit=100)}",
+        "response_time_ms": response_time,
+    }
+
+
 async def _test_zhipu_connection() -> dict[str, Any]:
     if not config.zhipu_api_key:
         return {"status": "not_configured", "message": "ZHIPU_API_KEY 未设置，智谱搜索功能不可用"}
@@ -4086,10 +4368,15 @@ async def doctor() -> dict[str, Any]:
     except Exception as e:
         info["jina_connection_test"] = {"status": "error", "message": sanitize_provider_error_message(e)}
 
-    if config.firecrawl_api_key:
-        info["firecrawl_connection_test"] = {"status": "configured", "message": "FIRECRAWL_API_KEY 已设置"}
-    else:
-        info["firecrawl_connection_test"] = {"status": "not_configured", "message": "FIRECRAWL_API_KEY 未设置，Firecrawl 功能不可用"}
+    try:
+        info["firecrawl_connection_test"] = await _test_firecrawl_connection()
+    except httpx.TimeoutException:
+        info["firecrawl_connection_test"] = {"status": "timeout", "message": "Firecrawl API 请求超时"}
+    except Exception as e:
+        info["firecrawl_connection_test"] = {
+            "status": "error",
+            "message": sanitize_provider_error_message(e),
+        }
 
     try:
         info["zhipu_connection_test"] = await _test_zhipu_connection()

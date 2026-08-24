@@ -36,6 +36,9 @@ Use the local `smart-search` command as the default execution layer for web rese
 - `route`: explain capability routing without executing providers.
 - `research`: live Deep Research executor for end-to-end plan, discovery, fetch/read, gap check, and evidence-only synthesis.
 - `deep`: offline Deep Research planner; it does not run providers, fetch pages, or replace default `search`.
+- `research-run`: deterministic operations on a caller-held `ResearchRun` dossier. In the agentic architecture, Root uses it to compile and execute Root-authored tasks, import child results, mine registered artifacts, update Claim records, verify final citation mappings, and materialize a durable Research Workspace.
+- `research-view`: serve a read-only Research Workspace visualizer on `127.0.0.1`. The user starts it in a separate terminal; agents must not start or background the service automatically.
+- `research-environment`: install or health-check the isolated Python 3.12 Search Toolkit sidecar used for registered-artifact document mining.
 - `zhipu-search`: Chinese-language, domestic China, policy/regulatory, announcements, current news, or China-local source discovery.
 - `context7-library` / `context7-docs`: library, SDK, API, framework, or documentation intent. Automatic routes select Context7 only when a query subject overlaps a candidate title/id; otherwise use same-capability Exa fallback. Explicit commands retain the candidate list and supplied library id.
 - `exa-search`: official domains, papers, product pages, trusted pages, date/domain-filtered low-noise discovery, and adjacent source discovery through `exa-similar`.
@@ -59,72 +62,39 @@ Use the local `smart-search` command as the default execution layer for web rese
 
 ## Multi-Source Research Flow
 
-This diagram is the Preview implementation target. Solid nodes represent orchestration that this Skill can direct now. Provider-specific Research or Agent lanes are conditional: use them only when the corresponding API, entitlement, and live minimum request are available. Regardless of source, discovery candidates become evidence only after their content is read or fetched.
+Root Agent is the sole semantic planner and synthesizer. It dynamically decides task decomposition, replanning, stopping, and how many Search Scouts, Source Curators, or Evidence Miners to launch and how to shard them. Smart Search is the deterministic kernel: it validates contracts, executes configured capabilities, normalizes results, stores append-only artifacts and Trace, and verifies citation links. Children return `DelegateResult` records with gaps and suggestions; only Root can turn suggestions into new tasks.
+
+Use `research-run ... --workspace PATH` to project each returned dossier into a durable Research Workspace, and add one or more `--checkpoint LABEL` options when the caller needs immutable named snapshots. Use `research-run materialize` to persist an existing dossier together with optional `final_synthesis` and `citation_verification` fields from its input payload. The structured Dossier, Trace, Evidence, and Claim records remain authoritative; Markdown files are human-readable projections. `public_trace.jsonl` contains only public trace identity and event metadata. Never save hidden reasoning in the workspace or its visualizer inputs.
+
+The product modes are `quick`, `standard`, and `deep`. Provider Research Agents are Firecrawl Agent, Jina DeepSearch, Exa Agent, and Tavily Research. Their configured/reachable/entitled state controls whether an attempt can run. The default project-agent adapter settings (`gpt-5.6-luna`, reasoning `max`, service tier `priority`) are deployment defaults, not product acceptance conditions.
+
+Before launching a project Agent, read its matching definition in `agents/search_scout.yaml`, `agents/source_curator.yaml`, or `agents/evidence_miner.yaml`. Use a registered project adapter when the Harness provides one; otherwise create a Harness child from that definition. The YAML role contract remains authoritative in either case.
 
 ```mermaid
 flowchart TD
-    U([User question]) --> P[Multi-Research Planner<br/>decompose by intent, complexity, and expected evidence]
-    P --> M[Choose run mode<br/>quick / standard / deep / max]
-    M --> T{What evidence is needed?}
-
-    subgraph SS[Smart Search: multi-dimensional discovery and source collection]
-      A[Academic<br/>Firecrawl Research + Sciverse + Exa]
-      C[Code and developer sources<br/>Firecrawl Developer Index + Exa official repositories and docs]
-      D[Technical docs and APIs<br/>Context7 + Exa official sources]
-      W[General web<br/>Exa Auto/Fast + Tavily Search + Chinese sources + Firecrawl/Jina]
-      DC[Merge DiscoveryCandidate]
-      R[Read or fetch key sources<br/>Tavily Extract + Jina Reader + Firecrawl Scrape]
-      G{Does current evidence support the key claims?}
-      A --> DC
-      C --> DC
-      D --> DC
-      W --> DC
-      DC --> R --> G
-    end
-
-    T -- Academic --> A
-    T -- Code --> C
-    T -- Docs/API --> D
-    T -- General web --> W
-
-    subgraph AS[AnySearch: external Skill delegated by the agent]
-      AN{Would AnySearch add useful evidence?}
-      AR[Resolve Skill<br/>bundled snapshot first; global Skill fallback]
-      AA[Read AnySearch SKILL.md<br/>model chooses capability and parameters]
-      AC[AnySearch result<br/>DiscoveryCandidate or extracted content]
-      AU[AnySearch unavailable<br/>continue with other sources]
-      AN -- Yes --> AR
-      AR -- Available --> AA --> AC
-      AR -- Missing or unusable --> AU
-    end
-
-    M -. agent decides .-> AN
-    AC --> DC
-    AU --> G
-
-    subgraph NR[Provider Research Agents: run only when APIs and entitlements are available]
-      L{Research depth}
-      FM[Max<br/>Firecrawl Agent with explicit credit ceiling]
-      JM[Max<br/>Jina DeepSearch with token ceiling]
-      ED[Deep<br/>Exa Agent]
-      TD[Deep<br/>Tavily Research]
-      EL[Light<br/>Exa Deep or equivalent available mode]
-      RA[ResearchArtifact<br/>read original cited sources before final synthesis]
-      L -- Max --> FM --> RA
-      L -- Max --> JM --> RA
-      L -- Deep --> ED --> RA
-      L -- Deep --> TD --> RA
-      L -- Light --> EL --> RA
-    end
-
-    G -- Insufficient --> L
-    G -- Sufficient --> N[Normalize ProviderRun, DiscoveryCandidate, and ResearchArtifact]
-    RA --> N
-    N --> E[Entity normalization and deduplication<br/>URL / DOI / repository / event]
-    E --> I[EvidenceItem<br/>read text, locator, and time]
-    I --> CL[Claim Ledger<br/>evidence, disagreement, and source confidence]
-    CL --> S[One-pass synthesis<br/>independent source weighting by run mode]
-    S --> O([Cited combined result])
+    U([User question and constraints]) --> R[Root Agent<br/>ResearchFrame and ClaimSpec]
+    R --> T[Root-authored SearchTask and DelegateRequest]
+    T --> K[Smart Search deterministic kernel]
+    T -. optional .-> S[Search Scout]
+    T -. optional .-> A[AnySearch Skill<br/>bundled snapshot then global fallback]
+    K --> P[Configured Provider Research Agents]
+    S --> D[DelegateResult<br/>candidates, gaps, suggestions]
+    A --> D
+    P --> C[DiscoveryCandidate and registered artifacts]
+    D --> C
+    C --> R
+    R -. optional Root-decided shards .-> Q[Source Curator]
+    Q --> KS[DelegateResult with KeySourceProposal]
+    KS --> R
+    R --> EM[EvidenceMiningTask]
+    EM --> M[Evidence Miner<br/>registered artifacts only]
+    M --> E[DelegateResult with EvidenceItem]
+    E --> R
+    R --> CR[ClaimRecord<br/>support, contradict, qualify, gaps]
+    CR --> G{Root judges sufficiency}
+    G -- replan --> T
+    G -- stop --> F[Root final synthesis]
+    F --> V[Smart Search citation verification<br/>reverse trace to artifact and Trace]
 ```
 
 ## References
@@ -132,6 +102,7 @@ flowchart TD
 - Current OPPO Linux search flow, Embedding trigger conditions, provider layout, and Mermaid diagram: `references/current-search-flow.md`
 - Command examples, evidence files, timeout retry policy, and guardrails: `references/command-patterns.md`
 - Deep Research planner/executor workflow, plan fields, gap check, and smoke matrix: `references/deep-research-mode.md`
+- Root-led multi-source architecture, project-agent roles, caller-held dossier operations, Claim lifecycle, document mining, Trace, and reverse citation tracing: `references/agentic-research-architecture.md`
 - CLI entrypoints, command signatures, aliases, output fields, exit codes, and tool policy: `references/cli-core.md`
 - Setup, config storage, skill installation, provider endpoints, and OpenAI-compatible diagnostics: `references/setup-config.md`
 - Intent routing, provider capabilities, source provenance, fallback boundaries, and routing maintenance: `references/provider-routing.md`

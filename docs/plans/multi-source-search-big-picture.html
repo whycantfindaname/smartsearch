@@ -342,6 +342,7 @@
     .flow-node.decision { border-color: #dfc380; background: var(--warn-soft); }
 
     .flow-node .node-state { position: absolute; top: 8px; right: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
+    .flow-node[data-state="implemented"] .node-state { background: #177a55; box-shadow: 0 0 0 3px rgba(23, 122, 85, 0.12); }
     .flow-node[data-state="baseline"] .node-state { background: var(--proof); }
     .flow-node[data-state="confirmed"] .node-state { background: var(--search); }
     .flow-node[data-state="proposed"] .node-state { background: var(--plan); }
@@ -384,6 +385,7 @@
     .legend-item { display: inline-flex; align-items: center; gap: 5px; }
     .legend-dot { width: 6px; height: 6px; border-radius: 50%; }
     .legend-dot.baseline { background: var(--proof); }
+    .legend-dot.implemented { background: #177a55; }
     .legend-dot.confirmed { background: var(--search); }
     .legend-dot.planned { background: var(--warn); }
     .legend-dot.proposed { background: var(--plan); }
@@ -407,6 +409,7 @@
     }
 
     .detail-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .detail-status.implemented { color: #177a55; background: #e8f5ef; }
     .detail-status.baseline { color: var(--proof); background: var(--proof-soft); }
     .detail-status.confirmed { color: var(--search); background: var(--search-soft); }
     .detail-status.proposed { color: var(--plan); background: var(--plan-soft); }
@@ -503,16 +506,17 @@
         <span class="brand-mark">S</span>
         <div class="brand-copy">
           <strong>Smart Search · 多源研究实施地图</strong>
-          <span>preview/multi-source-agentic-research · v0.9 · 2026-08-23</span>
+          <span>preview/multi-source-agentic-research · v1.0 · 2026-08-24</span>
         </div>
       </div>
       <div class="top-status" aria-label="当前状态">
-        <span class="status-chip">Root Agent 规划 · 双层重规划</span>
+        <span class="status-chip">Root Agent · 唯一语义控制面</span>
         <span class="status-chip hold">当前激活版暂不替换</span>
       </div>
       <nav class="top-actions" aria-label="全局入口">
         <button class="top-button" type="button" data-open="overview">整体</button>
-        <button class="top-button" type="button" data-open="roadmap">实施 A–G</button>
+        <button class="top-button" type="button" data-open="roadmap">垂直路线 A–G</button>
+        <button class="top-button" type="button" data-open="environment-config">环境配置</button>
         <button class="top-button" type="button" data-open="benchmark">验收调研</button>
         <a class="top-link" href="./multi-source-research-implementation.md">完整计划 ↗</a>
       </nav>
@@ -566,25 +570,26 @@
 
             <button class="flow-node node-user" type="button" data-node="question" data-state="confirmed"><span class="node-state"></span><strong>用户问题</strong><span>目标 · 范围 · 时效 · 成本</span></button>
             <button class="flow-node planner node-planner" type="button" data-node="planner" data-state="confirmed"><span class="node-state"></span><strong>Root Agent · Planning</strong><span>ResearchFrame · 初始任务 · 动态重规划</span></button>
-            <button class="flow-node planner node-compiler" type="button" data-node="plan-compiler" data-state="pending"><span class="node-state"></span><strong>Plan Compiler / Validator</strong><span>Schema · 能力 · 预算 · 依赖</span></button>
-            <button class="flow-node search node-frame" type="button" data-node="research-frame" data-state="proposed"><span class="node-state"></span><strong>ResearchFrame</strong><span>规范化问题、范围、研究角度与证据预期</span></button>
-            <button class="flow-node search node-task" type="button" data-node="search-task" data-state="proposed"><span class="node-state"></span><strong>SearchTask[]</strong><span>按研究角度拆分，不按 Provider 拆分</span></button>
-            <button class="flow-node search node-scout" type="button" data-node="scouts" data-state="pending"><span class="node-state"></span><strong>项目 Search Scout 并行探索</strong><span>按研究角度自主选择搜索能力</span></button>
-            <button class="flow-node search node-capabilities" type="button" data-node="capabilities" data-state="baseline"><span class="node-state"></span><strong>Smart Search · AnySearch · Provider Research Agents</strong><span>内部 Provider + 外部 Skill + 资格受控 API</span></button>
-            <button class="flow-node search node-candidates" type="button" data-node="candidates" data-state="pending"><span class="node-state"></span><strong>全量保存 · 归一化</strong><span>CandidateCard</span></button>
-            <button class="flow-node decision node-coverage" type="button" data-node="coverage" data-state="confirmed"><span class="node-state"></span><strong>分片 Curator → Root 裁决</strong><span>可回溯 · 可展开 · 可补搜</span></button>
-            <button class="flow-node mine node-mining-task" type="button" data-node="mining-task" data-state="pending"><span class="node-state"></span><strong>EvidenceMiningTask</strong><span>关键文档 + 待验证 Claim</span></button>
-            <button class="flow-node mine node-miner" type="button" data-node="miner" data-state="pending"><span class="node-state"></span><strong>Evidence Miner</strong><span>单文档迭代取证，不做最终综合</span></button>
-            <button class="flow-node mine node-docs" type="button" data-node="docs" data-state="pending"><span class="node-state"></span><strong>Mistral-inspired Docs MCP</strong><span>MinerU · search / open / navigate / read / grep</span></button>
-            <button class="flow-node mine node-evidence" type="button" data-node="evidence-item" data-state="pending"><span class="node-state"></span><strong>EvidenceItem[]</strong><span>原始 URL + 精确 locator + 时间</span></button>
-            <button class="flow-node proof node-normalize" type="button" data-node="normalize" data-state="pending"><span class="node-state"></span><strong>Research Trace</strong><span>计划 → 执行 → 证据 → 结论</span></button>
-            <button class="flow-node proof node-ledger" type="button" data-node="claim-ledger" data-state="pending"><span class="node-state"></span><strong>Claim Ledger</strong><span>支持、反驳、冲突与不确定性</span></button>
-            <button class="flow-node proof node-root" type="button" data-node="root-agent" data-state="pending"><span class="node-state"></span><strong>Root Agent · Synthesis</strong><span>权重判断 · 证据缺口 · 引用映射</span></button>
-            <button class="flow-node proof node-final" type="button" data-node="final-answer" data-state="pending"><span class="node-state"></span><strong>一次性带引用结论</strong><span>不拼接各执行单元的自然语言报告</span></button>
+            <button class="flow-node planner node-compiler" type="button" data-node="plan-compiler" data-state="implemented"><span class="node-state"></span><strong>Smart Search Kernel / Plan Compiler</strong><span>确定性校验 · 编译 · 记录，不做语义规划</span></button>
+            <button class="flow-node search node-frame" type="button" data-node="research-frame" data-state="implemented"><span class="node-state"></span><strong>Caller-held ResearchRun</strong><span>ResearchFrame · run-local TraceEvent</span></button>
+            <button class="flow-node search node-task" type="button" data-node="search-task" data-state="implemented"><span class="node-state"></span><strong>ClaimSpec → SearchTask[]</strong><span>Root 动态拆分、分片、重规划与停止</span></button>
+            <button class="flow-node search node-scout" type="button" data-node="scouts" data-state="implemented"><span class="node-state"></span><strong>Root 委派项目 Search Scout</strong><span>DelegateRequest ⇄ DelegateResult · 子级不派生</span></button>
+            <button class="flow-node search node-capabilities" type="button" data-node="capabilities" data-state="baseline"><span class="node-state"></span><strong>Smart Search · AnySearch · Research API</strong><span>内部 Provider + 外部 Skill + 资格受控 API</span></button>
+            <button class="flow-node search node-candidates" type="button" data-node="candidates" data-state="implemented"><span class="node-state"></span><strong>全量保存 · 归一化</strong><span>CandidateCard</span></button>
+            <button class="flow-node decision node-coverage" type="button" data-node="coverage" data-state="confirmed"><span class="node-state"></span><strong>Root 决定 0 / 1 / 多 Curator</strong><span>候选量与上下文估计只是建议信号</span></button>
+            <button class="flow-node mine node-mining-task" type="button" data-node="mining-task" data-state="implemented"><span class="node-state"></span><strong>EvidenceMiningTask</strong><span>关键文档 + claim_spec_id</span></button>
+            <button class="flow-node mine node-miner" type="button" data-node="miner" data-state="implemented"><span class="node-state"></span><strong>Evidence Miner</strong><span>单文档迭代取证，不做最终综合</span></button>
+            <button class="flow-node mine node-docs" type="button" data-node="docs" data-state="implemented"><span class="node-state"></span><strong>Search Toolkit · Py3.12 Sidecar</strong><span>project adapters · search / open / navigate / read / grep</span></button>
+            <button class="flow-node mine node-evidence" type="button" data-node="evidence-item" data-state="implemented"><span class="node-state"></span><strong>EvidenceItem[]</strong><span>typed locator · snapshot identity · stance</span></button>
+            <button class="flow-node proof node-normalize" type="button" data-node="normalize" data-state="implemented"><span class="node-state"></span><strong>Append-only Research Trace</strong><span>TraceEvent · ExecutionAttempt · run-local audit</span></button>
+            <button class="flow-node proof node-ledger" type="button" data-node="claim-ledger" data-state="implemented"><span class="node-state"></span><strong>ClaimRecord[]</strong><span>定性状态 · 支持/反驳 · 独立性</span></button>
+            <button class="flow-node proof node-root" type="button" data-node="root-agent" data-state="implemented"><span class="node-state"></span><strong>Root Agent · Synthesis</strong><span>定性裁决 · 证据缺口 · 引用映射</span></button>
+            <button class="flow-node proof node-final" type="button" data-node="final-answer" data-state="implemented"><span class="node-state"></span><strong>一次性带引用结论</strong><span>不拼接各执行单元的自然语言报告</span></button>
           </div>
         </div>
 
         <div class="diagram-legend" aria-label="节点状态图例">
+          <span class="legend-item"><i class="legend-dot implemented"></i>已实现</span>
           <span class="legend-item"><i class="legend-dot baseline"></i>已有基线</span>
           <span class="legend-item"><i class="legend-dot confirmed"></i>已确认</span>
           <span class="legend-item"><i class="legend-dot planned"></i>待实现</span>
@@ -619,18 +624,19 @@
       const details = {
         overview: {
           path: 'Big Picture', status: 'confirmed', statusText: '已确认', title: '从候选来源到可引用结论',
-          summary: '阶段 01 的多源发现以既有 Smart Search 为基础改编；阶段 02 的关键文档深挖明确源自 Mistral Agentic Search。当前项目负责把两者连接为 Root Agent 可动态重规划、Subagent 可分工、证据可定位的统一研究流程。',
-          principle: '明确保留思想与代码来源：发现能力不冒充从零创建，文档深挖不隐去 Mistral Agentic Search；本项目新增的是两阶段编排、任务协议、运行隔离和统一证据综合。',
+          summary: 'Root Agent 是唯一的语义 Planning + Synthesis 控制面；Smart Search 是确定性的 Kernel / Plan Compiler。多源发现改编自 Smart Search，关键文档深挖直接复用 mistralai-search-toolkit，并由项目适配既有 embedding、MinerU 与本地索引。',
+          principle: 'Root 决定研究方向、能力、委派数量、重规划与停止；Kernel 只编译、执行确定性步骤、归一化、存证与追加审计事件。',
           sources: [
             { kind: '阶段 01 · 原始项目', label: 'Smart Search · konbakuyomu/smartsearch', url: 'https://github.com/konbakuyomu/smartsearch', note: '多源发现阶段沿用并扩展其 CLI、Provider 路由、Research、Fetch 与来源处理能力。' },
             { kind: '当前改编仓库', label: 'Smart Search Preview · whycantfindaname/smartsearch', url: 'https://github.com/whycantfindaname/smartsearch', note: '本项目的多源研究 Preview 在该仓库分支上实现。' },
             { kind: '阶段 02 · 思想来源', label: 'Mistral · Agentic Search', url: 'https://mistral.ai/news/agentic-search/', note: '关键文档命中后转向文档内部迭代搜索、打开、导航与读取的核心思路来源。' },
-            { kind: '阶段 02 · 参考实现', label: 'Mistral · Search Starter App', url: 'https://github.com/mistralai/search-starter-app', note: '参考 MCP 工具语义和可定位 Document/Chunk 结构；不直接采用其 Mistral API 与 Vespa 默认运行栈。' }
+            { kind: '阶段 02 · Python 发行包', label: 'mistralai-search-toolkit · PyPI', url: 'https://pypi.org/project/mistralai-search-toolkit/', note: 'Python 3.12 Sidecar 直接复用 Apache-2.0 包中的文档模型与检索管线；项目适配器替换托管依赖。' },
+            { kind: '阶段 02 · 公开示例仓库', label: 'mistralai/search-starter-app', url: 'https://github.com/mistralai/search-starter-app', note: 'Mistral 官方公开的 Agentic Search、MCP 与 Search Toolkit 集成示例。' }
           ],
-          implementation: ['Root Agent 根据完整对话生成 ResearchFrame 和第一轮 SearchTask。', 'Plan Compiler / Validator 检查结构、能力资格、模式预算与依赖，再编译内部执行和外部委派步骤。', '项目专用 Search Scout 使用改编自 Smart Search 的多源发现能力按研究角度寻找材料。', '全部原始候选先保存并归一化；候选溢出时由多个分片 Source Curator 生成可回溯提案，再由 Root Agent 选择关键文档或补搜。', '只把影响结论的关键文档交给 Evidence Miner，并按 Mistral Agentic Search 的文档内探索思路深挖；证据仍不足时回到 Root Agent 重规划。', 'Root Agent 最终用本项目定义的 Claim Ledger 处理支持、反驳、冲突与不确定性，并一次性生成带引用结论。'],
-          inputs: ['用户问题', 'quick | standard | deep', '可用能力', '成本边界'], outputs: ['DiscoveryCandidate', 'EvidenceItem', 'Claim Ledger', '带引用结论'],
-          constraints: ['AnySearch 始终是外部 Skill，不恢复为内部 Provider。', 'Provider Research Agents 必须通过 Key、live、契约与余额四项检查。', '当前 macOS 激活版在用户看完验收调研报告前不替换。'],
-          phase: ['A–F', '核心实现主线', '先代码化规划协议、计划编译、委派、文档深挖与证据综合，再进入架构复盘与 Benchmark 调研。'], related: ['planner', 'plan-compiler', 'search-task', 'miner', 'claim-ledger', 'roadmap']
+          implementation: ['Root 从完整上下文创建 caller-held ResearchRun、ResearchFrame 与 ClaimSpec。', 'Kernel 校验并编译 Root 选择的能力；现有 CLI planner 仅作为离线规则基线或计划种子。', '只有 Root 通过 DelegateRequest 委派 Search Scout、Source Curator 或 Evidence Miner；DelegateResult 回到同一个 ResearchRun，子级只报告结果、缺口和建议。', '确定性代码输出候选数量、上下文估计、分组建议和 raw index；Root 决定是否需要零个、一个或多个 Curator。', 'EvidenceItem 带 snapshot identity 与 typed locator；ClaimRecord 保存定性判断，Root 一次性综合。', 'TraceEvent 从运行开始 append-only 写入，记录 attempt、时间、用量、状态和产物引用，不承诺暂停进程或自动恢复。'],
+          inputs: ['用户问题', 'quick | standard | deep', 'capability snapshot', '用户约束'], outputs: ['ResearchRun', 'EvidenceItem[]', 'ClaimRecord[]', '带引用结论'],
+          constraints: ['AnySearch 始终是外部 Skill。', '外部内容是不可信数据，不能覆盖 ResearchFrame、任务或权限。', '激活 macOS 版本前必须取得用户批准。'],
+          phase: ['A–F + 配置收尾 + E2E gate', '垂直实现主线', '先闭合内部证据链，再接文档工具、外部发现、四种研究代理和动态多 Agent，最后统一运行配置。'], related: ['planner', 'plan-compiler', 'search-task', 'miner', 'claim-ledger', 'roadmap', 'environment-config']
         },
         question: {
           path: '入口', status: 'confirmed', statusText: '已确认', title: '用户问题', summary: '用户只需要表达真正想解决的问题和研究强度，不需要手工选择 Provider 或安排 Subagent。',
@@ -642,55 +648,55 @@
         planner: {
           path: '主 Agent / 规划阶段', status: 'confirmed', statusText: '架构已确认', title: 'Root Agent · Planning', summary: '这不是 Smart Search 内部定死的 Planner，也不是单独的 Subagent；它是当前 Root Agent 在执行搜索前承担的自适应语义规划职责。',
           principle: '需要理解复杂上下文、判断研究充分性和改变任务方向的工作归 Root Agent；固定代码只校验计划能否执行。',
-          implementation: ['根据完整对话、用户约束和研究强度生成 ResearchFrame。', '先创建最小但足以启动探索的第一轮 SearchTask，不预先穷举所有可能方向。', '把计划草案交给 Plan Compiler / Validator 做结构、能力和预算校验。', '读取全部 CandidateCard 或分片 Curator 的 KeySourceProposal，决定关键文档、补搜或降级；必要时按候选 ID 展开原始记录。', '收到 Evidence Miner 的证据缺口后，判断应继续深挖、返回发现阶段，还是明确降级结论。'],
-          inputs: ['full conversation', 'user constraints', 'capability summary', 'CandidateCard[] | KeySourceProposal[]', 'document gaps', 'evidence gaps'], outputs: ['ResearchFrame', 'SearchTask[]', 'EvidenceMiningTask[]', 'replan decision'], constraints: ['不是独立 Subagent。', '不能绕过 Plan Compiler 直接形成执行步骤。', '关键文档最终选择不能交给 Curator。', '动态重规划仍受 quick、standard、deep 预算约束。', '预算耗尽时必须保留未解决缺口。'],
-          phase: ['B/D', 'Root Agent 规划协议', '定义首轮规划、两类缺口回传和动态重规划的 Harness 无关协议。'], related: ['plan-compiler', 'research-frame', 'search-task', 'coverage', 'root-agent']
+          implementation: ['根据完整对话与用户约束生成 ResearchFrame 和先行 ClaimSpec。', '选择基础能力、Provider Research Agents、任务拆分、Scout 数量与分片方式。', '根据候选量、上下文估计、分组建议和 raw index 决定零个、一个或多个 Source Curator。', '收到子级 gaps / suggestions 后自行决定是否重规划；子级不创建后代。', '判断研究充分性并决定继续、降级或停止，最后更新 ClaimRecord 并综合。'],
+          inputs: ['full conversation', 'user constraints', 'capability snapshot', 'CandidateCard[] | KeySourceProposal[]', 'gaps and suggestions'], outputs: ['ResearchFrame', 'ClaimSpec[]', 'SearchTask[]', 'EvidenceMiningTask[]', 'delegate and stop decisions'], constraints: ['Root 是唯一语义 Planner 与 Synthesizer。', '现有 CLI planner 只可提供离线规则基线或种子。', '任务数、Subagent 数、Curator 数和研究工作量不由产品固定。'],
+          phase: ['A/B/F', '控制权、内部闭环与动态编排', '同一个 Root 贯穿规划、委派、裁决、停止和综合。'], related: ['plan-compiler', 'research-frame', 'search-task', 'coverage', 'root-agent']
         },
         'plan-compiler': {
-          path: 'Smart Search / 确定性控制', status: 'pending', statusText: '待实现', title: 'Plan Compiler / Validator', summary: 'Smart Search 内部的确定性模块。它不负责理解复杂研究语义，而是把 Root Agent 的计划草案校验并编译成合法、可追踪、受预算约束的执行步骤。',
-          principle: '固定代码保证计划“能执行、不会越界、结果可追踪”，不承担“研究方向是否合理”的开放式判断。',
-          implementation: ['校验 ResearchFrame、SearchTask 和 EvidenceMiningTask 的最小 Schema。', '应用 quick、standard、deep 的模式门控和任务预算。', '根据 capability probe 检查 Provider、Provider Research Agents、AnySearch Skill 和 Subagent 的可用性与依赖。', '把通过校验的任务编译成 internal、native、delegated_skill 或 delegated_agent 执行步骤。', '向 Root Agent 返回 validation errors、降级原因以及能力选择与跳过理由。'],
-          inputs: ['plan draft', 'capability status', 'mode budget'], outputs: ['validated research_plan', 'executable steps', 'validation errors'], constraints: ['不自行推理研究角度。', '不自行循环搜索或派生 Subagent。', '现有 CLI-only planner 只保留为离线保守基线，不冒充复杂语义规划。'],
-          phase: ['A–B', '计划契约与编译器', '先固定协议和确定性校验，再接 Root Agent 的动态规划。'], related: ['planner', 'modes', 'capabilities', 'provider-run']
+          path: 'Smart Search / 确定性内核', status: 'implemented', statusText: '已实现', title: 'Smart Search Kernel / Plan Compiler', summary: '无语义所有权的确定性内核：校验 Root 草案、编译能力调用、执行内部步骤、归一化结果并追加 TraceEvent。',
+          principle: '代码保证契约、权限、可执行性和可追踪性；研究方向、工作量与停止时机仍由 Root 判断。',
+          implementation: ['校验 ResearchRun、ResearchFrame、ClaimSpec、SearchTask、EvidenceMiningTask 与 DelegateResult。', '按 quick、standard、deep 做能力边界校验，并读取带时间戳的 capability snapshot。', '编译 internal、provider_research、delegated_skill、delegated_agent 与 document_tool 步骤。', '为每次动作记录独立 ExecutionAttempt、时间、状态、usage 与原始产物引用。', '返回 validation errors、状态和可用性事实，不替 Root 选方向或派 Agent。'],
+          inputs: ['root plan draft', 'capability snapshot', 'DelegateResult'], outputs: ['compiled steps', 'ExecutionAttempt[]', 'TraceEvent[]', 'validation errors'], constraints: ['不决定 SearchTask、Subagent 或 Curator 数量。', '不暂停等待委派，也不承诺自动恢复。', '只有 Root 发出委派。'],
+          phase: ['A/B', '契约、Trace 与内部证据闭环', '先固定控制权与事件链，再扩展能力。'], related: ['planner', 'modes', 'capabilities', 'execution-attempt']
         },
         modes: {
-          path: '编排层 / 预算', status: 'confirmed', statusText: '已确认', title: 'quick · standard · deep', summary: '三种产品模式共用同一证据管线，只改变允许调用的能力和任务预算。阶段 G 的验收调研同样使用 deep，不另设第四种模式。',
-          principle: '预算可以降低搜索深度，但不能降低“候选不是证据”的基本标准。',
-          implementation: ['Root Agent 根据问题复杂度安排任务；Plan Compiler 负责执行模式硬约束。', 'quick：只执行 Smart Search 基础搜索，不调用 AnySearch 或 Provider Research Agents。', 'standard：执行基础搜索；Root Agent 判断有价值时委派 AnySearch；不调用 Provider Research Agents。', 'deep：始终执行 Smart Search Research，可委派 Scout、AnySearch 和最多 2 个已验证 Provider Research Agents。'],
-          inputs: ['quick', 'standard', 'deep'], outputs: ['mode gates', 'task budget', 'capability budget'], constraints: ['超过 2 个 Provider Research Agents 必须由用户显式指定。', '各模式具体 SearchTask 与 EvidenceMiningTask 数量仍待确认。'],
+          path: '编排层 / 强度', status: 'confirmed', statusText: '已确认', title: 'quick · standard · deep', summary: '三种产品模式共用证据管线，表示允许的研究强度与能力范围；不把它们换算成固定任务数或脚本化研究额度。',
+          principle: '模式限制能力范围，Root 根据问题和运行事实决定实际工作量。',
+          implementation: ['Root 选择任务、能力、委派与停止；Kernel 校验模式边界并记录实际 attempts、时间和 usage。', 'quick：以 Smart Search 基础能力完成短路径证据闭环。', 'standard：保留基础能力，并可由 Root 委派 AnySearch 或项目角色。', 'deep：包含 Firecrawl Agent、Jina DeepSearch、Exa Agent 与 Tavily Research；配置可用时四者都被表示和尝试，状态、错误与用量独立记录，再非 fail-fast 合并。'],
+          inputs: ['quick', 'standard', 'deep'], outputs: ['capability envelope', 'observed usage', 'stop decision'], constraints: ['不预设 SearchTask、Subagent 或 Curator 数量。', 'Provider 单路失败不取消其他路。'],
           phase: ['B', '模式门控', '模式规则由编译器确定性执行，Root Agent 负责语义任务结构。'], related: ['plan-compiler', 'planner', 'capabilities', 'roadmap']
         },
         'research-frame': {
-          path: '发现阶段 / 任务定义', status: 'proposed', statusText: '设计提案', title: 'ResearchFrame', summary: '一次研究共享的问题框架，用来防止不同 Scout 各自理解问题并悄悄扩大范围。',
-          principle: '借鉴 Academic Deep Research 的范围继承，以及 Public Deep Research 的领域维度识别，但压缩成一个轻量对象。',
-          implementation: ['由 Root Agent 根据完整上下文生成，再由 Plan Compiler 校验最小结构。', '记录规范化问题、纳入与排除范围、时间、对象和地域。', '根据问题生成必须覆盖的研究角度，而不是固定创建“论文、新闻、代码、官方”四类任务。', '声明期望证据类型和已知假设，供所有 SearchTask 继承。'],
-          inputs: ['normalized question', 'scope', 'intent signals'], outputs: ['ResearchFrame'], constraints: ['不是一份研究报告。', '不默认启动独立 methodology Subagent。', '字段细节在阶段 A 契约测试中固定。'],
+          path: '发现阶段 / 调用方状态', status: 'implemented', statusText: '已实现', title: 'Caller-held ResearchRun', summary: 'ResearchRun 由调用方持有，包含 ResearchFrame、计划/结果引用和 run-local Trace；Smart Search 不保持一个暂停进程等待外部委派。',
+          principle: '显式往返取代隐式等待：Root 提交步骤或 DelegateResult，再调用 Kernel 推进同一 run。',
+          implementation: ['Root 创建 run_id、ResearchFrame 与首批 ClaimSpec。', 'Kernel 返回内部结果或结构化 DelegateRequest，调用方保存当前 run bundle。', 'Root 完成委派后提交 DelegateResult；Kernel 校验 run_id、task_id、step_id 与产物引用。', '每轮都追加 TraceEvent，但 Preview 不许诺自动恢复。'],
+          inputs: ['normalized question', 'scope', 'caller state'], outputs: ['ResearchRun', 'ResearchFrame', 'TraceEvent[]'], constraints: ['没有常驻暂停进程。', '不把审计产物描述为可自动恢复状态。'],
           phase: ['A–B', '数据契约与规划协议', '先固定最小结构，再接 Root Agent 生成与编译器校验。'], related: ['planner', 'plan-compiler', 'search-task', 'scouts']
         },
         'search-task': {
-          path: '发现阶段 / 任务定义', status: 'proposed', statusText: '设计提案', title: 'SearchTask[]', summary: '一个 Scout 可以独立完成并验收的研究角度。任务按待回答子问题或待验证主张拆分，不按 Provider 拆分。',
+          path: '发现阶段 / 任务定义', status: 'implemented', statusText: '已实现', title: 'ClaimSpec → SearchTask[]', summary: 'Root 先定义需要验证的 ClaimSpec，再按研究角度创建可独立验收的 SearchTask；任务不按 Provider 拆分。',
           principle: '“官方技术、最新案例、论文、代码”只是可能的证据方向，不是固定任务槽位。',
-          implementation: ['包含 task_id、objective、angle 与 inherited_scope。', '声明 evidence_need、source_policy、query_hints、budget 和 stop_condition。', 'Search Scout 返回候选、产物引用、gaps 和 suggested_tasks；Root Agent 决定是否接受扩展任务，Plan Compiler 再校验新一轮计划。', 'Harness 无关协议写入 skills/smart-search-cli/references/subagent-orchestration.md。'],
-          inputs: ['ResearchFrame', 'research angle', 'budget'], outputs: ['DiscoveryCandidate[]', 'ResearchArtifact[]', 'raw artifact refs', 'gaps', 'suggested_tasks'], constraints: ['不能绑定某个固定 Provider。', '不能让 Search Scout 自行无限创建新任务。', '动态扩展轮数与任务上限仍待确认。'],
+          implementation: ['ClaimSpec 保存 claim_spec_id、定义、时间范围和判定条件。', 'SearchTask 包含 task_id、objective、angle、inherited_scope、claim_spec_ids 与 source policy。', 'Search Scout 返回候选、产物引用、gaps 和 suggestions；只有 Root 决定是否创建新任务。', 'Kernel 记录 attempts 与 usage，不替 Root 规定工作量。'],
+          inputs: ['ResearchFrame', 'ClaimSpec[]', 'research angle'], outputs: ['DiscoveryCandidate[]', 'ResearchArtifact[]', 'gaps', 'suggestions'], constraints: ['不能绑定固定 Provider。', '子级不能派生后代。'],
           phase: ['A–D', '契约、规划与 Agent 委派', 'SearchTask 是 Harness 之间共享的业务协议。'], related: ['research-frame', 'planner', 'scouts', 'coverage']
         },
         scouts: {
-          path: '发现阶段 / 项目 Subagent', status: 'pending', statusText: '待实现', title: 'Search Scout 并行探索', summary: 'Smart Search 项目专用 Search Scout 分别执行互相独立的 SearchTask，在任务范围内自主决定怎样搜索。',
+          path: '发现阶段 / 项目 Subagent', status: 'implemented', statusText: '已实现', title: 'Search Scout 并行探索', summary: 'Smart Search 项目专用 Search Scout 分别执行互相独立的 SearchTask，在任务范围内自主决定怎样搜索。',
           principle: 'Subagent 是执行分工，不是第二套规划器；它寻找来源，但不裁决最终结论。',
-          implementation: ['在 .codex/agents/search_scout.toml 定义 Codex 项目 Agent。', 'Codex 首版固定使用 gpt-5.6-luna、Max 推理强度与 Fast 服务层；对应配置为 model_reasoning_effort = "max"、service_tier = "priority"。', 'Root Agent 按通过编译器校验的 SearchTask 委派 Search Scout。', 'Search Scout 自主使用 Smart Search、AnySearch Skill 或可用 Provider Research Agents。', '按统一协议返回候选、原始产物引用、覆盖缺口、使用能力、建议任务和停止原因。', '自然语言小结不能绕过公共合并入口直接拼成最终答案。'],
-          inputs: ['SearchTask', 'available capabilities'], outputs: ['DiscoveryCandidate[]', 'ResearchArtifact[]', 'raw artifact refs', 'coverage gaps'], constraints: ['不依赖 Infra 管理的全局 Agent role。', '不为每个搜索引擎创建专用 Agent。', 'Search Scout 不继续派生 Subagent。', '首版不自动升级或切换模型；Root Agent 模型由 Harness 控制。'],
+          implementation: ['Root 生成 DelegateRequest 并按需要委派一个或多个 Search Scout。', 'Scout 自主使用 Root 允许的 Smart Search、AnySearch 或 Provider Research 能力。', '以 DelegateResult 返回候选、原始产物引用、覆盖缺口、使用能力、建议和停止原因。', 'Codex Adapter 启用时默认 gpt-5.6-luna / max / priority；这不是产品验收条件。'],
+          inputs: ['DelegateRequest', 'ResearchFrame', 'SearchTask', 'allowed capabilities'], outputs: ['DelegateResult', 'DiscoveryCandidate[]', 'ResearchArtifact[]', 'gaps', 'suggestions'], constraints: ['不依赖 Infra 全局 Agent role。', '不为每个搜索引擎创建专用 Agent。', 'Search Scout 不继续派生 Subagent。'],
           phase: ['D', 'Agent 委派与结果合并', '实现 Codex 首版，同时保持协议可被 Claude Code、Pi 适配。'], related: ['search-task', 'capabilities', 'candidates', 'root-agent']
         },
         capabilities: {
           path: '发现阶段 / 能力池', status: 'baseline', statusText: '已有基线', title: '多元搜索能力池', summary: 'Scout 面向能力而不是 Provider 名单工作：广泛搜索、官方文档、论文、代码、当前信息、已知 URL 与 Provider Research Agents 都可以组合。',
           principle: '能力可以增加，但任何来源都必须回到统一候选、回读和证据管线。',
           sources: [{ kind: '改编基础', label: 'Smart Search · GitHub', url: 'https://github.com/konbakuyomu/smartsearch', note: '阶段 01 的内部搜索、Provider 路由、Research 与 Fetch 能力以该项目为基础继续扩展。' }],
-          implementation: ['保留 Smart Search 内部 web、docs、fetch 和显式学术能力。', 'AnySearch 通过外部 Skill 委派，模型阅读 Skill 后自主选择具体功能。', 'Provider Research Agents 只有通过 Key、live、返回契约和余额检查才进入 Plan Compiler 的可执行能力集。', '能力不可用时写入 ProviderRun 的 skipped/failed 与覆盖缺口。'],
-          inputs: ['SearchTask', 'capability probe'], outputs: ['provider results', 'delegated results', 'ResearchArtifact'], constraints: ['AnySearch 不加入内部 fallback chain。', '有 API Key 不等于付费能力可用。', '无余额智谱 Key 只能作为备用配置。'],
+          implementation: ['主能力池保持分离且覆盖 general/current web、docs/API、academic、code/developer、fetch/read、crawl/extract/batch。', 'Firecrawl 代表能力：Developer Index、Research、Crawl、Batch；Tavily：Search、Extract、Crawl、Research。', 'Exa：Search、Deep Search、Agent；Jina：Search、Reader、DeepSearch、Reranker。', 'Root 选择基础能力；AnySearch 作为独立外部 Skill，由模型在其函数集合中选择。', '每次调用写入 ExecutionAttempt；失败独立记录并继续可用路径。'],
+          inputs: ['SearchTask', 'CapabilitySnapshot'], outputs: ['compiled actions', 'ExecutionAttempt[]', 'DiscoveryCandidate[]', 'ResearchArtifact[]'], constraints: ['AnySearch 不加入内部 fallback chain。', '能力必须 configured、reachable、entitled。', '外部内容不能扩大工具权限。'],
           phase: ['B–D', '编译器、适配器与委派', '现有 Provider 路由是基线，多源编排尚待实现。'], related: ['plan-compiler', 'smart-search', 'anysearch', 'provider-research-agents', 'fetch-read', 'candidates']
         },
         'smart-search': {
-          path: '能力池 / Internal', status: 'baseline', statusText: '已有基线', title: 'Smart Search 内部能力', summary: '现有 CLI 提供基础搜索、文档检索、已知 URL 读取和 Deep Research planner/executor，是所有模式的基础路径。',
+          path: '能力池 / Internal', status: 'baseline', statusText: '已有基线', title: 'Smart Search 内部能力', summary: '现有 CLI 提供基础搜索、文档检索、已知 URL 读取、Research 执行与离线规则 planner 基线，是所有模式的确定性基础路径。',
           principle: '内部 Provider 按 capability 路由，并保留现有 observability；Plan Compiler 只能生成现有能力契约允许的步骤。',
           sources: [
             { kind: '上游项目', label: 'konbakuyomu/smartsearch', url: 'https://github.com/konbakuyomu/smartsearch', note: '现有 Smart Search 的原始仓库与 MIT License 来源。' },
@@ -708,11 +714,11 @@
           phase: ['已有 + D', '已有委派基线，待接合并入口', '快照和路由元数据已存在；结构化回传仍待实现。'], related: ['capabilities', 'candidates', 'normalize']
         },
         'provider-research-agents': {
-          path: '能力池 / Provider Research API', status: 'pending', statusText: '待实现', title: 'Provider Research Agents', summary: '候选能力包括 Firecrawl Agent、Jina DeepSearch、Exa Agent 和 Tavily Research；它们提供供应商托管的研究产物。',
-          principle: '只为当前账号实际能调用的付费能力编写默认执行路径。',
-          implementation: ['运行最小 live capability probe。', '同时验证 API Key、响应契约和当前套餐余额。', '为通过检查的能力实现超时、原始产物和 ResearchArtifact 适配。', 'deep 默认最多选择两个互补能力并行执行。'],
-          inputs: ['query', 'provider entitlement', 'deep budget'], outputs: ['ResearchArtifact', 'citations', 'usage metadata'], constraints: ['standard 不调用 Provider Research Agents。', '摘要不是最终证据，关键引用仍需回读。', '启用清单在实施时重新探测，不能沿用旧实验假设。'],
-          phase: ['C', 'Provider Research Agents 适配器', '能力资格与统一 ResearchArtifact 是本阶段交付。'], related: ['capabilities', 'candidates', 'fetch-read']
+          path: '能力池 / Provider Research API', status: 'implemented', statusText: '已实现', title: 'Provider Research Agents', summary: 'Firecrawl Agent、Jina DeepSearch、Exa Agent 和 Tavily Research 已接入统一生命周期；deep 对四路并发尝试并独立报告状态、错误、用量和研究产物。',
+          principle: 'deep 明示完整四路研究面；每一路独立提交、观察和归一化，单路失败不让其他路 fail-fast。',
+          implementation: ['读取 configured / reachable / entitled 能力快照。', '配置可用时分别表示并尝试 Firecrawl Agent、Jina DeepSearch、Exa Agent 与 Tavily Research。', '每一路创建独立 ExecutionAttempt，记录 submit/poll/stream 生命周期、status、error、usage 和 raw artifact。', '四路产物非 fail-fast 合并为 ResearchArtifact，再回读关键引用。'],
+          inputs: ['query', 'capability snapshot', 'deep'], outputs: ['ExecutionAttempt[]', 'ResearchArtifact[]', 'citations', 'usage metadata'], constraints: ['无配置或无 entitlement 的能力显式标记不可执行。', '摘要不是最终证据，关键引用仍需回读。'],
+          phase: ['E', '四路 Provider Research 与能力扩展', '同一里程碑覆盖四种独立运行模型和主能力池扩展。'], related: ['capabilities', 'candidates', 'fetch-read']
         },
         'fetch-read': {
           path: '能力池 / Read', status: 'baseline', statusText: '已有基线', title: '已知 URL Fetch / Read', summary: '对已知来源回读正文，是 DiscoveryCandidate 变成可用证据前的必要步骤。',
@@ -722,114 +728,123 @@
           phase: ['已有 + E/F', '复用并增强', '现有 fetch 是基础，后续补 locator 与证据模型。'], related: ['candidates', 'docs', 'evidence-item']
         },
         candidates: {
-          path: '发现阶段 / 全量候选', status: 'pending', statusText: '待实现', title: '全量保存、归一化与 CandidateCard', summary: '保存内部 Provider、AnySearch、Provider Research Agents 和 Search Scout 的全部原始产物，再生成去重后的紧凑候选视图。',
+          path: '发现阶段 / 全量候选', status: 'implemented', statusText: '已实现', title: '全量保存、归一化与 CandidateCard', summary: '保存内部 Provider、AnySearch、Provider Research Agents 和 Search Scout 的全部原始产物，再生成去重后的紧凑候选视图。',
           principle: '候选压缩必须可逆：多源重复项不能重复加权，筛选过程也不能删除原始信息。',
-          implementation: ['原始 DiscoveryCandidate、ResearchArtifact 和 Provider 产物全部落盘。', '归一化标题、URL、发布日期、来源类型和 Provider 排名。', '按规范 URL、DOI、代码仓库、论文版本和事件实体去重。', '为每项生成带稳定 candidate_id、相关性摘要、provenance 和原始产物引用的 CandidateCard。', '估算 CandidateCard 总上下文体积，决定由 Root Agent 直接读取还是启动分片 Curator。'],
-          inputs: ['provider results', 'AnySearch JSON', 'DiscoveryCandidate[]', 'ResearchArtifact'], outputs: ['CandidateCard[]', 'coverage map', 'raw artifact index'], constraints: ['不删除或覆盖原始候选。', '无 URL 的结构化事实仍只是候选数据。', '重复来源不能重复加权。'],
+          implementation: ['原始 DiscoveryCandidate、ResearchArtifact 和 Provider 产物全部落盘。', '归一化标题、URL、发布日期、来源类型和 Provider 排名。', '对规范 URL、DOI、仓库和论文版本等确定性重复项执行合并。', '疑似同一事件只建立 related_cluster_id，并保留 independence_status。', '生成 CandidateCard、candidate count、context estimate、group suggestions 与 raw index，交给 Root 决策。'],
+          inputs: ['provider results', 'AnySearch JSON', 'DiscoveryCandidate[]', 'ResearchArtifact'], outputs: ['CandidateCard[]', 'candidate count', 'context estimate', 'group suggestions', 'raw index'], constraints: ['不删除或覆盖原始候选。', '相关事件不等于同一份独立证据。'],
           phase: ['A/F', '统一模型与证据合并', '先固定结构，再实现实体级去重。'], related: ['coverage', 'fetch-read', 'mining-task', 'normalize']
         },
         coverage: {
-          path: '发现阶段 / 分片筛选与裁决', status: 'confirmed', statusText: '架构已确认', title: 'Source Curator 分片筛选与 Root 裁决', summary: '候选能装入 Root 上下文时全部直达 Root；溢出时由多个项目专用 Source Curator 分片生成可回溯提案，再由 Root 决定关键文档、补搜或降级。',
-          principle: 'Curator 只减少 Root 首轮需要阅读的内容，不能成为唯一信息入口或替 Root 作最终判断。',
-          implementation: ['确定性代码按当前模式的候选上下文预算判断是否需要 Curator。', '候选溢出时按 SearchTask、主题或来源分片；不得把全部溢出上下文交给单个 Curator。', '在 .codex/agents/source_curator.toml 定义项目 Agent；Codex 首版固定使用 gpt-5.6-luna、Max 推理强度与 Fast 服务层，对应 service_tier = "priority"。', '每个实例返回 KeySourceProposal，包括输入候选集合、保留/延后/淘汰理由、覆盖缺口、不确定项和原始产物引用。', 'Root Agent 读取全部 CandidateCard 或分片提案，必要时按 candidate_id 展开原始记录。', 'Root Agent 决定关键文档、补搜、重新筛选或降级；新任务仍经过 Plan Compiler。'],
-          inputs: ['ResearchFrame', 'CandidateCard[]', 'raw artifact index', 'context budget'], outputs: ['KeySourceProposal[]', 'sufficient | replan | degrade', 'key sources'], constraints: ['原始候选始终保留。', 'Curator 实例数动态决定。', 'Root Agent 保留最终选择权。', '预算耗尽时明确降级。'],
+          path: '发现阶段 / 动态筛选与裁决', status: 'confirmed', statusText: '架构已确认', title: 'Root 决定 0 / 1 / 多 Source Curator', summary: 'Kernel 只暴露候选数量、上下文估计、分组建议和 raw index；Root 结合问题与当前上下文决定直接读取，或委派零个、一个或多个 Curator。',
+          principle: 'Curator 是 Root 可选的压缩执行角色，不是阈值触发器、最终裁决者或新的控制面。',
+          implementation: ['Root 读取确定性候选摘要和原始索引。', '需要压缩时由 Root 生成一个或多个 DelegateRequest，并选择分组方式。', '每个 Curator 返回 DelegateResult / KeySourceProposal、覆盖缺口、不确定项和原始引用。', 'Codex Adapter 默认 gpt-5.6-luna / max / priority，但产品验收只看角色边界和结构化结果。', 'Root 决定关键文档、补搜、重分组或降级。'],
+          inputs: ['CandidateCard[]', 'candidate count', 'context estimate', 'group suggestions', 'raw index'], outputs: ['KeySourceProposal[]', 'key-source decision', 'replan or stop'], constraints: ['原始候选始终保留。', '只有 Root 委派。', 'Curator 不派生后代。', 'Root 保留最终选择权。'],
           phase: ['A/B/D/F', '候选协议、分片委派与动态重规划', '先实现可回溯筛选，再接关键文档任务。'], related: ['planner', 'plan-compiler', 'search-task', 'candidates', 'mining-task']
         },
         'mining-task': {
-          path: '深挖阶段 / 任务定义', status: 'pending', statusText: '待实现', title: 'EvidenceMiningTask', summary: '为一个关键文档或一组紧密相关材料定义具体取证问题，避免 Evidence Miner 无目标地阅读全文。',
+          path: '深挖阶段 / 任务定义', status: 'implemented', statusText: '已实现', title: 'EvidenceMiningTask', summary: '为一个关键文档或一组紧密相关材料定义具体取证问题，避免 Evidence Miner 无目标地阅读全文。',
           principle: '只深挖会影响结论的文档；不是每个搜索结果都进入第二阶段。',
-          implementation: ['绑定 source_id、原始 URL、标题和已有抓取产物。', '声明待验证 Claim、允许能力、已读 chunk、预算与停止条件。', '要求返回带页码、offset、chunk 或代码位置的 EvidenceItem。'],
-          inputs: ['key source', 'claim question', 'existing content'], outputs: ['EvidenceMiningTask'], constraints: ['未找到证据、解析失败和预算耗尽都必须成为显式终止原因。', '任务不包含跨来源最终结论。'],
+          implementation: ['绑定 source_id、artifact_id、原始 URL、标题和已有抓取产物。', '引用预先存在的 claim_spec_id，并声明允许的文档能力和已读定位。', '要求返回带 typed locator、snapshot identity 与 stance 的 EvidenceItem。'],
+          inputs: ['key source', 'ClaimSpec', 'controlled artifact_id'], outputs: ['EvidenceMiningTask'], constraints: ['未找到证据、解析失败和停止原因必须显式返回。', '任务不包含跨来源最终结论。'],
           phase: ['A/B/D', '契约、规划与委派', '由 Root Agent 在读取全部 CandidateCard 或 KeySourceProposal 后生成，再由 Plan Compiler 校验。'], related: ['planner', 'plan-compiler', 'coverage', 'miner', 'docs', 'evidence-item']
         },
         miner: {
-          path: '深挖阶段 / Subagent', status: 'pending', statusText: '待实现', title: 'Evidence Miner', summary: '项目专用 Subagent，围绕单个关键文档反复 search/open/read/grep，直到找到可定位证据或达到停止条件。',
+          path: '深挖阶段 / Subagent', status: 'implemented', statusText: '已实现', title: 'Evidence Miner', summary: '项目专用 Subagent，围绕单个关键文档反复 search/open/read/grep，直到找到可定位证据或达到停止条件。',
           principle: 'Root Agent 不承担逐页、逐段的常规挖掘；Evidence Miner 不承担跨来源综合。',
-          implementation: ['在 .codex/agents/evidence_miner.toml 定义 Codex 项目 Agent。', 'Codex 首版固定使用 gpt-5.6-luna、Max 推理强度与 Fast 服务层；对应配置为 model_reasoning_effort = "max"、service_tier = "priority"。', '读取 Harness 无关的 EvidenceMiningTask 与 EvidenceItem 协议。', '优先复用已有正文，必要时调用 MinerU 和 Agentic Docs MCP。', '返回结构化 EvidenceItem[]、证据缺口与停止原因，不得继续派生 Subagent。'],
-          inputs: ['EvidenceMiningTask', 'document tools'], outputs: ['EvidenceItem[]', 'evidence gaps', 'termination reason'], constraints: ['只处理单个或紧密相关文档。', '不输出最终报告。', '不继续派生 Agent。', '首版不自动升级或切换模型；Root Agent 模型由 Harness 控制。'],
+          implementation: ['Root 通过 DelegateRequest 委派 Evidence Miner。', 'Miner 读取 Harness 无关的 EvidenceMiningTask 与 EvidenceItem 协议。', '优先复用已有正文，必要时调用 MinerU 与 Search Toolkit Sidecar。', '返回 DelegateResult、EvidenceItem[]、证据缺口与停止原因。', 'Codex Adapter 启用时默认 gpt-5.6-luna / max / priority，但不作为产品验收。'],
+          inputs: ['DelegateRequest', 'EvidenceMiningTask', 'document tools'], outputs: ['DelegateResult', 'EvidenceItem[]', 'evidence gaps', 'termination reason'], constraints: ['只处理单个或紧密相关文档。', '不输出最终报告。', '不继续派生 Agent。'],
           phase: ['D/E', 'Agent bundle 与文档深挖', 'Codex 首版先实现，其他 Harness 只写 Adapter。'], related: ['mining-task', 'docs', 'evidence-item', 'root-agent']
         },
         docs: {
-          path: '深挖阶段 / 文档工具', status: 'pending', statusText: '待实现', title: 'Mistral-inspired 文档深挖', summary: '这一阶段明确改编自 Mistral Agentic Search：搜索到关键文档后转向文档内部导航，不再用新的网页搜索替代深入阅读。',
-          principle: '保留 Mistral Agentic Search 的思想来源和工具语义，但不使用 Mistral API Key、模型、额度或 Starter App 的默认 Vespa 运行栈。',
+          path: '深挖阶段 / 文档工具', status: 'implemented', statusText: '已实现', title: 'mistralai-search-toolkit 文档深挖', summary: 'Python 3.12 Sidecar 直接复用 Mistral Search Toolkit 的文档模型、检索管线与导航工具，并通过项目适配器接入现有基础设施。',
+          principle: '明确保留 Mistral 代码与思想 provenance；复用 toolkit，不调用 Mistral 托管 API 或消耗 Mistral credits。',
           sources: [
             { kind: '思想来源', label: 'Mistral · Agentic Search', url: 'https://mistral.ai/news/agentic-search/', note: '“先发现关键文档，再在文档内部持续搜索与读取”的阶段设计来源。' },
-            { kind: 'SDK 文档', label: 'Mistral · Search Toolkit', url: 'https://docs.mistral.ai/studio-api/search-toolkit', note: '参考 Document、DocumentChunk、source_id、locator 与检索组件的接口设计。' },
-            { kind: '参考实现', label: 'mistralai/search-starter-app', url: 'https://github.com/mistralai/search-starter-app', note: '参考 search、open、navigate、read、grep 等 MCP 工具结构。' }
+            { kind: 'SDK 文档', label: 'Mistral · Search Toolkit', url: 'https://docs.mistral.ai/studio/search/search-toolkit', note: '参考 Document、DocumentChunk、source_id、locator 与可替换检索组件的接口设计。' },
+            { kind: 'Python 发行包', label: 'mistralai-search-toolkit · PyPI', url: 'https://pypi.org/project/mistralai-search-toolkit/', note: '直接复用的 Apache-2.0 Python 包；包含 Document、DocumentChunk、Pipeline、TextSplitter 与 QueryEngine。' },
+            { kind: '公开示例仓库', label: 'mistralai/search-starter-app', url: 'https://github.com/mistralai/search-starter-app', note: 'Mistral 官方公开的 Search Toolkit 与 Agentic Search 集成示例。' }
           ],
-          implementation: ['普通 HTML 优先复用 Smart Search 已抓取 Markdown。', 'PDF、扫描件、Office 和复杂 HTML 按需使用 MinerU。', '独立 Python 3.12 Sidecar 提供与 Mistral Starter App 语义兼容的 search、open、navigate、read、grep、ingest 和 delete。', '使用现有 OpenAI-compatible 服务实现独立的 Document Embedder；模型、维度、归一化方式和 Chunker 版本共同构成索引身份。', '第一版使用按 run_id 隔离的轻量本地索引，不直接部署 Vespa；Evidence Miner 自己维护已读集合和停止条件。'],
-          inputs: ['run_id', 'document', 'original source metadata', 'document embedding config'], outputs: ['navigable chunks', 'precise locator', 'read text'], constraints: ['不要求 MISTRAL_API_KEY，也不消耗 Mistral credits。', 'MinerU 和现有 Embedding 仍可能消耗各自额度。', '模型、向量维度、归一化方式或 Chunker 变化时必须重建索引。', '若复制上游代码，必须保留对应 MIT 或 Apache-2.0 许可与来源说明。'],
-          phase: ['E', 'Agentic Docs MCP 与关键文档深挖', 'Sidecar 不提高 Smart Search 主 CLI 的 Python 3.10 最低版本。'], related: ['miner', 'fetch-read', 'mineru', 'agentic-docs', 'evidence-item']
+          implementation: ['复用 Document、DocumentChunk 与 locator 数据模型。', '复用 Pipeline、TextSplitter、QueryEngine 和 search/open/navigate/read/grep。', '项目适配器将 MistralEmbedder 替换为现有 OpenAI-compatible embedding，将 Mistral OCR 替换为 MinerU。', 'loader 只接收 Smart Search 控制的 artifact_id；storage 使用 SQLite FTS5 与本地 vector matrix。', '保留原始来源、解析版本、snapshot identity 和定位映射。'],
+          inputs: ['run_id', 'controlled artifact_id', 'source metadata', 'embedding config'], outputs: ['Document', 'DocumentChunk[]', 'typed locators'], constraints: ['不要求 MISTRAL_API_KEY，也不消耗 Mistral credits。', '不向 Agent 暴露任意本地路径或 file URL 摄取，也不暴露删除能力。', '保留上游许可与 provenance。'],
+          phase: ['C', 'Search Toolkit 文档深挖', 'Sidecar 使用 Python 3.12，主 CLI 版本边界不变。'], related: ['miner', 'fetch-read', 'mineru', 'agentic-docs', 'evidence-item']
         },
         mineru: {
-          path: '文档工具 / Parser', status: 'pending', statusText: '待实现', title: 'MinerU 按需解析', summary: '把 PDF、扫描件、Office 或难抓取页面转换成适合文档内部检索的 Markdown。',
+          path: '文档工具 / Parser', status: 'implemented', statusText: '已接通委派边界', title: 'MinerU 按需解析', summary: 'MinerU 通过外部 Skill 解析 PDF、扫描件、Office 或难抓取页面；Smart Search 只接收与已登记输入 artifact 绑定的受控 Markdown 派生产物。',
           principle: '解析器只在现有正文不足时使用，普通网页不默认重复送入 OCR。',
-          implementation: ['按输入类型选择 MinerU 解析模式。', '把生成 Markdown 与原始 source_id、URL、标题和页码映射一起交给 MCP ingest。', '最终引用始终指回原始来源，而不是临时解析目录。'],
-          inputs: ['PDF | scan | Office | complex HTML'], outputs: ['Markdown', 'page mapping'], constraints: ['解析失败时回退到 Smart Search fetch 和普通正文读取。', 'MinerU 配额独立于 Mistral。'],
+          implementation: ['Root 或 Evidence Miner 只把 ResearchRun 中已登记的输入 artifact 交给 MinerU Skill。', 'MinerU 以 DelegateResult 返回 source_artifact_id、Markdown 和 parser_version；Smart Search 校验任务绑定、字段白名单和大小限制。', '通过校验的 Markdown 登记为不可变 document_snapshot，并保留 parent artifact、原 URL 与 parser metadata。', 'Sidecar 只读取已导入的派生 snapshot；调用方不能直接向 document 命令注入 mineru_results。', '最终引用始终指回原始来源，而不是临时解析目录。'],
+          inputs: ['registered PDF | scan | Office | complex HTML artifact'], outputs: ['derived document_snapshot', 'page mapping'], constraints: ['成功或部分成功的 Markdown 上限为 2 MiB。', 'source_artifact_id 必须属于当前 DelegateRequest。', '解析失败时回退到 Smart Search fetch 和普通正文读取。', 'MinerU 配额独立于 Mistral。'],
           phase: ['E', '解析衔接', '只实现真实需要的输入类型，不扩大为通用文档平台。'], related: ['docs', 'agentic-docs', 'evidence-item']
         },
         'agentic-docs': {
-          path: '文档工具 / MCP', status: 'pending', statusText: '待实现', title: 'Mistral-compatible Agentic Docs MCP', summary: '以本地轻量实现为 Evidence Miner 提供文档内部搜索、打开、导航、读取和 grep；工具语义改编自 Mistral Search Starter App。',
-          principle: '兼容的是工具契约和文档定位思路，不是 Mistral 的托管服务、默认模型或完整运行栈。',
+          path: '文档工具 / Sidecar', status: 'implemented', statusText: '已实现', title: 'Search Toolkit · Project Adapters', summary: '在 Python 3.12 Sidecar 中直接复用 mistralai-search-toolkit，并把托管组件替换为本项目已有能力。',
+          principle: '这是带明确 Mistral provenance 的代码复用与项目适配，不宣称托管服务或行为兼容。',
           sources: [
-            { kind: '工具契约来源', label: 'Mistral Search Starter App · MCP Server', url: 'https://github.com/mistralai/search-starter-app/blob/main/template/src/entrypoints/mcp_server.py', note: 'search、open、navigate、read、grep、ingest 和 delete 的接口参考。' },
-            { kind: '数据模型来源', label: 'Mistral Search Toolkit · Document Model', url: 'https://docs.mistral.ai/studio-api/search-toolkit/document-model', note: 'source_id、locator、字符区间与稳定 chunk_id 的设计参考。' }
+            { kind: 'Python 发行包', label: 'mistralai-search-toolkit · PyPI', url: 'https://pypi.org/project/mistralai-search-toolkit/', note: '直接复用的 Apache-2.0 Python 包；版本与许可证必须在依赖和第三方清单中保留。' },
+            { kind: '模型说明', label: 'Mistral Search Toolkit · Document Model', url: 'https://docs.mistral.ai/studio/search-toolkit/document-model', note: 'source_id、locator、字符区间与稳定 chunk identity 的语义说明。' },
+            { kind: '公开示例仓库', label: 'mistralai/search-starter-app', url: 'https://github.com/mistralai/search-starter-app', note: '用于核对官方 MCP 与项目集成方式，不作为本项目的存储和密钥配置。' }
           ],
-          implementation: ['以独立 Python 3.12 Sidecar 运行。', '自行实现 Mistral-compatible MCP 工具层，不 Fork 整套 Starter App。', '第一版使用 SQLite FTS5 与小规模本地向量矩阵组成按 run_id 隔离的索引，不部署 Vespa。', 'Document Embedding 默认复用现有 API URL、Key 和 Model，但使用独立且显式的维度、归一化和索引身份配置。', '摄取时保留原始来源身份；已读集合由 EvidenceMiningTask 与 Evidence Miner 管理，不依赖 MCP 全局状态。'],
-          inputs: ['run_id', 'task_id', 'Markdown', 'source metadata', 'embedding identity'], outputs: ['search hits', 'document chunks', 'locators'], constraints: ['本地索引、Embedding 或 MCP 不可用时必须可降级。', '不同任务不得共享未声明的已读状态或候选集合。', '索引身份必须包含 embedding 模型、向量维度、归一化方式与 Chunker 版本。'],
-          phase: ['E', '本地 MCP Sidecar', '提供最小 ingest/search/open/read smoke test。'], related: ['docs', 'mineru', 'miner', 'evidence-item']
+          implementation: ['以独立 Python 3.12 Sidecar 运行 toolkit。', 'MistralEmbedder → 现有 OpenAI-compatible embedding；Mistral OCR → MinerU。', 'loader → 受控 artifact_id；storage → SQLite FTS5 + local vector matrix。', 'Evidence Miner 使用 search、open、navigate、read、grep；已读状态属于任务。'],
+          inputs: ['run_id', 'task_id', 'artifact_id', 'source metadata', 'embedding identity'], outputs: ['search hits', 'DocumentChunk[]', 'typed locators'], constraints: ['本地索引、Embedding 或 Sidecar 不可用时可降级。', '不接受 Agent 任意路径、任意 file URL 或删除请求。', '不同任务不共享未声明状态。'],
+          phase: ['C', 'Search Toolkit Sidecar', '验证受控摄取、检索、定位与回读。'], related: ['docs', 'mineru', 'miner', 'evidence-item']
         },
         'evidence-item': {
-          path: '深挖阶段 / 输出', status: 'pending', statusText: '待实现', title: 'EvidenceItem[]', summary: '已经读取、可以定位、能够明确支持或反驳某个 Claim 的最小证据单元。',
+          path: '深挖阶段 / 输出', status: 'implemented', statusText: '已实现', title: 'EvidenceItem[]', summary: '已经读取、可以定位、能够明确支持或反驳某个 Claim 的最小证据单元。',
           principle: 'EvidenceItem 是搜索结果进入结论层的门票。',
-          implementation: ['保存规范化来源 ID、可访问 URL、摘录或忠实转述。', '保存页码、offset、chunk locator 或代码位置。', '记录来源发布时间、读取时间、来源类型、直接性和质量信息。', '关联支持或反驳的 claim_id。'],
-          inputs: ['read text', 'source locator', 'claim'], outputs: ['EvidenceItem', 'unresolved evidence gap'], constraints: ['关键证据缺少原始来源定位时拒绝进入最终综合。', '摘要型 ResearchArtifact 不能直接伪装成 EvidenceItem。', '证据缺口必须返回 Root Agent，不能由 Miner 擅自扩大搜索范围。'],
-          phase: ['A/E/F', '核心证据模型', '契约先行，随后接入 Miner、重规划反馈与 Claim Ledger。'], related: ['mining-task', 'planner', 'normalize', 'claim-ledger']
+          implementation: ['保存 source_id、canonical_url、snapshot_id、retrieved_at、content_type 与 parser identity。', 'locator 使用 page/char range、code range、section 或 chunk 等类型化结构。', '保存 quote/paraphrase、claim_spec_id 与 support / contradict / qualify stance。', '保留 authority、directness、freshness、methodological_fit、independence 与 locator_quality 等定性维度。'],
+          inputs: ['read snapshot', 'typed locator', 'ClaimSpec'], outputs: ['EvidenceItem', 'unresolved evidence gap'], constraints: ['缺少 snapshot identity 或原始定位的关键证据不进入最终综合。', 'ResearchArtifact 不能伪装成 EvidenceItem。', 'Miner 只报告缺口，由 Root 决定下一步。'],
+          phase: ['A/B/C', '核心证据模型与内部闭环', 'ClaimSpec 先行，EvidenceItem 可回读，ClaimRecord 后置。'], related: ['mining-task', 'planner', 'normalize', 'claim-ledger']
         },
         normalize: {
-          path: '综合阶段 / Trace', status: 'pending', statusText: '待实现', title: 'Research Trace 与证据归一化', summary: '把研究计划、任务委派、Provider / Skill / Subagent 执行、来源读取、证据和最终 Claim 串成一条可审计、可恢复的链路。',
-          principle: '最终报告中的 Claim 应能反向定位到 Claim Ledger、EvidenceItem、原文 locator、对应任务和 ProviderRun。Trace 记录发生了什么及结构化决策依据，不保存模型的隐藏思维过程。',
-          implementation: ['以 run_id、step_id、task_id、source_id、evidence_id 和 claim_id 建立稳定关联。', '记录任务输入输出、状态、时间、耗时、用量、原始产物引用，以及选择、跳过、失败和降级的结构化原因。', '统一 DiscoveryCandidate、ResearchArtifact 与 EvidenceItem 的来源身份，并回读 Provider Research Agents 和 AnySearch 的关键引用。', '阶段 F 先实现可供验收观察的最小 Trace；阶段 G 再调研什么样的 Trace 才足够好，并提出是否调整字段、持久化层级和展示方式。'],
-          inputs: ['ResearchFrame', 'SearchTask', 'EvidenceMiningTask', 'ProviderRun', 'DiscoveryCandidate', 'ResearchArtifact', 'EvidenceItem', 'Claim Ledger'], outputs: ['research trace', 'normalized evidence graph', 'resumable artifacts'], constraints: ['失败执行不静默丢弃。', '同一来源或同一事件不能作为多份独立证据重复加权。', '不记录 API Key、私有配置或模型隐藏思维过程。', '外部网页可能变化；Trace 应保存历史证据与执行事实，但不承诺未来能够逐字复现。'],
-          phase: ['A/F + G 复盘', '最小 Trace 先行，验收调研修订', '候选质量维度包括可追溯性、失败可解释性、恢复能力、体积与上下文成本、隐私和 Harness 无关性。'], related: ['candidates', 'evidence-item', 'provider-run', 'claim-ledger', 'benchmark']
+          path: '综合阶段 / Trace', status: 'implemented', statusText: '已实现', title: 'Append-only Research Trace', summary: '从第一版起用最小 TraceEvent 串联 ResearchRun、任务、委派、ExecutionAttempt、证据与 ClaimRecord；它是 run-local 审计事实。',
+          principle: 'Trace 说明发生了什么，不保存隐藏思维，也不暗示存在暂停中的进程或自动恢复机制。',
+          implementation: ['TraceEvent 包含 schema_version、event_id、run_id、task_id、step_id、attempt_id、parent_event_id、event_type、timestamp 与 artifact_refs。', '记录 DelegateRequest/DelegateResult 往返、状态、时间、用量、错误与降级。', '确定性重复项合并；相关事件只聚类并保留 independence_status。', '最终 ClaimRecord 可回到 EvidenceItem、typed locator、snapshot、任务与 ExecutionAttempt。'],
+          inputs: ['ResearchRun', 'TraceEvent', 'ExecutionAttempt', 'EvidenceItem', 'ClaimRecord'], outputs: ['run-local audit trace', 'normalized evidence graph'], constraints: ['失败执行不静默丢弃。', '不记录 API Key、私有配置、未授权正文或隐藏思维。'],
+          phase: ['A 起步，后续增量', '最小 Trace 从合同阶段开始', '每个垂直里程碑都写同一事件链。'], related: ['candidates', 'evidence-item', 'execution-attempt', 'claim-ledger', 'benchmark']
         },
-        'provider-run': {
-          path: '综合阶段 / Provenance', status: 'pending', statusText: '待实现', title: 'ProviderRun', summary: '一次内部 Provider、Provider Research Agents API、Skill、Agent 或 MCP 执行的运行记录。',
+        'execution-attempt': {
+          path: '综合阶段 / Provenance', status: 'implemented', statusText: '已实现', title: 'ExecutionAttempt', summary: '一次 internal、Provider Research、Skill、Agent 或 document tool 动作的独立运行记录。',
           principle: '结果质量与运行事实分开保存；成功、部分成功、跳过和失败都可解释。',
-          implementation: ['记录 provider、capability 与 execution_kind。', '状态覆盖 planned、running、awaiting_delegate、succeeded、partial、failed 和 skipped。', '关联请求摘要、成本、原始产物和降级原因。'],
-          inputs: ['execution request', 'runtime events'], outputs: ['ProviderRun'], constraints: ['不在日志中泄露 API Key 或私有 .env。', '外部 Skill 和 Subagent 同样必须生成运行记录。'],
+          implementation: ['记录 execution_kind、provider、capability、attempt_no 与外部 job identity。', '状态、错误、deadline、时间与 usage 各自保存。', '关联请求摘要、raw artifact 和降级原因；异步、轮询和流式生命周期均落在本对象。'],
+          inputs: ['compiled action', 'runtime events'], outputs: ['ExecutionAttempt'], constraints: ['不在日志中泄露 API Key 或私有配置。', '委派往返另用 DelegateRequest / DelegateResult。'],
           phase: ['A', '公共数据契约', '作为所有运行结果的追踪骨架。'], related: ['normalize', 'capabilities', 'claim-ledger']
         },
         'claim-ledger': {
-          path: '综合阶段 / 判断', status: 'pending', statusText: '待实现', title: 'Claim Ledger', summary: '以主张为中心组织支持证据、反驳证据、冲突类型、当前判断、置信度和引用映射。',
+          path: '综合阶段 / 判断', status: 'implemented', statusText: '已实现', title: 'ClaimRecord[]', summary: '把先行 ClaimSpec 升级为综合状态，关联支持、反驳、限定证据、冲突与引用映射。',
           principle: '冲突不能通过简单多数票消失；结论必须保留证据差异与不确定性。',
-          implementation: ['规范化待回答 Claim 并分配 claim_id。', '关联支持与反驳 EvidenceItem。', '区分时间差异、定义差异、方法差异和事实冲突。', '保存最终判断、保留意见和答案引用位置。'],
-          inputs: ['claims', 'EvidenceItem[]'], outputs: ['Claim Ledger', 'conflict record'], constraints: ['证据权重必须考虑权威性、直接性、时效性和独立性。', '证据不足时降级结论，不强行给出确定答案。'],
+          implementation: ['沿用 claim_spec_id 创建或更新 ClaimRecord。', '关联 support / contradict / qualify EvidenceItem。', '区分时间、定义、方法与事实冲突，并读取 independence metadata。', '状态使用 supported、contested、weakly_supported、unsupported、unresolved。'],
+          inputs: ['ClaimSpec[]', 'EvidenceItem[]'], outputs: ['ClaimRecord[]', 'conflict record'], constraints: ['使用可解释的定性维度，不生成伪精确统一分数。', '证据不足时保持 unresolved。'],
           phase: ['F', '证据合并与综合', '这是统一综合的核心中间状态。'], related: ['evidence-item', 'root-agent', 'final-answer']
         },
         'root-agent': {
-          path: '主 Agent / 综合阶段', status: 'pending', statusText: '待实现', title: 'Root Agent · Synthesis', summary: '这是前面负责规划的同一个 Root Agent 在后半程承担的证据裁决职责，不是另一个 Agent。它处理跨来源冲突、剩余缺口与最终综合，不亲自承担常规逐页挖掘。',
+          path: '主 Agent / 综合阶段', status: 'implemented', statusText: '已接通', title: 'Root Agent · Synthesis', summary: '这是前面负责规划的同一个 Root Agent 在后半程承担的证据裁决职责，不是另一个 Agent。它通过 Skill 协议和调用方持有的 ResearchRun 处理跨来源冲突、剩余缺口与最终综合。',
           principle: 'Scout 找来源，Miner 找证据，Root Agent 既决定还缺什么，也判断现有证据意味着什么。',
-          implementation: ['执行通过 Plan Compiler 校验的内部步骤、外部 Skill 和项目 Subagent 委派。', '候选未溢出时读取全部 CandidateCard；溢出时读取各分片 KeySourceProposal，并可按 candidate_id 展开原始记录。', '决定关键文档、补搜或降级，再创建 EvidenceMiningTask。', '确保所有委派返回值进入公共合并入口。', '深挖后仍有关键证据缺口时，返回自己的规划阶段重开 SearchTask 或 EvidenceMiningTask。', '结合 Claim Ledger 处理冲突、证据缺口和权重。', '生成一次性综合答案并映射引用。'],
-          inputs: ['research_plan', 'CandidateCard[] | KeySourceProposal[]', 'ProviderRun', 'Claim Ledger'], outputs: ['key-source decision', 'final synthesis', 'citations', 'gaps'], constraints: ['不能直接拼接 Scout、Curator 或 Miner 的自然语言报告。', '不能把关键文档最终选择交给 Curator。', '不能绕过来源回读把 Provider Research Agents 摘要当作最终证据。'],
+          implementation: ['选择并提交 Kernel 内部步骤；只有 Root 发出 DelegateRequest。', '读取 CandidateCard、可选 KeySourceProposal 与 raw index，决定关键文档和下一轮。', '为先行 ClaimSpec 创建 EvidenceMiningTask，接收 DelegateResult。', '根据 gaps / suggestions 决定重规划或停止。', '以定性证据维度和 independence metadata 更新 ClaimRecord。', '生成一次性综合答案并映射引用。'],
+          inputs: ['ResearchRun', 'CandidateCard[] | KeySourceProposal[]', 'ExecutionAttempt[]', 'ClaimRecord[]'], outputs: ['delegate decisions', 'stop decision', 'final synthesis', 'citations', 'gaps'], constraints: ['不能拼接子级自然语言报告。', '不能把语义决策交给 Kernel 或 Curator。', '不能把 Provider 摘要当作最终证据。'],
           phase: ['B/D/F', '规划、委派与综合', '同一个 Root Agent 在不同阶段切换职责；业务协议保持 Harness 无关。'], related: ['planner', 'plan-compiler', 'scouts', 'miner', 'claim-ledger', 'final-answer']
         },
         'final-answer': {
-          path: '输出', status: 'pending', statusText: '待实现', title: '一次性带引用结论', summary: '用户看到的是一份统一、可追溯、明确说明冲突和证据缺口的答案，而不是多个搜索工具报告的拼盘。',
+          path: '输出', status: 'implemented', statusText: '已接通', title: '一次性带引用结论', summary: '用户看到的是一份统一、可追溯、明确说明冲突和证据缺口的答案，而不是多个搜索工具报告的拼盘。',
           principle: '最终答案只使用已读取证据；无法闭合的 Claim 必须明确降级。',
-          implementation: ['按 Claim Ledger 组织回答结构。', '在相关主张附近输出可定位引用。', '显式说明相互冲突的来源、时效差异和保留意见。', '保留执行范围、主要缺口与降级信息。'],
-          inputs: ['Claim Ledger', 'citation mapping'], outputs: ['answer', 'citations', 'limitations'], constraints: ['不重新调用搜索 Provider。', '不引用未回读的发现候选作为关键证据。'],
+          implementation: ['按 ClaimRecord 组织回答结构。', '在相关主张附近输出可定位引用。', '显式说明冲突、时效差异、来源独立性和保留意见。', '保留执行范围、主要缺口与降级信息。'],
+          inputs: ['ClaimRecord[]', 'citation mapping'], outputs: ['answer', 'citations', 'limitations'], constraints: ['最终表达阶段不自行扩展搜索。', '不引用未回读候选作为关键证据。'],
           phase: ['F', '统一综合', 'A–E 的产物最终在此收敛。'], related: ['claim-ledger', 'benchmark', 'overview']
         },
         roadmap: {
-          path: '实施计划', status: 'pending', statusText: '待实现', title: '阶段 A–G', summary: 'A–F 完成全流程代码化；G 使用新版 Preview CLI 完成架构复盘与 Benchmark 推荐报告。验收阶段不选择或运行 Benchmark。',
-          principle: '先实现可执行系统，再用它检查架构并调研评测方法。报告用于帮助用户作决定，不替用户完成 Benchmark 选型。',
-          implementation: ['A：公共数据契约。B：Root Agent 规划协议与 Plan Compiler / Validator。', 'C：Provider Research Agents 适配。D：项目专用 Search Scout、Source Curator、Evidence Miner 委派，以及候选分片与双层重规划反馈。', 'E：Agentic Docs MCP 与关键文档深挖。F：证据合并与综合。', 'G：在隔离 Preview 环境中，以一次或多次有边界的 deep 运行完成两项调研；多次运行由外层 Goal 编排，不增加第四种模式。'],
-          inputs: ['confirmed design', 'current preview baseline'], outputs: ['implemented preview', 'acceptance research report'], constraints: ['G 只能在 A–F 通过工程测试后启动。', 'G 不包含 Benchmark 实跑、最终选型或跨 Harness 适配。', '替换 macOS、合并 lwj_dev、push 或跨机器同步都需要后续明确授权。'],
-          phase: ['A–G', '完整路线', '当前只有最小 AnySearch 外部委派基线；整张流程图尚未代码化。'], related: ['planner', 'plan-compiler', 'normalize', 'benchmark']
+          path: '实施计划', status: 'implemented', statusText: 'A–G 已完成', title: '垂直里程碑 A–G', summary: '里程碑 A–F、配置收尾、隔离 E2E Gate 和阶段 G 调研均已完成；当前等待用户审阅，macOS 激活版尚未替换。',
+          principle: '每步都从 Root 控制面推进到可定位证据和 ClaimRecord；G 前先过一个小型工程 E2E gate。',
+          implementation: ['A：冻结 contracts、TraceEvent 与控制权，包含 caller-held ResearchRun、ClaimSpec、ExecutionAttempt、Delegate 往返。', 'B：仅用内部能力跑通 Root → Kernel → discovery/fetch → EvidenceItem → ClaimRecord → cited answer。', 'C：接入 Search Toolkit Python 3.12 Sidecar 和项目 adapters，闭合文档内取证。', 'D：接入 Search Scout + AnySearch，验证 DelegateRequest / DelegateResult 与统一候选管线。', 'E：接入四种 Provider Research Agents，并扩展主能力池；每路独立状态、错误和 usage。', 'F：加入动态多 Agent / Curator 与证据质量增量，包括聚类和 independence metadata。', '配置收尾：统一配置所有权、setup/config/doctor、打包边界与隔离 Preview 环境，不复制密钥。', 'E2E gate：配置完成后做小型工程闭环检查，不预设精确任务数，也不运行公开 Benchmark。', 'G：使用 deep 做架构与 Benchmark 候选调研，等待用户选择，不实跑 Benchmark。'],
+          inputs: ['confirmed architecture', 'current preview baseline'], outputs: ['incremental evidence loops', 'validated Preview configuration', 'engineering E2E evidence', 'Stage G research report'], constraints: ['G 只在配置收尾与工程 E2E gate 后启动。', 'G 不选择或运行 Benchmark。', '替换 macOS 激活版和应用配置必须另获用户批准。'],
+          phase: ['A–G', '垂直交付路线', '每个阶段都扩展同一控制面、Trace 和证据闭环。'], related: ['planner', 'plan-compiler', 'normalize', 'environment-config', 'benchmark']
+        },
+        'environment-config': {
+          path: '实施收尾 / 仓库配置', status: 'implemented', statusText: '已验收', title: '仓库环境与运行配置', summary: '配置所有权、setup/config/doctor、隔离 Preview、组件健康检查、打包和密钥泄漏验收均已完成；当前激活配置未被覆盖。',
+          principle: '配置复杂性由仓库承担，但密钥只保存在其唯一所有者的私密配置域；Preview 验证不能覆盖当前激活环境。',
+          implementation: ['以 src/smart_search/config.py、smart-search setup/config 和 doctor 为 Smart Search 主配置入口。', 'Firecrawl、Jina、Exa、Tavily Research 优先复用现有 Provider Key 与 endpoint；只有官方契约要求时才新增键。', 'Sidecar、Document Embedding 和本地索引只增加必要的非敏感配置；Embedding Key 复用已有 OpenAI-compatible 配置。', 'AnySearch 继续读取内置快照的私有 .env 或进程环境；MinerU 继续由独立 Skill 管理 Key，除非调用边界另行改变。', '同步更新 setup/config、masked doctor、Skill 配置文档、打包清单和测试。', '使用独立 SMART_SEARCH_CONFIG_DIR 建立 Preview 配置，执行 config path/list、doctor、健康检查和最小 live probe。', '检查 Git、npm 包、wheel、Trace 与日志，确保没有真实密钥、私有 endpoint 或未授权正文。'],
+          inputs: ['implemented capabilities', 'existing config contract', 'local private provider credentials'], outputs: ['configuration ownership matrix', 'updated setup/config/doctor', 'isolated Preview config', 'verification record'], constraints: ['不新增根目录 .env 作为第二配置入口。', '不复制同一密钥。', '不修改 Infra 或全局 Agent 配置。', '不覆盖当前 macOS 激活配置。', '正式应用配置必须另获用户批准。'],
+          phase: ['A–F 后 / E2E 前', '配置与发布准备', '代码能力稳定后统一配置面，再进入工程 E2E 与 Stage G。'], related: ['capabilities', 'agentic-docs', 'roadmap', 'benchmark']
         },
         benchmark: {
-          path: '验收调研', status: 'gated', statusText: 'A–F 后启动', title: '架构复盘与 Benchmark 推荐', summary: '新版 CLI 完成后，以 deep 模式产出一份调研报告，只回答两个问题：现有框架是否还有更好的设计；哪些 Benchmark 值得后续考虑，以及它们怎样评分、复现成本多高。一次运行覆盖不足时，由外层 Goal 编排多次有边界的 deep 运行。',
+          path: '验收调研', status: 'implemented', statusText: '调研已完成', title: 'Stage G · deep 验收调研', summary: '已用新 deep 流程完成真实多源研究，并把过程、证据、结论和验收报告迁移到可视化 Research Workspace；仍未选择或运行 Benchmark。',
           principle: '验收交付的是有证据的建议，不是 Benchmark 最终选型，也不是实际跑分。',
           sources: [
             { kind: '工程经验参考', label: '中型探索任务的 MultiAgent 架构设计漫谈（1）', url: 'https://mp.weixin.qq.com/s/Osm8jzocOBNvkxIXSgdiNQ', note: '用于检查角色拆分、上下文隔离、任务 Schema、正式消息和全局状态管理。' },
@@ -837,8 +852,8 @@
             { kind: '产品与实现参考', label: 'Mistral · Agentic Search', url: 'https://mistral.ai/news/agentic-search/', note: '用于核查文档深挖循环和相关公开评测线索。' }
           ],
           implementation: ['在隔离 Preview 环境中使用本分支 CLI，不替换当前激活版。', '主题一：综合调研论文、官方产品与技术文档、开源仓库、工程博客和公开案例，比较 Agentic Search、Deep Research 与多 Agent 搜索在规划、委派、Subagent 信息交换、文档深挖、证据综合、Research Trace 和反馈循环上的设计，并指出本框架可改进之处。', 'Trace 专项：比较现有系统怎样连接计划、任务、工具调用、Subagent 返回、原始产物、证据、冲突和最终结论；验证并修订“好 Trace”的候选标准，区分 Trace、普通日志、证据 provenance 和模型隐藏思维过程。', 'Trace 专项给出一条从最终 Claim 反向定位到原文和执行任务的示例，以及最小数据模型、持久化层级、展示方式和当前实现缺口。', '主题二：从相关论文、官方排行榜、数据集与评测仓库、研究机构和产品公开评测中收集 Benchmark，推荐值得后续考虑的候选，但不替用户作最终选择。', '每个候选都说明评测对象、数据集获取方式、输入输出、评分流程、Judge 或人工复核方式，以及结果是否容易受搜索源和时效影响。', '估算复现所需的数据许可、模型/API、搜索与网页读取服务、Judge、计算资源、工程时间和大致费用。', 'SearchSwarm 和用户提供的 MultiAgent 工程文章都只是调研入口；关键结论需要回读相应论文、官方文档、代码仓库、评测材料或原始工程记录。'],
-          inputs: ['implemented A–F', 'isolated Preview CLI', 'minimum Research Trace', 'papers and surveys', 'official docs and product materials', 'open-source repositories', 'benchmark datasets and leaderboards'], outputs: ['architecture improvement report', 'Research Trace review and example', 'good-trace criteria', 'minimum trace recommendations', 'benchmark recommendation matrix', 'scoring workflows', 'reproduction cost estimates'], constraints: ['调研来源不得局限于论文或单一产品。', '不把隐藏思维过程作为 Trace 要求。', '不选择最终 Benchmark。', '不运行 Benchmark 或生成分数。', '不讨论 Codex、Claude Code、Pi 等 Harness 的适配。', '报告交给用户审阅后，再决定下一步和是否替换 macOS 激活版。'],
-          phase: ['G', '调研型验收', '当前处于门控状态；A–F 完成前不启动完整调研。'], related: ['roadmap', 'planner', 'scouts', 'normalize', 'final-answer', 'overview']
+          inputs: ['validated isolated Preview config', 'engineering E2E evidence', 'isolated Preview CLI', 'run-local Trace', 'papers', 'official docs', 'repositories', 'benchmark materials'], outputs: ['architecture improvement report', 'Trace review', 'benchmark candidate matrix', 'scoring workflows', 'reproduction cost estimates', 'persistent Research Workspace', '127.0.0.1 read-only visualizer'], constraints: ['不把隐藏思维作为 Trace。', '不选择最终 Benchmark。', '不运行 Benchmark 或生成分数。', '可视化只读且由用户显式启动。', '报告交给用户审阅后再决定下一步和 macOS 激活。'],
+          phase: ['G', '调研型验收', '只做 deep acceptance research；公开 Benchmark 仍是后续用户决策。'], related: ['roadmap', 'planner', 'scouts', 'normalize', 'final-answer', 'overview']
         }
       };
 
@@ -848,7 +863,7 @@
       const inspectorScroll = document.getElementById('inspector-scroll');
       const nodeButtons = [...document.querySelectorAll('[data-node]')];
       const state = { scale: 1, x: 0, y: 0, dragging: false, startX: 0, startY: 0, originX: 0, originY: 0 };
-      const statusClasses = ['baseline', 'confirmed', 'proposed', 'pending', 'gated'];
+      const statusClasses = ['implemented', 'baseline', 'confirmed', 'proposed', 'pending', 'gated'];
 
       const renderList = (element, items) => {
         element.replaceChildren(...items.map((item) => {

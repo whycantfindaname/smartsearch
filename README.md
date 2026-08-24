@@ -239,6 +239,48 @@ smart-search deep "帮我核验这个说法是真是假：某某工具已经完�
 smart-search deep "https://example.com/source" --format json
 ```
 
+## Agentic Research Preview
+
+The Preview adds a caller-controlled research runtime without changing the
+default `search`, `deep`, or `research` behavior. It is intended for a Root
+Agent that owns planning and synthesis while Smart Search performs
+deterministic ResearchRun operations and stores an auditable workspace.
+
+```bash
+# Observe currently configured, reachable, and entitled research capabilities.
+smart-search research-run capabilities --format json
+
+# Install and check the isolated document sidecar with an explicit Python 3.12.
+smart-search research-environment install --python /absolute/path/to/python3.12 --format json
+smart-search research-environment doctor --format json
+
+# Open a materialized Research Workspace in the read-only local visualizer.
+smart-search research-view /path/to/research-workspace --port 8080
+```
+
+`research-run` also exposes `create`, `execute`, `import`, task-addition,
+document-mining, claim, decision, citation-verification, and `materialize`
+operations. These commands exchange structured JSON dossiers with the calling
+Agent; they are not a replacement for the user-facing `research` command.
+
+The dossier, append-only Trace, Artifact Registry, EvidenceItem, and Claim
+records are authoritative. Markdown files and the visualizer are readable
+projections and do not store hidden reasoning. Provider Research Agents are
+attempted only when their capabilities are configured, reachable, and covered
+by the current account entitlement. AnySearch and MinerU remain external Skills
+and keep their credentials outside Smart Search configuration.
+
+The document sidecar requires an explicit Python 3.12 interpreter and creates a
+dedicated virtual environment, by default under
+`$SMART_SEARCH_CONFIG_DIR/research-sidecar`. Smart Search saves
+`SMART_SEARCH_SIDECAR_PYTHON` only after the health check succeeds; it does not
+install dependencies into the supplied interpreter itself.
+
+See [Research Runtime Configuration](docs/architecture/research-runtime-config.md),
+[Agentic Research architecture](skills/smart-search-cli/references/agentic-research-architecture.md),
+and the [smart-search-cli Skill](skills/smart-search-cli/SKILL.md) for the full
+contract and orchestration guidance.
+
 ## Provider And API Key Guide
 
 Use `smart-search setup` for normal configuration. Environment variables remain supported for CI and advanced users.
@@ -387,6 +429,9 @@ Provider timeouts:
 | `route` | `rt` | Explain required capabilities without running providers |
 | `deep` | `dr` | Offline Deep Research plan |
 | `research` | `rs` | Live Deep Research execution |
+| `research-run` | `rr` | Deterministic Agent-facing ResearchRun dossier operations |
+| `research-view` | `rv` | Read-only local Research Workspace visualizer |
+| `research-environment` | `research-env`, `renv` | Install or health-check the isolated Python 3.12 document sidecar |
 | `fetch` | `f` | Fetch one URL as JSON, Markdown, or content |
 | `map` | `m` | Map a website structure |
 | `exa-search` | `exa`, `x` | Exa source discovery |

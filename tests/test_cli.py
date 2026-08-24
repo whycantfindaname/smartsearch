@@ -69,6 +69,22 @@ def test_each_subcommand_help_exits_successfully(capsys):
         ["context7-library", "--help"],
         ["context7-docs", "--help"],
         ["deep", "--help"],
+        ["research-run", "--help"],
+        ["research-run", "create", "--help"],
+        ["research-run", "execute", "--help"],
+        ["research-run", "import", "--help"],
+        ["research-run", "add-search-tasks", "--help"],
+        ["research-run", "add-evidence-tasks", "--help"],
+        ["research-run", "document", "--help"],
+        ["research-run", "claims", "--help"],
+        ["research-run", "decision", "--help"],
+        ["research-run", "verify", "--help"],
+        ["research-run", "materialize", "--help"],
+        ["research-run", "capabilities", "--help"],
+        ["research-view", "--help"],
+        ["research-environment", "--help"],
+        ["research-environment", "install", "--help"],
+        ["research-environment", "doctor", "--help"],
         ["route-calibrate", "--help"],
         ["smoke", "--help"],
         ["doctor", "--help"],
@@ -98,6 +114,153 @@ def test_each_subcommand_help_exits_successfully(capsys):
     out = capsys.readouterr().out
     assert "usage: smart-search search" in out
     assert "usage: smart-search regression" in out
+
+
+def test_research_run_document_rejects_unregistered_mineru_payload(
+    monkeypatch, tmp_path, capsys
+):
+    monkeypatch.setattr(
+        cli.research_runtime.ResearchDossier,
+        "from_dict",
+        staticmethod(lambda value: object()),
+    )
+    monkeypatch.setattr(
+        cli.EvidenceMiningTask,
+        "from_dict",
+        staticmethod(lambda value: object()),
+    )
+    payload = {
+        "dossier": {},
+        "task": {},
+        "operations": [],
+        "mineru_results": {
+            "artifact-source": {
+                "status": "success",
+                "markdown": "unregistered",
+            }
+        },
+    }
+
+    code = cli.main(
+        [
+            "research-run",
+            "document",
+            "--input",
+            json.dumps(payload),
+            "--artifact-root",
+            str(tmp_path),
+            "--format",
+            "json",
+        ]
+    )
+    data = json.loads(capsys.readouterr().out)
+
+    assert code == cli.EXIT_PARAMETER_ERROR
+    assert data["error_type"] == "parameter_error"
+    assert "MinerU DelegateResult" in data["error"]
+
+
+def test_research_run_materialize_projects_workspace(monkeypatch, tmp_path, capsys):
+    captured = {}
+
+    class FakeRun:
+        run_id = "run-cli-workspace"
+
+    class FakeDossier:
+        run = FakeRun()
+
+    class FakeWorkspace:
+        def __init__(self, root, *, artifact_root=None):
+            captured["root"] = str(root)
+            captured["artifact_root"] = str(artifact_root)
+
+        def materialize(self, dossier, **kwargs):
+            captured["dossier"] = dossier
+            captured.update(kwargs)
+            return {"run_id": dossier.run.run_id, "status": "complete"}
+
+    monkeypatch.setattr(
+        cli.research_runtime.ResearchDossier,
+        "from_dict",
+        staticmethod(lambda value: FakeDossier()),
+    )
+    monkeypatch.setattr(cli, "ResearchWorkspace", FakeWorkspace)
+    payload = {
+        "dossier": {},
+        "final_synthesis": "# Final\n",
+        "citation_verification": {"ok": True, "citation_count": 1},
+    }
+
+    code = cli.main(
+        [
+            "research-run",
+            "materialize",
+            "--input",
+            json.dumps(payload),
+            "--artifact-root",
+            str(tmp_path / "artifacts"),
+            "--workspace",
+            str(tmp_path / "workspace"),
+            "--checkpoint",
+            "stage-final",
+            "--format",
+            "json",
+        ]
+    )
+    data = json.loads(capsys.readouterr().out)
+
+    assert code == cli.EXIT_OK
+    assert data["workspace"]["manifest"]["run_id"] == "run-cli-workspace"
+    assert captured["checkpoint_labels"] == ["stage-final"]
+    assert captured["final_synthesis"] == "# Final\n"
+    assert captured["citation_verification"]["ok"] is True
+
+
+def test_research_run_checkpoint_requires_workspace(monkeypatch, tmp_path, capsys):
+    class FakeDossier:
+        def to_dict(self):
+            return {}
+
+    monkeypatch.setattr(
+        cli.research_runtime.ResearchDossier,
+        "from_dict",
+        staticmethod(lambda value: FakeDossier()),
+    )
+    monkeypatch.setattr(
+        cli.research_runtime,
+        "derive_root_claim_records",
+        lambda dossier, decisions: dossier,
+    )
+    code = cli.main(
+        [
+            "research-run",
+            "claims",
+            "--input",
+            json.dumps({"dossier": {}, "decisions": []}),
+            "--artifact-root",
+            str(tmp_path),
+            "--checkpoint",
+            "claims",
+            "--format",
+            "json",
+        ]
+    )
+    data = json.loads(capsys.readouterr().out)
+
+    assert code == cli.EXIT_PARAMETER_ERROR
+    assert "--workspace" in data["error"]
+
+
+def test_research_view_uses_loopback_visualizer(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_serve(workspace, port):
+        captured.update({"workspace": workspace, "port": port})
+
+    monkeypatch.setattr(cli, "serve_research_workspace", fake_serve)
+
+    assert cli.main(["research-view", str(tmp_path), "--port", "8123"]) == cli.EXIT_OK
+    assert captured == {"workspace": str(tmp_path), "port": 8123}
 
 
 def test_command_aliases_parse_to_canonical_commands():
@@ -130,6 +293,8 @@ def test_command_aliases_parse_to_canonical_commands():
         (["c7docs", "/reactjs/react.dev", "hooks"], "context7-docs"),
         (["ctx7-docs", "/reactjs/react.dev", "hooks"], "context7-docs"),
         (["dr", "query"], "deep"),
+        (["rv", "."], "research-view"),
+        (["renv", "doctor"], "research-environment"),
         (["route-cal"], "route-calibrate"),
         (["rcal"], "route-calibrate"),
         (["sm"], "smoke"),
@@ -183,6 +348,17 @@ def test_search_help_exposes_timeout(capsys):
     assert "--max-try ATTEMPTS" in out
     assert "--stream" in out
     assert "--no-stream" in out
+
+
+def test_read_json_input_treats_path_probe_oserror_as_inline_json(monkeypatch):
+    payload = json.dumps({"content": "x" * 10000})
+
+    def fail_path_probe(self):
+        raise OSError("file name too long")
+
+    monkeypatch.setattr(Path, "is_file", fail_path_probe)
+
+    assert cli._read_json_input(payload) == {"content": "x" * 10000}
 
 
 def test_diagnose_openai_compatible_defaults_to_markdown(monkeypatch, capsys):
@@ -1669,6 +1845,20 @@ def test_setup_non_interactive_saves_values(monkeypatch, capsys):
         "intent-mini",
         "--intent-router-timeout",
         "4.5",
+        "--document-embedding-source",
+        "intent",
+        "--document-embedding-dimensions",
+        "4096",
+        "--document-embedding-normalize",
+        "true",
+        "--document-splitter",
+        "markdown",
+        "--document-chunk-size",
+        "1800",
+        "--sidecar-python",
+        "/opt/python3.12",
+        "--sidecar-timeout",
+        "240",
         "--zhipu-key",
         "zhipu-secret",
         "--zhipu-api-url",
@@ -1689,6 +1879,10 @@ def test_setup_non_interactive_saves_values(monkeypatch, capsys):
         "jina-secret",
         "--jina-reader-api-url",
         "r.jina.ai",
+        "--jina-search-api-url",
+        "s.jina.example/search",
+        "--jina-rerank-api-url",
+        "api.jina.example/v1/rerank",
         "--jina-respond-with",
         "readerlm-v2",
         "--jina-timeout",
@@ -1732,6 +1926,13 @@ def test_setup_non_interactive_saves_values(monkeypatch, capsys):
     assert saved["INTENT_CLASSIFIER_API_KEY"] == "classifier-test-secret"
     assert saved["INTENT_CLASSIFIER_MODEL"] == "intent-mini"
     assert saved["INTENT_ROUTER_TIMEOUT_SECONDS"] == "4.5"
+    assert saved["SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE"] == "intent"
+    assert saved["SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS"] == "4096"
+    assert saved["SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE"] == "true"
+    assert saved["SMART_SEARCH_DOCUMENT_SPLITTER"] == "markdown"
+    assert saved["SMART_SEARCH_DOCUMENT_CHUNK_SIZE"] == "1800"
+    assert saved["SMART_SEARCH_SIDECAR_PYTHON"] == "/opt/python3.12"
+    assert saved["SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS"] == "240"
     assert saved["ZHIPU_API_KEY"] == "zhipu-secret"
     assert saved["ZHIPU_API_URL"] == "https://zhipu.example.com/api"
     assert saved["ZHIPU_SEARCH_ENGINE"] == "search_pro"
@@ -1742,6 +1943,8 @@ def test_setup_non_interactive_saves_values(monkeypatch, capsys):
     assert saved["ZHIPU_MCP_TIMEOUT_SECONDS"] == "8"
     assert saved["JINA_API_KEY"] == "jina-secret"
     assert saved["JINA_READER_API_URL"] == "https://r.jina.ai"
+    assert saved["JINA_SEARCH_API_URL"] == "https://s.jina.example/search"
+    assert saved["JINA_RERANK_API_URL"] == "https://api.jina.example/v1/rerank"
     assert saved["JINA_RESPOND_WITH"] == "readerlm-v2"
     assert saved["JINA_TIMEOUT_SECONDS"] == "10"
     assert saved["CONTEXT7_API_KEY"] == "ctx-secret"
@@ -1792,6 +1995,30 @@ def test_setup_non_interactive_autofills_qwen3_8b_embedding_preset(monkeypatch, 
     assert saved["INTENT_EMBEDDING_MARGIN"] == "0.053"
     assert "warnings" not in data
     assert "embed-test-secret" not in json.dumps(data)
+
+
+def test_setup_rejects_invalid_research_config_before_writing_any_value(monkeypatch, capsys):
+    writes = []
+    monkeypatch.setattr(cli.service, "config_set", lambda key, value: writes.append((key, value)))
+    monkeypatch.setattr(cli.service, "config_path", lambda: {"ok": True, "config_file": "/tmp/preview/config.json"})
+    monkeypatch.setattr(cli.service, "config_list", lambda show_secrets=False: {"ok": True, "values": {}})
+
+    code = cli.main(
+        [
+            "setup",
+            "--non-interactive",
+            "--xai-api-key",
+            "must-not-be-written",
+            "--document-chunk-size",
+            "1",
+        ]
+    )
+    data = json.loads(capsys.readouterr().out)
+
+    assert code == cli.EXIT_PARAMETER_ERROR
+    assert data["saved"] == {}
+    assert writes == []
+    assert "must-not-be-written" not in json.dumps(data)
 
 
 def test_setup_non_interactive_keeps_explicit_embedding_thresholds(monkeypatch, tmp_path, capsys):

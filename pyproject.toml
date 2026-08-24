@@ -1,13 +1,15 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "smart-search"
 version = "0.1.16"
-description = "CLI-first multi-source web research with xAI/OpenAI-compatible search, Exa, Context7, Zhipu, Tavily, Firecrawl, and Deep Research planning."
+description = "CLI-first multi-source web search and Agentic Research Preview with structured evidence workspaces."
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 dependencies = [
     "httpx[socks]>=0.28.0",
     "InquirerPy>=0.3.4,<0.4",
@@ -28,6 +30,11 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 smart_search = [
+    "assets/research_visualizer/*.html",
+    "assets/research_visualizer/*.md",
+    "assets/sidecar/README.md",
+    "assets/sidecar/pyproject.toml",
+    "assets/sidecar/src/smart_search_sidecar/*.py",
     "assets/skills/smart-search-cli/SKILL.md",
     "assets/skills/smart-search-cli/agents/*.yaml",
     "assets/skills/smart-search-cli/references/*.md",
@@ -49,3 +56,6 @@ smart_search = [
 
 [project.scripts]
 smart-search = "smart_search.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,7 +1,9 @@
 import json
+import math
 import os
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 class Config:
     _instance = None
@@ -19,11 +21,18 @@ class Config:
     _DEFAULT_INTENT_ROUTER_TIMEOUT_SECONDS = "8"
     _DEFAULT_INTENT_EMBEDDING_THRESHOLD = "0.74"
     _DEFAULT_INTENT_EMBEDDING_MARGIN = "0.05"
+    _DEFAULT_DOCUMENT_EMBEDDING_SOURCE = "intent"
+    _DEFAULT_DOCUMENT_EMBEDDING_NORMALIZE = "true"
+    _DEFAULT_DOCUMENT_SPLITTER = "markdown"
+    _DEFAULT_DOCUMENT_CHUNK_SIZE = "1600"
+    _DEFAULT_SIDECAR_TIMEOUT_SECONDS = "120"
     _ALLOWED_XAI_TOOLS = {"web_search", "x_search"}
     _ALLOWED_VALIDATION_LEVELS = {"fast", "balanced", "strict"}
     _ALLOWED_FALLBACK_MODES = {"auto", "off"}
     _ALLOWED_MINIMUM_PROFILES = {"standard", "off"}
     _ALLOWED_INTENT_ROUTER_MODES = {"hybrid", "rules", "off"}
+    _ALLOWED_DOCUMENT_EMBEDDING_SOURCES = {"intent", "openai-compatible", "off"}
+    _ALLOWED_DOCUMENT_SPLITTERS = {"markdown", "character"}
     _CONFIG_KEYS = {
         "XAI_API_URL",
         "XAI_API_KEY",
@@ -52,6 +61,13 @@ class Config:
         "INTENT_CLASSIFIER_API_KEY",
         "INTENT_CLASSIFIER_MODEL",
         "INTENT_ROUTER_TIMEOUT_SECONDS",
+        "SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE",
+        "SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS",
+        "SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE",
+        "SMART_SEARCH_DOCUMENT_SPLITTER",
+        "SMART_SEARCH_DOCUMENT_CHUNK_SIZE",
+        "SMART_SEARCH_SIDECAR_PYTHON",
+        "SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS",
         "EXA_API_KEY",
         "EXA_BASE_URL",
         "EXA_TIMEOUT_SECONDS",
@@ -69,6 +85,8 @@ class Config:
         "ZHIPU_MCP_TIMEOUT_SECONDS",
         "JINA_API_KEY",
         "JINA_READER_API_URL",
+        "JINA_SEARCH_API_URL",
+        "JINA_RERANK_API_URL",
         "JINA_RESPOND_WITH",
         "JINA_TIMEOUT_SECONDS",
         "TAVILY_API_KEY",
@@ -237,6 +255,7 @@ class Config:
         key = key.strip().upper()
         if key not in self._CONFIG_KEYS:
             raise ValueError(f"Unsupported config key: {key}")
+        self._validate_research_config_value(key, value)
         config_data = self._load_config_file()
         config_data[key] = value
         self._save_config_file(config_data)
@@ -256,6 +275,45 @@ class Config:
             "SMART_SEARCH_INTENT_ROUTER",
         }:
             self._cached_model = None
+
+    @classmethod
+    def _validate_research_config_value(cls, key: str, value: str) -> None:
+        raw = str(value).strip()
+        if key in {"JINA_SEARCH_API_URL", "JINA_RERANK_API_URL"}:
+            parsed = urlsplit(raw)
+            if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+                raise ValueError(f"Invalid {key}: expected an absolute HTTP(S) URL.")
+        elif key == "SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE":
+            if raw.lower() not in cls._ALLOWED_DOCUMENT_EMBEDDING_SOURCES:
+                allowed = ", ".join(sorted(cls._ALLOWED_DOCUMENT_EMBEDDING_SOURCES))
+                raise ValueError(f"Invalid {key}: {raw}. Supported values: {allowed}")
+        elif key == "SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS":
+            cls._validate_integer_input(key, raw, minimum=0, maximum=65536)
+        elif key == "SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE":
+            if raw.lower() not in {"true", "false", "1", "0", "yes", "no"}:
+                raise ValueError(f"Invalid {key}: {raw}. Expected true or false.")
+        elif key == "SMART_SEARCH_DOCUMENT_SPLITTER":
+            if raw.lower() not in cls._ALLOWED_DOCUMENT_SPLITTERS:
+                allowed = ", ".join(sorted(cls._ALLOWED_DOCUMENT_SPLITTERS))
+                raise ValueError(f"Invalid {key}: {raw}. Supported values: {allowed}")
+        elif key == "SMART_SEARCH_DOCUMENT_CHUNK_SIZE":
+            cls._validate_integer_input(key, raw, minimum=256, maximum=20000)
+        elif key == "SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS":
+            try:
+                number = float(raw)
+            except ValueError as exc:
+                raise ValueError(f"Invalid {key}: {raw}. Expected a number.") from exc
+            if not math.isfinite(number) or number < 1 or number > 3600:
+                raise ValueError(f"Invalid {key}: {raw}. Expected a number between 1 and 3600.")
+
+    @staticmethod
+    def _validate_integer_input(key: str, raw: str, *, minimum: int, maximum: int) -> None:
+        try:
+            number = int(raw)
+        except ValueError as exc:
+            raise ValueError(f"Invalid {key}: {raw}. Expected an integer.") from exc
+        if number < minimum or number > maximum:
+            raise ValueError(f"Invalid {key}: {raw}. Expected an integer between {minimum} and {maximum}.")
 
     def unset_config_value(self, key: str) -> None:
         key = key.strip().upper()
@@ -415,9 +473,12 @@ class Config:
     def _float_value(self, key: str, default: str) -> float:
         value = self._get_config_value(key, default) or default
         try:
-            return float(value)
+            number = float(value)
         except (TypeError, ValueError):
             raise ValueError(f"Invalid {key}: {value}. Expected a number.")
+        if not math.isfinite(number):
+            raise ValueError(f"Invalid {key}: {value}. Expected a finite number.")
+        return number
 
     def _float_info(self, key: str, default: str) -> tuple[float, str]:
         try:
@@ -504,6 +565,103 @@ class Config:
     @property
     def intent_router_timeout(self) -> float:
         return self._float_value("INTENT_ROUTER_TIMEOUT_SECONDS", self._DEFAULT_INTENT_ROUTER_TIMEOUT_SECONDS)
+
+    @property
+    def document_embedding_source(self) -> str:
+        return self._validated_enum(
+            "SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE",
+            self._DEFAULT_DOCUMENT_EMBEDDING_SOURCE,
+            self._ALLOWED_DOCUMENT_EMBEDDING_SOURCES,
+        )
+
+    @property
+    def document_embedding_dimensions(self) -> int:
+        raw = self._get_config_value("SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS", "0") or "0"
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f"Invalid SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS: {raw}. Expected 0 or a positive integer.")
+        if value < 0 or value > 65536:
+            raise ValueError(
+                f"Invalid SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS: {raw}. Expected 0 or an integer up to 65536."
+            )
+        return value
+
+    @property
+    def document_embedding_normalize(self) -> bool:
+        raw = (self._get_config_value(
+            "SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE",
+            self._DEFAULT_DOCUMENT_EMBEDDING_NORMALIZE,
+        ) or self._DEFAULT_DOCUMENT_EMBEDDING_NORMALIZE).strip().lower()
+        if raw not in {"true", "false", "1", "0", "yes", "no"}:
+            raise ValueError(
+                f"Invalid SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE: {raw}. Expected true or false."
+            )
+        return raw in {"true", "1", "yes"}
+
+    @property
+    def document_splitter(self) -> str:
+        return self._validated_enum(
+            "SMART_SEARCH_DOCUMENT_SPLITTER",
+            self._DEFAULT_DOCUMENT_SPLITTER,
+            self._ALLOWED_DOCUMENT_SPLITTERS,
+        )
+
+    @property
+    def document_chunk_size(self) -> int:
+        raw = self._get_config_value("SMART_SEARCH_DOCUMENT_CHUNK_SIZE", self._DEFAULT_DOCUMENT_CHUNK_SIZE) or self._DEFAULT_DOCUMENT_CHUNK_SIZE
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f"Invalid SMART_SEARCH_DOCUMENT_CHUNK_SIZE: {raw}. Expected an integer.")
+        if value < 256 or value > 20000:
+            raise ValueError(
+                f"Invalid SMART_SEARCH_DOCUMENT_CHUNK_SIZE: {raw}. Expected an integer between 256 and 20000."
+            )
+        return value
+
+    @property
+    def sidecar_python(self) -> str:
+        configured = self._get_config_value("SMART_SEARCH_SIDECAR_PYTHON")
+        if configured:
+            return configured
+        executable = "python.exe" if sys.platform.startswith("win") else "python"
+        scripts_dir = "Scripts" if sys.platform.startswith("win") else "bin"
+        return str(self.config_file.parent / "research-sidecar" / scripts_dir / executable)
+
+    @property
+    def sidecar_timeout(self) -> float:
+        return self._bounded_float_value(
+            "SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS",
+            self._DEFAULT_SIDECAR_TIMEOUT_SECONDS,
+            1.0,
+            3600.0,
+        )
+
+    def document_embedding_config(self) -> dict[str, object]:
+        source = self.document_embedding_source
+        if source == "intent":
+            api_url = self.intent_embedding_api_url
+            api_key = self.intent_embedding_api_key
+            model = self.intent_embedding_model
+        elif source == "openai-compatible":
+            base = (self.openai_compatible_api_url or "").rstrip("/")
+            api_url = f"{base}/embeddings" if base else ""
+            api_key = self.openai_compatible_api_key
+            model = self.openai_compatible_model
+        else:
+            api_url = ""
+            api_key = None
+            model = ""
+        return {
+            "source": source,
+            "api_url": api_url,
+            "api_key": api_key,
+            "model": model,
+            "dimensions": self.document_embedding_dimensions,
+            "normalize": self.document_embedding_normalize,
+            "configured": bool(source != "off" and api_url and api_key and model),
+        }
 
     def _csv_values(self, key: str) -> list[str]:
         raw = self._get_config_value(key, "") or ""
@@ -688,6 +846,14 @@ class Config:
         return self._get_config_value("JINA_READER_API_URL", "https://r.jina.ai") or "https://r.jina.ai"
 
     @property
+    def jina_search_api_url(self) -> str:
+        return self._get_config_value("JINA_SEARCH_API_URL", "https://s.jina.ai") or "https://s.jina.ai"
+
+    @property
+    def jina_rerank_api_url(self) -> str:
+        return self._get_config_value("JINA_RERANK_API_URL", "https://api.jina.ai") or "https://api.jina.ai"
+
+    @property
     def jina_respond_with(self) -> str:
         return self._get_config_value("JINA_RESPOND_WITH", "") or ""
 
@@ -742,6 +908,49 @@ class Config:
             0.0,
             1.0,
         )
+        document_embedding_source, document_embedding_source_error = self._enum_info(
+            "SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE",
+            self._DEFAULT_DOCUMENT_EMBEDDING_SOURCE,
+            self._ALLOWED_DOCUMENT_EMBEDDING_SOURCES,
+        )
+        document_splitter, document_splitter_error = self._enum_info(
+            "SMART_SEARCH_DOCUMENT_SPLITTER",
+            self._DEFAULT_DOCUMENT_SPLITTER,
+            self._ALLOWED_DOCUMENT_SPLITTERS,
+        )
+        document_dimensions_error = ""
+        document_normalize_error = ""
+        document_chunk_size_error = ""
+        sidecar_timeout_error = ""
+        jina_url_errors: list[str] = []
+        try:
+            document_dimensions = self.document_embedding_dimensions
+        except ValueError as e:
+            document_dimensions = 0
+            document_dimensions_error = str(e)
+        try:
+            document_normalize = self.document_embedding_normalize
+        except ValueError as e:
+            document_normalize = True
+            document_normalize_error = str(e)
+        try:
+            document_chunk_size = self.document_chunk_size
+        except ValueError as e:
+            document_chunk_size = int(self._DEFAULT_DOCUMENT_CHUNK_SIZE)
+            document_chunk_size_error = str(e)
+        try:
+            sidecar_timeout = self.sidecar_timeout
+        except ValueError as e:
+            sidecar_timeout = float(self._DEFAULT_SIDECAR_TIMEOUT_SECONDS)
+            sidecar_timeout_error = str(e)
+        for key, value in (
+            ("JINA_SEARCH_API_URL", self.jina_search_api_url),
+            ("JINA_RERANK_API_URL", self.jina_rerank_api_url),
+        ):
+            try:
+                self._validate_research_config_value(key, value)
+            except ValueError as e:
+                jina_url_errors.append(str(e))
         config_parameter_errors.extend(
             error
             for error in (
@@ -752,6 +961,13 @@ class Config:
                 intent_router_timeout_error,
                 intent_embedding_threshold_error,
                 intent_embedding_margin_error,
+                document_embedding_source_error,
+                document_splitter_error,
+                document_dimensions_error,
+                document_normalize_error,
+                document_chunk_size_error,
+                sidecar_timeout_error,
+                *jina_url_errors,
             )
             if error
         )
@@ -786,6 +1002,13 @@ class Config:
             "INTENT_CLASSIFIER_API_KEY": self._mask_api_key(self.intent_classifier_api_key) if self.intent_classifier_api_key else "未配置",
             "INTENT_CLASSIFIER_MODEL": self.intent_classifier_model or "未配置",
             "INTENT_ROUTER_TIMEOUT_SECONDS": intent_router_timeout,
+            "SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE": document_embedding_source,
+            "SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS": document_dimensions,
+            "SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE": document_normalize,
+            "SMART_SEARCH_DOCUMENT_SPLITTER": document_splitter,
+            "SMART_SEARCH_DOCUMENT_CHUNK_SIZE": document_chunk_size,
+            "SMART_SEARCH_SIDECAR_PYTHON": self.sidecar_python,
+            "SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS": sidecar_timeout,
             "SMART_SEARCH_DEBUG": self.debug_enabled,
             "SMART_SEARCH_LOG_LEVEL": self.log_level,
             "SMART_SEARCH_LOG_DIR": self.log_dir_config_value,
@@ -821,6 +1044,8 @@ class Config:
             "ZHIPU_MCP_TIMEOUT_SECONDS": self.zhipu_mcp_timeout,
             "JINA_API_KEY": self._mask_api_key(self.jina_api_key) if self.jina_api_key else "未配置",
             "JINA_READER_API_URL": self.jina_reader_api_url,
+            "JINA_SEARCH_API_URL": self.jina_search_api_url,
+            "JINA_RERANK_API_URL": self.jina_rerank_api_url,
             "JINA_RESPOND_WITH": self.jina_respond_with,
             "JINA_TIMEOUT_SECONDS": self.jina_timeout,
             "primary_api_mode": "xai-responses" if self.xai_api_key else ("chat-completions" if self.openai_compatible_api_url and self.openai_compatible_api_key else "未配置"),

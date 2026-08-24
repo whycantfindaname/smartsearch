@@ -1,4 +1,7 @@
 from pathlib import Path
+import re
+
+import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC_SKILL_DIR = ROOT / "skills" / "smart-search-cli"
@@ -287,6 +290,84 @@ def test_readme_language_split_and_provider_links_are_documented():
 
 def test_deep_research_shared_skill_files_are_synchronized():
     assert _skill_text_files(PUBLIC_SKILL_DIR) == _skill_text_files(PACKAGED_SKILL_DIR)
+
+
+def test_agentic_research_project_agents_are_packaged_and_match():
+    expected = {
+        "search_scout.yaml": ("search_scout", ["DelegateRequest", "SearchTask"]),
+        "source_curator.yaml": ("source_curator", ["DelegateRequest", "SearchTask", "CandidateCard[]"]),
+        "evidence_miner.yaml": ("evidence_miner", ["DelegateRequest", "EvidenceMiningTask"]),
+    }
+
+    for filename, (agent_id, input_contracts) in expected.items():
+        public_path = PUBLIC_SKILL_DIR / "agents" / filename
+        packaged_path = PACKAGED_SKILL_DIR / "agents" / filename
+        assert public_path.is_file()
+        assert packaged_path.is_file()
+        assert public_path.read_bytes() == packaged_path.read_bytes()
+
+        definition = yaml.safe_load(public_path.read_text(encoding="utf-8"))
+        assert definition["schema_version"] == "1"
+        assert definition["id"] == agent_id
+        assert definition["contracts"]["inputs"] == input_contracts
+        assert definition["contracts"]["output"] == "DelegateResult"
+        assert definition["deployment_defaults"] == {
+            "model": "gpt-5.6-luna",
+            "reasoning_effort": "max",
+            "service_tier": "priority",
+        }
+        assert definition["permissions"]["may_create_tasks"] is False
+        assert definition["permissions"]["may_spawn_descendants"] is False
+        assert "registered artifact_id" in definition["instructions"]
+        assert "final synthesis" in definition["instructions"]
+
+    package_config = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert '"assets/skills/smart-search-cli/agents/*.yaml"' in package_config
+
+
+def test_agentic_research_skill_uses_confirmed_architecture_and_terms():
+    public_documents = {
+        path.relative_to(PUBLIC_SKILL_DIR).as_posix(): path.read_text(encoding="utf-8")
+        for path in PUBLIC_SKILL_DIR.rglob("*")
+        if path.is_file()
+        and path.suffix in {".md", ".yaml", ".yml"}
+        and "skills/anysearch/" not in path.relative_to(PUBLIC_SKILL_DIR).as_posix()
+    }
+    text = "\n".join(public_documents.values())
+
+    for deprecated in ("Native Research", "Multi-Research Planner"):
+        assert deprecated not in text
+    assert not re.search(
+        r"quick\s*(?:/|\|)\s*standard\s*(?:/|\|)\s*deep\s*(?:/|\|)\s*max",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    required_markers = [
+        "Root Agent is the sole semantic planner and synthesizer",
+        "Provider Research Agents",
+        "Firecrawl Agent",
+        "Jina DeepSearch",
+        "Exa Agent",
+        "Tavily Research",
+        "Search Scout",
+        "Source Curator",
+        "Evidence Miner",
+        "only Root can turn suggestions into new tasks",
+        "bundled snapshot first",
+        "installed global `$anysearch` Skill",
+        "Root may read all candidates or create any number of Curator shards",
+        "ClaimSpec -> EvidenceItem -> ClaimRecord",
+        "run-local and append-only",
+        "registered `artifact_id` values only",
+        "does not require a Mistral API key or credits",
+        "does not use Vespa or Docker",
+        "final citation -> ClaimRecord -> EvidenceItem",
+        "smart-search research-run",
+        "smart-search research-environment",
+    ]
+    for marker in required_markers:
+        assert marker in text
 
 
 def test_zhipu_setup_contract_public_and_packaged_assets_match():

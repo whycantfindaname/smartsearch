@@ -1,7 +1,7 @@
 {
   "name": "@konbakuyomu/smart-search",
   "version": "0.1.16",
-  "description": "CLI-first multi-source web research with xAI/OpenAI-compatible search, Exa, Context7, Zhipu, Tavily, Firecrawl, and Deep Research planning.",
+  "description": "CLI-first multi-source web search and Agentic Research Preview with structured evidence workspaces.",
   "license": "MIT",
   "homepage": "https://github.com/konbakuyomu/smartsearch#readme",
   "repository": {
@@ -19,11 +19,17 @@
     "skills/smart-search-cli/**",
     "!skills/smart-search-cli/skills/anysearch/.env",
     "src/smart_search/**/*.py",
+    "src/smart_search/assets/research_visualizer/**",
+    "src/smart_search/assets/sidecar/**",
     "src/smart_search/assets/skills/smart-search-cli/**",
     "!src/smart_search/assets/skills/smart-search-cli/skills/anysearch/.env",
+    "!src/smart_search/**/__pycache__/**",
+    "!src/smart_search/**/*.pyc",
+    "!src/smart_search/**/*.pyo",
     "pyproject.toml",
     "README.md",
     "README.zh-CN.md",
+    "THIRD_PARTY_NOTICES.md",
     "LICENSE"
   ],
   "scripts": {

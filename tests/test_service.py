@@ -2683,6 +2683,125 @@ async def test_jina_doctor_reports_readerlm_without_key_as_config_error(monkeypa
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("status_code", "payload", "expected_status"),
+    [
+        (200, {"success": True, "data": {"remainingCredits": 12}}, "ok"),
+        (200, {"success": True, "data": {"remainingCredits": 0}}, "entitlement_denied"),
+        (401, {"error": "invalid key"}, "entitlement_denied"),
+        (429, {"error": "rate limit"}, "rate_limited"),
+    ],
+)
+async def test_firecrawl_doctor_uses_read_only_credit_probe(
+    monkeypatch, status_code, payload, expected_status
+):
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "firecrawl-test-secret")
+    calls = []
+
+    class FakeAsyncClient:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
+        async def get(self, url, headers):
+            calls.append((url, headers))
+            return httpx.Response(
+                status_code,
+                json=payload,
+                request=httpx.Request("GET", url),
+            )
+
+    monkeypatch.setattr(service.httpx, "AsyncClient", FakeAsyncClient)
+
+    result = await service._test_firecrawl_connection()
+
+    assert result["status"] == expected_status
+    assert calls == [
+        (
+            "https://api.firecrawl.dev/v2/team/credit-usage",
+            {"Authorization": "Bearer firecrawl-test-secret"},
+        )
+    ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("tool", "arguments", "expected_operation", "expected_arguments"),
+    [
+        (
+            "academic-search",
+            {"query": "agentic search", "options": {"k": 20}},
+            "research_search",
+            {"query": "agentic search", "options": {"k": 20}},
+        ),
+        (
+            "academic-read",
+            {"paper_id": "arxiv:2105.05233", "options": {"query": "method", "k": 4}},
+            "research_read",
+            {"paper_id": "arxiv:2105.05233", "options": {"query": "method", "k": 4}},
+        ),
+        (
+            "academic-related",
+            {
+                "paper_id": "arxiv:2105.05233",
+                "intent": "same benchmark",
+                "options": {"mode": "references"},
+            },
+            "research_related",
+            {
+                "paper_id": "arxiv:2105.05233",
+                "intent": "same benchmark",
+                "options": {"mode": "references"},
+            },
+        ),
+        (
+            "developer-search",
+            {"query": "retry bug", "options": {"types": ["issue", "pull_request"]}},
+            "developer_search",
+            {"query": "retry bug", "options": {"types": ["issue", "pull_request"]}},
+        ),
+    ],
+)
+async def test_extended_firecrawl_index_tools_are_wired_to_the_official_operations(
+    monkeypatch, tool, arguments, expected_operation, expected_arguments
+):
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "firecrawl-test-secret")
+    captured = []
+
+    async def fake_gather(calls):
+        captured.extend(calls)
+        return [
+            {
+                "provider": "firecrawl",
+                "capability": calls[0].adapter.capabilities[calls[0].operation],
+                "status": "succeeded",
+                "result": {"success": True},
+                "errors": [],
+            }
+        ]
+
+    monkeypatch.setattr(service, "gather_capability_calls", fake_gather)
+
+    result = await service.run_extended_provider_capability(
+        tool,
+        arguments,
+        providers=["firecrawl"],
+        timeout_seconds=17,
+    )
+
+    assert result["ok"] is True
+    assert len(captured) == 1
+    assert captured[0].operation == expected_operation
+    assert captured[0].arguments == expected_arguments
+    assert captured[0].timeout_seconds == 17
+
+
+@pytest.mark.asyncio
 async def test_call_jina_reader_decodes_provider_json(monkeypatch):
     class FakeJinaReaderProvider:
         def __init__(self, reader_api_url, api_key, respond_with, timeout):

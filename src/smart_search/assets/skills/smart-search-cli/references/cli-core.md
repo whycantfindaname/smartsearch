@@ -40,6 +40,12 @@
 - `smart-search context7-docs LIBRARY_ID QUERY [--format json|markdown|content] [--output PATH]`
 - `smart-search deep QUERY [--budget quick|standard|deep] [--evidence-dir PATH] [--format json|markdown|content] [--output PATH]`
 - `smart-search research QUERY [--budget quick|standard|deep] [--evidence-dir PATH] [--fallback auto|off] [--format json|markdown|content] [--output PATH]`
+- `smart-search research-run create|execute|import|add-search-tasks|add-evidence-tasks|document|claims|decision|verify --input JSON_OR_PATH --artifact-root PATH [--workspace PATH] [--checkpoint LABEL]... [--format json|markdown|content] [--output PATH]`
+- `smart-search research-run materialize --input JSON_OR_PATH --artifact-root PATH --workspace PATH [--checkpoint LABEL]... [--format json|markdown|content] [--output PATH]`
+- `smart-search research-run capabilities [--format json|markdown|content] [--output PATH]`
+- `smart-search research-view WORKSPACE [--port PORT]`
+- `smart-search research-environment install --python PYTHON_3_12 [--environment PATH] [--install-timeout SECONDS] [--format json|markdown|content] [--output PATH]`
+- `smart-search research-environment doctor [--python PYTHON] [--environment PATH] [--format json|markdown|content] [--output PATH]`
 - `smart-search route-calibrate [--models CSV] [--format json|markdown|content] [--output PATH]`
 - `smart-search map URL [--instructions TEXT] [--max-depth N] [--max-breadth N] [--limit N] [--timeout SECONDS] [--format json|markdown|content] [--output PATH]`
 - `smart-search doctor [--format json|markdown|content] [--output PATH]`
@@ -53,7 +59,7 @@
 
 ## Aliases
 
-Top-level aliases normalize to the same service behavior as their full command: `search`/`s`, `route`/`rt`, `fetch`/`f`, `map`/`m`, `exa-search`/`exa`/`x`, `exa-similar`/`xs`, `zhipu-search`/`z`/`zp`, `zhipu-mcp-search`/`zmcp-search`, `zhipu-mcp-reader`/`zmcp-reader`, `zhipu-mcp-search-doc`/`zmcp-doc`, `zhipu-mcp-repo-structure`/`zmcp-tree`, `zhipu-mcp-read-file`/`zmcp-file`, `sciverse-catalog`/`sv-catalog`, `sciverse-search`/`sv-search`/`sv`, `sciverse-semantic`/`sv-semantic`, `sciverse-read`/`sv-read`, `sciverse-relations`/`sv-relations`, `context7-library`/`c7`/`ctx7`, `context7-docs`/`c7d`/`c7docs`/`ctx7-docs`, `deep`/`dr`, `research`/`rs`, `route-calibrate`/`route-cal`/`rcal`, `doctor`/`d`, `diagnose`/`diag`, `setup`/`init`, `config`/`cfg`, `model`/`mdl`, `smoke`/`sm`, and `regression`/`reg`.
+Top-level aliases normalize to the same service behavior as their full command: `search`/`s`, `route`/`rt`, `fetch`/`f`, `map`/`m`, `exa-search`/`exa`/`x`, `exa-similar`/`xs`, `zhipu-search`/`z`/`zp`, `zhipu-mcp-search`/`zmcp-search`, `zhipu-mcp-reader`/`zmcp-reader`, `zhipu-mcp-search-doc`/`zmcp-doc`, `zhipu-mcp-repo-structure`/`zmcp-tree`, `zhipu-mcp-read-file`/`zmcp-file`, `sciverse-catalog`/`sv-catalog`, `sciverse-search`/`sv-search`/`sv`, `sciverse-semantic`/`sv-semantic`, `sciverse-read`/`sv-read`, `sciverse-relations`/`sv-relations`, `context7-library`/`c7`/`ctx7`, `context7-docs`/`c7d`/`c7docs`/`ctx7-docs`, `deep`/`dr`, `research`/`rs`, `research-run`/`rr`, `research-view`/`rv`, `research-environment`/`research-env`/`renv`, `route-calibrate`/`route-cal`/`rcal`, `doctor`/`d`, `diagnose`/`diag`, `setup`/`init`, `config`/`cfg`, `model`/`mdl`, `smoke`/`sm`, and `regression`/`reg`.
 
 Nested aliases: `config path`/`cfg p`, `config list`/`cfg ls`/`cfg l`, `config set`/`cfg s`, `config unset`/`cfg rm`/`cfg u`, `model current`/`mdl cur`/`mdl c`, and `model set`/`mdl s`.
 
@@ -75,6 +81,7 @@ Nested aliases: `config path`/`cfg p`, `config list`/`cfg ls`/`cfg l`, `config s
 - Map output includes `ok`, `base_url`, `results`, `response_time`, `url`, and `elapsed_ms`.
 - Deep planner output includes `ok`, `mode`, `query_mode`, `question`, `trigger_source`, `difficulty`, `intent_signals`, `decomposition`, `capability_plan`, `evidence_policy`, `preflight`, `steps`, `gap_check`, `final_answer_policy`, `usage_boundary`, `allowed_tools`, `evidence_dir`, and `elapsed_ms`.
 - Research executor output includes `ok`, `mode=deep_research_execution`, `query_mode=research`, `question`, `budget`, `research_plan`, `routing_decision`, `stage_results`, `discovery_sources`, `final_answer`, `content`, `citations`, `evidence_items`, `gap_check`, `provider_attempts`, `providers_used`, `fallback_used`, `degraded`, `route_policy_version`, `evidence_dir`, `minimum_profile_ok`, `capability_status`, and `elapsed_ms`.
+- A successful `research-run` operation with `--workspace` adds `workspace.root` and `workspace.manifest` to its JSON result. `materialize` accepts an existing dossier and may also receive `final_synthesis` and `citation_verification` in the input payload.
 - Diagnostic output masks keys and reports config paths, Windows legacy config metadata, provider timeout values, `capability_status`, `minimum_profile_ok`, `intent_router_status`, `main_search_connection_tests`, and provider connectivity checks. OpenAI-compatible health must be validated through `/chat/completions`; `/models` is supplementary metadata.
 - Smoke output includes `ok`, `mode`, `status` (`healthy`, `degraded`, or `failed`), `failed_cases`, `degraded_cases`, `skipped_cases`, `cases`, `provider_attempts`, and `elapsed_ms`. Healthy and degraded smoke preserve `ok: true` and exit code `0`; failed smoke is non-zero. Live smoke uses skipped cases for unavailable optional checks instead of treating them as failed, but failure of every configured main-search route remains critical.
 
@@ -89,3 +96,17 @@ Nested aliases: `config path`/`cfg p`, `config list`/`cfg ls`/`cfg l`, `config s
 ## Tool Policy
 
 Web research through this skill should use `smart-search` CLI. If the CLI is unavailable, report the blocker and recovery steps instead of silently falling back to another web-search route.
+
+## Research Workspace
+
+`--workspace PATH` writes important intermediate and final projections for the returned dossier. Repeat `--checkpoint LABEL` to retain immutable named dossier snapshots. The workspace includes the latest dossier, named checkpoints, task projections, evidence and Claim projections, a public decision log, optional `final_synthesis.md`, optional `evidence/citation_verification.json`, and `public_trace.jsonl` when a run Trace is available.
+
+The structured Dossier, Trace, Evidence, and Claim records are authoritative. Markdown is a human-readable projection and must not be used to overwrite structured state. `public_trace.jsonl` contains only public trace identity and event metadata; the workspace must never contain hidden reasoning, API keys, private configuration, or unauthorized source bodies.
+
+To inspect a completed or in-progress workspace, the user starts the viewer in a separate terminal:
+
+```bash
+smart-search research-view WORKSPACE --port 8080
+```
+
+The viewer listens only on `127.0.0.1` and is available at `http://127.0.0.1:8080`. Agents must not start or background this service automatically.

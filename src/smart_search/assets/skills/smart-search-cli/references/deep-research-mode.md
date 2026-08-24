@@ -30,10 +30,15 @@ Do not select a fixed topic recipe. Market, product, technical docs, news, polic
 
 Deep Research does not change default `smart-search search` behavior and does not depend on an MCP session. It must not change default `smart-search search` behavior.
 
+The confirmed multi-source architecture adds a Root-led caller-held loop without changing these public compatibility commands. Root Agent is the sole semantic planner and synthesizer: it decides task counts, project-agent counts and shards, replanning, and stopping. Smart Search performs deterministic contract validation, capability execution, normalization, artifact/Trace persistence, and citation verification. Read `agentic-research-architecture.md` before using `research-run`, project-agent definitions, registered-artifact document mining, or Provider Research Agents.
+
+The product modes are `quick`, `standard`, and `deep`. Do not add another product mode. Provider Research Agents is the formal category for Firecrawl Agent, Jina DeepSearch, Exa Agent, and Tavily Research.
+
 ## Offline Planner And Live Executor
 
 - `smart-search deep` is the public offline planner command and a public planner entrypoint, not an executor. It does not call providers, run `doctor`, or fetch pages by default.
 - `smart-search research` is the public live executor command and public live executor entrypoint. It executes plan -> discover -> fetch/read -> gap check -> evidence-only synthesis.
+- `smart-search research-run` is the deterministic dossier interface for the Root-led architecture. Root holds the `ResearchRun`, authors tasks, imports child `DelegateResult` objects, and owns the final synthesis. Treat `research` output as an execution artifact when it participates in that loop.
 - Before manual execution, run `smart-search deep "question" --format json` and use the returned `research_plan` as your planning artifact.
 - Use `smart-search research "question" --format json` when the user wants the CLI to run live Deep Research end to end instead of only planning.
 
