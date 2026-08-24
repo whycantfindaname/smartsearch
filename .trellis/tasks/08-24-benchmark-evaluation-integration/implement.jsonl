@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Benchmark adapters span dataset, CLI, runtime artifacts, scorers, and visualization"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/research/current-evidence.md", "reason": "Current Stage G benchmark and Research Workspace evidence to revalidate"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/research/qwen-sglang-codex-harness.md", "reason": "SGLang, Codex, Qwen, GPU topology, live Provider and run-layout decisions"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/research/benchmark-shortlist.md", "reason": "Benchmark recommendation, scoring, leaderboard comparability and reproduction cost"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/research/harness-portability-and-observability.md", "reason": "Harness portability, all-mode visualization and normalized Agent Trace requirements"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/HANDOFF.md", "reason": "Linux GPU continuation boundary, settled Harness decisions and implementation order"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/research/harness-web-sources.md", "reason": "Reproducible Harness searches, official documentation, upstream issues and revalidation rules"}

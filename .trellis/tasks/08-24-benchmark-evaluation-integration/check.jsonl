@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Require testable failure accounting, reproducibility, and package boundaries"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/research/current-evidence.md", "reason": "Check recommendations against the accepted Stage G scope and evidence"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/research/qwen-sglang-codex-harness.md", "reason": "Verify fixed experiment environment and compatibility gates"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/research/benchmark-shortlist.md", "reason": "Verify benchmark sources, native scoring, cost and ranking claims"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/research/harness-portability-and-observability.md", "reason": "Verify Harness capability gates, three-mode visualization and Trace completeness"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/HANDOFF.md", "reason": "Verify Linux implementation preserves settled Harness, model, trace and mode boundaries"}
+{"file": ".trellis/tasks/08-24-benchmark-evaluation-integration/research/harness-web-sources.md", "reason": "Recheck upstream Harness and SGLang claims before Linux implementation and acceptance"}
