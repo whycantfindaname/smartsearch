@@ -60,9 +60,9 @@
 
 | 路径 | 作用与边界 |
 | --- | --- |
-| `.codestable/` | Codestable 的 requirements、reference、feature/issue 记录、gates 和维护工具。已有 tracked 文件属于治理资料，不是运行时包内容；`.gitignore` 忽略未来新增的本地 Codestable 内容。 |
 | `.github/` | CI、npm 发布 workflow 和 release notes；不参与 CLI 运行时。 |
-| `.trellis/` | Provider capability spec、归档 task 和 workspace journal；属于开发治理资料，不会被 npm 包发布。已有 tracked 文件保留，新的本地 Trellis 内容被 `.gitignore` 忽略。 |
+| `.trellis/` | 本仓库唯一的 task/spec/workspace 治理系统，包含规范、任务、平台脚本和 workspace journal；属于 tracked 开发资料，不会被 npm 包发布。机器身份与 session runtime 由 `.trellis/.gitignore` 单独排除。 |
+| `.agents/`、`.claude/`、`.codex/` | Trellis 为 Codex 和 Claude Code 提供的仓库级 Skill、Agent、hook 与平台配置投影；属于 tracked 开发工具，不进入 npm runtime。 |
 | `npm/` | npm CLI wrapper、Node.js 安装、版本同步、测试、Skill parity 和打包安装 smoke 脚本。 |
 | `scripts/` | 仓库外层辅助检查；当前 tracked 文件是 `rebuild-mise-venv.ps1` 和 `test-jina-capability.ps1`，不包含 Python Provider 实现。 |
 | `skills/smart-search-cli/` | 仓库内 public `smart-search-cli` Skill，包含 `SKILL.md`、`agents/openai.yaml` 和 `references/*.md`。 |
@@ -104,10 +104,11 @@
 `npm/scripts/postinstall.js` 要求 Python 3.10 或更新版本，创建隔离 venv，并用 pip
 安装 package root；`pyproject.toml` 的 `project.scripts` 是 Python 直接调用入口。
 `package.json` 的 `files` 白名单控制 npm tarball 内容：`npm/`、Python
-`src/smart_search/**/*.py`、`skills/smart-search-cli/**`、
-`src/smart_search/assets/skills/smart-search-cli/**`、`pyproject.toml`、`README.md`、
-`README.zh-CN.md` 和 `LICENSE`；npm 自身还会包含必需的 `package.json` 元数据。测试、治理资料、本地
-配置、凭证和虚拟环境不属于 npm tarball。
+`src/smart_search/**/*.py`、Research Visualizer、Python 3.12 Sidecar、
+`skills/smart-search-cli/**`、`src/smart_search/assets/skills/smart-search-cli/**`、
+`pyproject.toml`、两份 README、`THIRD_PARTY_NOTICES.md` 和 `LICENSE`；npm 自身
+还会包含必需的 `package.json` 元数据。测试、治理资料、本地配置、凭证、虚拟环境、
+`__pycache__` 和编译后的 Python cache 文件不属于 npm tarball。
 
 ### CLI 命令边界
 
@@ -115,7 +116,9 @@
 调用和 research 编排属于 `src/smart_search/service.py`。当前入口按用途分组：
 
 - 主流程：`search`、`route`、`fetch`、`map`、`deep`/`dr`、`research`/`rs`、
-  `route-calibrate`。
+  `research-run`/`rr`、`research-view`/`rv`、`research-environment`/`research-env`/`renv`
+  和 `route-calibrate`。后三项是 Agentic Research Preview 的 dossier 操作、只读
+  Workspace 可视化和 Python 3.12 Sidecar 环境管理入口。
 - 文档与网页 Provider：`exa-search`、`exa-similar`、`context7-library`、
   `context7-docs`、`zhipu-search`、`zhipu-mcp-search`、`zhipu-mcp-reader`，以及
   `zhipu-mcp-search-doc`、`zhipu-mcp-repo-structure`、`zhipu-mcp-read-file`。
@@ -205,9 +208,9 @@ source 清单；`find` 看到的目录不能自动视为 source。
 
 `.gitignore` 排除以下本地状态：`.venv/`、`.smart-search-python/`、`node_modules/`、
 `src/smart_search.egg-info/`、`__pycache__/`、`.pytest_cache/`、`dist/`、`build/`、
-`.env`、`.smart-search/`、`logs/`、`*.tgz`，以及本机的 `.agent/`、`.agents/`、
-`.claude/`、`.codex/`。`.codestable/` 和 `.trellis/` 可以保留少量 tracked governance
-资料，但新的本地内容不应当被当成 product source。
+`.env`、`.smart-search/`、`logs/`、`*.tgz` 和本机 `.agent/`。仓库级 `.agents/`、
+`.claude/`、`.codex/` 与 `.trellis/` 是 tracked 开发治理资料；其中机器身份、session
+runtime 等私有状态由 `.trellis/.gitignore` 在目录内排除，不能当作 product source。
 
 ### configuration 与 credentials
 
