@@ -1,0 +1,4 @@
+{"file": ".trellis/tasks/08-24-migrate-codestable-to-trellis/research/inventory.md", "reason": "Initial source classification, migration targets, and retirement risks"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Prevent duplicate governance and historical authorities during consolidation"}
+{"file": ".trellis/tasks/08-24-migrate-codestable-to-trellis/research/trellis-lifecycle-validation.md", "reason": "Repository-local Codex and Claude lifecycle evidence required before retirement"}
+{"file": ".trellis/tasks/08-24-migrate-codestable-to-trellis/research/retirement-record.md", "reason": "Retirement outcome, preserved authority, and recovery path"}

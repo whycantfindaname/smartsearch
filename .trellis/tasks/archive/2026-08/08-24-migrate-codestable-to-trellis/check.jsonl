@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Quality and verification baseline for migrated specification content"}
+{"file": ".trellis/tasks/08-24-migrate-codestable-to-trellis/research/inventory.md", "reason": "Verify every retained or retired CodeStable group follows the approved mapping"}
+{"file": ".trellis/tasks/08-24-migrate-codestable-to-trellis/research/trellis-lifecycle-validation.md", "reason": "Verify retirement follows successful platform lifecycle checks"}
+{"file": ".trellis/tasks/08-24-migrate-codestable-to-trellis/research/retirement-record.md", "reason": "Verify retired path count, intentional references, and rollback evidence"}

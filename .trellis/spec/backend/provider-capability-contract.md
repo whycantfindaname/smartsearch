@@ -37,6 +37,30 @@ smart-search research QUERY
   [--fallback auto|off]
   [--format json|markdown|content]
   [--output PATH]
+smart-search research-run capabilities
+smart-search research-run create|execute|import|add-search-tasks|add-evidence-tasks|document|claims|decision|verify
+  --input JSON_OR_FILE
+  --artifact-root PATH
+  [--workspace PATH]
+  [--checkpoint LABEL]...
+  [--format json|markdown|content]
+  [--output PATH]
+smart-search research-run materialize
+  --input JSON_OR_FILE
+  --artifact-root PATH
+  --workspace PATH
+  [--checkpoint LABEL]...
+  [--format json|markdown|content]
+  [--output PATH]
+smart-search research-view WORKSPACE [--port PORT]
+smart-search research-environment install --python PYTHON_3_12
+  [--environment PATH]
+  [--install-timeout SECONDS]
+  [--format json|markdown|content]
+smart-search research-environment doctor
+  [--python PYTHON_3_12]
+  [--environment PATH]
+  [--format json|markdown|content]
 smart-search route-calibrate
   [--models CSV]
   [--format json|markdown|content]
@@ -119,6 +143,8 @@ validate_minimum_profile() -> dict[str, Any]
 search(query, platform="", model="", extra_sources=0,
        validation="", fallback="", providers="auto") -> dict[str, Any]
 research(query, budget="deep", evidence_dir="", fallback="auto") -> dict[str, Any]
+get_provider_research_agent_status() -> dict[str, Any]
+run_provider_research_agents(question, run_id, task_id) -> dict[str, Any]
 route_calibrate(models="") -> dict[str, Any]
 doctor() -> dict[str, Any]
 diagnose_openai_compatible(timeout_seconds=30.0) -> dict[str, Any]
@@ -130,6 +156,69 @@ Main-search providers are peers, not nested fallbacks:
 ```text
 main_search fallback chain: xai-responses -> openai-compatible
 ```
+
+### Root-led Preview contract
+
+The `preview/multi-source-agentic-research` product flow is the `research-run`
+contract. Root Agent is the sole semantic planner and synthesizer. Smart Search
+is a deterministic kernel and must not choose task count, project-Agent count,
+Source Curator count, semantic replanning, or stopping policy.
+
+- The caller holds the `ResearchRun` dossier and submits explicit operations.
+- `create` establishes `ResearchFrame`, `ClaimSpec`, Root-created `SearchTask`,
+  capability snapshot, append-only artifact registry, and Trace.
+- `execute` runs compiled internal steps and all four configured Provider
+  Research Agents in `deep`: Firecrawl Agent, Jina DeepSearch, Exa Agent, and
+  Tavily Research. Each path owns an independent `ExecutionAttempt`; missing
+  key, entitlement denial, timeout, partial result, and success do not cancel
+  sibling paths.
+- `import` accepts a validated `DelegateResult` for AnySearch, Search Scout,
+  Source Curator, Evidence Miner, or MinerU. Only Root may turn child gaps or
+  suggestions into new tasks through `add-search-tasks` or
+  `add-evidence-tasks`.
+- AnySearch remains an external Skill. The bundled snapshot is resolved first,
+  the global Skill is fallback, and Smart Search never hard-codes which
+  AnySearch function the model must call.
+- MinerU remains an external Skill. Successful/partial Markdown may be imported
+  only when `source_artifact_id` belongs to the original DelegateRequest. The
+  kernel registers a bounded immutable derived snapshot; `document` rejects
+  direct caller-supplied `mineru_results`.
+- `document` passes only registered artifacts to the Python 3.12 Search Toolkit
+  Sidecar. It does not expose arbitrary file paths, `file://` URLs, deletion,
+  Mistral APIs, Vespa, or Docker.
+- `claims`, `decision`, and `verify` preserve Root semantic ownership while
+  validating Claim/Evidence/citation links and reverse Trace provenance.
+- `materialize` persists an existing dossier as a Research Workspace. Other
+  dossier operations may project their returned state with `--workspace`; a
+  repeated `--checkpoint LABEL` writes immutable named dossier snapshots.
+- `research-view` is a read-only visualizer that binds only to `127.0.0.1`.
+  The user starts it in a separate terminal; agents must not start or
+  background it automatically.
+
+The formal term for Firecrawl Agent, Jina DeepSearch, Exa Agent, and Tavily
+Research is **Provider Research Agents**. Do not introduce the deprecated term
+“Native Research.”
+
+### Research Workspace persistence
+
+Research Workspace preserves important public intermediate and final outputs
+without becoming a second workflow authority. The structured `ResearchDossier`,
+append-only Trace, `EvidenceItem`, and `ClaimRecord` data remain authoritative;
+Markdown files are deterministic human-readable projections.
+
+The workspace may contain the latest dossier, immutable named checkpoints,
+task projections, evidence and Claim projections, a public decision log,
+optional `final_synthesis.md`, supplied
+`evidence/citation_verification.json`, and `public_trace.jsonl` when Trace is
+available. `final_synthesis` is written only when supplied by the caller.
+`citation_verification` records the supplied verification result rather than a
+status inferred from Markdown. `public_trace.jsonl` contains only public trace
+identity and event metadata.
+
+Workspace projections must reject hidden reasoning, chain-of-thought, API
+keys, private configuration, and unauthorized source bodies. The visualizer
+must read only fixed workspace projections and must not mutate the dossier,
+Trace, artifacts, Evidence, Claims, checkpoints, or reports.
 
 ## 3. Contracts
 
@@ -144,7 +233,10 @@ Capabilities:
 | `vertical_search` | delegated `$anysearch` Skill; `sciverse` is explicit-only and route-disabled in v1 | Agent-level supplementation plus explicit structured academic search |
 | `synthesis` | currently successful `main_search` provider | Final answer synthesis |
 
-Deep Research planner orchestration:
+Legacy-compatible `deep` / `research` orchestration:
+
+The commands in this subsection remain compatibility entry points and a rule
+baseline. They are not the Root-led Preview control plane described above.
 
 - Deep Research has a public offline planner command:
   `smart-search deep QUERY [--budget quick|standard|deep] [--evidence-dir PATH]`.

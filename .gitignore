@@ -14,8 +14,3 @@ logs/
 node_modules/
 *.tgz
 .agent/
-.agents/
-.claude/
-.codex/
-.codestable/
-.trellis/
