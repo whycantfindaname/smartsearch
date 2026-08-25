@@ -49,3 +49,24 @@ Added seven accepted Smart Search Agentic Research concepts, deprecated Native R
 ### Status
 
 [OK] **Completed**
+
+
+## Session 3: Export Stage G portable research evidence
+
+**Date**: 2026-08-26
+**Task**: Export Stage G portable research evidence
+**Branch**: `preview/multi-source-agentic-research`
+
+### Summary
+
+Added a committed Stage G research index and paper-style References; exported a portable non-sensitive evidence bundle with Candidate, Evidence, Claim, Artifact metadata, public Trace, manifests, and citation verification; linked the Benchmark task to the portable records.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1fe0068` | (see git log) |
+
+### Status
+
+[OK] **Completed**
