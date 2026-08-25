@@ -18,9 +18,18 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [],
+  "children": [
+    "08-26-stage-g-reference-index"
+  ],
   "parent": null,
-  "relatedFiles": [],
+  "relatedFiles": [
+    "docs/acceptance/stage-g-research-index.md",
+    "docs/acceptance/stage-g-engineering-gate.md",
+    "docs/acceptance/stage-g-architecture-review.md",
+    "docs/acceptance/stage-g-benchmark-recommendations.md",
+    "docs/research-runs/run-stage-g-seq-20260823T191412Z/README.md",
+    "docs/research-runs/run-stage-g-seq-20260823T191412Z/project_manifest.json"
+  ],
   "notes": "",
   "meta": {}
 }

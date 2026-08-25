@@ -35,6 +35,13 @@
 - Benchmark 候选、评分与复现成本：
   `.trellis/tasks/08-24-benchmark-evaluation-integration/research/benchmark-shortlist.md`
 
+## Stage G 来源与 References
+
+- [Stage G 研究索引与 References](../../../docs/acceptance/stage-g-research-index.md)是计划、实际搜索产物、三份验收报告和本任务之间的统一入口。
+- [架构复盘](../../../docs/acceptance/stage-g-architecture-review.md)使用 `[A1]`–`[A8]`；[Benchmark 候选推荐](../../../docs/acceptance/stage-g-benchmark-recommendations.md)使用 `[B1]`–`[B10]`。
+- 跨机器证据以 [Portable Research Evidence Bundle](../../../docs/research-runs/run-stage-g-seq-20260823T191412Z/README.md) 为准，包含 Dossier、Candidate、Evidence、Claim、引用验证、Artifact metadata 与公开 Trace。当前 Mac 仍保留被 Git 忽略的完整 Workspace，用于原始 snapshot 和字符级 locator 重放。
+- Reference 中的 CandidateCard ID 回到发现结果；EvidenceItem ID 回到已深挖的 snapshot 与 typed locator。没有 EvidenceItem 的来源仍是候选或实现归属依据，不能表述为本次正式取证结论。
+
 ## 已确定方案
 
 1. 当前准确边界是 `Harness-neutral research protocol + Codex-oriented deployment

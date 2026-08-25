@@ -1,0 +1,47 @@
+{
+  "schema_version": "1",
+  "dossier_schema_version": "1",
+  "run_id": "run-stage-g-seq-20260823T191412Z",
+  "mode": "deep",
+  "status": "completed",
+  "current_phase": "root_decision",
+  "updated_at": "2026-08-23T19:48:29.485698Z",
+  "counts": {
+    "candidate_cards": 113,
+    "candidates": 113,
+    "claim_records": 2,
+    "delegate_requests": 7,
+    "delegate_results": 7,
+    "evidence_items": 16,
+    "evidence_mining_tasks": 3,
+    "execution_attempts": 63,
+    "key_source_proposals": 2,
+    "search_tasks": 16
+  },
+  "entrypoints": {
+    "document_index": "README.md",
+    "export_manifest": "export_manifest.json",
+    "latest_dossier": "latest_dossier.json",
+    "initial_context": "initial_context.md",
+    "domain_methodology": "domain_methodology.md",
+    "main_log": "main_log.md",
+    "final_synthesis": "final_synthesis.md",
+    "references": "references.md",
+    "artifact_registry": "artifacts.jsonl",
+    "public_trace": "public_trace.jsonl",
+    "evidence": {
+      "candidates": "evidence/candidates.jsonl",
+      "candidate_cards": "evidence/candidate_cards.jsonl",
+      "key_source_proposals": "evidence/key_source_proposals.jsonl",
+      "evidence_items": "evidence/evidence_items.jsonl",
+      "claim_records": "evidence/claim_records.json",
+      "citation_verification": "evidence/citation_verification.json"
+    },
+    "reports": {
+      "research_index": "../../acceptance/stage-g-research-index.md",
+      "engineering_gate": "../../acceptance/stage-g-engineering-gate.md",
+      "architecture_review": "../../acceptance/stage-g-architecture-review.md",
+      "benchmark_recommendations": "../../acceptance/stage-g-benchmark-recommendations.md"
+    }
+  }
+}

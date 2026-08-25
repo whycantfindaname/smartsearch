@@ -3,6 +3,7 @@
 > 复盘对象：隔离 Preview 环境中的 `deep` 研究运行 `run-stage-g-seq-20260823T191412Z`
 > 证据时点：2026-08-24
 > 结论边界：本复盘只判断哪些项目架构应保留、修改或暂不实施。它不证明一套完整公共架构，也不选择、运行或评分任何 Benchmark。
+> 文档索引：[Stage G 研究索引与 References](stage-g-research-index.md)
 
 ## 结论
 
@@ -32,7 +33,7 @@ Smart Search：校验身份与 Schema，归一化并只追加保存 artifact、a
 Root：跨分片复核、选择关键文档、更新 Claim、补充任务或停止
 ```
 
-这一方向与 [Anthropic 的 orchestrator-worker 实践](https://www.anthropic.com/engineering/multi-agent-research-system)一致：lead agent 负责分解并协调并行的专门子任务，且任务必须说明目标、输出格式、工具/来源和边界；其公开案例也显示，过短 brief 会造成误解和重复搜索。[SearchSwarm](https://arxiv.org/html/2606.09730)进一步指出，子 Agent 在全新上下文中运行时，brief 是上下文输入的唯一通道，而主 Agent 才拥有跨子任务全局视图；子结果若不附直接来源 URL，主 Agent 无法可靠复核。
+这一方向与 Anthropic 的 orchestrator-worker 实践一致：lead agent 负责分解并协调并行的专门子任务，且任务必须说明目标、输出格式、工具/来源和边界；其公开案例也显示，过短 brief 会造成误解和重复搜索。[A1] SearchSwarm 进一步指出，子 Agent 在全新上下文中运行时，brief 是上下文输入的唯一通道，而主 Agent 才拥有跨子任务全局视图；子结果若不附直接来源 URL，主 Agent 无法可靠复核。[A3]
 
 因此修改 `DelegateRequest` 的语义要求，而不增加新角色：
 
@@ -49,17 +50,17 @@ Root：跨分片复核、选择关键文档、更新 Claim、补充任务或停�
 
 需要新增的是可审计的公开决策记录，而不是模型隐藏思维过程。每个关键转向都应记录：观察到的结果或缺口、选中的下一动作、被放弃的替代动作、成本/时间约束和停止理由。本次 dossier 保存了 attempts、gaps 与最终 stop reason，但 `root_next_decision` 为空；后续验收应能直接看出“为何补搜、为何重试、为何选择这份文档、为何停止”。
 
-关键文档仍由 Root 从候选与 Curator 提案中选择。本次架构挖掘实际选取 [Anthropic 多 Agent 工程文章](https://www.anthropic.com/engineering/multi-agent-research-system)、[Mistral Agentic Search 文档](https://docs.mistral.ai/studio/search/agentic-search)、[SearchSwarm 论文](https://arxiv.org/html/2606.09730)和[用户提供的 MultiAgent 公开案例](https://mp.weixin.qq.com/s/Osm8jzocOBNvkxIXSgdiNQ)，均形成了正式 EvidenceItem。公开案例提出把各角色发现的改进点纳入正式通信协议，这一建议值得吸收到现有 `gaps/suggestions/uncertainties`，但不足以据此新增常驻架构迭代 Agent、旁路 Review Agent 或 SystemUpdater。
+关键文档仍由 Root 从候选与 Curator 提案中选择。本次架构挖掘实际选取 Anthropic 多 Agent 工程文章、Mistral Agentic Search 文档、SearchSwarm 论文和用户提供的 MultiAgent 公开案例，均形成了正式 EvidenceItem。[A1–A4] 公开案例提出把各角色发现的改进点纳入正式通信协议，这一建议值得吸收到现有 `gaps/suggestions/uncertainties`，但不足以据此新增常驻架构迭代 Agent、旁路 Review Agent 或 SystemUpdater。
 
 反馈循环建议固定为：角色报告局部缺口或改进观察 → Root 跨分片去重并判断是否影响当前 Claim → 必要时创建补搜、重选文档或再挖掘任务 → Smart Search 记录决定及结果。系统级改进只形成待人工审阅的建议，不在研究运行中自动修改架构或代码。
 
 ## 文档深挖与知识产权来源
 
-保留 Search Toolkit 文档内挖掘路线。本次 Sidecar 健康结果为 Python 3.12、`mistralai-search-toolkit` 0.0.11，暴露 `ingest/search/open/navigate/read/grep`，不暴露 `delete`；实际运行未使用 Mistral API、Vespa 或 Docker。受控 loader 只接受登记过的 artifact，本次显式关闭 Embedding 后由 SQLite FTS5 完成取证；自动化测试也覆盖了 Embedding 探测失败时的同能力降级。[Mistral Agentic Search](https://docs.mistral.ai/studio/search/agentic-search)直接描述了 search → inspect → grep → navigate/read 循环及 `exclude_ids` 已读排除；[Mistral Search Toolkit 文档](https://docs.mistral.ai/studio/search-toolkit)与 [`mistralai-search-toolkit` 发行包](https://pypi.org/project/mistralai-search-toolkit/)是实现与归属依据。
+保留 Search Toolkit 文档内挖掘路线。本次 Sidecar 健康结果为 Python 3.12、`mistralai-search-toolkit` 0.0.11，暴露 `ingest/search/open/navigate/read/grep`，不暴露 `delete`；实际运行未使用 Mistral API、Vespa 或 Docker。受控 loader 只接受登记过的 artifact，本次显式关闭 Embedding 后由 SQLite FTS5 完成取证；自动化测试也覆盖了 Embedding 探测失败时的同能力降级。Mistral Agentic Search 直接描述了 search → inspect → grep → navigate/read 循环及 `exclude_ids` 已读排除；Mistral Search Toolkit 文档与 `mistralai-search-toolkit` 发行包是实现与归属依据。[A2, A5, A6]
 
 来源边界必须长期保留：
 
-- 发现阶段的 CLI、Provider 路由、Search/Research/Fetch、来源处理与可观测性改编自 [`konbakuyomu/smartsearch`](https://github.com/konbakuyomu/smartsearch)，并在当前 [`whycantfindaname/smartsearch`](https://github.com/whycantfindaname/smartsearch) 分支继续演化；
+- 发现阶段的 CLI、Provider 路由、Search/Research/Fetch、来源处理与可观测性改编自 `konbakuyomu/smartsearch`，并在当前 `whycantfindaname/smartsearch` 分支继续演化；[A7, A8]
 - 文档深挖的文档模型、locator、Pipeline、splitter、QueryEngine 与工具循环来自 Mistral Agentic Search / Search Toolkit；项目只在其周围实现受控 artifact、存储、Embedding、MinerU 与失败降级适配；
 - `ResearchFrame`、角色委派合同、caller-held `ResearchRun`、Claim 生命周期、Trace 和引用完整性检查是本项目自有协议；
 - 代码、锁定依赖、NOTICE、许可证和第三方来源清单必须继续保留 Smart Search 与 Mistral Search Toolkit 的版权和许可信息。不得把接口复用写成项目独立发明，也不得把本次兼容结果外推为未经验证的完整兼容承诺。
@@ -83,3 +84,14 @@ Root：跨分片复核、选择关键文档、更新 Claim、补充任务或停�
 | 暂不做 | 独立 Review/架构迭代/SystemUpdater 角色；子角色创建后代；自动暂停恢复或重放工作流；固定 Agent/任务/候选阈值；统一证据分数；声称完整公共架构已获证明；选择、运行或评分 Benchmark。 |
 
 Stage G 的架构复盘到此停止。Benchmark 仍需用户审阅后另建任务；本文件不作选择，也没有运行任何 Benchmark。
+
+## References
+
+1. **[A1] Anthropic.** [How we built our multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system). CandidateCard `cand_65ade4bac10bbac004649282`; EvidenceItem `evidence-architecture-anthropic-orchestrator`, `evidence-architecture-anthropic-boundaries`, `evidence-architecture-anthropic-duplicate-risk`.
+2. **[A2] Mistral AI.** [Agentic Search](https://docs.mistral.ai/studio/search/agentic-search). CandidateCard `cand_5107102d22f06e3185838d0d`; EvidenceItem `evidence-architecture-mistral-retrieval-loop`, `evidence-architecture-mistral-read-set-navigation`.
+3. **[A3] SearchSwarm.** [Agentic Search with Multi-Agent Collaboration](https://arxiv.org/html/2606.09730). CandidateCard `cand_14ada9dbe5277b11a3cb16e1`; EvidenceItem `evidence-delegation-searchswarm-brief-context`, `evidence-delegation-searchswarm-root-judgment`, `evidence-delegation-searchswarm-citations`.
+4. **[A4] 用户提供的 MultiAgent 公开案例.** [微信公众号原文](https://mp.weixin.qq.com/s/Osm8jzocOBNvkxIXSgdiNQ). 已知 URL 直接登记为 artifact；EvidenceItem `evidence-delegation-wechat-feedback-protocol`, `evidence-delegation-wechat-role-separation`.
+5. **[A5] Mistral AI.** [Search Toolkit documentation](https://docs.mistral.ai/studio/search-toolkit). 实现归属依据，本次没有独立 EvidenceItem。
+6. **[A6] Mistral AI.** [`mistralai-search-toolkit` 发行包](https://pypi.org/project/mistralai-search-toolkit/). 版本与依赖归属依据，本次没有独立 EvidenceItem。
+7. **[A7] konbakuyomu.** [`smartsearch` 上游仓库](https://github.com/konbakuyomu/smartsearch). 发现阶段原始项目来源，本次没有独立 EvidenceItem。
+8. **[A8] whycantfindaname.** [当前 `smartsearch` 仓库](https://github.com/whycantfindaname/smartsearch). 当前实现与验收载体，本次没有独立 EvidenceItem。

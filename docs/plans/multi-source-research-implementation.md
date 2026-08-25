@@ -410,8 +410,8 @@ Gate 同时记录实际耗时、Provider/模型/工具调用和可观测用量�
 
 - 工程 E2E Gate 已通过：根包 560 项测试、Sidecar 2 项独立测试、wheel/npm 打包一致性、隔离配置 live doctor、组件健康检查和密钥泄漏检查均完成。
 - 阶段 G 已用新 `deep` 流程完成真实多源研究：113 个候选、2 份 Curator 提案、7 份项目 Agent 结果、16 条 EvidenceItem 和 16/16 引用反向验证。
-- Stage G 既有运行已迁移到仓库内、被 Git 忽略的持久化 Research Workspace，并通过只读 visualizer 数据契约复核；迁移没有重跑 Provider。
-- 架构复盘见 [`docs/acceptance/stage-g-architecture-review.md`](../acceptance/stage-g-architecture-review.md)，Benchmark 推荐见 [`docs/acceptance/stage-g-benchmark-recommendations.md`](../acceptance/stage-g-benchmark-recommendations.md)，工程证据见 [`docs/acceptance/stage-g-engineering-gate.md`](../acceptance/stage-g-engineering-gate.md)。
+- Stage G 既有运行已迁移到仓库内、被 Git 忽略的持久化 Research Workspace，并通过只读 visualizer 数据契约复核；迁移没有重跑 Provider。长期证据另行导出到 Git 管理的 [`docs/research-runs/run-stage-g-seq-20260823T191412Z/`](../research-runs/run-stage-g-seq-20260823T191412Z/README.md)，排除 raw payload、SQLite、重复 checkpoints 和逐任务运行目录。
+- 统一入口见 [`docs/acceptance/stage-g-research-index.md`](../acceptance/stage-g-research-index.md)；架构复盘见 [`docs/acceptance/stage-g-architecture-review.md`](../acceptance/stage-g-architecture-review.md)，Benchmark 推荐见 [`docs/acceptance/stage-g-benchmark-recommendations.md`](../acceptance/stage-g-benchmark-recommendations.md)，工程证据见 [`docs/acceptance/stage-g-engineering-gate.md`](../acceptance/stage-g-engineering-gate.md)。References 中的 CandidateCard 与 EvidenceItem ID 可在 fresh checkout 中回到可移植证据包；只有字符级 locator 重放仍需要本地完整 Workspace。
 - 当前 macOS 激活版本的替换不属于自动收尾步骤，必须等待用户审阅全部验收结果并另行批准。
 
 ## 9. 验收现场结果与剩余决策

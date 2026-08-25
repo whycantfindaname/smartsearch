@@ -3,10 +3,11 @@
 > 分支：`preview/multi-source-agentic-research`
 > 验收日期：2026-08-24
 > 边界：Provider 与文档挖掘实跑在仓库工作树、隔离 Preview 配置和临时 run-local artifact root 中完成；随后只把既有运行产物迁移到仓库内、被 Git 忽略的持久化 Research Workspace，没有重跑 Provider。未替换当前 macOS 激活版本，未修改全局 Infra 配置，未 commit、push 或 merge。
+> 文档索引：[Stage G 研究索引与 References](stage-g-research-index.md)
 
 ## 结论
 
-里程碑 A–F、仓库配置收尾和工程 E2E Gate 已通过，Stage G 的 `deep` 研究闭环已真实运行。最终运行保留 113 个候选、2 份 Curator 提案、7 份项目 Agent 结果、16 条可定位证据和 2 条 ClaimRecord；16/16 条最终引用均通过 Claim → Evidence → task/attempt → artifact/snapshot/raw ref 反向验证。两个 ClaimRecord 均为 `weakly_supported`，没有把局部公开证据外推成对整套架构或 Benchmark 的完整证明。
+里程碑 A–F、仓库配置收尾和工程 E2E Gate 已通过，Stage G 的 `deep` 研究闭环已真实运行。最终运行保留 113 个候选、2 份 Curator 提案、7 份项目 Agent 结果、16 条可定位证据和 2 条 ClaimRecord；16/16 条最终引用均通过 Claim → Evidence → task/attempt → artifact/snapshot/raw ref 反向验证。两个 ClaimRecord 均为 `weakly_supported`，没有把局部公开证据外推成对整套架构或 Benchmark 的完整证明。[E1–E4]
 
 ## 工程 Gate
 
@@ -87,9 +88,17 @@ smart-search research-view .smart-search/research-runs/run-stage-g-seq-20260823T
 
 ## 交付物
 
+- [Stage G 研究索引与 References](stage-g-research-index.md)
 - [架构复盘](stage-g-architecture-review.md)
 - [Benchmark 候选推荐](stage-g-benchmark-recommendations.md)
 - 本工程验收记录
 - 持久化 Research Workspace 与只读搜索过程可视化
 
 下一步只剩用户审阅。Benchmark 尚未选择或运行，当前 macOS 激活版本也尚未替换。
+
+## References
+
+1. **[E1] Stage G Project Manifest.** [可移植运行索引](../research-runs/run-stage-g-seq-20260823T191412Z/project_manifest.json)，记录 run identity、状态、计数与已提交 entrypoints。
+2. **[E2] Stage G ResearchRun Dossier.** [最终结构化 Dossier](../research-runs/run-stage-g-seq-20260823T191412Z/latest_dossier.json)，保存任务、执行尝试、候选、委派、Evidence 与 Claim。
+3. **[E3] Stage G Public Trace.** [公开 Trace](../research-runs/run-stage-g-seq-20260823T191412Z/public_trace.jsonl)，保存可跨机器读取的执行、失败与降级事件；原始 append-only Trace 仍在本地完整 Workspace。
+4. **[E4] Stage G Citation Verification.** [引用反向验证](../research-runs/run-stage-g-seq-20260823T191412Z/evidence/citation_verification.json)，保存 16 条 Claim → Evidence → task/attempt → artifact/snapshot/raw ref 回溯结果。

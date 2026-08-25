@@ -1,0 +1,62 @@
+{
+  "export_schema_version": "1",
+  "source_run_id": "run-stage-g-seq-20260823T191412Z",
+  "source_class": "git-ignored local Research Workspace",
+  "exported_at": "2026-08-26",
+  "purpose": "portable, non-sensitive provenance for committed Stage G reports",
+  "included": [
+    "project and export manifests",
+    "initial context and domain methodology",
+    "main log and final synthesis",
+    "paper-style reference register",
+    "final Research Dossier",
+    "discovery candidates and CandidateCards",
+    "KeySourceProposals",
+    "EvidenceItems and ClaimRecords",
+    "citation verification",
+    "public Trace",
+    "artifact identities and source URLs"
+  ],
+  "excluded": [
+    {
+      "pattern": "runtime/**/raw/*.bin",
+      "reason": "downloaded third-party webpage payloads and runtime cache"
+    },
+    {
+      "pattern": "runtime/**/document-index/*.sqlite3",
+      "reason": "generated local search indexes"
+    },
+    {
+      "pattern": "checkpoints/",
+      "reason": "intermediate states duplicate latest_dossier.json"
+    },
+    {
+      "pattern": "task_task-*/",
+      "reason": "per-task runtime files are represented by the final dossier and public Trace"
+    },
+    {
+      "pattern": "reports/",
+      "reason": "canonical reports are maintained under docs/acceptance"
+    },
+    {
+      "pattern": "runtime/**/trace.jsonl",
+      "reason": "raw execution Trace remains local; public_trace.jsonl is the committed observable projection"
+    }
+  ],
+  "counts": {
+    "artifacts": 27,
+    "candidate_cards": 113,
+    "candidates": 113,
+    "citation_backtraces": 16,
+    "claim_records": 2,
+    "evidence_items": 16,
+    "execution_attempts": 63,
+    "key_source_proposals": 2,
+    "public_trace_events": 28
+  },
+  "limitations": [
+    "Raw snapshot payloads are not included, so character-range locator checks cannot be replayed offline.",
+    "Historical snapshot IDs, raw_ref values, and raw Trace references remain in structured records to preserve provenance identity.",
+    "External source URLs remain the authoritative location for third-party content."
+  ]
+}

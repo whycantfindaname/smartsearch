@@ -67,6 +67,9 @@ Smart Search Provider，评测 quick、standard、deep 三种产品模式，并�
     并能展示 Root 重规划、Agent 生命周期、工具状态、失败和 Workspace checkpoint。
 11. 提供 Benchmark Run 索引，使每个 Case × Harness × Mode 的分数和错误都能打开
     对应 ResearchWorkspace。
+12. 每份最终研究报告提供论文式 `References`，并把来源 URL 绑定到该 Case 保存的
+    CandidateCard、Artifact、snapshot 和 EvidenceItem；明确区分“进入候选”与
+    “已经深挖取证”，且能从报告反向打开 Workspace 记录。
 
 ## Acceptance Criteria
 
@@ -80,6 +83,8 @@ Smart Search Provider，评测 quick、standard、deep 三种产品模式，并�
 - [ ] quick、standard、deep 均有 Workspace/Trace/Visualizer 参数化测试计划。
 - [ ] 每个 Harness 的原生 Trace 被保存，且安全归一化事件可在可视化器中按
       Root、Agent、Tool、Provider 和阶段查看。
+- [ ] 每份报告的 References 可回到 Candidate/Evidence/Artifact，并且不会把只有
+      CandidateCard 的来源表述为已经核验的 EvidenceItem。
 - [ ] 明确区分内部模式比较、Benchmark 原生分数和严格排行榜可比分数。
 - [ ] 实施顺序从离线 Fixture、最小兼容性验证到小规模 live Pilot，且需要用户
       决定后才进入完整运行。

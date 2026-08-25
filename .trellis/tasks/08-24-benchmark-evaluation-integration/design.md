@@ -201,6 +201,7 @@ Benchmark Viewer 先展示 Case × Harness × Mode 索引，再打开现有 Rese
 - 对三种模式使用同一页面与 API；
 - 区分未选择阶段、等待、失败、降级和完成，不能把正常 quick 流程显示为残缺 deep；
 - 提供 Root/Agent/Tool 时间线、失败、用量、Evidence、Claim 和最终报告；
+- 展示最终报告的论文式 References，并区分 Candidate-only 来源与 locator-backed EvidenceItem；
 - 让每个分数和错误反向链接到 CaseAttempt 与 Trace。
 
 ## Benchmark Adapters

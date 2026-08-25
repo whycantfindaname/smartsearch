@@ -55,6 +55,8 @@
 - [ ] Visualizer 区分 `not_selected`、`waiting`、`running`、`degraded`、`failed`、
       `completed`，避免把正常 quick 流程显示为残缺 deep。
 - [ ] 增加 Root/项目 Agent/Tool/Provider 时间线以及 Evidence、Claim、引用验证和最终报告视图。
+- [ ] 为最终报告生成论文式 References，将来源 URL 绑定到 CandidateCard、Artifact、
+      snapshot 和 EvidenceItem，并在 Viewer 中提供反向导航。
 - [ ] 增加 Benchmark Run Index：按 Case × Harness × Mode 展示原生分数、状态、错误、
       用量，并可打开对应 ResearchWorkspace 与 Trace。
 - [ ] 验证任一分数、失败和可视化节点都能反向定位到 CaseAttempt、事件和 Artifact。

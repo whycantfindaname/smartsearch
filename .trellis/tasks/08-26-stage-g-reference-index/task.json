@@ -1,0 +1,31 @@
+{
+  "id": "stage-g-reference-index",
+  "name": "stage-g-reference-index",
+  "title": "Index and export Stage G research evidence",
+  "description": "Create a committed Stage G document index and portable evidence bundle, add paper-style References bound to saved EvidenceItems, and link the benchmark task back to the source Research Workspace.",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": "Stage G acceptance docs, portable Research Workspace evidence, and Benchmark task cross-links",
+  "package": null,
+  "priority": "P2",
+  "creator": "jasonliao",
+  "assignee": "jasonliao",
+  "createdAt": "2026-08-26",
+  "completedAt": null,
+  "branch": "preview/multi-source-agentic-research",
+  "base_branch": "lwj_dev",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-24-benchmark-evaluation-integration",
+  "relatedFiles": [
+    "docs/acceptance/stage-g-research-index.md",
+    "docs/research-runs/run-stage-g-seq-20260823T191412Z/README.md",
+    "docs/research-runs/run-stage-g-seq-20260823T191412Z/project_manifest.json",
+    "docs/research-runs/run-stage-g-seq-20260823T191412Z/export_manifest.json"
+  ],
+  "notes": "",
+  "meta": {}
+}

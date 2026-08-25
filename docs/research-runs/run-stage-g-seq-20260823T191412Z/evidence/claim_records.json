@@ -1,0 +1,78 @@
+{
+  "claim_records": [
+    {
+      "citation_map": {
+        "citation-arch-boundaries": "evidence-architecture-anthropic-boundaries",
+        "citation-arch-brief-context": "evidence-delegation-searchswarm-brief-context",
+        "citation-arch-duplicate-risk": "evidence-architecture-anthropic-duplicate-risk",
+        "citation-arch-feedback-protocol": "evidence-delegation-wechat-feedback-protocol",
+        "citation-arch-navigation": "evidence-architecture-mistral-read-set-navigation",
+        "citation-arch-orchestrator": "evidence-architecture-anthropic-orchestrator",
+        "citation-arch-report-citations": "evidence-delegation-searchswarm-citations",
+        "citation-arch-retrieval-loop": "evidence-architecture-mistral-retrieval-loop",
+        "citation-arch-role-separation": "evidence-delegation-wechat-role-separation",
+        "citation-arch-root-judgment": "evidence-delegation-searchswarm-root-judgment"
+      },
+      "claim_record_id": "claim_record_ce426c497e40e034394e3903",
+      "claim_spec_id": "claim-architecture",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [
+        "Public sources support the Root-led orchestration and document-mining loop, but do not expose one complete typed Root-to-child exchange and Claim-to-artifact reverse-trace contract; those contracts remain project-owned.",
+        "The wider Curator proposal identifies additional architecture sources that were not all mined to exact locators in this acceptance pass."
+      ],
+      "qualify_evidence_ids": [
+        "evidence-architecture-anthropic-duplicate-risk",
+        "evidence-delegation-wechat-role-separation"
+      ],
+      "run_id": "run-stage-g-seq-20260823T191412Z",
+      "schema_version": "1",
+      "statement": "The planned Root-led multi-source discovery, key-document mining, evidence synthesis and Trace architecture should be retained or revised based on current public evidence.",
+      "status": "weakly_supported",
+      "support_evidence_ids": [
+        "evidence-architecture-anthropic-boundaries",
+        "evidence-architecture-anthropic-orchestrator",
+        "evidence-architecture-mistral-read-set-navigation",
+        "evidence-architecture-mistral-retrieval-loop",
+        "evidence-delegation-searchswarm-brief-context",
+        "evidence-delegation-searchswarm-citations",
+        "evidence-delegation-searchswarm-root-judgment",
+        "evidence-delegation-wechat-feedback-protocol"
+      ]
+    },
+    {
+      "citation_map": {
+        "citation-bench-browsecomp-caveat": "evidence-miner-benchmarks-browsecomp-table-caveat",
+        "citation-bench-browsecomp-discrimination": "evidence-miner-benchmarks-browsecomp-discrimination",
+        "citation-bench-browsecomp-metrics": "evidence-miner-benchmarks-browsecomp-metrics",
+        "citation-bench-drb-fact": "evidence-miner-benchmarks-deepresearch-fact",
+        "citation-bench-drb-frameworks": "evidence-miner-benchmarks-deepresearch-complement",
+        "citation-bench-drb-race": "evidence-miner-benchmarks-deepresearch-race"
+      },
+      "claim_record_id": "claim_record_7395fc9905805adf13e095f8",
+      "claim_spec_id": "claim-benchmarks",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [
+        "No single public benchmark in the reviewed evidence measures discovery, live-Web orchestration, document mining, provenance and long-form citation quality together.",
+        "BrowseComp-Plus lists its metrics but the fetched first-party page says the full result table will be posted later.",
+        "Exact reproduction cost for each recommended benchmark requires a later benchmark-specific setup pass; Stage G recommends candidates but intentionally does not select or run one."
+      ],
+      "qualify_evidence_ids": [
+        "evidence-miner-benchmarks-browsecomp-table-caveat"
+      ],
+      "run_id": "run-stage-g-seq-20260823T191412Z",
+      "schema_version": "1",
+      "statement": "Public benchmarks can be recommended for later evaluation of the new Smart Search capability with transparent scoring and reproduction cost.",
+      "status": "weakly_supported",
+      "support_evidence_ids": [
+        "evidence-miner-benchmarks-browsecomp-discrimination",
+        "evidence-miner-benchmarks-browsecomp-metrics",
+        "evidence-miner-benchmarks-deepresearch-complement",
+        "evidence-miner-benchmarks-deepresearch-fact",
+        "evidence-miner-benchmarks-deepresearch-race"
+      ]
+    }
+  ],
+  "schema_version": "1"
+}

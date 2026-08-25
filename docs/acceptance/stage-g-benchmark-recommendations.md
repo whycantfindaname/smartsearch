@@ -2,6 +2,7 @@
 
 > 日期：2026-08-24
 > 边界：本报告只推荐候选和后续评分流程，不选择、不运行任何 Benchmark，也不生成分数。
+> 文档索引：[Stage G 研究索引与 References](stage-g-research-index.md)
 
 ## 结论
 
@@ -11,17 +12,17 @@
 
 | 能力层 | 优先研究候选 | 角色 |
 | --- | --- | --- |
-| 发现 / 代码检索 | [DevDex](https://www.firecrawl.dev/benchmarks/devdex)、[BrowseComp-Plus](https://texttron.github.io/BrowseComp-Plus/) | 前者测开发者资料检索，后者用固定语料拆开答案正确性与证据召回 |
-| live Web | [LiveResearchBench](https://github.com/SalesforceAIResearch/LiveResearchBench)、[LiveDRBench](https://github.com/microsoft/livedrbench)；[BrowseComp](https://openai.com/index/browsecomp/) 可选 | 分别测实时长报告、Claim 发现和困难短答案搜索 |
-| 文档挖掘 | [QASPER](https://huggingface.co/datasets/allenai/qasper) 或 [MMLongBench-Doc](https://mayubo2333.github.io/MMLongBench-Doc/) | 前者适合低成本文本证据定位，后者适合 PDF、跨页、表格和图表路径 |
-| 报告与引用 | [DeepResearch Bench](https://deepresearch-bench.github.io/) | 联合评估长报告质量、信息获取和引用可信度 |
-| 轻量引用单测 | [ALCE](https://github.com/princeton-nlp/ALCE/) | 对生成内容做引用完整性与引用支持关系回归 |
+| 发现 / 代码检索 | DevDex [B1]、BrowseComp-Plus [B3] | 前者测开发者资料检索，后者用固定语料拆开答案正确性与证据召回 |
+| live Web | LiveResearchBench [B4]、LiveDRBench [B5]；BrowseComp [B2] 可选 | 分别测实时长报告、Claim 发现和困难短答案搜索 |
+| 文档挖掘 | QASPER [B6] 或 MMLongBench-Doc [B7] | 前者适合低成本文本证据定位，后者适合 PDF、跨页、表格和图表路径 |
+| 报告与引用 | DeepResearch Bench [B9] | 联合评估长报告质量、信息获取和引用可信度 |
+| 轻量引用单测 | ALCE [B8] | 对生成内容做引用完整性与引用支持关系回归 |
 
 “优先研究”表示值得进入下一轮选型核验，不表示已经选定。尤其是数据许可、隐藏集访问、当前评测脚本、judge 模型和服务配额，仍需在实际建任务前按固定 commit 回读。
 
 ## 1. 发现 / 代码检索
 
-### DevDex / Developer Retrieval Benchmark
+### DevDex / Developer Retrieval Benchmark [B1]
 
 - **测什么：** 面向技术问题，从开发者文档、README、仓库、Issue 和 PR 等资料中找回规范来源；最贴近 Search Scout 的代码与开发者资料发现，以及 Curator 对 canonical URL 的选择。
 - **评分流程：** 在统一的 agent、搜索工具和每次返回 10 条结果的条件下，将前 10 个引用与 canonical URL gold 对齐，计算 Recall@10 与 MRR@10；空结果按未命中处理，不需要 LLM judge。公开实现见 [benchmark-devdex](https://github.com/firecrawl/benchmark-devdex)。
@@ -29,7 +30,7 @@
 - **时效与污染：** no-search memorization gate 可排除模型不搜索也能答出的样本，但公开样本仍可能进入训练；开发者页面迁移、版本更新和 canonical URL 变化会造成时间漂移。
 - **不能测什么：** 不测通用 live Web 覆盖、长文档内定位、长报告综合、引用对 Claim 的语义支持，也不能证明动态重规划或多 Agent 信息交换有效。
 
-### BrowseComp-Plus
+### BrowseComp-Plus [B3]
 
 - **测什么：** 在约 100K 固定文档和 830 个查询上，同时观察答案正确性、gold evidence 召回、搜索调用量与置信度校准；适合区分“答案碰巧正确”和“确实找到了证据”。
 - **评分流程：** 官方页面给出的四项指标是由 `gpt-4.1` 判定的 Accuracy、相对完整 evidence 集的 Recall、Search Calls 和 Calibration Error。运行时应分别报告四项，不合成总分。
@@ -40,7 +41,7 @@
 
 ## 2. Live Web
 
-### LiveResearchBench
+### LiveResearchBench [B4]
 
 - **测什么：** 用户导向、需要最新网页信息的开放式长报告，覆盖动态检索、跨来源综合、内容覆盖、呈现质量和引用关系；它最接近 Smart Search `deep` 的最终用户产物。
 - **评分流程：** 使用 DeepEval 对报告做多协议评估，维度包括 coverage、presentation、citation accuracy / association、consistency 和 analysis depth。后续运行应保留分维度结果，同时抽样人工复核 judge 分歧。
@@ -48,7 +49,7 @@
 - **时效与污染：** live 任务减少单纯背题的价值，但网页更新、下线、地域差异和搜索排序变化会降低跨时间可比性。必须记录运行时间、地区、provider、抓取快照和 judge 版本。
 - **不能测什么：** 最终报告得分不能单独定位是 Scout 漏搜、Curator 选错文档、Miner 漏证据还是 Synthesizer 写作失败，也不直接验收 typed locator 和内部 Trace。
 
-### LiveDRBench
+### LiveDRBench [B5]
 
 - **测什么：** 把 deep research 视为 Claim 发现问题，考察系统找出的关键 Claim 是否完整且准确；适合检查 Miner 到 Claim synthesis 的中间产物，而不只看最终文风。
 - **评分流程：** 按官方仓库协议将系统 Claim 与参考 Claim 对齐，报告 precision、recall 和 F1。若对齐实现调用语义匹配模型或 judge，应锁定模型、提示词与阈值，并保存匹配明细供复核。
@@ -56,7 +57,7 @@
 - **时效与污染：** Claim gold 与网页事实都可能随时间变化。固定旧 gold 会损害 freshness，动态更新 gold 又会降低重复性；应把任务版本和事实截止时间作为结果的一部分。
 - **不能测什么：** 不测报告结构、叙述质量、引用呈现、文档内 locator 精度，也不能单独评价代码检索或 Root/Scout 的协作效率。
 
-### BrowseComp（可选侧测）
+### BrowseComp（可选侧测）[B2]
 
 - **测什么：** 困难、持续搜索型的 live-Web 短答案任务，适合给 Root 的查询改写、跨页追踪和停止决策施压。
 - **评分流程：** 按官方协议对 1,266 个任务的短答案做规范化正确性判定，并单独记录失败、调用次数、耗时和成本；不要把短答案正确率替代引用或长报告指标。
@@ -66,7 +67,7 @@
 
 ## 3. 文档挖掘
 
-### QASPER
+### QASPER [B6]
 
 - **测什么：** 1,585 篇论文上的 5,049 个问题及 evidence annotations，适合验证文本论文内的答案提取、不可回答判断和证据段选择。
 - **评分流程：** 分别计算答案 token F1 与 evidence-selection F1；答案和证据必须保持分开，避免答案正确掩盖 locator 选错。
@@ -74,7 +75,7 @@
 - **时效与污染：** 静态且已公开多年，重复性高但训练污染风险高。适合作为工程回归，不适合作为当前检索能力的唯一证据。
 - **不能测什么：** 不测 live Web、多源发现、网页/仓库检索、复杂 PDF 视觉元素、长报告或外部引用正确性。
 
-### MMLongBench-Doc（多模态文档路径）
+### MMLongBench-Doc（多模态文档路径）[B7]
 
 - **测什么：** 135 篇长 PDF 上的 1,082 个专家问题，覆盖跨页、表格、图表和不可回答案例；更贴近 MinerU、PDF 解析与 typed locator 的联合路径。
 - **评分流程：** 分开报告 answer 与 evidence-location 指标，并按问题类型拆分文本、表格、图表、跨页和不可回答结果。开放答案是否需要 judge，应以锁定 commit 的官方 scorer 为准。
@@ -86,7 +87,7 @@ QASPER 与 MMLongBench-Doc 是两条不同成本的候选路径，不应把后�
 
 ## 4. 报告与引用
 
-### DeepResearch Bench
+### DeepResearch Bench [B9]
 
 - **测什么：** 面向双语、博士级研究任务的长报告；RACE 关注报告质量，FACT 关注信息获取效果、有效引用和引用准确性。它是本候选集中最接近端到端报告验收的一项。
 - **评分流程：** 先按 RACE 的自适应 criteria 和维度权重评价报告，再按 FACT 拆分 citation abundance / effectiveness 与 citation accuracy；两套框架互补，不能只保留一个总分。
@@ -96,7 +97,7 @@ QASPER 与 MMLongBench-Doc 是两条不同成本的候选路径，不应把后�
 
 ## 5. 轻量引用单测
 
-### ALCE
+### ALCE [B8]
 
 - **测什么：** 在 ASQA、QAMPARI、ELI5 等静态任务上检查长答案的正确性、流畅性、引用完整性以及引用是否真正支持相邻 Claim；适合做快速、频繁的 citation regression。
 - **评分流程：** 使用官方 harness 分开计算任务正确性/覆盖、citation recall、citation precision 或 entailment 支持关系，并保留 fluency；不要把 NLI 判断当作网页来源权威性判断。
@@ -115,3 +116,16 @@ QASPER 与 MMLongBench-Doc 是两条不同成本的候选路径，不应把后�
 ## 决策边界
 
 这组候选仍不能直接测出 Root/Scout/Curator/Miner 的 typed information exchange、动态重规划质量、Provider 失败隔离、重复来源控制和 Claim-to-artifact 反向追踪。上述项目契约应继续由工程 E2E Gate 与项目自有 Trace/locator 测试负责；公开 Benchmark 只补充外部能力证据，不能替代内部验收。
+
+## References
+
+1. **[B1] Firecrawl.** [DevDex / Developer Retrieval Benchmark](https://www.firecrawl.dev/benchmarks/devdex) 与 [公开 harness](https://github.com/firecrawl/benchmark-devdex). CandidateCard `cand_91d38a21584dd4314594e98b`, `cand_0495c5d9da69713e829c1989`; 本次没有 EvidenceItem。
+2. **[B2] OpenAI.** [BrowseComp](https://openai.com/index/browsecomp/). CandidateCard `cand_85939b9a7a062cf72b92cad9`; 本次没有 EvidenceItem。
+3. **[B3] BrowseComp-Plus.** [Benchmark project page](https://texttron.github.io/BrowseComp-Plus/). CandidateCard `cand_bfd494130f6eaf8f076dd16a`; EvidenceItem `evidence-miner-benchmarks-browsecomp-discrimination`, `evidence-miner-benchmarks-browsecomp-table-caveat`, `evidence-miner-benchmarks-browsecomp-metrics`.
+4. **[B4] Salesforce AI Research.** [LiveResearchBench](https://github.com/SalesforceAIResearch/LiveResearchBench). CandidateCard `cand_dbb4f44d4140e24875c28170`; 本次没有 EvidenceItem。
+5. **[B5] Microsoft.** [LiveDRBench](https://github.com/microsoft/livedrbench). CandidateCard `cand_5f22d728c373fe49030acdc6`; 本次没有 EvidenceItem。
+6. **[B6] AllenAI.** [QASPER](https://huggingface.co/datasets/allenai/qasper). CandidateCard `cand_902623fc3396b0f60ba22bdf`; 本次没有 EvidenceItem。
+7. **[B7] MMLongBench-Doc.** [Benchmark project page](https://mayubo2333.github.io/MMLongBench-Doc/). CandidateCard `cand_e96046df2347264f2a09e26b`; 本次没有 EvidenceItem。
+8. **[B8] Princeton NLP.** [ALCE](https://github.com/princeton-nlp/ALCE/). CandidateCard `cand_cc8b1cf12a24eed3d271dd8a`; 本次没有 EvidenceItem。
+9. **[B9] DeepResearch Bench.** [Benchmark project page](https://deepresearch-bench.github.io/). CandidateCard `cand_34d246b318eba3e034e49647`; EvidenceItem `evidence-miner-benchmarks-deepresearch-complement`, `evidence-miner-benchmarks-deepresearch-race`, `evidence-miner-benchmarks-deepresearch-fact`.
+10. **[B10] Smart Search Stage G.** [工程验收记录](stage-g-engineering-gate.md) 与 [引用反向验证](../research-runs/run-stage-g-seq-20260823T191412Z/evidence/citation_verification.json). 项目内部工程证据，用于补充公开 Benchmark 无法覆盖的 typed information exchange、失败隔离、Trace 和 Claim-to-artifact 回溯。
