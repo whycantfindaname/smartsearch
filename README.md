@@ -281,6 +281,13 @@ See [Research Runtime Configuration](docs/architecture/research-runtime-config.m
 and the [smart-search-cli Skill](skills/smart-search-cli/SKILL.md) for the full
 contract and orchestration guidance.
 
+The current Preview implementation and acceptance evidence are indexed in the
+[Stage G research index](docs/acceptance/stage-g-research-index.md), with a
+[portable evidence bundle](docs/research-runs/run-stage-g-seq-20260823T191412Z/README.md)
+that can be read on another machine without the ignored local Workspace. These
+artifacts are published on the Preview branch only; they do not mean the branch
+has been merged or the active macOS Skill has been replaced.
+
 ## Provider And API Key Guide
 
 Use `smart-search setup` for normal configuration. Environment variables remain supported for CI and advanced users.

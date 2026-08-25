@@ -95,10 +95,16 @@
 
 ## Linux 上的后续步骤
 
-1. 先确认 Mac 上本分支的目标改动已提交并推送，再在 Linux 拉取同一分支；当前
-   Mac checkout 为 `preview/multi-source-agentic-research`，观察到的 HEAD 是
-   `020b4dc904e2b19643aeece0c00b25d011eb1fc5`，但当前工作树包含大量未提交和
-   未跟踪改动，不能把该 HEAD 当作本交接内容的远端版本。
+1. 在 Linux 拉取 `preview/multi-source-agentic-research`，并确认该分支包含 Stage G
+   可移植证据包提交 `1fe0068`：
+
+   ```bash
+   git merge-base --is-ancestor 1fe0068 HEAD
+   ```
+
+   命令返回成功后，以仓库内 `docs/acceptance/stage-g-research-index.md` 和
+   `docs/research-runs/run-stage-g-seq-20260823T191412Z/` 为跨机器交接入口；不要依赖
+   Mac 上被 Git 忽略的 `.smart-search/` 完整 Workspace。
 2. 在 Linux 读取 `AGENTS.md`、`.trellis/workflow.md` 和本文件，验证
    `08-24-benchmark-evaluation-integration` 仍为 `planning`。
 3. 用户确认实施后再运行：

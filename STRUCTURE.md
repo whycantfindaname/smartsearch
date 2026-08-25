@@ -29,7 +29,7 @@
 | 改动应落在哪个文件，哪些内容不能进入 source（源码）？ | 第 5、6 节 |
 | 怎样验证以及何时更新本文？ | 第 7、8 节 |
 
-相关入口：[`AGENTS.md`](AGENTS.md)、[Provider capability contract](.trellis/spec/backend/provider-capability-contract.md)、[英文 README](README.md)、[中文 README](README.zh-CN.md)。
+相关入口：[`AGENTS.md`](AGENTS.md)、[Provider capability contract](.trellis/spec/backend/provider-capability-contract.md)、[英文 README](README.md)、[中文 README](README.zh-CN.md)、[Stage G 研究索引与 References](docs/acceptance/stage-g-research-index.md)。
 命令与 Provider 参考：[CLI contract](skills/smart-search-cli/references/cli-core.md)、[Provider routing](skills/smart-search-cli/references/provider-routing.md)、[Deep Research](skills/smart-search-cli/references/deep-research-mode.md)、[Setup and config](skills/smart-search-cli/references/setup-config.md)。
 
 ## 1. Infra 配套仓库（companion）、fork 与 upstream

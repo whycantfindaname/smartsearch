@@ -284,6 +284,12 @@ Dossier、append-only Trace、Artifact Registry、EvidenceItem 和 Claim 记录�
 [Agentic Research architecture](skills/smart-search-cli/references/agentic-research-architecture.md)
 以及 [smart-search-cli Skill](skills/smart-search-cli/SKILL.md)。
 
+当前 Preview 实现与验收证据统一收录在
+[Stage G 研究索引](docs/acceptance/stage-g-research-index.md)，并提供可在其他机器上直接读取的
+[可移植证据包](docs/research-runs/run-stage-g-seq-20260823T191412Z/README.md)，不依赖被 Git
+忽略的本地完整 Workspace。这些产物目前只发布在 Preview 分支，不代表已经 merge，
+也不代表已经替换当前 macOS 激活 Skill。
+
 ## API 和 Key 申请入口
 
 普通用户优先用 `smart-search setup` 配置。环境变量仍然支持 CI 和高级用户。

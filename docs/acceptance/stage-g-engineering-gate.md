@@ -2,7 +2,8 @@
 
 > 分支：`preview/multi-source-agentic-research`
 > 验收日期：2026-08-24
-> 边界：Provider 与文档挖掘实跑在仓库工作树、隔离 Preview 配置和临时 run-local artifact root 中完成；随后只把既有运行产物迁移到仓库内、被 Git 忽略的持久化 Research Workspace，没有重跑 Provider。未替换当前 macOS 激活版本，未修改全局 Infra 配置，未 commit、push 或 merge。
+> 2026-08-24 验收边界：Provider 与文档挖掘实跑在仓库工作树、隔离 Preview 配置和临时 run-local artifact root 中完成；随后只把既有运行产物迁移到仓库内、被 Git 忽略的持久化 Research Workspace，没有重跑 Provider。当时尚未替换当前 macOS 激活版本、修改全局 Infra 配置、commit、push 或 merge。
+> 2026-08-26 发布状态：Stage G 索引与可移植证据包已经提交并推送到 `preview/multi-source-agentic-research`；尚未 merge，尚未替换当前 macOS 激活版本，也未修改全局 Infra 配置。
 > 文档索引：[Stage G 研究索引与 References](stage-g-research-index.md)
 
 ## 结论
@@ -94,7 +95,9 @@ smart-search research-view .smart-search/research-runs/run-stage-g-seq-20260823T
 - 本工程验收记录
 - 持久化 Research Workspace 与只读搜索过程可视化
 
-下一步只剩用户审阅。Benchmark 尚未选择或运行，当前 macOS 激活版本也尚未替换。
+Stage G 证据与报告已经进入 Preview 分支。Benchmark 接入仍由
+[`08-24-benchmark-evaluation-integration`](../../.trellis/tasks/08-24-benchmark-evaluation-integration/)
+规划任务管理，尚未选择或运行 Benchmark；当前 macOS 激活版本尚未替换。
 
 ## References
 
