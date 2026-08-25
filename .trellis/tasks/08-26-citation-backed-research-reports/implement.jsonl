@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Follow repository backend structure, error, persistence, and quality guidance"}
+{"file": "skills/smart-search-cli/references/agentic-research-architecture.md", "reason": "Preserve Root ownership, Evidence and Claim authority, Workspace projections, and citation reverse tracing"}
+{"file": "skills/smart-search-cli/references/cli-core.md", "reason": "Extend the existing verify and materialize CLI contract without creating a parallel report workflow"}

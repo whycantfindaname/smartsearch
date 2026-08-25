@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Verify focused failure paths and repository quality expectations"}
+{"file": "skills/smart-search-cli/references/agentic-research-architecture.md", "reason": "Check that rendered reports remain projections and all citations retain full backtrace"}
+{"file": "docs/acceptance/stage-g-engineering-gate.md", "reason": "Use the real Stage G Workspace and citation evidence as the regression baseline without rewriting it"}
