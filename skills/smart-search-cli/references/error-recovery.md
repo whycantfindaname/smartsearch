@@ -82,6 +82,14 @@ theoretical upstream error as a supported Smart Search contract.
 | `skipped` / `disabled` | A breaker, explicit config, or capability policy prevented a call. | Read the reason; do not bypass an intentional disablement. |
 | `degraded` | An optional route failed while the command retained a usable primary result. | Keep the primary result, disclose the missing route, and avoid claiming cross-validation. |
 
+HTTP statuses not listed in the shared classifier, including `402`, `404`,
+`405`, `409`, `413`, `415`, `432`, and `433`, default to
+`provider_error`. This fallback does not mean the failures have the same
+cause. Use the sanitized provider message and the channel section below to
+distinguish billing, missing resources, method/media mismatch, conflicts,
+payload size, or plan limits. These statuses receive no generic transport
+retry or logical replay.
+
 ## Main search default budget
 
 The default search command is:
@@ -110,6 +118,8 @@ known failed attempt. Peer fallback is not logical replay.
 | Connection failure before request submission | Bounded provider transport retry. | No additional replay | Wait for the existing attempt budget. If it still fails, inspect network/DNS/TLS and make one fresh request only after the condition changes. |
 | HTTP `400`/`422` | `parameter_error`. | No | Check model, tool names, endpoint mode, and payload compatibility. |
 | HTTP `401`/`403` | `auth_error`. | No | Verify `XAI_API_KEY`, endpoint, account access, and model entitlement. |
+| HTTP `404` | `provider_error`; xAI documents unknown models and invalid endpoint paths under this status. | No | Verify the configured model and `XAI_API_URL`. Do not retry the same route unchanged. |
+| HTTP `405`/`415` | `provider_error`; the endpoint rejected the method or media type. | No | Treat this as an incompatible endpoint/relay contract. Verify the Responses route and JSON request handling. |
 | Generic HTTP `408`/timeout | `timeout`. | No | Preserve the attempt. A timeout does not prove rejection. |
 | Generic HTTP `429` | `rate_limited`. A separately configured peer may still run. | No | Wait for the provider limit window or use the completed peer fallback result. |
 | HTTP `499` | `request_cancelled`; main peer fallback stops. | Never | Treat submission as uncertain. Confirm no usable result arrived before any later fresh request. |
@@ -126,6 +136,7 @@ known failed attempt. Peer fallback is not logical replay.
 | Missing URL/key or no valid main provider | `config_error`. | No | Set `OPENAI_COMPATIBLE_API_URL` and `OPENAI_COMPATIBLE_API_KEY`; verify the endpoint exposes `/chat/completions`. |
 | Invalid model/payload, HTTP `400`/`422` | `parameter_error`; non-retryable. | No | Use `smart-search model current` and verify the model against `/models`; correct the payload or provider mode. |
 | HTTP `401`/`403` | `auth_error`; non-retryable. | No | Verify key, endpoint, relay account, and model entitlement. |
+| HTTP `402`/`404`/`405`/`409`/`415`, or another unlisted HTTP status | `provider_error`; non-retryable by the shared client. | No | Read the sanitized provider message. Resolve billing, model/route, method/media, or relay-state problems before one fresh request. |
 | HTTP `408`, transport timeout, connection error, or remote protocol error | Bounded transport retry. A retryable stream failure may fall back to non-stream. | No | Let transport handling finish. If the final search shape still hangs, run `smart-search diagnose openai-compatible --format markdown`. |
 | Exact HTTP `429` plus `concurrency_limit_exceeded` | Final result is eligible for bounded CLI replay with backoff. | Yes, within `--max-try` | Let the CLI finish; then follow the structured recovery cooldown. |
 | Other HTTP `429` | Bounded provider transport retry may run; final type is `rate_limited`. | No | Honor the provider window and do not turn it into a logical search loop. |
@@ -152,6 +163,7 @@ until the relevant URL is fetched.
 | HTTP `400`/`422`, including invalid domain/date/category filters | `parameter_error`; no useful retry with the same payload. | Correct the filter values and submit one fresh command. |
 | HTTP `401`/`403` | `auth_error`. | Verify the Exa key and account entitlement before retrying. |
 | HTTP `408`/`429`/`500`/`502`/`503`/`504`, timeout, or connection failure | Bounded provider transport retry, then the shared final error type. | Wait for the provider call to finish. In an automatic docs route, use the recorded same-capability outcome; for a direct command, wait for the condition to change before one fresh call. |
+| HTTP `402`, `404`, `409`, or another unlisted status | `provider_error`; no built-in retry. | Follow the sanitized Exa message for billing, resource, or request-state correction; otherwise use Context7 or another discovery route. |
 | Invalid JSON | `parse_error`. | Preserve the sanitized response excerpt and use Context7 or another suitable discovery route. |
 | `ok: true` with zero results | `empty`, not a transport error. | Broaden filters or change the query; do not retry unchanged. |
 
@@ -169,6 +181,10 @@ not a general-news or broad-web provider.
 | Missing `CONTEXT7_API_KEY` | `config_error`. | Configure Context7 or allow Exa in the same `docs_search` capability. |
 | Invalid/unknown library id or HTTP `400`/`422` | `parameter_error`. | Run `context7-library` again, choose a returned id, then call `context7-docs`. |
 | HTTP `401`/`403` | `auth_error`. | Verify key and entitlement before retrying. |
+| HTTP `202` | Context7 accepted a library that is not finalized. Smart Search may expose it as an empty/no-snippet response. | Wait for indexing to finish, then make one fresh Context7 request or use Exa. |
+| HTTP `301` | The Context7 client follows the redirect inside the same call. | Use the final response; if the redirected library id is returned, preserve that id for later calls. |
+| HTTP `404` | `provider_error`; the library id does not exist. | Resolve the library again and use the returned id. Do not retry the missing id unchanged. |
+| HTTP `409` | `provider_error`; the resource already exists or conflicts with current state. | Use the existing library/resource or reconcile its state before a fresh request. |
 | HTTP `408`/`429`/`5xx`, timeout, or network failure | Bounded transport retry, then a shared final error. | Let the provider budget finish; automatic docs routing may continue to Exa. |
 | No eligible library candidate | Recorded as `empty`; automatic docs routing continues to Exa. | Refine the library name or use Exa. Do not invent a library id. |
 | Non-JSON text response | Preserved as content with no normalized result list. | Treat it as unverified text; use Exa/fetch if a citable URL is required. |
@@ -183,7 +199,7 @@ not a general-news or broad-web provider.
 | HTTP `400`/`422` | `parameter_error`. | Check engine, recency/domain filters, content size, and query constraints. |
 | HTTP `401`/`403` | `auth_error`. | Verify key, endpoint, and product entitlement. |
 | HTTP `408`/`500`/`502`/`503`/`504`, timeout, or network failure | Bounded transport retry. | Let it finish; same-capability routing may continue to Zhipu MCP, Tavily, or Firecrawl. |
-| HTTP `429` | Returned immediately as `rate_limited`; this provider path deliberately does not retry it. | Use the next configured `web_search` provider or wait for quota reset before one fresh direct call. |
+| HTTP `429` | Returned immediately as `rate_limited`; this provider path deliberately does not retry it. The provider message may indicate concurrency excess, upload frequency, exhausted balance, or an account restriction. | Use the next configured `web_search` provider. For concurrency/frequency, wait before one fresh direct call; for balance or account restriction, recharge or contact the provider instead of retrying. |
 | Empty `search_result` | `empty`. | Continue same-capability fallback or broaden the query. |
 
 ### Zhipu Coding Plan MCP and reader
@@ -207,6 +223,8 @@ Tavily can serve `web_search`, `web_fetch`, and `map`.
 | Missing `TAVILY_API_KEY` | Tavily is unavailable; `map` returns `config_error`. | Configure the key or use another `web_search`/`web_fetch` provider. `map` has no same-capability fallback. |
 | HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared parameter/auth/timeout/rate/network classification. | Correct permanent errors; for transient errors use same-capability fallback rather than a shell retry loop. |
 | Response reports `success: false`, `error`, or `detail` | `provider_error`. | Follow the provider message or use fallback. |
+| HTTP `432` | `provider_error`; Tavily plan usage limit exceeded. | Upgrade/change the plan limit or wait for its reset. Do not retry the same request immediately. |
+| HTTP `433` | `provider_error`; Tavily pay-as-you-go limit exceeded. | Increase the pay-as-you-go limit or disable that route until billing changes. |
 | Missing/non-list `results`, non-object result, or non-text extract content | `parse_error`. | Report schema drift and use Jina/Zhipu MCP reader/Firecrawl for fetch, or another web search provider. |
 | Empty search/extract result | `empty`. | Continue same-capability fallback. |
 
@@ -218,7 +236,7 @@ Jina is a known-URL fetch provider, not a general search provider.
 | --- | --- | --- |
 | No key under the standard profile | `not_configured`; anonymous Reader remains explicit/experimental only. | Configure `JINA_API_KEY` or use Tavily/Zhipu MCP reader/Firecrawl. |
 | `JINA_RESPOND_WITH` set without a key | `config_error` before network access. | Add the key or remove `JINA_RESPOND_WITH`. |
-| HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared error classification; Jina itself does not add a transport retry loop. | Correct permanent errors or continue the fetch fallback chain. |
+| HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared error classification; Jina itself does not add a transport retry loop. A `429` can reflect RPM, token, per-key/IP, or concurrency limits. | Correct permanent errors. For `429`, wait for the applicable limit window or reduce concurrency; otherwise continue the fetch fallback chain. |
 | Empty body or a Cloudflare/JavaScript challenge marker | `quality_error`; content must not be cited. | Continue to the next fetch provider, normally Zhipu MCP reader or Firecrawl. |
 | Timeout/network failure | `timeout`/`network_error`. | Use the next configured fetch provider. |
 
@@ -231,9 +249,31 @@ or challenge-prone pages.
 | --- | --- | --- |
 | Missing `FIRECRAWL_API_KEY` | Provider is unavailable; all-missing fetch routes return `config_error`. | Configure the key or use another fetch provider. |
 | HTTP/auth/rate/timeout/`5xx` failure | Shared provider classification. | Continue same-capability fallback or wait for the condition to change before one fresh direct request. |
+| HTTP `402` | `provider_error`; Firecrawl credits are exhausted or billing is not configured. | Top up credits, enable the intended billing policy, or keep Firecrawl disabled until that changes. |
+| HTTP `404` | `provider_error`; endpoint, job id, or resource is missing. | Verify `FIRECRAWL_API_URL` and the resource id; do not retry unchanged. |
+| HTTP `409` | `provider_error`; the resource state conflicts with the operation. | Re-read/reconcile state before a fresh request. |
+| HTTP `413` | `provider_error`; the request payload is too large. | Reduce batch size, schema, or input size before retrying. |
 | Response reports a tool error | `provider_error`. | Follow the sanitized provider message; do not treat it as empty success. |
 | Missing `data`, missing `web`, non-object search items, or non-text Markdown | `parse_error`. | Report schema drift and use another provider. |
 | Scrape succeeds but Markdown is empty | Firecrawl performs its bounded empty-content attempts with increasing `waitFor`; final state is `empty`. | Let those attempts finish, then use the remaining fetch chain or report empty content. |
+
+Firecrawl may include a more precise code inside a `408` or `5xx` response.
+Smart Search currently preserves that sanitized message while retaining the
+shared `timeout`/`network_error` type:
+
+- `SCRAPE_TIMEOUT`: increase the provider/page timeout only when the page is
+  expected to finish, or use another fetch provider.
+- `SCRAPE_SSL_ERROR` or `SCRAPE_DNS_RESOLUTION_ERROR`: verify the target URL,
+  certificate, and DNS. Do not weaken TLS verification as a generic fix.
+- `SCRAPE_ACTION_ERROR`, `SCRAPE_ALL_ENGINES_FAILED`, or
+  `SCRAPE_SITE_ERROR`: simplify the scrape or use the next fetch provider.
+- `SCRAPE_PDF_PREFETCH_FAILED`, `SCRAPE_PDF_INSUFFICIENT_TIME_ERROR`, or
+  `SCRAPE_PDF_ANTIBOT_ERROR`: use a direct PDF/document extraction route or
+  report the blocked source.
+- `SCRAPE_UNSUPPORTED_FILE_ERROR`: use a supported file or a dedicated
+  document parser; retrying the same URL is not a fix.
+- `SCRAPE_ZDR_VIOLATION_ERROR`: remove the option that conflicts with Zero
+  Data Retention, or change the approved data-retention policy first.
 
 ## Sciverse channel
 
@@ -245,6 +285,7 @@ Sciverse is explicit-only academic vertical search. It is not part of default
 | Missing `SCIVERSE_API_TOKEN` | `config_error` before network access. | Configure the token or use another explicit academic source. |
 | Invalid collection/filter/sort/mode/source type, missing id/query, invalid page, `page_size`, `top_k`, offset, limit, or relation | `parameter_error` before network access. | Correct the named field. Current bounds include search `page_size` 1–50, semantic `top_k` 1–30, read limit 1–16384, and relation `page_size` 1–200. |
 | HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared provider classification. | Correct permanent errors; after transient failure make at most one fresh explicit command when still needed. |
+| HTTP `404` or another unlisted status | `provider_error`; no automatic retry or fallback. | Verify document id, endpoint, collection, and provider-native message before a fresh explicit command. |
 | Invalid JSON or missing/wrong response fields | `parse_error`. | Preserve tool name and schema message; report provider contract drift. |
 | Empty result set | Successful explicit query with zero results. | Change filters/query; do not route it into ordinary web search automatically. |
 
@@ -258,6 +299,7 @@ calls only.
 | --- | --- | --- |
 | Invalid `--sub-domain-params`, malformed `--param`, or more than five batch queries | `parameter_error` before network access. | Correct local arguments; use `anysearch-domains` to inspect valid domains. |
 | HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared provider classification. | Correct permanent errors or wait before one fresh explicit call. Do not convert it into default web fallback. |
+| HTTP `402`, `404`, `409`, or another unlisted status | `provider_error`; no automatic retry. | Resolve billing, domain/tool availability, or resource state through the delegated AnySearch Skill. |
 | JSON-RPC `error` or tool `isError: true` | `provider_error`; result sources are empty and error URLs are not evidence. | Correct domain/tool arguments or follow the AnySearch Skill's provider-specific procedure. |
 | Invalid JSON | `parse_error`. | Preserve the sanitized response and report protocol drift. |
 | Timeout/network failure | `timeout`/`network_error`. | Use another explicitly approved vertical source or report the gap. |
@@ -360,3 +402,16 @@ do not add individual error rows there.
   and label the degraded path.
 - Do not claim that HTTP `499` means the provider rejected the request; its
   defining property here is that submission state is uncertain.
+
+## Provider documentation references
+
+These upstream pages help interpret sanitized provider messages. They do not
+override Smart Search's implemented classification or retry boundaries. Last
+checked: 2026-08-26.
+
+- [xAI debugging errors](https://docs.x.ai/developers/debugging)
+- [Context7 API guide](https://context7.com/docs/api-guide)
+- [Zhipu API error codes](https://docs.bigmodel.cn/cn/faq/api-code)
+- [Tavily HTTP errors](https://help.tavily.com/articles/8645538886-understanding-http-errors)
+- [Firecrawl API errors](https://docs.firecrawl.dev/api-reference/errors)
+- [Jina Reader API and rate limits](https://jina.ai/reader/)
