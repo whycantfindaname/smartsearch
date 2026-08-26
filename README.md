@@ -270,6 +270,17 @@ attempted only when their capabilities are configured, reachable, and covered
 by the current account entitlement. AnySearch and MinerU remain external Skills
 and keep their credentials outside Smart Search configuration.
 
+For a citation-backed final report, Root writes exact `[cite:<citation_id>]`
+markers in `draft_report` and submits them with the existing `citations` mapping
+to `research-run verify`. With `--workspace`, the same invocation validates the
+complete Claim/Evidence/artifact/Trace chain and locators, renders numbered
+citations and one References section, and persists three distinct projections:
+`final_synthesis.md` for readers, authoritative
+`evidence/citation_verification.json` for reverse-trace validation, and derived
+`evidence/reference_register.json` for the audit mapping. Manifest entrypoints
+are only the Workspace document index. The same contract applies to `quick`,
+`standard`, and `deep` Research Workspaces.
+
 The document sidecar requires an explicit Python 3.12 interpreter and creates a
 dedicated virtual environment, by default under
 `$SMART_SEARCH_CONFIG_DIR/research-sidecar`. Smart Search saves
