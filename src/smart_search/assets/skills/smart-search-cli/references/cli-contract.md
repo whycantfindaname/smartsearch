@@ -5,7 +5,8 @@ This compatibility entrypoint no longer stores the full CLI contract. Read the f
 ## Read These Files
 
 - `cli-core.md`: entrypoints, command signatures, aliases, JSON/Markdown/content output expectations, exit codes, and tool policy.
-- `command-patterns.md`: source-directed examples, evidence files, timeout retry policy, and everyday guardrails.
+- `command-patterns.md`: source-directed examples, evidence files, and everyday guardrails.
+- `error-recovery.md`: provider-specific error catalog, classification, retry and replay boundaries, diagnostics, and operator actions.
 - `deep-research-mode.md`: Deep Research trigger rules, offline planner, live executor, `research_plan` shape, allowed tools, gap check, provider advantage routing, and smoke matrix.
 - `agentic-research-architecture.md`: Root semantic ownership, caller-held `ResearchRun`, project agents, Provider Research Agents, AnySearch and MinerU boundaries, registered-artifact mining, Claim lifecycle, Trace, and citation reverse tracing.
 - `provider-routing.md`: intent routing diagnostics, provider capabilities, source provenance, same-capability fallback, Zhipu REST/MCP, Jina, AnySearch, Exa, Tavily, Firecrawl, Context7, and maintenance guardrails.
@@ -19,5 +20,6 @@ This compatibility entrypoint no longer stores the full CLI contract. Read the f
 - Need setup, API keys, config paths, skill update behavior, or provider endpoint flags: read `setup-config.md`.
 - Need deep search, deep research, multi-source verification, serious review, or selection/comparison research: read `deep-research-mode.md`.
 - Need Root-led delegation, dynamic project-agent sharding, dossier operations, document mining, Claim records, or citation auditing: read `agentic-research-architecture.md`.
-- Need timeout recovery, saved evidence files, or source-first fallback examples: read `command-patterns.md`.
+- Need error classification, recovery, retry, replay, cooldown, or diagnostic guidance: read `error-recovery.md`.
+- Need saved evidence files or source-first command examples: read `command-patterns.md`.
 - Need release, npm/mise packaged install, or regression expectations: read `regression-release.md`.
