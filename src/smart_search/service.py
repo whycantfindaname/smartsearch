@@ -450,6 +450,20 @@ def _record_openai_model_failure(api_url: str, model: str) -> dict[str, Any]:
     return _openai_model_breaker_state(api_url, model)
 
 
+def _openai_failure_counts_for_model_breaker(error_result: dict[str, Any]) -> bool:
+    """Keep the model breaker from consuming the CLI's approved safe replay."""
+    if error_result.get("error_type") != "rate_limited":
+        return True
+    error = str(error_result.get("error") or "")
+    return not (
+        re.search(r"\bHTTP\s+429\b", error, flags=re.IGNORECASE)
+        and re.search(
+            r"(?<![A-Za-z0-9_])concurrency_limit_exceeded(?![A-Za-z0-9_])",
+            error,
+        )
+    )
+
+
 def _openai_model_candidates(provider_config: dict[str, Any], *, fallback_mode: str, model_override: str) -> list[dict[str, Any]]:
     primary_model = provider_config["model"]
     candidates = [
@@ -2712,7 +2726,10 @@ async def search(
                     transport_fallback_used = transport_fallback_used or any(
                         attempt.get("fallback_from_transport") for attempt in transport_attempts
                     )
-                if candidate_config["provider"] == "openai-compatible":
+                if (
+                    candidate_config["provider"] == "openai-compatible"
+                    and _openai_failure_counts_for_model_breaker(error_result)
+                ):
                     attempt_extra["breaker_state"] = _record_openai_model_failure(candidate_config["api_url"], candidate_config["model"])
                 if candidate_config["provider"] != "openai-compatible" or not transport_attempts:
                     provider_attempts.append(
