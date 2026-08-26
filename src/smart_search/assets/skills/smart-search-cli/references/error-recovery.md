@@ -178,7 +178,7 @@ until the relevant URL is fetched.
 | HTTP `400`/`422`, including invalid domain/date/category filters | `parameter_error`; no useful retry with the same payload. | Correct the filter values and submit one fresh command. |
 | HTTP `401`/`403` | `auth_error`. | Verify the Exa key and account entitlement before retrying. |
 | HTTP `408`/`429`/`500`/`502`/`503`/`504`, timeout, or connection failure | Bounded provider transport retry, then the shared final error type. | Wait for the provider call to finish. In an automatic docs route, use the recorded same-capability outcome; for a direct command, wait for the condition to change before one fresh call. |
-| HTTP `402`, `404`, `409`, or another unlisted status | `provider_error`; no built-in retry. | Follow the sanitized Exa message for billing, resource, or request-state correction; otherwise use Context7 or another discovery route. |
+| HTTP `402`, `404`, `409`, or another unlisted status | `provider_error`; no built-in retry. | Follow the sanitized Exa message for billing, resource, or request-state correction; otherwise use an explicit Context7, Sciverse, or broad discovery route. Do not switch to a composite `research` command that can silently select Exa again unless that run can exclude the failed provider. |
 | Invalid JSON | `parse_error`. | Preserve the sanitized response excerpt and use Context7 or another suitable discovery route. |
 | `ok: true` with zero results | `empty`, not a transport error. | Broaden filters or change the query; do not retry unchanged. |
 
