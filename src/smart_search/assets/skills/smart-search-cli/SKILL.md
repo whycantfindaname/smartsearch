@@ -47,7 +47,7 @@ behavior, or the structured output contract must change.
 - `exa-search`: official domains, papers, product pages, trusted pages, date/domain-filtered low-noise discovery, and adjacent source discovery through `exa-similar`.
 - `fetch`: user-provided URLs or any claim that depends on page content.
 - `map`: documentation site or domain structure before fetching many pages from one site.
-- `anysearch-*`: explicit experimental vertical search only. Inspect domains first and do not use AnySearch as default fallback. Parse JSON parameters before repeatable `--param key=value` overrides; `anysearch-extract --max-length` sends only the URL upstream and truncates successful text locally.
+- `anysearch-*`: explicit experimental compatibility commands, never an automatic default fallback. Inspect domains before vertical search. Use `anysearch-extract` for a known URL only when the error catalog permits that explicit recovery after the standard fetch chain is exhausted; `--max-length` sends only the URL upstream and truncates successful text locally. Parse JSON parameters before repeatable `--param key=value` overrides.
 - `sciverse-*`: explicit experimental academic search only. Use for catalog/search/semantic/read/relations; do not use Sciverse as `docs_search`, `standard`, or default `search` / `research` fallback.
 - `model current`: inspect explicit provider models only. Change models with `smart-search config set XAI_MODEL ...` or `smart-search config set OPENAI_COMPATIBLE_MODEL ...`.
 
