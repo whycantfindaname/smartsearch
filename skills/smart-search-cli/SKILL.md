@@ -53,6 +53,7 @@ behavior, or the structured output contract must change.
 - `fetch`: user-provided URLs or any claim that depends on page content.
 - `map`: documentation site or domain structure before fetching many pages from one site.
 - `$anysearch`: optional agent-level supplementation for general or vertical search, parallel batch search, and URL extraction. Prefer the bundled snapshot, fall back to a separately installed global Skill, and let the model choose among the capabilities documented by that Skill.
+- `anysearch-*`: explicit experimental compatibility commands, never an automatic default fallback. Inspect domains before vertical search. Use `anysearch-extract` for a known URL only when the error catalog permits that explicit recovery after the standard fetch chain is exhausted; `--max-length` sends only the URL upstream and truncates successful text locally. Parse JSON parameters before repeatable `--param key=value` overrides.
 - `sciverse-*`: explicit experimental academic search only. Use for catalog/search/semantic/read/relations; do not use Sciverse as `docs_search`, `standard`, or default `search` / `research` fallback.
 - `model current`: inspect explicit provider models only. Change models with `smart-search config set XAI_MODEL ...` or `smart-search config set OPENAI_COMPATIBLE_MODEL ...`.
 

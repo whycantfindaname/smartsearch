@@ -252,7 +252,7 @@ Jina is a known-URL fetch provider, not a general search provider.
 | No key under the standard profile | `not_configured`; anonymous Reader remains explicit/experimental only. | Configure `JINA_API_KEY` or use Tavily/Zhipu MCP reader/Firecrawl. |
 | `JINA_RESPOND_WITH` set without a key | `config_error` before network access. | Add the key or remove `JINA_RESPOND_WITH`. |
 | HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared error classification; Jina itself does not add a transport retry loop. A `429` can reflect RPM, token, per-key/IP, or concurrency limits. | Correct permanent errors. For `429`, wait for the applicable limit window or reduce concurrency; otherwise continue the fetch fallback chain. |
-| Empty body or a Cloudflare/JavaScript challenge marker | `quality_error`; content must not be cited. | Continue to the next fetch provider, normally Zhipu MCP reader or Firecrawl. |
+| Empty body or a Cloudflare/JavaScript challenge marker | `quality_error`; content must not be cited. | Continue to the next configured fetch provider, normally Zhipu MCP reader or Firecrawl. If that standard chain ends in `empty` or `config_error`, and the task permits the experimental compatibility route, make one explicit `anysearch-extract URL --format json --output PATH` request for the known URL; it is a new provider route, not a retry of Jina. |
 | Unexpected HTML or interstitial content without a recognized challenge marker | No stable Smart Search classification yet; it may surface as apparently successful content. | Treat it as unverified and do not cite it. Preserve a sanitized excerpt as a new signature, continue to the next fetch provider, and add a catalog rule only after the signature is reproducible. |
 | Timeout/network failure | `timeout`/`network_error`. | Use the next configured fetch provider. |
 
@@ -271,7 +271,7 @@ or challenge-prone pages.
 | HTTP `413` | `provider_error`; the request payload is too large. | Reduce batch size, schema, or input size before retrying. |
 | Response reports a tool error | `provider_error`. | Follow the sanitized provider message; do not treat it as empty success. |
 | Missing `data`, missing `web`, non-object search items, or non-text Markdown | `parse_error`. | Report schema drift and use another provider. |
-| Scrape succeeds but Markdown is empty | Firecrawl performs its bounded empty-content attempts with increasing `waitFor`; final state is `empty`. | Let those attempts finish, then use the remaining fetch chain or report empty content. |
+| Scrape succeeds but Markdown is empty | Firecrawl performs its bounded empty-content attempts with increasing `waitFor`; final state is `empty`. | Let those attempts finish. Use another configured standard fetch provider; if none remains and the task permits the experimental compatibility route, make one explicit `anysearch-extract` request for that known URL. Otherwise report empty content. |
 
 Firecrawl may include a more precise code inside a `408` or `5xx` response.
 Smart Search currently preserves that sanitized message while retaining the
@@ -308,10 +308,15 @@ Sciverse is explicit-only academic vertical search. It is not part of default
 ## AnySearch compatibility channel
 
 AnySearch remains a delegated external Skill and is not a generic Smart Search
-fallback. The governed agent workflow always uses `$anysearch`. Some
+fallback. The governed agent workflow normally uses `$anysearch`. Some
 development builds retain explicit Smart Search compatibility commands, while
 the installed CLI may omit them; their presence does not authorize default
-routing through AnySearch.
+routing through AnySearch. After a known-URL `fetch` has exhausted every
+configured standard provider, an Agent may make one explicit
+`anysearch-extract URL --format json --output PATH` request when the command is
+available and the task allows experimental routes. This is a provider switch,
+not an unchanged outer retry. Accept the content only when the command returns
+`ok: true` and the page passes the same evidence-quality checks.
 
 | Observed signature | Built-in behavior | Required handling |
 | --- | --- | --- |
