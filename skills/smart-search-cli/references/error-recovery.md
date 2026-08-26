@@ -43,6 +43,9 @@ theoretical upstream error as a supported Smart Search contract.
    `fallback_used`, and `recovery` from the returned JSON.
 2. Locate the channel section below. Use the last relevant failed attempt, not
    just the top-level message, when a fallback chain ran.
+   When an incident note calls this the `last_error`, preserve the top-level
+   `error` plus that attempt's `error_type` and `error`; `last_error` is an
+   operator label, not an additional emitted JSON field.
 3. Distinguish an error from `empty`, `skipped`, `disabled`, `not_configured`,
    or `degraded`. These statuses can change routing without being transport
    failures.
@@ -250,6 +253,7 @@ Jina is a known-URL fetch provider, not a general search provider.
 | `JINA_RESPOND_WITH` set without a key | `config_error` before network access. | Add the key or remove `JINA_RESPOND_WITH`. |
 | HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared error classification; Jina itself does not add a transport retry loop. A `429` can reflect RPM, token, per-key/IP, or concurrency limits. | Correct permanent errors. For `429`, wait for the applicable limit window or reduce concurrency; otherwise continue the fetch fallback chain. |
 | Empty body or a Cloudflare/JavaScript challenge marker | `quality_error`; content must not be cited. | Continue to the next fetch provider, normally Zhipu MCP reader or Firecrawl. |
+| Unexpected HTML or interstitial content without a recognized challenge marker | No stable Smart Search classification yet; it may surface as apparently successful content. | Treat it as unverified and do not cite it. Preserve a sanitized excerpt as a new signature, continue to the next fetch provider, and add a catalog rule only after the signature is reproducible. |
 | Timeout/network failure | `timeout`/`network_error`. | Use the next configured fetch provider. |
 
 ## Firecrawl channel
@@ -369,8 +373,10 @@ commands contain no user query or other search payload.
 
 ## Recovery procedure
 
-1. Read the JSON result and preserve `provider_attempts`, `logical_attempts`,
-   and `recovery`.
+1. Read the JSON result and preserve the top-level `error`,
+   `provider_attempts`, `logical_attempts`, and `recovery`. For the operational
+   `last_error`, retain the final relevant failed attempt's `error_type` and
+   `error`; do not invent a separate JSON field.
 2. If no `recovery` object exists, do not add an agent-side retry loop. Follow
    the normal provider-specific diagnosis or evidence fallback contract.
 3. For `concurrency_limit_exceeded`, wait `recovery.wait_seconds`, run
