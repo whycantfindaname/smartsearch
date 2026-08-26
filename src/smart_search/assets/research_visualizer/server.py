@@ -24,6 +24,7 @@ MAX_JSON_BYTES = 8 * 1024 * 1024
 MAX_MARKDOWN_BYTES = 2 * 1024 * 1024
 MAX_TRACE_EVENTS = 2_000
 TASK_ID_RE = re.compile(r"^task_[A-Za-z0-9][A-Za-z0-9_.-]*$")
+REFERENCES_HEADING_RE = re.compile(r"(?im)^#{1,6}\s+references\s*$")
 
 FIXED_MARKDOWN = {
     "initial_context": "initial_context.md",
@@ -378,6 +379,8 @@ def gather_summary(root: Path) -> dict[str, Any]:
     evidence = _collection(root, "evidence/evidence_items.jsonl", ("evidence_items", "evidence"))
     claims = _collection(root, "evidence/claim_records.json", ("claim_records", "claims"))
     verification = _read_json(_fixed_path(root, "evidence/citation_verification.json"), {})
+    reference_register = _read_json(_fixed_path(root, "evidence/reference_register.json"), {})
+    reference_register = reference_register if isinstance(reference_register, dict) else {}
     provider_attempts = [
         item
         for item in attempts
@@ -391,6 +394,12 @@ def gather_summary(root: Path) -> dict[str, Any]:
     citation_count = _citation_count(verification)
     report_path = _fixed_path(root, "final_synthesis.md")
     has_report = report_path.is_file()
+    report_text = _read_text(report_path, limit=MAX_MARKDOWN_BYTES) if has_report else ""
+    has_report_references = bool(REFERENCES_HEADING_RE.search(report_text))
+    registered_references = reference_register.get("references")
+    registered_references = registered_references if isinstance(registered_references, list) else []
+    entrypoints = manifest.get("entrypoints")
+    entrypoints = entrypoints if isinstance(entrypoints, dict) else {}
     counts = {
         "tasks": len(tasks),
         "provider_attempts": len(provider_attempts),
@@ -401,6 +410,7 @@ def gather_summary(root: Path) -> dict[str, Any]:
         "evidence": len(evidence),
         "claims": len(claims),
         "citations": citation_count,
+        "references": len(registered_references),
     }
     claim_statuses = Counter(str(item.get("status", "unknown")) for item in claims)
     attempt_statuses = Counter(str(item.get("status", "unknown")) for item in attempts)
@@ -449,10 +459,10 @@ def gather_summary(root: Path) -> dict[str, Any]:
         {
             "id": "synthesis",
             "index": "06",
-            "label": "Final Synthesis",
+            "label": "Final Report / References",
             "status": "complete" if has_report else "active" if has_active and claims else "waiting",
-            "metrics": [{"label": "report", "value": "ready" if has_report else "not available"}, {"label": "stop reason", "value": "recorded" if run.get("stop_reason") else "open"}],
-            "description": "Root writes the final answer once; Smart Search checks the citation map without generating hidden reasoning.",
+            "metrics": [{"label": "report", "value": "ready" if has_report else "not available"}, {"label": "audit references", "value": counts["references"]}],
+            "description": "Reader-facing References live in the final report; the audit reference register preserves internal mappings, while the manifest entrypoints are only a Workspace document index.",
         },
     ]
     return {
@@ -462,6 +472,9 @@ def gather_summary(root: Path) -> dict[str, Any]:
             "mode": str(_pick(run.get("frame", {}) if isinstance(run.get("frame"), dict) else {}, "mode", "budget", default=manifest.get("mode", "")))[:80],
             "status": str(_pick(manifest, "status", default="active" if has_active else "complete" if has_report else "partial"))[:80],
             "has_final_report": has_report,
+            "has_report_references": has_report_references,
+            "has_reference_register": bool(reference_register),
+            "has_document_index": bool(entrypoints),
             "updated_at": str(_pick(manifest, "updated_at", "last_updated", default=""))[:80],
         },
         "counts": counts,
@@ -478,6 +491,22 @@ def gather_summary(root: Path) -> dict[str, Any]:
             "present": bool(verification),
             "ok": verification.get("ok") if isinstance(verification, dict) else None,
             "count": citation_count,
+        },
+        "projections": {
+            "report_references": {
+                "present": has_report_references,
+                "kind": "reader_projection",
+            },
+            "reference_register": {
+                "present": bool(reference_register),
+                "count": len(registered_references),
+                "kind": "audit_projection",
+            },
+            "document_index": {
+                "present": bool(entrypoints),
+                "count": len(entrypoints),
+                "kind": "workspace_navigation",
+            },
         },
     }
 

@@ -348,7 +348,7 @@
       <nav class="tabs" role="tablist" aria-label="Workspace views">
         <button class="tab" role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="true">Module detail</button>
         <button class="tab" role="tab" id="tab-activity" aria-controls="panel-activity" aria-selected="false">Public activity</button>
-        <button class="tab" role="tab" id="tab-evidence" aria-controls="panel-evidence" aria-selected="false">Evidence register</button>
+        <button class="tab" role="tab" id="tab-evidence" aria-controls="panel-evidence" aria-selected="false">Evidence items</button>
         <button class="tab" role="tab" id="tab-report" aria-controls="panel-report" aria-selected="false">Final report</button>
       </nav>
 
@@ -366,8 +366,8 @@
 
       <section class="tab-panel" role="tabpanel" id="panel-evidence" aria-labelledby="tab-evidence" hidden>
         <div class="panel-heading">
-          <div><p class="section-kicker">Claim-facing sources</p><h2>Evidence register</h2></div>
-          <p>Every row keeps the source URL, stance, typed locator summary, and task association together.</p>
+          <div><p class="section-kicker">Claim-facing sources</p><h2>Evidence items</h2></div>
+          <p>Every row keeps the source URL, stance, typed locator summary, and task association together. This is structured evidence, not the report References or the audit reference register.</p>
         </div>
         <div class="evidence-toolbar" aria-label="Evidence filters">
           <label><span class="sr-only">Filter evidence</span><input class="filter-input" id="evidence-query" type="search" placeholder="Filter by URL, task, claim, or excerpt"></label>
@@ -381,8 +381,8 @@
 
       <section class="tab-panel" role="tabpanel" id="panel-report" aria-labelledby="tab-report" hidden>
         <div class="panel-heading">
-          <div><p class="section-kicker">Root synthesis</p><h2>Final report</h2></div>
-          <p>The viewer renders the selected final Markdown source locally. Raw artifacts and runtime directories remain outside the server surface.</p>
+          <div><p class="section-kicker">Root synthesis</p><h2>Final report with References</h2></div>
+          <p>Reader-facing References are rendered inside this Markdown report. The audit reference register maps those numbers back to Claims, EvidenceItems, snapshots, and locators; the Workspace document index in the manifest only lists navigation entrypoints. None replaces the structured research authorities.</p>
         </div>
         <div class="report-actions"><button class="plain-button" id="load-report">Load final synthesis</button></div>
         <article id="report-content" class="markdown"><p>Load the report when <code>final_synthesis.md</code> is available.</p></article>
@@ -451,7 +451,7 @@
     function renderCounts() {
       const c = state.summary.counts;
       return `<div class="count-rack" aria-label="Run counts">
-        ${[[c.tasks,"Tasks"],[c.provider_attempts,"Provider attempts"],[c.agents,"Agents"],[c.candidates,"Candidates"],[c.proposals,"Proposals"],[c.evidence,"Evidence items"],[c.claims,"Claims"],[c.citations,"Citations"]]
+        ${[[c.tasks,"Tasks"],[c.provider_attempts,"Provider attempts"],[c.agents,"Agents"],[c.candidates,"Candidates"],[c.proposals,"Proposals"],[c.evidence,"Evidence items"],[c.claims,"Claims"],[c.citations,"Citations"],[c.references,"Audit references"]]
           .map(([value,label]) => `<div class="count-cell"><b>${escapeHtml(value)}</b><span>${escapeHtml(label)}</span></div>`).join("")}
       </div>`;
     }

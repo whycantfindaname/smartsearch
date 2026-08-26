@@ -4,10 +4,15 @@ import pytest
 
 from smart_search import research_runtime
 from smart_search.research_contracts import (
+    ClaimRecord,
     ClaimSpec,
+    ContractValidationError,
+    EvidenceItem,
     EvidenceMiningTask,
+    ExecutionAttempt,
     ResearchFrame,
     SearchTask,
+    TraceEvent,
 )
 from smart_search.research_kernel import ArtifactRegistry, JsonlTraceStore
 
@@ -76,6 +81,205 @@ def _create(tmp_path, tasks):
         artifact_root=tmp_path,
         capability_observed_at="2026-08-24T00:00:00Z",
     )
+
+
+def _citation_ready_dossier(tmp_path, *, mode="deep"):
+    run_id = f"run-citation-{mode}"
+    claim = ClaimSpec(
+        run_id=run_id,
+        claim_spec_id="claim-report",
+        statement="The report has source-backed findings.",
+    )
+    dossier = research_runtime.create_dossier(
+        frame=ResearchFrame(
+            run_id=run_id,
+            question="What does the evidence show?",
+            mode=mode,
+            permissions=["public_web"],
+        ),
+        claims=[claim],
+        search_tasks=[],
+        capability_snapshot=CAPABILITIES,
+        artifact_root=tmp_path,
+        capability_observed_at="2026-08-26T00:00:00Z",
+    )
+    registry = ArtifactRegistry(tmp_path, run_id)
+    alpha_text = "Alpha evidence one. Alpha evidence two."
+    alpha = registry.register_snapshot(
+        run_id=run_id,
+        task_id="task-alpha",
+        step_id="step-alpha",
+        attempt_no=1,
+        content=alpha_text,
+        media_type="text/markdown",
+        canonical_url="https://sources.example/alpha?utm_source=ignored",
+        metadata={
+            "bibliographic": {
+                "title": "Alpha Source",
+                "authors": ["Ada Example"],
+                "published_at": "2026-08-25",
+                "venue": "Example Journal",
+                "doi": "10.1000/example",
+            }
+        },
+    )
+    beta_text = "Beta evidence."
+    beta = registry.register_snapshot(
+        run_id=run_id,
+        task_id="task-beta",
+        step_id="step-beta",
+        attempt_no=1,
+        content=beta_text,
+        media_type="text/markdown",
+        canonical_url="https://sources.example/beta",
+    )
+    tasks = [
+        EvidenceMiningTask(
+            run_id=run_id,
+            task_id="task-alpha",
+            step_id="step-alpha",
+            claim_spec_id=claim.claim_spec_id,
+            artifact_ids=[alpha.artifact_id],
+            artifact_refs=[alpha.artifact_id],
+        ),
+        EvidenceMiningTask(
+            run_id=run_id,
+            task_id="task-beta",
+            step_id="step-beta",
+            claim_spec_id=claim.claim_spec_id,
+            artifact_ids=[beta.artifact_id],
+            artifact_refs=[beta.artifact_id],
+        ),
+    ]
+    dossier = research_runtime.add_root_evidence_tasks(dossier, tasks)
+    attempts = [
+        ExecutionAttempt(
+            attempt_id=f"attempt-{name}",
+            run_id=run_id,
+            task_id=f"task-{name}",
+            step_id=f"step-{name}",
+            attempt_no=1,
+            execution_kind="project_agent",
+            capability="evidence_mining",
+            provider="evidence-miner",
+            status="success",
+            completed_at="2026-08-26T00:00:01Z",
+            artifact_refs=[artifact.artifact_id],
+        )
+        for name, artifact in (("alpha", alpha), ("beta", beta))
+    ]
+    quality = {
+        "authority": "primary",
+        "directness": "direct",
+        "freshness": "current",
+        "methodological_fit": "fit",
+        "independence": "independent",
+        "locator_quality": "exact",
+    }
+    evidence = [
+        EvidenceItem(
+            evidence_id="evidence-alpha-one",
+            run_id=run_id,
+            task_id="task-alpha",
+            step_id="step-alpha",
+            attempt_no=1,
+            claim_spec_id=claim.claim_spec_id,
+            source_id="source-alpha",
+            canonical_url=alpha.canonical_url,
+            artifact_id=alpha.artifact_id,
+            snapshot_id=alpha.snapshot_id,
+            retrieved_at=alpha.created_at,
+            content_type=alpha.media_type,
+            locator={"type": "character_range", "start": 0, "end": 19},
+            text="Alpha evidence one.",
+            stance="support",
+            quality=quality,
+            artifact_refs=[alpha.artifact_id],
+        ),
+        EvidenceItem(
+            evidence_id="evidence-alpha-two",
+            run_id=run_id,
+            task_id="task-alpha",
+            step_id="step-alpha",
+            attempt_no=1,
+            claim_spec_id=claim.claim_spec_id,
+            source_id="source-alpha",
+            canonical_url=alpha.canonical_url,
+            artifact_id=alpha.artifact_id,
+            snapshot_id=alpha.snapshot_id,
+            retrieved_at=alpha.created_at,
+            content_type=alpha.media_type,
+            locator={"type": "character_range", "start": 20, "end": 39},
+            text="Alpha evidence two.",
+            stance="support",
+            quality=quality,
+            artifact_refs=[alpha.artifact_id],
+        ),
+        EvidenceItem(
+            evidence_id="evidence-beta",
+            run_id=run_id,
+            task_id="task-beta",
+            step_id="step-beta",
+            attempt_no=1,
+            claim_spec_id=claim.claim_spec_id,
+            source_id="source-beta",
+            canonical_url=beta.canonical_url,
+            artifact_id=beta.artifact_id,
+            snapshot_id=beta.snapshot_id,
+            retrieved_at=beta.created_at,
+            content_type=beta.media_type,
+            locator={"type": "character_range", "start": 0, "end": len(beta_text)},
+            text=beta_text,
+            stance="support",
+            quality=quality,
+            artifact_refs=[beta.artifact_id],
+        ),
+    ]
+    citation_map = {
+        "citation-alpha-one": "evidence-alpha-one",
+        "citation-alpha-two": "evidence-alpha-two",
+        "citation-beta": "evidence-beta",
+    }
+    claim_record = ClaimRecord(
+        claim_record_id="record-report",
+        run_id=run_id,
+        claim_spec_id=claim.claim_spec_id,
+        statement=claim.statement,
+        status="supported",
+        support_evidence_ids=[item.evidence_id for item in evidence],
+        citation_map=citation_map,
+    )
+    dossier = dataclasses.replace(
+        dossier,
+        run=dataclasses.replace(dossier.run, attempts=attempts),
+        evidence_items=evidence,
+        claim_records=[claim_record],
+    )
+    trace = JsonlTraceStore(tmp_path, run_id)
+    parent = trace.events()[-1].event_id
+    for name, artifact in (("alpha", alpha), ("beta", beta)):
+        event = TraceEvent(
+            event_id=f"event-{name}-{mode}",
+            run_id=run_id,
+            task_id=f"task-{name}",
+            step_id=f"step-{name}",
+            attempt_no=1,
+            event_type="evidence_mined",
+            timestamp="2026-08-26T00:00:01Z",
+            parent_event_id=parent,
+            artifact_refs=[artifact.artifact_id],
+        )
+        trace.append(event)
+        parent = event.event_id
+    citations = [
+        {
+            "citation_id": citation_id,
+            "claim_record_id": claim_record.claim_record_id,
+            "evidence_id": evidence_id,
+        }
+        for citation_id, evidence_id in citation_map.items()
+    ]
+    return dossier, citations
 
 
 def test_capability_snapshot_does_not_promote_configured_only_to_live_eligibility():
@@ -756,6 +960,156 @@ async def test_evidence_miner_roundtrip_claim_and_final_citation_backtrace(monke
     assert dossier.claim_records[0].status == "supported"
     assert result["ok"] is True
     assert result["backtrace"]["citation-1"]["artifact_id"] == document.artifact_id
+
+
+@pytest.mark.parametrize("mode", ["quick", "standard", "deep"])
+def test_citation_report_is_deterministic_across_product_modes(tmp_path, mode):
+    dossier, citations = _citation_ready_dossier(tmp_path, mode=mode)
+    draft = (
+        "# Findings\n\n"
+        "Beta appears first [cite:citation-beta]. "
+        "Alpha follows [cite:citation-alpha-one], repeats "
+        "[cite:citation-alpha-one], and uses another locator "
+        "[cite:citation-alpha-two]."
+    )
+
+    result = research_runtime.verify_final_citations(
+        dossier,
+        citations=citations,
+        artifact_root=tmp_path,
+        draft_report=draft,
+    )
+
+    assert result["citation_count"] == 3
+    assert result["rendered_report"].startswith(
+        "# Findings\n\nBeta appears first [1]. Alpha follows [2], repeats [2]"
+    )
+    assert result["rendered_report"].count("## References") == 1
+    assert "1. https://sources.example/beta." in result["rendered_report"]
+    assert "2. Ada Example. [Alpha Source](https://sources.example/alpha)" in result[
+        "rendered_report"
+    ]
+    register = result["reference_register"]
+    assert register["reference_count"] == 2
+    assert [item["source"]["source_id"] for item in register["references"]] == [
+        "source-beta",
+        "source-alpha",
+    ]
+    alpha = register["references"][1]
+    assert alpha["citation_ids"] == ["citation-alpha-one", "citation-alpha-two"]
+    assert [item["locator"] for item in alpha["evidence_items"]] == [
+        {"type": "character_range", "start": 0, "end": 19},
+        {"type": "character_range", "start": 20, "end": 39},
+    ]
+    references = result["rendered_report"].split("## References", 1)[1]
+    for internal_id in (
+        "source-alpha",
+        "record-report",
+        "evidence-alpha-one",
+        alpha["artifacts"][0]["artifact_id"],
+        alpha["artifacts"][0]["snapshot_id"],
+    ):
+        assert internal_id not in references
+
+
+def test_citation_report_rejects_unknown_marker_and_conflicting_mapping(tmp_path):
+    dossier, citations = _citation_ready_dossier(tmp_path)
+
+    with pytest.raises(ContractValidationError, match="marker citation-unknown"):
+        research_runtime.verify_final_citations(
+            dossier,
+            citations=citations,
+            artifact_root=tmp_path,
+            draft_report="Unknown [cite:citation-unknown].",
+        )
+
+    conflicting = citations + [
+        {
+            "citation_id": "citation-alpha-one",
+            "claim_record_id": "record-report",
+            "evidence_id": "evidence-alpha-two",
+        }
+    ]
+    with pytest.raises(ContractValidationError, match="conflicting duplicate mappings"):
+        research_runtime.verify_final_citations(
+            dossier,
+            citations=conflicting,
+            artifact_root=tmp_path,
+        )
+
+
+def test_citation_report_rejects_supplied_mappings_without_markers(tmp_path):
+    dossier, citations = _citation_ready_dossier(tmp_path)
+
+    with pytest.raises(ContractValidationError, match="must use supplied citation mappings"):
+        research_runtime.verify_final_citations(
+            dossier,
+            citations=citations,
+            artifact_root=tmp_path,
+            draft_report="# Findings\n\nA factual finding without a marker.",
+        )
+
+
+def test_citation_report_rejects_invalid_locator_and_candidate_only_mapping(tmp_path):
+    dossier, citations = _citation_ready_dossier(tmp_path)
+    broken = dataclasses.replace(dossier.evidence_items[0], text="Wrong snapshot text")
+    dossier = dataclasses.replace(
+        dossier,
+        evidence_items=[broken, *dossier.evidence_items[1:]],
+    )
+
+    with pytest.raises(ContractValidationError, match="citation-alpha-one.*invalid.*locator"):
+        research_runtime.verify_final_citations(
+            dossier,
+            citations=citations,
+            artifact_root=tmp_path,
+            draft_report="Finding [cite:citation-alpha-one].",
+        )
+
+    with pytest.raises(ContractValidationError, match="CandidateCard or URL-only"):
+        research_runtime.verify_final_citations(
+            dossier,
+            citations=[
+                {
+                    "citation_id": "citation-candidate",
+                    "candidate_id": "candidate-only",
+                    "canonical_url": "https://sources.example/candidate",
+                }
+            ],
+            artifact_root=tmp_path,
+        )
+
+
+def test_citation_only_verify_remains_compatible_and_exact_duplicates_are_idempotent(tmp_path):
+    dossier, citations = _citation_ready_dossier(tmp_path)
+    result = research_runtime.verify_final_citations(
+        dossier,
+        citations=[citations[0], dict(citations[0])],
+        artifact_root=tmp_path,
+    )
+
+    assert result["citation_count"] == 1
+    assert "rendered_report" not in result
+    assert "reference_register" not in result
+
+
+def test_citation_only_verify_preserves_all_evidence_locator_validation(tmp_path):
+    dossier, citations = _citation_ready_dossier(tmp_path)
+    broken_uncited = dataclasses.replace(
+        dossier.evidence_items[-1],
+        text="This text is not present in the registered snapshot.",
+    )
+    dossier = dataclasses.replace(
+        dossier,
+        evidence_items=[*dossier.evidence_items[:-1], broken_uncited],
+    )
+
+    with pytest.raises(ContractValidationError, match="locator"):
+        research_runtime.verify_final_citations(
+            dossier,
+            citations=[citations[0]],
+            artifact_root=tmp_path,
+        )
 
 
 @pytest.mark.asyncio

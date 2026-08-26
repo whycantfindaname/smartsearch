@@ -283,20 +283,96 @@ def _tree_bytes(root: Path) -> dict[str, bytes]:
 
 
 def _citation_verification(dossier: ResearchDossier) -> dict:
+    evidence = dossier.evidence_items[0]
     return {
         "ok": True,
         "citation_count": 16,
         "backtrace": {
             "citation-evidence-00": {
                 "claim_record_id": dossier.claim_records[0].claim_record_id,
-                "evidence_id": "evidence-00",
-                "artifact_id": "artifact-1",
+                "claim_spec_id": evidence.claim_spec_id,
+                "evidence_id": evidence.evidence_id,
+                "task_id": evidence.task_id,
+                "attempt_id": next(
+                    item.attempt_id
+                    for item in dossier.run.attempts
+                    if item.task_id == evidence.task_id
+                    and item.step_id == evidence.step_id
+                    and item.attempt_no == evidence.attempt_no
+                ),
+                "artifact_id": evidence.artifact_id,
+                "snapshot_id": evidence.snapshot_id,
+                "raw_ref": "raw/snapshot.bin",
             }
         },
         "locator_checks": {"evidence-00": {"locator_type": "character_range"}},
         "trace_ref": dossier.run.trace_ref,
         "artifact_index_ref": dossier.run.artifact_index_ref,
     }
+
+
+def _rendered_report_and_register(dossier: ResearchDossier) -> tuple[str, dict]:
+    evidence = dossier.evidence_items[0]
+    claim = dossier.claim_records[0]
+    report = (
+        "# Final\n\nThe evidence supports the conclusion [1].\n\n"
+        "## References\n\n1. https://evidence.example/0.\n"
+    )
+    register = {
+        "schema_version": "1",
+        "run_id": dossier.run.run_id,
+        "projection": "derived_audit_reference_register",
+        "reference_count": 1,
+        "references": [
+            {
+                "number": 1,
+                "source": {
+                    "source_id": evidence.source_id,
+                    "canonical_url": evidence.canonical_url,
+                    "canonical_urls": [evidence.canonical_url],
+                    "bibliographic": {},
+                },
+                "citation_ids": ["citation-evidence-00"],
+                "claim_records": [
+                    {
+                        "claim_record_id": claim.claim_record_id,
+                        "claim_spec_id": claim.claim_spec_id,
+                    }
+                ],
+                "evidence_items": [
+                    {
+                        "evidence_id": evidence.evidence_id,
+                        "claim_record_id": claim.claim_record_id,
+                        "claim_spec_id": evidence.claim_spec_id,
+                        "task_id": evidence.task_id,
+                        "step_id": evidence.step_id,
+                        "attempt_no": evidence.attempt_no,
+                        "attempt_id": next(
+                            item.attempt_id
+                            for item in dossier.run.attempts
+                            if item.task_id == evidence.task_id
+                            and item.step_id == evidence.step_id
+                            and item.attempt_no == evidence.attempt_no
+                        ),
+                        "artifact_id": evidence.artifact_id,
+                        "snapshot_id": evidence.snapshot_id,
+                        "canonical_url": evidence.canonical_url,
+                        "retrieved_at": evidence.retrieved_at,
+                        "locator": evidence.locator,
+                    }
+                ],
+                "artifacts": [
+                    {
+                        "artifact_id": evidence.artifact_id,
+                        "snapshot_id": evidence.snapshot_id,
+                        "raw_ref": "raw/snapshot.bin",
+                        "canonical_url": evidence.canonical_url,
+                    }
+                ],
+            }
+        ],
+    }
+    return report, register
 
 
 def test_materializes_public_agent_workspace_and_stage_g_projections(tmp_path):
@@ -421,6 +497,56 @@ def test_rematerialization_is_byte_idempotent(tmp_path):
     assert _tree_bytes(root) == before
 
 
+def test_legacy_report_replacement_removes_stale_reference_register(tmp_path):
+    dossier = _stage_g_dossier()
+    report, register = _rendered_report_and_register(dossier)
+    verification = _citation_verification(dossier)
+    root = tmp_path / "workspace"
+    workspace = ResearchWorkspace(root)
+
+    workspace.materialize(
+        dossier,
+        final_synthesis=report,
+        citation_verification=verification,
+        reference_register=register,
+    )
+    workspace.materialize(
+        dossier,
+        final_synthesis="# Legacy replacement\n\nNo evidence-backed references here.\n",
+    )
+
+    assert not (root / "evidence/reference_register.json").exists()
+    manifest = json.loads((root / "project_manifest.json").read_text())
+    assert "reference_register" not in manifest["entrypoints"]
+
+
+def test_wrong_run_legacy_report_does_not_remove_existing_reference_register(tmp_path):
+    dossier = _stage_g_dossier()
+    report, register = _rendered_report_and_register(dossier)
+    verification = _citation_verification(dossier)
+    root = tmp_path / "workspace"
+    workspace = ResearchWorkspace(root)
+    workspace.materialize(
+        dossier,
+        final_synthesis=report,
+        citation_verification=verification,
+        reference_register=register,
+    )
+    before = _tree_bytes(root)
+    other_payload = json.loads(
+        json.dumps(dossier.to_dict()).replace(dossier.run.run_id, "run-other")
+    )
+    other = ResearchDossier.from_dict(other_payload)
+
+    with pytest.raises(ResearchWorkspaceError, match="different research run"):
+        workspace.materialize(
+            other,
+            final_synthesis="# Wrong run\n\nLegacy report.\n",
+        )
+
+    assert _tree_bytes(root) == before
+
+
 def test_checkpoint_labels_are_safe_and_different_snapshots_are_not_overwritten(tmp_path):
     dossier = _stage_g_dossier()
     workspace = ResearchWorkspace(tmp_path / "workspace")
@@ -490,6 +616,133 @@ def test_citation_verification_projection_is_supplied_data(tmp_path):
         "evidence/citation_verification.json"
     )
     assert "## Phase 7: Citation Verification" in (root / "main_log.md").read_text()
+
+
+@pytest.mark.parametrize("mode", ["quick", "standard", "deep"])
+def test_citation_backed_report_register_is_materialized_for_every_mode(tmp_path, mode):
+    dossier = _stage_g_dossier()
+    dossier = dataclasses.replace(
+        dossier,
+        run=dataclasses.replace(
+            dossier.run,
+            frame=dataclasses.replace(dossier.run.frame, mode=mode),
+        ),
+    )
+    report, register = _rendered_report_and_register(dossier)
+    verification = _citation_verification(dossier)
+    root = tmp_path / mode
+
+    manifest = ResearchWorkspace(root).materialize(
+        dossier,
+        final_synthesis=report,
+        citation_verification=verification,
+        reference_register=register,
+    )
+
+    assert (root / "final_synthesis.md").read_text() == report
+    assert json.loads((root / "evidence/reference_register.json").read_text()) == register
+    assert manifest["mode"] == mode
+    assert manifest["entrypoints"]["reference_register"] == (
+        "evidence/reference_register.json"
+    )
+    references = report.split("## References", 1)[1]
+    assert "evidence-00" not in references
+    assert "record-claim-architecture" not in references
+    assert "artifact-1" not in references
+
+
+def test_invalid_reference_register_is_rejected_before_final_projection_changes(tmp_path):
+    dossier = _stage_g_dossier()
+    report, register = _rendered_report_and_register(dossier)
+    verification = _citation_verification(dossier)
+    root = tmp_path / "workspace"
+    workspace = ResearchWorkspace(root)
+    workspace.materialize(
+        dossier,
+        final_synthesis=report,
+        citation_verification=verification,
+        reference_register=register,
+    )
+    before = {
+        path: (root / path).read_bytes()
+        for path in (
+            "final_synthesis.md",
+            "evidence/citation_verification.json",
+            "evidence/reference_register.json",
+            "project_manifest.json",
+        )
+    }
+    broken = json.loads(json.dumps(register))
+    broken["references"][0]["evidence_items"][0]["snapshot_id"] = "snapshot-wrong"
+
+    with pytest.raises(ResearchWorkspaceError, match="conflicts on snapshot_id"):
+        workspace.materialize(
+            dossier,
+            final_synthesis=report.replace("supports", "still supports"),
+            citation_verification=verification,
+            reference_register=broken,
+        )
+
+    assert {
+        path: (root / path).read_bytes()
+        for path in before
+    } == before
+
+
+def test_reference_register_rejects_unused_reference_and_internal_id_leak(tmp_path):
+    dossier = _stage_g_dossier()
+    report, register = _rendered_report_and_register(dossier)
+    verification = _citation_verification(dossier)
+
+    with pytest.raises(ResearchWorkspaceError, match="not used by an in-text citation"):
+        ResearchWorkspace(tmp_path / "unused").materialize(
+            dossier,
+            final_synthesis=report.replace(" [1]", ""),
+            citation_verification=verification,
+            reference_register=register,
+        )
+    assert not (tmp_path / "unused").exists()
+
+    leaked_report = report.replace(
+        "https://evidence.example/0.",
+        "https://evidence.example/0. evidence-00",
+    )
+    with pytest.raises(ResearchWorkspaceError, match="internal audit identifiers"):
+        ResearchWorkspace(tmp_path / "leaked").materialize(
+            dossier,
+            final_synthesis=leaked_report,
+            citation_verification=verification,
+            reference_register=register,
+        )
+    assert not (tmp_path / "leaked").exists()
+
+
+def test_reference_register_rejects_projection_and_source_identity_conflicts(tmp_path):
+    dossier = _stage_g_dossier()
+    report, register = _rendered_report_and_register(dossier)
+    verification = _citation_verification(dossier)
+
+    wrong_projection = json.loads(json.dumps(register))
+    wrong_projection["projection"] = "authoritative_reference_database"
+    with pytest.raises(ResearchWorkspaceError, match="derived audit projection"):
+        ResearchWorkspace(tmp_path / "projection").materialize(
+            dossier,
+            final_synthesis=report,
+            citation_verification=verification,
+            reference_register=wrong_projection,
+        )
+    assert not (tmp_path / "projection").exists()
+
+    wrong_source = json.loads(json.dumps(register))
+    wrong_source["references"][0]["source"]["source_id"] = "source-conflict"
+    with pytest.raises(ResearchWorkspaceError, match="source or claim identity"):
+        ResearchWorkspace(tmp_path / "source").materialize(
+            dossier,
+            final_synthesis=report,
+            citation_verification=verification,
+            reference_register=wrong_source,
+        )
+    assert not (tmp_path / "source").exists()
 
 
 def test_workspace_and_task_paths_reject_traversal(tmp_path):

@@ -3,7 +3,7 @@
   "name": "citation-backed-research-reports",
   "title": "Generate citation-backed research reports",
   "description": "Add deterministic paper-style citation rendering, reference registration, and reverse-trace validation to Smart Search final research reports without changing Evidence or Claim authority.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": "Citation-marked final synthesis, deterministic numbered References, reference register projection, reverse-trace validation, Workspace and visualizer integration, tests, and Skill documentation",
   "package": null,

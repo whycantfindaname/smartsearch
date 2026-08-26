@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from .research_contracts import SCHEMA_VERSION, ContractValidationError
+from .research_kernel import canonicalize_url
 from .research_runtime import ResearchDossier
 
 
@@ -24,6 +25,8 @@ WORKSPACE_SCHEMA_VERSION = "1"
 
 _CHECKPOINT_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 _TASK_COMPONENT_RE = re.compile(r"[^A-Za-z0-9_-]+")
+_REFERENCES_HEADING_RE = re.compile(r"(?im)^#{1,6}\s+references\s*$")
+_NUMBERED_CITATION_RE = re.compile(r"\[([1-9][0-9]*)\]")
 _FORBIDDEN_PUBLIC_KEYS = frozenset(
     {
         "access_token",
@@ -131,6 +134,329 @@ def _locator_summary(locator: Mapping[str, Any]) -> str:
             f"{locator.get('file')}:{locator.get('line_start')}–{locator.get('line_end')}"
         )
     return locator_type
+
+
+def _validate_reference_register(
+    dossier: ResearchDossier,
+    *,
+    final_synthesis: str | None,
+    citation_verification: Mapping[str, Any] | None,
+    reference_register: Mapping[str, Any] | None,
+) -> None:
+    if reference_register is None:
+        return
+    if final_synthesis is None:
+        raise ResearchWorkspaceError(
+            "reference_register requires the rendered final_synthesis in the same materialization"
+        )
+    if citation_verification is None or citation_verification.get("ok") is not True:
+        raise ResearchWorkspaceError(
+            "reference_register requires a successful citation_verification projection"
+        )
+    if reference_register.get("schema_version") != "1":
+        raise ResearchWorkspaceError("reference_register.schema_version must be 1")
+    if reference_register.get("run_id") != dossier.run.run_id:
+        raise ResearchWorkspaceError("reference_register belongs to a different research run")
+    if reference_register.get("projection") != "derived_audit_reference_register":
+        raise ResearchWorkspaceError(
+            "reference_register.projection must identify the derived audit projection"
+        )
+    references = reference_register.get("references")
+    if not isinstance(references, list):
+        raise ResearchWorkspaceError("reference_register.references must be a list")
+    if reference_register.get("reference_count") != len(references):
+        raise ResearchWorkspaceError(
+            "reference_register.reference_count must match the references list"
+        )
+    backtrace = citation_verification.get("backtrace")
+    if not isinstance(backtrace, Mapping):
+        raise ResearchWorkspaceError(
+            "citation_verification.backtrace is required for reference_register validation"
+        )
+    heading_matches = list(_REFERENCES_HEADING_RE.finditer(final_synthesis))
+    if references and len(heading_matches) != 1:
+        raise ResearchWorkspaceError(
+            "a rendered report with references must contain exactly one References section"
+        )
+    if not references and heading_matches:
+        raise ResearchWorkspaceError(
+            "a rendered report may not contain References when reference_register is empty"
+        )
+    report_body = final_synthesis[: heading_matches[0].start()] if heading_matches else final_synthesis
+    displayed_numbers = {int(value) for value in _NUMBERED_CITATION_RE.findall(report_body)}
+    expected_numbers = list(range(1, len(references) + 1))
+    unexpected_numbers = displayed_numbers - set(expected_numbers)
+    if unexpected_numbers:
+        raise ResearchWorkspaceError(
+            "rendered report contains an in-text reference number absent from reference_register"
+        )
+    known_internal_ids: set[str] = {
+        item.candidate_id for item in dossier.candidate_cards
+    }
+    known_internal_ids.update(item.evidence_id for item in dossier.evidence_items)
+    known_internal_ids.update(item.claim_record_id for item in dossier.claim_records)
+    seen_citation_ids: set[str] = set()
+    seen_source_ids: set[str] = set()
+    authoritative_evidence = {
+        item.evidence_id: item for item in dossier.evidence_items
+    }
+    authoritative_claims = {
+        item.claim_record_id: item for item in dossier.claim_records
+    }
+    authoritative_attempts = {
+        (item.run_id, item.task_id, item.step_id, item.attempt_no): item
+        for item in dossier.run.attempts
+    }
+
+    def normalized_url(value: Any, *, label: str) -> str:
+        try:
+            return canonicalize_url(str(value or ""))
+        except ContractValidationError as exc:
+            raise ResearchWorkspaceError(f"{label} is not a valid canonical URL") from exc
+
+    for expected_number, reference in zip(expected_numbers, references):
+        if not isinstance(reference, Mapping) or reference.get("number") != expected_number:
+            raise ResearchWorkspaceError(
+                "reference_register reference numbers must be consecutive in display order"
+            )
+        if expected_number not in displayed_numbers:
+            raise ResearchWorkspaceError(
+                f"reference {expected_number} is not used by an in-text citation"
+            )
+        source = reference.get("source")
+        citation_ids = reference.get("citation_ids")
+        claim_records = reference.get("claim_records")
+        evidence_items = reference.get("evidence_items")
+        artifacts = reference.get("artifacts")
+        if (
+            not isinstance(source, Mapping)
+            or not isinstance(source.get("canonical_url"), str)
+            or not source.get("canonical_url")
+            or not str(source.get("canonical_url")).startswith(("http://", "https://"))
+        ):
+            raise ResearchWorkspaceError(
+                f"reference {expected_number} requires canonical source metadata"
+            )
+        canonical_urls = source.get("canonical_urls")
+        bibliographic = source.get("bibliographic")
+        if (
+            not isinstance(canonical_urls, list)
+            or not canonical_urls
+            or any(not isinstance(item, str) or not item for item in canonical_urls)
+            or not isinstance(bibliographic, Mapping)
+        ):
+            raise ResearchWorkspaceError(
+                f"reference {expected_number} requires canonical URL aliases and bibliographic metadata"
+            )
+        normalized_source_urls = [
+            normalized_url(
+                item,
+                label=f"reference {expected_number} source canonical URL",
+            )
+            for item in canonical_urls
+        ]
+        primary_source_url = normalized_url(
+            source.get("canonical_url"),
+            label=f"reference {expected_number} primary source URL",
+        )
+        if (
+            primary_source_url not in normalized_source_urls
+            or len(normalized_source_urls) != len(set(normalized_source_urls))
+        ):
+            raise ResearchWorkspaceError(
+                f"reference {expected_number} canonical source aliases are inconsistent"
+            )
+        if not isinstance(citation_ids, list) or not citation_ids:
+            raise ResearchWorkspaceError(
+                f"reference {expected_number} requires at least one citation_id"
+            )
+        if any(not isinstance(item, str) or not item for item in citation_ids):
+            raise ResearchWorkspaceError(
+                f"reference {expected_number} citation_ids must be non-empty strings"
+            )
+        duplicate_citations = seen_citation_ids.intersection(citation_ids)
+        if duplicate_citations:
+            raise ResearchWorkspaceError(
+                "a citation_id may map to only one displayed reference number"
+            )
+        seen_citation_ids.update(citation_ids)
+        source_id = str(source.get("source_id") or "")
+        if not source_id or source_id in seen_source_ids:
+            raise ResearchWorkspaceError(
+                "reference_register requires one unique stable source_id per displayed reference"
+            )
+        seen_source_ids.add(source_id)
+        if not isinstance(claim_records, list) or not isinstance(evidence_items, list):
+            raise ResearchWorkspaceError(
+                f"reference {expected_number} requires ClaimRecord and EvidenceItem mappings"
+            )
+        if not isinstance(artifacts, list) or not artifacts:
+            raise ResearchWorkspaceError(
+                f"reference {expected_number} requires registered artifact snapshots"
+            )
+        evidence_by_id = {
+            str(item.get("evidence_id") or ""): item
+            for item in evidence_items
+            if isinstance(item, Mapping)
+        }
+        artifacts_by_id = {
+            str(item.get("artifact_id") or ""): item
+            for item in artifacts
+            if isinstance(item, Mapping)
+        }
+        claims_by_id = {
+            str(item.get("claim_record_id") or ""): item
+            for item in claim_records
+            if isinstance(item, Mapping)
+        }
+        for citation_id in citation_ids:
+            verified = backtrace.get(citation_id)
+            if not isinstance(verified, Mapping):
+                raise ResearchWorkspaceError(
+                    f"reference {expected_number} citation {citation_id} is absent from citation_verification"
+                )
+            evidence_id = str(verified.get("evidence_id") or "")
+            artifact_id = str(verified.get("artifact_id") or "")
+            claim_record_id = str(verified.get("claim_record_id") or "")
+            evidence_projection = evidence_by_id.get(evidence_id)
+            artifact_projection = artifacts_by_id.get(artifact_id)
+            claim_projection = claims_by_id.get(claim_record_id)
+            evidence_authority = authoritative_evidence.get(evidence_id)
+            claim_authority = authoritative_claims.get(claim_record_id)
+            if (
+                evidence_projection is None
+                or artifact_projection is None
+                or claim_projection is None
+                or evidence_authority is None
+                or claim_authority is None
+            ):
+                raise ResearchWorkspaceError(
+                    f"reference {expected_number} citation {citation_id} has an incomplete claim/evidence/artifact mapping"
+                )
+            linked_evidence = set(
+                claim_authority.support_evidence_ids
+                + claim_authority.contradict_evidence_ids
+                + claim_authority.qualify_evidence_ids
+            )
+            if (
+                evidence_id not in linked_evidence
+                or evidence_authority.claim_spec_id != claim_authority.claim_spec_id
+                or evidence_authority.source_id != source_id
+            ):
+                raise ResearchWorkspaceError(
+                    f"reference {expected_number} citation {citation_id} conflicts with authoritative source or claim identity"
+                )
+            attempt_authority = authoritative_attempts.get(
+                (
+                    evidence_authority.run_id,
+                    evidence_authority.task_id,
+                    evidence_authority.step_id,
+                    evidence_authority.attempt_no,
+                )
+            )
+            if attempt_authority is None:
+                raise ResearchWorkspaceError(
+                    f"reference {expected_number} citation {citation_id} has no authoritative attempt"
+                )
+            authoritative_fields = {
+                "claim_record_id": claim_authority.claim_record_id,
+                "claim_spec_id": claim_authority.claim_spec_id,
+                "evidence_id": evidence_authority.evidence_id,
+                "task_id": evidence_authority.task_id,
+                "attempt_id": attempt_authority.attempt_id,
+                "artifact_id": evidence_authority.artifact_id,
+                "snapshot_id": evidence_authority.snapshot_id,
+            }
+            for field, value in authoritative_fields.items():
+                if str(verified.get(field) or "") != str(value):
+                    raise ResearchWorkspaceError(
+                        f"reference {expected_number} citation {citation_id} conflicts with authoritative {field}"
+                    )
+            if not isinstance(evidence_projection.get("locator"), Mapping):
+                raise ResearchWorkspaceError(
+                    f"reference {expected_number} citation {citation_id} requires a typed locator"
+                )
+            if claim_projection.get("claim_spec_id") != verified.get("claim_spec_id"):
+                raise ResearchWorkspaceError(
+                    f"reference {expected_number} citation {citation_id} conflicts on claim_spec_id"
+                )
+            for field in ("claim_record_id", "claim_spec_id", "artifact_id", "snapshot_id"):
+                if str(evidence_projection.get(field) or verified.get(field) or "") != str(
+                    verified.get(field) or ""
+                ):
+                    raise ResearchWorkspaceError(
+                        f"reference {expected_number} citation {citation_id} conflicts on {field}"
+                    )
+            if artifact_projection.get("snapshot_id") != verified.get("snapshot_id"):
+                raise ResearchWorkspaceError(
+                    f"reference {expected_number} citation {citation_id} conflicts on snapshot_id"
+                )
+            if artifact_projection.get("raw_ref") != verified.get("raw_ref"):
+                raise ResearchWorkspaceError(
+                    f"reference {expected_number} citation {citation_id} conflicts on raw_ref"
+                )
+            projected_evidence_fields = {
+                "claim_record_id": claim_authority.claim_record_id,
+                "claim_spec_id": evidence_authority.claim_spec_id,
+                "task_id": evidence_authority.task_id,
+                "step_id": evidence_authority.step_id,
+                "attempt_no": evidence_authority.attempt_no,
+                "attempt_id": attempt_authority.attempt_id,
+                "artifact_id": evidence_authority.artifact_id,
+                "snapshot_id": evidence_authority.snapshot_id,
+                "retrieved_at": evidence_authority.retrieved_at,
+            }
+            for field, value in projected_evidence_fields.items():
+                if evidence_projection.get(field) != value:
+                    raise ResearchWorkspaceError(
+                        f"reference {expected_number} citation {citation_id} conflicts on projected {field}"
+                    )
+            if dict(evidence_projection["locator"]) != dict(evidence_authority.locator):
+                raise ResearchWorkspaceError(
+                    f"reference {expected_number} citation {citation_id} conflicts on projected locator"
+                )
+            evidence_url = normalized_url(
+                evidence_authority.canonical_url,
+                label=f"reference {expected_number} evidence canonical URL",
+            )
+            if (
+                evidence_url not in normalized_source_urls
+                or normalized_url(
+                    evidence_projection.get("canonical_url"),
+                    label=f"reference {expected_number} projected evidence URL",
+                )
+                != evidence_url
+                or normalized_url(
+                    artifact_projection.get("canonical_url"),
+                    label=f"reference {expected_number} projected artifact URL",
+                )
+                != evidence_url
+            ):
+                raise ResearchWorkspaceError(
+                    f"reference {expected_number} citation {citation_id} conflicts on canonical source URL"
+                )
+        known_internal_ids.update(str(item) for item in citation_ids)
+        for collection, fields in (
+            (claim_records, ("claim_record_id", "claim_spec_id")),
+            (evidence_items, ("evidence_id", "claim_record_id", "claim_spec_id", "artifact_id", "snapshot_id")),
+            (artifacts, ("artifact_id", "snapshot_id")),
+        ):
+            for item in collection:
+                if isinstance(item, Mapping):
+                    known_internal_ids.update(
+                        str(item[field]) for field in fields if item.get(field)
+                    )
+
+    if heading_matches:
+        human_references = final_synthesis[heading_matches[0].start() :]
+        leaked = next(
+            (identity for identity in sorted(known_internal_ids) if identity in human_references),
+            "",
+        )
+        if leaked:
+            raise ResearchWorkspaceError(
+                "the reader-facing References section may not contain internal audit identifiers"
+            )
 
 
 class ResearchWorkspace:
@@ -305,6 +631,7 @@ class ResearchWorkspace:
         task_layout: Sequence[tuple[Any, str]],
         *,
         citation_verification_available: bool,
+        reference_register_available: bool,
         public_trace_available: bool,
     ) -> dict[str, Any]:
         status, phase = self._phase(dossier)
@@ -321,6 +648,8 @@ class ResearchWorkspace:
             entrypoints["final_synthesis"] = "final_synthesis.md"
         if citation_verification_available:
             entrypoints["citation_verification"] = "evidence/citation_verification.json"
+        if reference_register_available:
+            entrypoints["reference_register"] = "evidence/reference_register.json"
         if public_trace_available:
             entrypoints["public_trace"] = "public_trace.jsonl"
         entrypoints.update(self._artifact_refs(dossier))
@@ -719,6 +1048,7 @@ class ResearchWorkspace:
         checkpoint_labels: Sequence[str] = (),
         final_synthesis: str | None = None,
         citation_verification: Mapping[str, Any] | None = None,
+        reference_register: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Write deterministic projections and return the manifest payload."""
         if not isinstance(dossier, ResearchDossier):
@@ -734,11 +1064,21 @@ class ResearchWorkspace:
             raise ResearchWorkspaceError("final_synthesis must be non-empty text when supplied")
         if citation_verification is not None and not isinstance(citation_verification, Mapping):
             raise ResearchWorkspaceError("citation_verification must be an object when supplied")
+        if reference_register is not None and not isinstance(reference_register, Mapping):
+            raise ResearchWorkspaceError("reference_register must be an object when supplied")
 
         dossier_payload = dossier.to_dict()
         _assert_public(dossier_payload, path="ResearchDossier")
         if citation_verification is not None:
             _assert_public(citation_verification, path="citation_verification")
+        if reference_register is not None:
+            _assert_public(reference_register, path="reference_register")
+        _validate_reference_register(
+            dossier,
+            final_synthesis=final_synthesis,
+            citation_verification=citation_verification,
+            reference_register=reference_register,
+        )
 
         self._mkdir()
         self._assert_workspace_identity(dossier)
@@ -746,9 +1086,6 @@ class ResearchWorkspace:
         public_trace_available = self._project_public_trace(dossier)
         for label in checkpoint_labels:
             self.write_checkpoint(dossier, label)
-
-        if final_synthesis is not None:
-            self._atomic_write("final_synthesis.md", final_synthesis)
 
         self._mkdir("evidence")
         self._atomic_write(
@@ -781,6 +1118,18 @@ class ResearchWorkspace:
                 "evidence/citation_verification.json",
                 _canonical_json(dict(citation_verification)),
             )
+        if reference_register is not None:
+            self._atomic_write(
+                "evidence/reference_register.json",
+                _canonical_json(dict(reference_register)),
+            )
+        if final_synthesis is not None:
+            # A caller-supplied legacy report is a new report projection.  Do
+            # not leave an audit register from an earlier finalized report
+            # attached to it after all run-identity checks have passed.
+            if reference_register is None:
+                self._remove_generated_file("evidence/reference_register.json")
+            self._atomic_write("final_synthesis.md", final_synthesis)
 
         for task, directory in task_layout:
             self._write_task(dossier, task, directory)
@@ -789,10 +1138,15 @@ class ResearchWorkspace:
             citation_verification is not None
             or self._destination("evidence/citation_verification.json").is_file()
         )
+        reference_register_available = (
+            reference_register is not None
+            or self._destination("evidence/reference_register.json").is_file()
+        )
         manifest = self._manifest(
             dossier,
             task_layout,
             citation_verification_available=citation_available,
+            reference_register_available=reference_register_available,
             public_trace_available=public_trace_available,
         )
         self._atomic_write("latest_dossier.json", _canonical_json(dossier_payload))

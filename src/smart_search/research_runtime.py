@@ -48,6 +48,7 @@ from .research_kernel import (
     JsonlTraceStore,
     PlanCompiler,
     build_candidate_cards,
+    canonicalize_url,
     derive_claim_record,
     normalize_candidates,
     validate_evidence_locator,
@@ -71,6 +72,10 @@ DOSSIER_FIELDS = frozenset(
     }
 )
 _URL_RE = re.compile(r"https?://[^\s<>()\[\]{}\"']+")
+_CITATION_MARKER_RE = re.compile(
+    r"\[cite:([A-Za-z0-9][A-Za-z0-9._:-]{0,127})\]"
+)
+_REFERENCES_HEADING_RE = re.compile(r"(?im)^#{1,6}\s+references\s*$")
 _PROVIDER_STATUS_MAP = {
     "not_configured": "missing_key",
     "unreachable": "unavailable",
@@ -1513,28 +1518,302 @@ def update_root_decision(
     )
 
 
+def _normalize_final_citations(
+    citations: Sequence[Mapping[str, str]],
+) -> list[dict[str, str]]:
+    normalized: list[dict[str, str]] = []
+    seen: dict[str, tuple[str, str]] = {}
+    for index, citation in enumerate(citations):
+        if not isinstance(citation, Mapping):
+            raise ContractValidationError(f"citation mapping at index {index} must be an object")
+        citation_id = str(citation.get("citation_id") or "")
+        claim_record_id = str(citation.get("claim_record_id") or "")
+        evidence_id = str(citation.get("evidence_id") or "")
+        if not citation_id:
+            raise ContractValidationError(f"citation mapping at index {index} requires citation_id")
+        if not claim_record_id or not evidence_id:
+            if citation.get("candidate_id") or citation.get("url") or citation.get("canonical_url"):
+                raise ContractValidationError(
+                    f"citation {citation_id} must reference a ClaimRecord and EvidenceItem; "
+                    "CandidateCard or URL-only citations are discovery inputs, not report evidence"
+                )
+            raise ContractValidationError(
+                f"citation {citation_id} requires claim_record_id and evidence_id"
+            )
+        target = (claim_record_id, evidence_id)
+        previous = seen.get(citation_id)
+        if previous is not None:
+            if previous != target:
+                raise ContractValidationError(
+                    f"citation {citation_id} has conflicting duplicate mappings"
+                )
+            continue
+        seen[citation_id] = target
+        normalized.append(
+            {
+                "citation_id": citation_id,
+                "claim_record_id": claim_record_id,
+                "evidence_id": evidence_id,
+            }
+        )
+    return normalized
+
+
+def _metadata_value(metadata: Mapping[str, Any], *names: str) -> Any:
+    bibliographic = metadata.get("bibliographic")
+    sources = [bibliographic, metadata] if isinstance(bibliographic, Mapping) else [metadata]
+    for source in sources:
+        for name in names:
+            value = source.get(name)
+            if value not in (None, "", [], {}):
+                return value
+    return ""
+
+
+def _bibliographic_metadata(artifact: ArtifactRecord) -> dict[str, Any]:
+    metadata = artifact.metadata
+    result: dict[str, Any] = {}
+    title = _metadata_value(metadata, "title")
+    authors = _metadata_value(metadata, "authors", "author")
+    published = _metadata_value(
+        metadata,
+        "published_at",
+        "publication_date",
+        "published_date",
+        "date",
+    )
+    venue = _metadata_value(metadata, "venue", "journal", "publisher")
+    doi = _metadata_value(metadata, "doi")
+    accessed = _metadata_value(metadata, "accessed_at", "access_date")
+    if isinstance(title, str) and title.strip():
+        result["title"] = title.strip()
+    if isinstance(authors, str) and authors.strip():
+        result["authors"] = [authors.strip()]
+    elif isinstance(authors, list):
+        cleaned = [item.strip() for item in authors if isinstance(item, str) and item.strip()]
+        if cleaned:
+            result["authors"] = cleaned
+    for name, value in (
+        ("published_at", published),
+        ("venue", venue),
+        ("doi", doi),
+        ("accessed_at", accessed),
+    ):
+        if isinstance(value, str) and value.strip():
+            result[name] = value.strip()
+    return result
+
+
+def _merge_bibliographic_metadata(
+    current: dict[str, Any], artifact: ArtifactRecord
+) -> None:
+    for name, value in _bibliographic_metadata(artifact).items():
+        if name not in current:
+            current[name] = value
+
+
+def _escape_reference_text(value: str) -> str:
+    return re.sub(r"([\\`*_{}\[\]<>])", r"\\\1", value)
+
+
+def _render_reference(reference: Mapping[str, Any]) -> str:
+    source = reference.get("source")
+    source = source if isinstance(source, Mapping) else {}
+    bibliographic = source.get("bibliographic")
+    bibliographic = bibliographic if isinstance(bibliographic, Mapping) else {}
+    canonical_url = str(source.get("canonical_url") or "")
+    title = str(bibliographic.get("title") or "")
+    authors = bibliographic.get("authors")
+    parts: list[str] = []
+    if isinstance(authors, list) and authors:
+        parts.append(", ".join(_escape_reference_text(str(item)) for item in authors))
+    if title and canonical_url:
+        parts.append(f"[{_escape_reference_text(title)}]({canonical_url})")
+    elif title:
+        parts.append(_escape_reference_text(title))
+    elif canonical_url:
+        parts.append(canonical_url)
+    for name in ("venue", "published_at"):
+        value = str(bibliographic.get(name) or "")
+        if value:
+            parts.append(_escape_reference_text(value))
+    doi = str(bibliographic.get("doi") or "")
+    if doi:
+        parts.append(f"DOI: {_escape_reference_text(doi)}")
+    accessed = str(bibliographic.get("accessed_at") or "")
+    if accessed:
+        parts.append(f"Accessed: {_escape_reference_text(accessed)}")
+    return ". ".join(parts).rstrip(".") + "."
+
+
+def _render_citation_report(
+    draft_report: str,
+    *,
+    dossier: ResearchDossier,
+    mapping: Mapping[str, Mapping[str, str]],
+    artifacts: Sequence[ArtifactRecord],
+) -> tuple[str, dict[str, Any]]:
+    if not isinstance(draft_report, str) or not draft_report.strip():
+        raise ContractValidationError("draft_report must be non-empty Markdown when supplied")
+    if _REFERENCES_HEADING_RE.search(draft_report):
+        raise ContractValidationError(
+            "draft_report must not contain a References heading; Smart Search appends it after verification"
+        )
+    marker_ids = _CITATION_MARKER_RE.findall(draft_report)
+    without_valid_markers = _CITATION_MARKER_RE.sub("", draft_report)
+    if re.search(r"\[cite:", without_valid_markers, flags=re.IGNORECASE):
+        raise ContractValidationError(
+            "draft_report contains a malformed citation marker; use exact [cite:<citation_id>] syntax"
+        )
+    if mapping and not marker_ids:
+        raise ContractValidationError(
+            "draft_report must use supplied citation mappings with [cite:<citation_id>] markers"
+        )
+    for citation_id in marker_ids:
+        if citation_id not in mapping:
+            raise ContractValidationError(
+                f"draft_report marker {citation_id} has no supplied citation mapping"
+            )
+
+    evidence_by_id = {item.evidence_id: item for item in dossier.evidence_items}
+    artifacts_by_id = {item.artifact_id: item for item in artifacts}
+    references: list[dict[str, Any]] = []
+    by_source: dict[str, dict[str, Any]] = {}
+    citation_numbers: dict[str, int] = {}
+
+    for citation_id in marker_ids:
+        backtrace = mapping[citation_id]
+        evidence = evidence_by_id[backtrace["evidence_id"]]
+        artifact = artifacts_by_id[backtrace["artifact_id"]]
+        normalized_url = canonicalize_url(evidence.canonical_url)
+        if not artifact.canonical_url or canonicalize_url(artifact.canonical_url) != normalized_url:
+            raise ContractValidationError(
+                f"citation {citation_id} canonical URL does not match its registered artifact snapshot"
+            )
+        reference = by_source.get(evidence.source_id)
+        if reference is None:
+            number = len(references) + 1
+            reference = {
+                "number": number,
+                "source": {
+                    "source_id": evidence.source_id,
+                    "canonical_url": normalized_url,
+                    "canonical_urls": [normalized_url],
+                    "bibliographic": _bibliographic_metadata(artifact),
+                },
+                "citation_ids": [],
+                "claim_records": [],
+                "evidence_items": [],
+                "artifacts": [],
+            }
+            by_source[evidence.source_id] = reference
+            references.append(reference)
+        source = reference["source"]
+        if normalized_url not in source["canonical_urls"]:
+            source["canonical_urls"].append(normalized_url)
+        _merge_bibliographic_metadata(source["bibliographic"], artifact)
+        if citation_id not in reference["citation_ids"]:
+            reference["citation_ids"].append(citation_id)
+        claim_projection = {
+            "claim_record_id": backtrace["claim_record_id"],
+            "claim_spec_id": backtrace["claim_spec_id"],
+        }
+        if claim_projection not in reference["claim_records"]:
+            reference["claim_records"].append(claim_projection)
+        if not any(
+            item["evidence_id"] == evidence.evidence_id
+            for item in reference["evidence_items"]
+        ):
+            reference["evidence_items"].append(
+                {
+                    "evidence_id": evidence.evidence_id,
+                    "claim_record_id": backtrace["claim_record_id"],
+                    "claim_spec_id": evidence.claim_spec_id,
+                    "task_id": evidence.task_id,
+                    "step_id": evidence.step_id,
+                    "attempt_no": evidence.attempt_no,
+                    "attempt_id": backtrace["attempt_id"],
+                    "artifact_id": evidence.artifact_id,
+                    "snapshot_id": evidence.snapshot_id,
+                    "canonical_url": normalized_url,
+                    "retrieved_at": evidence.retrieved_at,
+                    "locator": dict(evidence.locator),
+                }
+            )
+        if not any(
+            item["artifact_id"] == artifact.artifact_id
+            for item in reference["artifacts"]
+        ):
+            reference["artifacts"].append(
+                {
+                    "artifact_id": artifact.artifact_id,
+                    "snapshot_id": artifact.snapshot_id,
+                    "raw_ref": artifact.raw_ref,
+                    "canonical_url": artifact.canonical_url,
+                }
+            )
+        citation_numbers[citation_id] = reference["number"]
+
+    rendered = _CITATION_MARKER_RE.sub(
+        lambda match: f"[{citation_numbers[match.group(1)]}]",
+        draft_report.rstrip(),
+    )
+    if references:
+        rendered += "\n\n## References\n\n" + "\n".join(
+            f"{reference['number']}. {_render_reference(reference)}"
+            for reference in references
+        )
+    rendered += "\n"
+    register = {
+        "schema_version": "1",
+        "run_id": dossier.run.run_id,
+        "projection": "derived_audit_reference_register",
+        "reference_count": len(references),
+        "references": references,
+    }
+    return rendered, register
+
+
 def verify_final_citations(
     dossier: ResearchDossier,
     *,
     citations: Sequence[Mapping[str, str]],
     artifact_root: str | Path,
+    draft_report: str | None = None,
 ) -> dict[str, Any]:
     registry = ArtifactRegistry(artifact_root, dossier.run.run_id)
     trace = JsonlTraceStore(artifact_root, dossier.run.run_id)
-    locator_checks = {
-        item.evidence_id: validate_evidence_locator(registry, item)
-        for item in dossier.evidence_items
-    }
+    normalized_citations = _normalize_final_citations(citations)
+    artifacts = registry.records()
+    trace_events = trace.events()
+    if normalized_citations and not trace_events:
+        raise ContractValidationError(
+            "citation verification requires artifact-linked Trace events for the complete reverse trace"
+        )
     mapping = validate_citation_backtrace(
-        citations,
+        normalized_citations,
         claim_records=dossier.claim_records,
         evidence_items=dossier.evidence_items,
         tasks=dossier.search_tasks + dossier.evidence_mining_tasks,
         attempts=dossier.run.attempts,
-        artifacts=registry.records(),
-        trace_events=trace.events(),
+        artifacts=artifacts,
+        trace_events=trace_events,
     )
-    return {
+    citations_by_evidence: dict[str, list[str]] = {}
+    for citation_id, backtrace in mapping.items():
+        citations_by_evidence.setdefault(backtrace["evidence_id"], []).append(citation_id)
+    locator_checks: dict[str, dict[str, Any]] = {}
+    for evidence in dossier.evidence_items:
+        try:
+            locator_checks[evidence.evidence_id] = validate_evidence_locator(registry, evidence)
+        except ContractValidationError as exc:
+            citation_ids = citations_by_evidence.get(evidence.evidence_id, [])
+            if citation_ids:
+                raise ContractValidationError(
+                    f"citation {citation_ids[0]} has an invalid EvidenceItem locator: {exc}"
+                ) from exc
+            raise
+    result: dict[str, Any] = {
         "ok": True,
         "citation_count": len(mapping),
         "backtrace": mapping,
@@ -1542,3 +1821,13 @@ def verify_final_citations(
         "trace_ref": dossier.run.trace_ref,
         "artifact_index_ref": dossier.run.artifact_index_ref,
     }
+    if draft_report is not None:
+        rendered_report, reference_register = _render_citation_report(
+            draft_report,
+            dossier=dossier,
+            mapping=mapping,
+            artifacts=artifacts,
+        )
+        result["rendered_report"] = rendered_report
+        result["reference_register"] = reference_register
+    return result
