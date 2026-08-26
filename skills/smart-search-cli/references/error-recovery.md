@@ -103,6 +103,18 @@ maximum number of logical calls, including the first call. It is a bounded
 safety budget, not a general retry switch. A result records
 `logical_attempts`, `logical_retry_used`, and `logical_retry_max_attempts`.
 
+## CLI and local invocation channel
+
+| Observed signature | Built-in behavior | Required handling |
+| --- | --- | --- |
+| `argument command: invalid choice`, unknown option, missing required argument, or invalid option choice | `argparse` stops before provider routing, writes usage to stderr, and normally exits with code `2`; no structured provider JSON exists. | Run `smart-search --help` or `<command> --help`, correct the invocation, and do not diagnose a provider. |
+| A command exists in source/tests but is absent from the installed `smart-search --help` | Executable/package version drift; updating the Skill package does not publish or replace the CLI. | Record `smart-search --version`, use only installed commands, and update/publish the CLI only through the separate approved release workflow. |
+| A positive/bounded local value is invalid, such as `search --max-try 0` or Sciverse `--page-size 0` | Local `parameter_error` or parser exit before network access. | Correct the documented range. Retrying unchanged cannot help. |
+| Output path cannot be written | Local filesystem exception; the provider result may already have completed. | Preserve stdout when available, fix the directory/permission, and write the existing result instead of repeating the provider request. |
+
+CLI parser errors are not `provider_error`, even when an absent command names a
+provider. They must not start a doctor or provider retry workflow.
+
 ## Main provider channel
 
 The main provider channel owns broad answer generation and synthesis. xAI
@@ -292,11 +304,14 @@ Sciverse is explicit-only academic vertical search. It is not part of default
 ## AnySearch compatibility channel
 
 AnySearch remains a delegated external Skill and is not a generic Smart Search
-fallback. Smart Search compatibility commands expose explicit vertical-domain
-calls only.
+fallback. The governed agent workflow always uses `$anysearch`. Some
+development builds retain explicit Smart Search compatibility commands, while
+the installed CLI may omit them; their presence does not authorize default
+routing through AnySearch.
 
 | Observed signature | Built-in behavior | Required handling |
 | --- | --- | --- |
+| `anysearch-*` is rejected as an invalid CLI command | Local parser error before provider access; the installed CLI does not expose the compatibility adapter. | Use the official `$anysearch` Skill. Do not treat this as provider downtime. |
 | Invalid `--sub-domain-params`, malformed `--param`, or more than five batch queries | `parameter_error` before network access. | Correct local arguments; use `anysearch-domains` to inspect valid domains. |
 | HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared provider classification. | Correct permanent errors or wait before one fresh explicit call. Do not convert it into default web fallback. |
 | HTTP `402`, `404`, `409`, or another unlisted status | `provider_error`; no automatic retry. | Resolve billing, domain/tool availability, or resource state through the delegated AnySearch Skill. |
