@@ -174,6 +174,7 @@ until the relevant URL is fetched.
 
 | Observed signature | Built-in behavior | Required handling |
 | --- | --- | --- |
+| Local parser rejects `--end-published-date` or another unknown `exa-search` option | `argparse` exits with code `2` before any Exa request; this is not an Exa provider failure. | Use `exa-search --help` outside the metered research run when needed. The current command supports `--start-published-date` but not an end-date flag; put the upper date bound in the query and verify the actual publication date from each direct source. Do not count the corrected command as an Exa retry. |
 | Missing `EXA_API_KEY` | `config_error` before the provider call. | Configure the key, or use another configured `docs_search` provider. |
 | HTTP `400`/`422`, including invalid domain/date/category filters | `parameter_error`; no useful retry with the same payload. | Correct the filter values and submit one fresh command. |
 | HTTP `401`/`403` | `auth_error`. | Verify the Exa key and account entitlement before retrying. |
@@ -300,6 +301,7 @@ Sciverse is explicit-only academic vertical search. It is not part of default
 | --- | --- | --- |
 | Missing `SCIVERSE_API_TOKEN` | `config_error` before network access. | Configure the token or use another explicit academic source. |
 | Invalid collection/filter/sort/mode/source type, missing id/query, invalid page, `page_size`, `top_k`, offset, limit, or relation | `parameter_error` before network access. | Correct the named field. Current bounds include search `page_size` 1–50, semantic `top_k` 1–30, read limit 1–16384, and relation `page_size` 1–200. |
+| HTTP `400` with `INVALID_REQUEST` and `extra_forbidden` for CLI-exposed fields such as `year_from` or `sort_by_year` | `parameter_error`; the installed client and current Sciverse request schema disagree. The provider does not retry it. | Remove only the rejected server fields and submit one corrected explicit query if the result is still needed. Express the date window in the query, then verify publication dates from the original paper or project page; do not silently widen the final claim. |
 | HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared provider classification. | Correct permanent errors; after transient failure make at most one fresh explicit command when still needed. |
 | HTTP `404` or another unlisted status | `provider_error`; no automatic retry or fallback. | Verify document id, endpoint, collection, and provider-native message before a fresh explicit command. |
 | Invalid JSON or missing/wrong response fields | `parse_error`. | Preserve tool name and schema message; report provider contract drift. |
