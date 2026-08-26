@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_45b9532998b98dc6d6321cb4"
+      ],
+      "attempt_id": "attempt-source-01",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-arxiv-api-candidates.json",
+        "locator_label": "arXiv Atom candidate-set response and published fields"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_45b9532998b98dc6d6321cb4",
+      "artifact_refs": [
+        "art_45b9532998b98dc6d6321cb4"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://export.arxiv.org/api/query?id_list=2608.18579,2608.21180,2607.29253,2608.02549,2608.01301,2607.27084,2608.20713,2607.26333,2607.12375,2606.16082,2608.04567",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-window-record",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-01",
+      "locator": {
+        "section": "arXiv Atom candidate-set response and published fields",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_4964923df3f6732d344fb1b708ab31c79eb8a7f22906d4414da34ae8230fa3d2",
+      "source_id": "source-a2-window-record",
+      "stance": "support",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "text": "2026-08-26T11:36:55Z 10 11 0  http://arxiv.org/abs/2607.26333v1"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-01"
+}

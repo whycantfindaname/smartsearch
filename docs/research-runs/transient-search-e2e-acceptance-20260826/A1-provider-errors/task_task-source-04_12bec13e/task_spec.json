@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_18c9f5cb96f89f16bd4c009c"
+  ],
+  "artifact_refs": [
+    "art_18c9f5cb96f89f16bd4c009c"
+  ],
+  "claim_spec_id": "claim-openai-rate-signals",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-04",
+  "task_id": "task-source-04",
+  "user_constraints": {}
+}

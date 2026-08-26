@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_280e990cf84f37615207358a"
+  ],
+  "artifact_refs": [
+    "art_280e990cf84f37615207358a"
+  ],
+  "claim_spec_id": "claim-a2-mriqa2",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-03",
+  "task_id": "task-source-03",
+  "user_constraints": {}
+}

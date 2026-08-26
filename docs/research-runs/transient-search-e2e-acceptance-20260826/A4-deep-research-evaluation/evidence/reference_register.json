@@ -1,0 +1,1208 @@
+{
+  "projection": "derived_audit_reference_register",
+  "reference_count": 24,
+  "references": [
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_b24591548709873c55b5eb92",
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+          "raw_ref": "raw/snap_ce32e5d355f8af79ab14deb21721dcf12ee67b629adb210aa4e3efbac66db195.bin",
+          "snapshot_id": "snap_ce32e5d355f8af79ab14deb21721dcf12ee67b629adb210aa4e3efbac66db195"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-date"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-date",
+          "claim_spec_id": "claim-a4-dream-date"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_b24591548709873c55b5eb92",
+          "attempt_id": "attempt-source-01",
+          "attempt_no": 1,
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+          "claim_record_id": "record-claim-a4-dream-date",
+          "claim_spec_id": "claim-a4-dream-date",
+          "evidence_id": "evidence-source-01",
+          "locator": {
+            "section": "arxiv:2602.18940v1 entry published field",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_ce32e5d355f8af79ab14deb21721dcf12ee67b629adb210aa4e3efbac66db195",
+          "step_id": "step-source-01",
+          "task_id": "task-source-01"
+        }
+      ],
+      "number": 1,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "arXiv API metadata for 2602.18940 and 2508.10152"
+        },
+        "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+        "canonical_urls": [
+          "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152"
+        ],
+        "source_id": "source-a4-dream-date"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_6f74a94defbb8841f666abfb",
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2510.14240",
+          "raw_ref": "raw/snap_31963b6ae1e90115b413da3842b47aa755fbc3a506392a87ec28fc955febf00f.bin",
+          "snapshot_id": "snap_31963b6ae1e90115b413da3842b47aa755fbc3a506392a87ec28fc955febf00f"
+        }
+      ],
+      "citation_ids": [
+        "a4-live-date"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-live-date",
+          "claim_spec_id": "claim-a4-live-date"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_6f74a94defbb8841f666abfb",
+          "attempt_id": "attempt-source-02",
+          "attempt_no": 1,
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2510.14240",
+          "claim_record_id": "record-claim-a4-live-date",
+          "claim_spec_id": "claim-a4-live-date",
+          "evidence_id": "evidence-source-02",
+          "locator": {
+            "section": "arxiv:2510.14240v1 entry published field",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_31963b6ae1e90115b413da3842b47aa755fbc3a506392a87ec28fc955febf00f",
+          "step_id": "step-source-02",
+          "task_id": "task-source-02"
+        }
+      ],
+      "number": 2,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "arXiv API metadata for 2510.14240"
+        },
+        "canonical_url": "https://export.arxiv.org/api/query?id_list=2510.14240",
+        "canonical_urls": [
+          "https://export.arxiv.org/api/query?id_list=2510.14240"
+        ],
+        "source_id": "source-a4-live-date"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_ba147e6b8b5faada8190d938",
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "raw_ref": "raw/snap_837f8f2959919ebab6e4b9ba559c78ce8f36f886ee857a2060dfcab8bb327a06.bin",
+          "snapshot_id": "snap_837f8f2959919ebab6e4b9ba559c78ce8f36f886ee857a2060dfcab8bb327a06"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-metrics-inventory"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-metrics-inventory",
+          "claim_spec_id": "claim-a4-dream-metrics-inventory"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_ba147e6b8b5faada8190d938",
+          "attempt_id": "attempt-source-03",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "claim_record_id": "record-claim-a4-dream-metrics-inventory",
+          "claim_spec_id": "claim-a4-dream-metrics-inventory",
+          "evidence_id": "evidence-source-03",
+          "locator": {
+            "section": "Section 2 taxonomy table, Source Quality row",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_837f8f2959919ebab6e4b9ba559c78ce8f36f886ee857a2060dfcab8bb327a06",
+          "step_id": "step-source-03",
+          "task_id": "task-source-03"
+        }
+      ],
+      "number": 3,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "DREAM: Deep Research Evaluation with Agentic Metrics"
+        },
+        "canonical_url": "https://arxiv.org/html/2602.18940v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2602.18940v1"
+        ],
+        "source_id": "source-a4-dream-metrics-inventory"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_934ff150bb9a4c6fcde004e1",
+          "canonical_url": "https://arxiv.org/html/2510.14240v1",
+          "raw_ref": "raw/snap_c2f8c87ac29b11ae0d2097117fe05f2bcf80113fafb8dfd1b6ab9e44eda4ee7c.bin",
+          "snapshot_id": "snap_c2f8c87ac29b11ae0d2097117fe05f2bcf80113fafb8dfd1b6ab9e44eda4ee7c"
+        }
+      ],
+      "citation_ids": [
+        "a4-live-paper-metrics"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-live-paper-metrics",
+          "claim_spec_id": "claim-a4-live-paper-metrics"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_934ff150bb9a4c6fcde004e1",
+          "attempt_id": "attempt-source-04",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2510.14240v1",
+          "claim_record_id": "record-claim-a4-live-paper-metrics",
+          "claim_spec_id": "claim-a4-live-paper-metrics",
+          "evidence_id": "evidence-source-04",
+          "locator": {
+            "section": "Abstract and Section 4 DeepEval metric list",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_c2f8c87ac29b11ae0d2097117fe05f2bcf80113fafb8dfd1b6ab9e44eda4ee7c",
+          "step_id": "step-source-04",
+          "task_id": "task-source-04"
+        }
+      ],
+      "number": 4,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild"
+        },
+        "canonical_url": "https://arxiv.org/html/2510.14240v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2510.14240v1"
+        ],
+        "source_id": "source-a4-live-paper-metrics"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_74383003be613afa4cc3b795",
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "raw_ref": "raw/snap_c6d632acf069b7e664f6c09d9fd16b84968bc8ec224097411813bf570fe9b10c.bin",
+          "snapshot_id": "snap_c6d632acf069b7e664f6c09d9fd16b84968bc8ec224097411813bf570fe9b10c"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-verification-pipelines"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-verification-pipelines",
+          "claim_spec_id": "claim-a4-dream-verification-pipelines"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_74383003be613afa4cc3b795",
+          "attempt_id": "attempt-source-05",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "claim_record_id": "record-claim-a4-dream-verification-pipelines",
+          "claim_spec_id": "claim-a4-dream-verification-pipelines",
+          "evidence_id": "evidence-source-05",
+          "locator": {
+            "section": "Section 3.2 Workflow Evaluator, Citation Integrity",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_c6d632acf069b7e664f6c09d9fd16b84968bc8ec224097411813bf570fe9b10c",
+          "step_id": "step-source-05",
+          "task_id": "task-source-05"
+        }
+      ],
+      "number": 5,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "DREAM: Deep Research Evaluation with Agentic Metrics"
+        },
+        "canonical_url": "https://arxiv.org/html/2602.18940v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2602.18940v1"
+        ],
+        "source_id": "source-a4-dream-verification-pipelines"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_00c14700b8698bb2f0bcc470",
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "raw_ref": "raw/snap_ca418648b4598a76c93a34b267e0ca12d9b971c4e09abd7fd76348a83d7326a3.bin",
+          "snapshot_id": "snap_ca418648b4598a76c93a34b267e0ca12d9b971c4e09abd7fd76348a83d7326a3"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-kic-boundary"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-kic-boundary",
+          "claim_spec_id": "claim-a4-dream-kic-boundary"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_00c14700b8698bb2f0bcc470",
+          "attempt_id": "attempt-source-07",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "claim_record_id": "record-claim-a4-dream-kic-boundary",
+          "claim_spec_id": "claim-a4-dream-kic-boundary",
+          "evidence_id": "evidence-source-07",
+          "locator": {
+            "section": "Section 3.1 Adaptive Metrics, Key-Information Coverage",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_ca418648b4598a76c93a34b267e0ca12d9b971c4e09abd7fd76348a83d7326a3",
+          "step_id": "step-source-07",
+          "task_id": "task-source-07"
+        }
+      ],
+      "number": 6,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "DREAM: Deep Research Evaluation with Agentic Metrics"
+        },
+        "canonical_url": "https://arxiv.org/html/2602.18940v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2602.18940v1"
+        ],
+        "source_id": "source-a4-dream-kic-boundary"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_aec8964e0a9032fcdeba30ed",
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "raw_ref": "raw/snap_9f4e15d8b090995b9d44810b0256d4d4ca9f8019f25211794a0296327a6e3092.bin",
+          "snapshot_id": "snap_9f4e15d8b090995b9d44810b0256d4d4ca9f8019f25211794a0296327a6e3092"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-taxonomy"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-taxonomy",
+          "claim_spec_id": "claim-a4-dream-taxonomy"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_aec8964e0a9032fcdeba30ed",
+          "attempt_id": "attempt-source-08",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "claim_record_id": "record-claim-a4-dream-taxonomy",
+          "claim_spec_id": "claim-a4-dream-taxonomy",
+          "evidence_id": "evidence-source-08",
+          "locator": {
+            "section": "Introduction and Section 2 taxonomy",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_9f4e15d8b090995b9d44810b0256d4d4ca9f8019f25211794a0296327a6e3092",
+          "step_id": "step-source-08",
+          "task_id": "task-source-08"
+        }
+      ],
+      "number": 7,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "DREAM: Deep Research Evaluation with Agentic Metrics"
+        },
+        "canonical_url": "https://arxiv.org/html/2602.18940v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2602.18940v1"
+        ],
+        "source_id": "source-a4-dream-taxonomy"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_6e3d413e260cbbe6bcfebd08",
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "raw_ref": "raw/snap_6ea5deae899e81dad62a8b6acc3df0eb87a948ad8819ec8df38298f317d139a0.bin",
+          "snapshot_id": "snap_6ea5deae899e81dad62a8b6acc3df0eb87a948ad8819ec8df38298f317d139a0"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-framework"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-framework",
+          "claim_spec_id": "claim-a4-dream-framework"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_6e3d413e260cbbe6bcfebd08",
+          "attempt_id": "attempt-source-09",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "claim_record_id": "record-claim-a4-dream-framework",
+          "claim_spec_id": "claim-a4-dream-framework",
+          "evidence_id": "evidence-source-09",
+          "locator": {
+            "section": "Introduction, DREAM framework description",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_6ea5deae899e81dad62a8b6acc3df0eb87a948ad8819ec8df38298f317d139a0",
+          "step_id": "step-source-09",
+          "task_id": "task-source-09"
+        }
+      ],
+      "number": 8,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "DREAM: Deep Research Evaluation with Agentic Metrics"
+        },
+        "canonical_url": "https://arxiv.org/html/2602.18940v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2602.18940v1"
+        ],
+        "source_id": "source-a4-dream-framework"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_3122d22d40ba88d2244b4355",
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "raw_ref": "raw/snap_6c9901e349a52b494379be88ec554f724f1bd2f1c91d7e57610c794d4ae76887.bin",
+          "snapshot_id": "snap_6c9901e349a52b494379be88ec554f724f1bd2f1c91d7e57610c794d4ae76887"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-static-metrics"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-static-metrics",
+          "claim_spec_id": "claim-a4-dream-static-metrics"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_3122d22d40ba88d2244b4355",
+          "attempt_id": "attempt-source-10",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "claim_record_id": "record-claim-a4-dream-static-metrics",
+          "claim_spec_id": "claim-a4-dream-static-metrics",
+          "evidence_id": "evidence-source-10",
+          "locator": {
+            "section": "Section 3.1 Static Metrics",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_6c9901e349a52b494379be88ec554f724f1bd2f1c91d7e57610c794d4ae76887",
+          "step_id": "step-source-10",
+          "task_id": "task-source-10"
+        }
+      ],
+      "number": 9,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "DREAM: Deep Research Evaluation with Agentic Metrics"
+        },
+        "canonical_url": "https://arxiv.org/html/2602.18940v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2602.18940v1"
+        ],
+        "source_id": "source-a4-dream-static-metrics"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_84fbf02e9c49437622c7e4e2",
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "raw_ref": "raw/snap_8b471d94bfb39aab3efa07c32f6cec01704dff168f3d34e9c7500023f6040d54.bin",
+          "snapshot_id": "snap_8b471d94bfb39aab3efa07c32f6cec01704dff168f3d34e9c7500023f6040d54"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-adaptive-kic"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-adaptive-kic",
+          "claim_spec_id": "claim-a4-dream-adaptive-kic"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_84fbf02e9c49437622c7e4e2",
+          "attempt_id": "attempt-source-11",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "claim_record_id": "record-claim-a4-dream-adaptive-kic",
+          "claim_spec_id": "claim-a4-dream-adaptive-kic",
+          "evidence_id": "evidence-source-11",
+          "locator": {
+            "section": "Section 3.1 Adaptive Metrics, Key-Information Coverage",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_8b471d94bfb39aab3efa07c32f6cec01704dff168f3d34e9c7500023f6040d54",
+          "step_id": "step-source-11",
+          "task_id": "task-source-11"
+        }
+      ],
+      "number": 10,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "DREAM: Deep Research Evaluation with Agentic Metrics"
+        },
+        "canonical_url": "https://arxiv.org/html/2602.18940v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2602.18940v1"
+        ],
+        "source_id": "source-a4-dream-adaptive-kic"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_91c0576ce7a80280601daf1e",
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "raw_ref": "raw/snap_1650f7e1318638f2ffe9e6b77824f65ce3a6da89fe843ba06188ffc69d8f7d97.bin",
+          "snapshot_id": "snap_1650f7e1318638f2ffe9e6b77824f65ce3a6da89fe843ba06188ffc69d8f7d97"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-reasoning-quality"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-reasoning-quality",
+          "claim_spec_id": "claim-a4-dream-reasoning-quality"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_91c0576ce7a80280601daf1e",
+          "attempt_id": "attempt-source-12",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "claim_record_id": "record-claim-a4-dream-reasoning-quality",
+          "claim_spec_id": "claim-a4-dream-reasoning-quality",
+          "evidence_id": "evidence-source-12",
+          "locator": {
+            "section": "Section 3.1 Adaptive Metrics, Reasoning Quality",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_1650f7e1318638f2ffe9e6b77824f65ce3a6da89fe843ba06188ffc69d8f7d97",
+          "step_id": "step-source-12",
+          "task_id": "task-source-12"
+        }
+      ],
+      "number": 11,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "DREAM: Deep Research Evaluation with Agentic Metrics"
+        },
+        "canonical_url": "https://arxiv.org/html/2602.18940v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2602.18940v1"
+        ],
+        "source_id": "source-a4-dream-reasoning-quality"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_e0107b871c3443ca463a92fc",
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "raw_ref": "raw/snap_15a2f0d6c2cbc8fe8c33b490aaa5901750e8c38f5afb478659ebd53d97893a35.bin",
+          "snapshot_id": "snap_15a2f0d6c2cbc8fe8c33b490aaa5901750e8c38f5afb478659ebd53d97893a35"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-factuality-independent"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-factuality-independent",
+          "claim_spec_id": "claim-a4-dream-factuality-independent"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_e0107b871c3443ca463a92fc",
+          "attempt_id": "attempt-source-06",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "claim_record_id": "record-claim-a4-dream-factuality-independent",
+          "claim_spec_id": "claim-a4-dream-factuality-independent",
+          "evidence_id": "evidence-source-06",
+          "locator": {
+            "section": "Section 3.2 Workflow Evaluator, Factuality",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_15a2f0d6c2cbc8fe8c33b490aaa5901750e8c38f5afb478659ebd53d97893a35",
+          "step_id": "step-source-06",
+          "task_id": "task-source-06"
+        }
+      ],
+      "number": 12,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "DREAM: Deep Research Evaluation with Agentic Metrics"
+        },
+        "canonical_url": "https://arxiv.org/html/2602.18940v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2602.18940v1"
+        ],
+        "source_id": "source-a4-dream-factuality-independent"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_28f01c0af0c336d3344f4c58",
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "raw_ref": "raw/snap_8ab851fc4706aeac619acf8bcdb1678651e6faeaeaf2717645807d9526a0b059.bin",
+          "snapshot_id": "snap_8ab851fc4706aeac619acf8bcdb1678651e6faeaeaf2717645807d9526a0b059"
+        }
+      ],
+      "citation_ids": [
+        "a4-dream-factuality-boundary"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-dream-factuality-boundary",
+          "claim_spec_id": "claim-a4-dream-factuality-boundary"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_28f01c0af0c336d3344f4c58",
+          "attempt_id": "attempt-source-13",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2602.18940v1",
+          "claim_record_id": "record-claim-a4-dream-factuality-boundary",
+          "claim_spec_id": "claim-a4-dream-factuality-boundary",
+          "evidence_id": "evidence-source-13",
+          "locator": {
+            "section": "Section 4.4 Grounding Beyond Citation Alignment",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_8ab851fc4706aeac619acf8bcdb1678651e6faeaeaf2717645807d9526a0b059",
+          "step_id": "step-source-13",
+          "task_id": "task-source-13"
+        }
+      ],
+      "number": 13,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "DREAM: Deep Research Evaluation with Agentic Metrics"
+        },
+        "canonical_url": "https://arxiv.org/html/2602.18940v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2602.18940v1"
+        ],
+        "source_id": "source-a4-dream-factuality-boundary"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_fb47eca6845ef55a783d289c",
+          "canonical_url": "https://arxiv.org/html/2510.14240v1",
+          "raw_ref": "raw/snap_c41cf5e68f8a35450fef6300fce73d7fdb83e697511d91f9dd609554496ecf78.bin",
+          "snapshot_id": "snap_c41cf5e68f8a35450fef6300fce73d7fdb83e697511d91f9dd609554496ecf78"
+        }
+      ],
+      "citation_ids": [
+        "a4-live-paper-scale"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-live-paper-scale",
+          "claim_spec_id": "claim-a4-live-paper-scale"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_fb47eca6845ef55a783d289c",
+          "attempt_id": "attempt-source-14",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2510.14240v1",
+          "claim_record_id": "record-claim-a4-live-paper-scale",
+          "claim_spec_id": "claim-a4-live-paper-scale",
+          "evidence_id": "evidence-source-14",
+          "locator": {
+            "section": "Abstract",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_c41cf5e68f8a35450fef6300fce73d7fdb83e697511d91f9dd609554496ecf78",
+          "step_id": "step-source-14",
+          "task_id": "task-source-14"
+        }
+      ],
+      "number": 14,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild"
+        },
+        "canonical_url": "https://arxiv.org/html/2510.14240v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2510.14240v1"
+        ],
+        "source_id": "source-a4-live-paper-scale"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_66aa2877b1bd02a4cf2ed18f",
+          "canonical_url": "https://arxiv.org/html/2510.14240v1",
+          "raw_ref": "raw/snap_1017b416b85ef0dfb470c9c7ee8a087b00225f75e11e955ed289f9aa56bf0265.bin",
+          "snapshot_id": "snap_1017b416b85ef0dfb470c9c7ee8a087b00225f75e11e955ed289f9aa56bf0265"
+        }
+      ],
+      "citation_ids": [
+        "a4-live-paper-systems"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-live-paper-systems",
+          "claim_spec_id": "claim-a4-live-paper-systems"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_66aa2877b1bd02a4cf2ed18f",
+          "attempt_id": "attempt-source-15",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/html/2510.14240v1",
+          "claim_record_id": "record-claim-a4-live-paper-systems",
+          "claim_spec_id": "claim-a4-live-paper-systems",
+          "evidence_id": "evidence-source-15",
+          "locator": {
+            "section": "Abstract and contribution summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_1017b416b85ef0dfb470c9c7ee8a087b00225f75e11e955ed289f9aa56bf0265",
+          "step_id": "step-source-15",
+          "task_id": "task-source-15"
+        }
+      ],
+      "number": 15,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild"
+        },
+        "canonical_url": "https://arxiv.org/html/2510.14240v1",
+        "canonical_urls": [
+          "https://arxiv.org/html/2510.14240v1"
+        ],
+        "source_id": "source-a4-live-paper-systems"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_6442c143d517b2ffc6f18822",
+          "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+          "raw_ref": "raw/snap_1bd9fa860da0ef4f5f5b5a716047d676e973528e1bd316af6696bc85f80a83e0.bin",
+          "snapshot_id": "snap_1bd9fa860da0ef4f5f5b5a716047d676e973528e1bd316af6696bc85f80a83e0"
+        }
+      ],
+      "citation_ids": [
+        "a4-live-dataset-fields"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-live-dataset-fields",
+          "claim_spec_id": "claim-a4-live-dataset-fields"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_6442c143d517b2ffc6f18822",
+          "attempt_id": "attempt-source-16",
+          "attempt_no": 1,
+          "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+          "claim_record_id": "record-claim-a4-live-dataset-fields",
+          "claim_spec_id": "claim-a4-live-dataset-fields",
+          "evidence_id": "evidence-source-16",
+          "locator": {
+            "section": "Dataset Fields, Subsets",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_1bd9fa860da0ef4f5f5b5a716047d676e973528e1bd316af6696bc85f80a83e0",
+          "step_id": "step-source-16",
+          "task_id": "task-source-16"
+        }
+      ],
+      "number": 16,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Salesforce/LiveResearchBench dataset"
+        },
+        "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+        "canonical_urls": [
+          "https://huggingface.co/datasets/Salesforce/LiveResearchBench"
+        ],
+        "source_id": "source-a4-live-dataset-fields"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_179fb7e4fef8c944b9848d1a",
+          "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+          "raw_ref": "raw/snap_60da497264f3b2f704bf677527e9f71aa3d27275943d02c07730f6eaedb446a4.bin",
+          "snapshot_id": "snap_60da497264f3b2f704bf677527e9f71aa3d27275943d02c07730f6eaedb446a4"
+        }
+      ],
+      "citation_ids": [
+        "a4-live-dataset-question-only"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-live-dataset-question-only",
+          "claim_spec_id": "claim-a4-live-dataset-question-only"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_179fb7e4fef8c944b9848d1a",
+          "attempt_id": "attempt-source-17",
+          "attempt_no": 1,
+          "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+          "claim_record_id": "record-claim-a4-live-dataset-question-only",
+          "claim_spec_id": "claim-a4-live-dataset-question-only",
+          "evidence_id": "evidence-source-17",
+          "locator": {
+            "section": "Dataset Fields, Subsets",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_60da497264f3b2f704bf677527e9f71aa3d27275943d02c07730f6eaedb446a4",
+          "step_id": "step-source-17",
+          "task_id": "task-source-17"
+        }
+      ],
+      "number": 17,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Salesforce/LiveResearchBench dataset"
+        },
+        "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+        "canonical_urls": [
+          "https://huggingface.co/datasets/Salesforce/LiveResearchBench"
+        ],
+        "source_id": "source-a4-live-dataset-question-only"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_e4bb0bb1fe4e5d7ee8f400dc",
+          "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+          "raw_ref": "raw/snap_dfa0aba03114c6f884426371b89d7ff371623de49b46d2be490338791190caa7.bin",
+          "snapshot_id": "snap_dfa0aba03114c6f884426371b89d7ff371623de49b46d2be490338791190caa7"
+        }
+      ],
+      "citation_ids": [
+        "a4-live-dataset-checklist"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-live-dataset-checklist",
+          "claim_spec_id": "claim-a4-live-dataset-checklist"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_e4bb0bb1fe4e5d7ee8f400dc",
+          "attempt_id": "attempt-source-18",
+          "attempt_no": 1,
+          "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+          "claim_record_id": "record-claim-a4-live-dataset-checklist",
+          "claim_spec_id": "claim-a4-live-dataset-checklist",
+          "evidence_id": "evidence-source-18",
+          "locator": {
+            "section": "Dataset Fields, checklist field",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_dfa0aba03114c6f884426371b89d7ff371623de49b46d2be490338791190caa7",
+          "step_id": "step-source-18",
+          "task_id": "task-source-18"
+        }
+      ],
+      "number": 18,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Salesforce/LiveResearchBench dataset"
+        },
+        "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+        "canonical_urls": [
+          "https://huggingface.co/datasets/Salesforce/LiveResearchBench"
+        ],
+        "source_id": "source-a4-live-dataset-checklist"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_cee871d12a501a7646183fc4",
+          "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+          "raw_ref": "raw/snap_b939bc91b7d84a9b0a2b3cea2878e831851a7915228b768e137cab37fd69fa4f.bin",
+          "snapshot_id": "snap_b939bc91b7d84a9b0a2b3cea2878e831851a7915228b768e137cab37fd69fa4f"
+        }
+      ],
+      "citation_ids": [
+        "a4-live-repo-identity"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-live-repo-identity",
+          "claim_spec_id": "claim-a4-live-repo-identity"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_cee871d12a501a7646183fc4",
+          "attempt_id": "attempt-source-19",
+          "attempt_no": 1,
+          "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+          "claim_record_id": "record-claim-a4-live-repo-identity",
+          "claim_spec_id": "claim-a4-live-repo-identity",
+          "evidence_id": "evidence-source-19",
+          "locator": {
+            "section": "README project description",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_b939bc91b7d84a9b0a2b3cea2878e831851a7915228b768e137cab37fd69fa4f",
+          "step_id": "step-source-19",
+          "task_id": "task-source-19"
+        }
+      ],
+      "number": 19,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "SalesforceAIResearch/LiveResearchBench repository"
+        },
+        "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+        "canonical_urls": [
+          "https://github.com/SalesforceAIResearch/LiveResearchBench"
+        ],
+        "source_id": "source-a4-live-repo-identity"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_c82f1bb2b0460cf3fac604d2",
+          "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+          "raw_ref": "raw/snap_fa2dc669d917980959ed7c4a8be6a024764ebbc9869ea571884f7f55f8d54bf0.bin",
+          "snapshot_id": "snap_fa2dc669d917980959ed7c4a8be6a024764ebbc9869ea571884f7f55f8d54bf0"
+        }
+      ],
+      "citation_ids": [
+        "a4-live-resume"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-live-resume",
+          "claim_spec_id": "claim-a4-live-resume"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_c82f1bb2b0460cf3fac604d2",
+          "attempt_id": "attempt-source-20",
+          "attempt_no": 1,
+          "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+          "claim_record_id": "record-claim-a4-live-resume",
+          "claim_spec_id": "claim-a4-live-resume",
+          "evidence_id": "evidence-source-20",
+          "locator": {
+            "section": "README Resume Interrupted Runs",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_fa2dc669d917980959ed7c4a8be6a024764ebbc9869ea571884f7f55f8d54bf0",
+          "step_id": "step-source-20",
+          "task_id": "task-source-20"
+        }
+      ],
+      "number": 20,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "SalesforceAIResearch/LiveResearchBench repository"
+        },
+        "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+        "canonical_urls": [
+          "https://github.com/SalesforceAIResearch/LiveResearchBench"
+        ],
+        "source_id": "source-a4-live-resume"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_8f78f191526ebd3c925b4a92",
+          "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+          "raw_ref": "raw/snap_8bb4c5f1cde8b112ebebe8e98c58f9bcd1a9fd43c31a7f0acfac3cd25e9d917d.bin",
+          "snapshot_id": "snap_8bb4c5f1cde8b112ebebe8e98c58f9bcd1a9fd43c31a7f0acfac3cd25e9d917d"
+        }
+      ],
+      "citation_ids": [
+        "a4-live-incremental"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-live-incremental",
+          "claim_spec_id": "claim-a4-live-incremental"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_8f78f191526ebd3c925b4a92",
+          "attempt_id": "attempt-source-21",
+          "attempt_no": 1,
+          "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+          "claim_record_id": "record-claim-a4-live-incremental",
+          "claim_spec_id": "claim-a4-live-incremental",
+          "evidence_id": "evidence-source-21",
+          "locator": {
+            "section": "README How It Works, incremental grading",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_8bb4c5f1cde8b112ebebe8e98c58f9bcd1a9fd43c31a7f0acfac3cd25e9d917d",
+          "step_id": "step-source-21",
+          "task_id": "task-source-21"
+        }
+      ],
+      "number": 21,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "SalesforceAIResearch/LiveResearchBench repository"
+        },
+        "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+        "canonical_urls": [
+          "https://github.com/SalesforceAIResearch/LiveResearchBench"
+        ],
+        "source_id": "source-a4-live-incremental"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_abf13da65c730c80afe86611",
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+          "raw_ref": "raw/snap_28e87f004e95c7a15d69de1efe2e9fc87241cf121cdd5893267ef9074ff9306e.bin",
+          "snapshot_id": "snap_28e87f004e95c7a15d69de1efe2e9fc87241cf121cdd5893267ef9074ff9306e"
+        }
+      ],
+      "citation_ids": [
+        "a4-excluded-browsecomp"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-excluded-browsecomp",
+          "claim_spec_id": "claim-a4-excluded-browsecomp"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_abf13da65c730c80afe86611",
+          "attempt_id": "attempt-source-22",
+          "attempt_no": 1,
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+          "claim_record_id": "record-claim-a4-excluded-browsecomp",
+          "claim_spec_id": "claim-a4-excluded-browsecomp",
+          "evidence_id": "evidence-source-22",
+          "locator": {
+            "section": "arxiv:2508.10152v2 abstract",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_28e87f004e95c7a15d69de1efe2e9fc87241cf121cdd5893267ef9074ff9306e",
+          "step_id": "step-source-22",
+          "task_id": "task-source-22"
+        }
+      ],
+      "number": 22,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "arXiv API metadata for 2602.18940 and 2508.10152"
+        },
+        "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+        "canonical_urls": [
+          "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152"
+        ],
+        "source_id": "source-a4-excluded-browsecomp"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_324bf425dbcc610ee9f7ee6e",
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+          "raw_ref": "raw/snap_d8e581a975d8cdb18f09b79df793fa4e7c533d92ae0be706945e9851a990b864.bin",
+          "snapshot_id": "snap_d8e581a975d8cdb18f09b79df793fa4e7c533d92ae0be706945e9851a990b864"
+        }
+      ],
+      "citation_ids": [
+        "a4-excluded-date"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-excluded-date",
+          "claim_spec_id": "claim-a4-excluded-date"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_324bf425dbcc610ee9f7ee6e",
+          "attempt_id": "attempt-source-23",
+          "attempt_no": 1,
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+          "claim_record_id": "record-claim-a4-excluded-date",
+          "claim_spec_id": "claim-a4-excluded-date",
+          "evidence_id": "evidence-source-23",
+          "locator": {
+            "section": "arxiv:2508.10152v2 entry published field",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_d8e581a975d8cdb18f09b79df793fa4e7c533d92ae0be706945e9851a990b864",
+          "step_id": "step-source-23",
+          "task_id": "task-source-23"
+        }
+      ],
+      "number": 23,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "arXiv API metadata for 2602.18940 and 2508.10152"
+        },
+        "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+        "canonical_urls": [
+          "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152"
+        ],
+        "source_id": "source-a4-excluded-date"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_f0889c4b6948693c7cd17866",
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+          "raw_ref": "raw/snap_f41ed354ca24758fe4756be2e69a63e669f913bfe615fad027150b23bd9f9ad7.bin",
+          "snapshot_id": "snap_f41ed354ca24758fe4756be2e69a63e669f913bfe615fad027150b23bd9f9ad7"
+        }
+      ],
+      "citation_ids": [
+        "a4-excluded-updated"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a4-excluded-updated",
+          "claim_spec_id": "claim-a4-excluded-updated"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_f0889c4b6948693c7cd17866",
+          "attempt_id": "attempt-source-24",
+          "attempt_no": 1,
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+          "claim_record_id": "record-claim-a4-excluded-updated",
+          "claim_spec_id": "claim-a4-excluded-updated",
+          "evidence_id": "evidence-source-24",
+          "locator": {
+            "section": "arxiv:2508.10152v2 entry updated field",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_f41ed354ca24758fe4756be2e69a63e669f913bfe615fad027150b23bd9f9ad7",
+          "step_id": "step-source-24",
+          "task_id": "task-source-24"
+        }
+      ],
+      "number": 24,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "arXiv API metadata for 2602.18940 and 2508.10152"
+        },
+        "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152",
+        "canonical_urls": [
+          "https://export.arxiv.org/api/query?id_list=2602.18940%2C2508.10152"
+        ],
+        "source_id": "source-a4-excluded-updated"
+      }
+    }
+  ],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1"
+}

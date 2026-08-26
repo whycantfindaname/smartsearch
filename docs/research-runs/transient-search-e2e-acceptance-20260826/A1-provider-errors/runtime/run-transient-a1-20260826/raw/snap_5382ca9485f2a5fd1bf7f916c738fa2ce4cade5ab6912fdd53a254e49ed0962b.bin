@@ -1,0 +1,1 @@
+Treat the **Retryable** column as authoritative; do not infer from the HTTP status alone.

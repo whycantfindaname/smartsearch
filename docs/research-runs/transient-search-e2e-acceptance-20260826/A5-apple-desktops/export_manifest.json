@@ -1,0 +1,74 @@
+{
+  "schema_version": "1",
+  "case_id": "A5",
+  "run_id": "run-transient-a5-20260826",
+  "source_commit": "f3a30d4eab2dee4656e0fbdfc020f490f4fa8594",
+  "source_archive": ".trellis/tasks/archive/2026-08/08-26-transient-search-e2e-acceptance/artifacts/acceptance-final/A5",
+  "included": [
+    "citation-backed Research Workspace projections",
+    "registered evidence excerpt snapshots and artifact registry",
+    "public Trace",
+    "sanitized command JSON and acceptance records"
+  ],
+  "excluded": [
+    "duplicate CLI stdout and stderr captures",
+    "superseded failed attempts",
+    "credentials, private configuration, and hidden test manifests"
+  ],
+  "counts": {
+    "claims": 4,
+    "cited_sources": 4,
+    "citations": 4,
+    "displayed_references": 4,
+    "search_commands": 9
+  },
+  "workspace_manifest": {
+    "schema_version": "1",
+    "dossier_schema_version": "1",
+    "project_name": "在 2026-08-26 的时间边界内，比较最新 Mac mini 与 Mac Studio 的芯片、unified memory、接口与扩展、外接显示器支持、尺寸重量和美国起售价，并区分 Apple 的产品定位与基于规格的比较判断。",
+    "run_id": "run-transient-a5-20260826",
+    "goal": "在 2026-08-26 的时间边界内，比较最新 Mac mini 与 Mac Studio 的芯片、unified memory、接口与扩展、外接显示器支持、尺寸重量和美国起售价，并区分 Apple 的产品定位与基于规格的比较判断。",
+    "question": "在 2026-08-26 的时间边界内，比较最新 Mac mini 与 Mac Studio 的芯片、unified memory、接口与扩展、外接显示器支持、尺寸重量和美国起售价，并区分 Apple 的产品定位与基于规格的比较判断。",
+    "mode": "standard",
+    "status": "completed",
+    "current_phase": "root_decision",
+    "observed_timestamps": [
+      "2026-08-26T00:00:00Z"
+    ],
+    "updated_at": "2026-08-26T00:00:00Z",
+    "public_trace_path": "public_trace.jsonl",
+    "counts": {
+      "search_tasks": 0,
+      "evidence_mining_tasks": 4,
+      "execution_attempts": 4,
+      "delegate_requests": 4,
+      "delegate_results": 0,
+      "candidates": 0,
+      "candidate_cards": 0,
+      "key_source_proposals": 0,
+      "evidence_items": 4,
+      "claim_records": 4
+    },
+    "entrypoints": {
+      "initial_context": "initial_context.md",
+      "domain_methodology": "domain_methodology.md",
+      "main_log": "main_log.md",
+      "latest_dossier": "latest_dossier.json",
+      "checkpoints": "checkpoints/",
+      "evidence": "evidence/",
+      "tasks": {
+        "task-source-01": "task_task-source-01_57a2fd65/",
+        "task-source-02": "task_task-source-02_9d163404/",
+        "task-source-03": "task_task-source-03_5a98d0cf/",
+        "task-source-04": "task_task-source-04_12bec13e/"
+      },
+      "final_synthesis": "final_synthesis.md",
+      "citation_verification": "evidence/citation_verification.json",
+      "reference_register": "evidence/reference_register.json",
+      "public_trace": "public_trace.jsonl",
+      "artifact_run_directory": "runtime/run-transient-a5-20260826",
+      "artifact_registry": "runtime/run-transient-a5-20260826/artifacts.jsonl",
+      "trace": "runtime/run-transient-a5-20260826/trace.jsonl"
+    }
+  }
+}

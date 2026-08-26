@@ -1,0 +1,248 @@
+{
+  "case_id": "A2",
+  "run_id": "run-transient-a2-20260826",
+  "question": "在 2026-07-28 至 2026-08-26 的窗口内，哪些首次公开的静态图像质量评估工作与 Agentic IQA、workflow、tool-augmented、multi-stage 或 multi-agent 方向相关？哪些工作值得继续跟进，哪些应排除？",
+  "mode": "standard",
+  "claims": [
+    {
+      "claim_spec_id": "claim-a2-window-record",
+      "statement": "按 arXiv 官方 Atom 的 published 字段判定首次 arXiv 公开日期，窗口内确认了 11 项与静态图像质量评估直接相关或紧邻的工作；在给定来源范围内没有核验到原文明确自称 multi-agent IQA 的窗口内新论文。"
+    },
+    {
+      "claim_spec_id": "claim-a2-scifigqual",
+      "statement": "SciFigQual-Bench 使用全文上下文和 6,308 幅图的五维专家标注，并提出 staged cross-modal SFQ-Agent 收集与融合模态证据，属于 agentic/workflow 型 IQA，但不能据此直接称为 multi-agent。"
+    },
+    {
+      "claim_spec_id": "claim-a2-mriqa2",
+      "statement": "MR-IQA-2 采用 actor-editor-judge 的 reasoning-editing-reflection，并用图像编辑与冻结 judge 为推理提供反思监督；它属于多组件、多阶段视觉反思，不直接等于 multi-agent。"
+    },
+    {
+      "claim_spec_id": "claim-a2-lge-mri",
+      "statement": "LGE-MRI 工作采用 two-stage VLM 流程：第一阶段生成五项 radiology-style 质量报告，第二阶段生成结构化质量分数和临床可用性二分类，并使用 20 名患者的 60 个 image slice-text pairs。"
+    },
+    {
+      "claim_spec_id": "claim-a2-miescore",
+      "statement": "MIEScore 面向多源图像编辑质量，建立 MIE-Bench，并在摘要中给出 3,000 个 editing instances、16 个任务、36K 张编辑图和超过 108K 个 MOS；摘要没有表明在线工具调用或多 Agent 协作。"
+    },
+    {
+      "claim_spec_id": "claim-a2-cxr",
+      "statement": "Chest X-ray 工作研究 evaluation reference 如何改变性能估计和模型排序，并指出 SSIM、PSNR 等 IQA 指标可能与专家诊断可用性判断不一致。"
+    },
+    {
+      "claim_spec_id": "claim-a2-blindpsnr",
+      "statement": "BlindPSNR 在无 ground-truth 时预测低光增强结果的 PSNR，通过 windowed cross-attention 融合增强图与低光输入，并用 heteroscedastic regression 估计 PSNR；它属于 signal fidelity assessment 边界。"
+    },
+    {
+      "claim_spec_id": "claim-a2-cbct",
+      "statement": "CBCT-IQ 发布 1,764 个专家标注切片，三名临床专家使用四级量表评价整体与 ROI 质量，并比较 26 个 full-reference/no-reference IQA measures。"
+    },
+    {
+      "claim_spec_id": "claim-a2-lpifm",
+      "statement": "LPIFM 观察两幅源图和两个融合候选，预测 A、B 或 Tie；数据覆盖 21 个 VIFB 场景、25 个 fusion methods 的 6,300 个无序比较，并按 published 2026-08-02 而非 updated 2026-08-07 纳入。"
+    },
+    {
+      "claim_spec_id": "claim-a2-ssim",
+      "statement": "SSIM-from-MSE 工作用 reference image 的 local statistics 按 variance 或 standard-deviation weighting 重分配 global MSE，以近似 local MSE 和 SSIM；其 published 为 2026-08-03，updated 为 2026-08-19。"
+    },
+    {
+      "claim_spec_id": "claim-a2-sharpness",
+      "statement": "Sharpness Informed IQA 工作通过四协议主观实验提出包括 SI-PSNR 在内的指标，并报告 sharpness-aware loss 的图像在二值比较中平均有 67% 获得偏好。"
+    },
+    {
+      "claim_spec_id": "claim-a2-agidefect",
+      "statement": "AGIDefect-4K 提供来自 15 个生成模型的 4,000 张图像，包含缺陷检测标签、像素级掩码、文本解释和 overall quality score，并提出基于 MLLM 的 AGIDA。"
+    },
+    {
+      "claim_spec_id": "claim-a2-agenticiqa",
+      "statement": "AgenticIQA 首次 arXiv 日期为 2025-09-30，将 IQA 拆为 distortion detection、distortion analysis、tool selection 和 tool execution，由 planner、executor、summarizer 协调，因此是窗口外的 agentic IQA 背景。"
+    },
+    {
+      "claim_spec_id": "claim-a2-muse",
+      "statement": "MUSE 首次 arXiv 日期为 2026-06-02，以可组合模块封装现成 MLLM，覆盖视觉处理、感知工具、结构化解析、确定性验证和 verifier-guided repair，且不重新训练模型；它是通用 agentic harness 而非窗口内新 IQA 论文。"
+    },
+    {
+      "claim_spec_id": "claim-a2-tooliqa",
+      "statement": "Tool-IQA 首次 arXiv 日期为 2026-06-15，使用 Magnifier 和 Gamma Corrector，并将 IQA 组织成 observation、tool-assisted inspection 和 final quantification 的 tool-augmented workflow。"
+    },
+    {
+      "claim_spec_id": "claim-a2-iqat1",
+      "statement": "IQA-T1 首次 arXiv 日期为 2026-07-14，让 MLLM 调用工具生成 noise residual maps、gradient statistics 和 frequency spectra，并用 Q-Tool 保存 11k 条基于工具证据的多模态推理链；它早于窗口起点。"
+    },
+    {
+      "claim_spec_id": "claim-a2-strive",
+      "statement": "arXiv:2608.04567 的官方记录实际对应 STRIVE: Probing Reasoning Limits in Graded Plausibility Generation and Evaluation，属于 Computation and Language，不是 IQA 论文，因此剔除 AGENT-IQA 候选。"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "source-a2-window-record",
+      "citation_id": "a2-window-record",
+      "claim_spec_id": "claim-a2-window-record",
+      "title": "Tool-IQA and IQA-T1 exclusion-date records within the checked candidate set",
+      "url": "https://export.arxiv.org/api/query?id_list=2608.18579,2608.21180,2607.29253,2608.02549,2608.01301,2607.27084,2608.20713,2607.26333,2607.12375,2606.16082,2608.04567",
+      "locator_label": "arXiv Atom candidate-set response and published fields",
+      "command_file": "commands/fetch-arxiv-api-candidates.json",
+      "excerpt": "2026-08-26T11:36:55Z 10 11 0  http://arxiv.org/abs/2607.26333v1"
+    },
+    {
+      "source_id": "source-a2-scifigqual",
+      "citation_id": "a2-scifigqual",
+      "claim_spec_id": "claim-a2-scifigqual",
+      "title": "SciFigQual-Bench: A Benchmark for Scientific Figure Quality Assessment with Full-Manuscript Context",
+      "url": "https://arxiv.org/abs/2607.27084",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-candidates.json",
+      "excerpt": "we designed a staged cross-modal evaluation framework SFQ-Agent to achieve auditable and refined scoring through the collection and fusion of modal evidence."
+    },
+    {
+      "source_id": "source-a2-mriqa2",
+      "citation_id": "a2-mriqa2",
+      "claim_spec_id": "claim-a2-mriqa2",
+      "title": "MR-IQA-2: Faithful Image Quality Reflection via Fine-Grained Credit Assignment",
+      "url": "https://arxiv.org/abs/2608.18579",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-candidates.json",
+      "excerpt": "We introduce MR-IQA-2, an actor-editor-judge framework that operationalizes reasoning-editing-reflection."
+    },
+    {
+      "source_id": "source-a2-lge-mri",
+      "citation_id": "a2-lge-mri",
+      "claim_spec_id": "claim-a2-lge-mri",
+      "title": "Toward Vision Language Model-based Assessment of Clinical Quality and Usability of LGE-MR Images for Cardiac Ablation Planning",
+      "url": "https://arxiv.org/abs/2608.21180",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-candidates.json",
+      "excerpt": "we propose a two-stage vision language model (VLM) framework for clinically grounded image quality assessment of left atrial LGE-MRI."
+    },
+    {
+      "source_id": "source-a2-miescore",
+      "citation_id": "a2-miescore",
+      "claim_spec_id": "claim-a2-miescore",
+      "title": "MIEScore: Human-Aligned Evaluation for Multi-Source Image Editing",
+      "url": "https://arxiv.org/abs/2608.02059",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-secondary.json",
+      "excerpt": "MIE-Bench includes 3,000 editing instances across 16 tasks"
+    },
+    {
+      "source_id": "source-a2-cxr",
+      "citation_id": "a2-cxr",
+      "claim_spec_id": "claim-a2-cxr",
+      "title": "Rethinking Clinical Relevance in Chest X-ray Machine Learning: How Evaluation References Define Performance",
+      "url": "https://arxiv.org/abs/2607.26333",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-candidates.json",
+      "excerpt": "We systematically investigate how evaluation-reference choices affect model performance and ranking in both pathology classification and image quality assessment (IQA)."
+    },
+    {
+      "source_id": "source-a2-blindpsnr",
+      "citation_id": "a2-blindpsnr",
+      "claim_spec_id": "claim-a2-blindpsnr",
+      "title": "BlindPSNR: A No-Reference Fidelity Predictor for Low-Light Image Enhancement",
+      "url": "https://arxiv.org/abs/2607.27628",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-secondary.json",
+      "excerpt": "BlindPSNR, a lightweight no-reference network that fuses the enhanced image with the degraded low-light input via windowed cross-attention and estimates PSNR through heteroscedastic regression."
+    },
+    {
+      "source_id": "source-a2-cbct",
+      "citation_id": "a2-cbct",
+      "claim_spec_id": "claim-a2-cbct",
+      "title": "CBCT-IQ: A Publicly Available Annotated Cone-Beam CT Dataset for Image Quality Assessment and Benchmarking",
+      "url": "https://arxiv.org/abs/2607.29253",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-candidates.json",
+      "excerpt": "Three clinical experts graded the overall image quality and a predefined regions of interest (ROI) using a four-level scoring scheme."
+    },
+    {
+      "source_id": "source-a2-lpifm",
+      "citation_id": "a2-lpifm",
+      "claim_spec_id": "claim-a2-lpifm",
+      "title": "Ranking Image Fusion the Way Humans Do: A Learned Pairwise Preference Measure for Infrared-Visible Fusion Assessment",
+      "url": "https://arxiv.org/abs/2608.01301",
+      "locator_label": "arXiv Atom entry: title, published, updated and summary",
+      "command_file": "commands/fetch-arxiv-api-candidates.json",
+      "excerpt": "LPIFM jointly observes the two sources and two fused candidates and predicts whether A is better, B is better, or the two are perceptually equivalent."
+    },
+    {
+      "source_id": "source-a2-ssim",
+      "citation_id": "a2-ssim",
+      "claim_spec_id": "claim-a2-ssim",
+      "title": "Estimating SSIM from MSE for DCT-Based Compressed Images via Modeling Local Error Statistics",
+      "url": "https://arxiv.org/abs/2608.02549",
+      "locator_label": "arXiv Atom entry: published, updated and summary",
+      "command_file": "commands/fetch-arxiv-api-secondary.json",
+      "excerpt": "we propose two approaches to approximate local MSE by redistributing the global MSE using variance or standard-deviation-based weighting."
+    },
+    {
+      "source_id": "source-a2-sharpness",
+      "citation_id": "a2-sharpness",
+      "claim_spec_id": "claim-a2-sharpness",
+      "title": "A Subjective Study on a New Sharpness Informed Class of Metrics",
+      "url": "https://arxiv.org/abs/2608.13989",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-secondary.json",
+      "excerpt": "67% of binarized comparisons, as opposed to losses that do not explicitly target sharpness."
+    },
+    {
+      "source_id": "source-a2-agidefect",
+      "citation_id": "a2-agidefect",
+      "claim_spec_id": "claim-a2-agidefect",
+      "title": "AGIDefect-4K: A Richly Annotated Dataset for AI-Generated Image Defect Detection, Localization and Explanation",
+      "url": "https://arxiv.org/abs/2608.20713",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-candidates.json",
+      "excerpt": "AGIDefect-4K features hierarchical defect annotations: (1) detection labels identifying whether defects exist, (2) pixel-level segmentation masks localizing defective regions, and (3) detailed textual explanations characterizing defect types and their perceptual impact."
+    },
+    {
+      "source_id": "source-a2-agenticiqa",
+      "citation_id": "a2-agenticiqa",
+      "claim_spec_id": "claim-a2-agenticiqa",
+      "title": "AgenticIQA: An Agentic Framework for Adaptive and Interpretable Image Quality Assessment",
+      "url": "https://arxiv.org/abs/2509.26006",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-agentic-outside-window.json",
+      "excerpt": "AgenticIQA decomposes IQA into four subtasks -- distortion detection, distortion analysis, tool selection, and tool execution -- coordinated by a planner, executor, and summarizer."
+    },
+    {
+      "source_id": "source-a2-muse",
+      "citation_id": "a2-muse",
+      "claim_spec_id": "claim-a2-muse",
+      "title": "MUSE: A Unified Agentic Harness for MLLMs",
+      "url": "https://arxiv.org/abs/2606.03005",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-agentic-outside-window.json",
+      "excerpt": "We introduce MUSE, a multimodal unified structured execution harness that wraps any off-the-shelf MLLM with composable modules"
+    },
+    {
+      "source_id": "source-a2-tooliqa",
+      "citation_id": "a2-tooliqa",
+      "claim_spec_id": "claim-a2-tooliqa",
+      "title": "Tool-IQA: Augmenting Image Quality Assessment with Simple Tools",
+      "url": "https://arxiv.org/abs/2606.16082",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-candidates.json",
+      "excerpt": "Tool-IQA, shifting the assessment mechanism from passive scoring to a tool-augmented workflow."
+    },
+    {
+      "source_id": "source-a2-iqat1",
+      "citation_id": "a2-iqat1",
+      "claim_spec_id": "claim-a2-iqat1",
+      "title": "IQA-T1: Tool-based Visual Evidence Reasoning for Image Quality Assessment",
+      "url": "https://arxiv.org/abs/2607.12375",
+      "locator_label": "arXiv Atom entry: published and summary",
+      "command_file": "commands/fetch-arxiv-api-candidates.json",
+      "excerpt": "We propose IQA-T1, a tool-based visual evidence reasoning framework that augments MLLM reasoning with explicit perceptual observations."
+    },
+    {
+      "source_id": "source-a2-strive",
+      "citation_id": "a2-strive",
+      "claim_spec_id": "claim-a2-strive",
+      "title": "STRIVE: Probing Reasoning Limits in Graded Plausibility Generation and Evaluation",
+      "url": "https://arxiv.org/abs/2608.04567",
+      "locator_label": "arXiv abstract page title; correction of the unsupported IQA candidate",
+      "command_file": "commands/fetch-hallucinated-agent-iqa.json",
+      "excerpt": "# Title:STRIVE: Probing Reasoning Limits in Graded Plausibility Generation and Evaluation"
+    }
+  ]
+}

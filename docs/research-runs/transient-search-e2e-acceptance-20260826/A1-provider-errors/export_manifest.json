@@ -1,0 +1,80 @@
+{
+  "schema_version": "1",
+  "case_id": "A1",
+  "run_id": "run-transient-a1-20260826",
+  "source_commit": "f3a30d4eab2dee4656e0fbdfc020f490f4fa8594",
+  "source_archive": ".trellis/tasks/archive/2026-08/08-26-transient-search-e2e-acceptance/artifacts/acceptance-final/A1",
+  "included": [
+    "citation-backed Research Workspace projections",
+    "registered evidence excerpt snapshots and artifact registry",
+    "public Trace",
+    "sanitized command JSON and acceptance records"
+  ],
+  "excluded": [
+    "duplicate CLI stdout and stderr captures",
+    "superseded failed attempts",
+    "credentials, private configuration, and hidden test manifests"
+  ],
+  "counts": {
+    "claims": 10,
+    "cited_sources": 10,
+    "citations": 10,
+    "displayed_references": 10,
+    "search_commands": 18
+  },
+  "workspace_manifest": {
+    "schema_version": "1",
+    "dossier_schema_version": "1",
+    "project_name": "审计 xAI、OpenAI、Exa、Tavily、Firecrawl 和 Jina Reader 的官方错误身份、重试边界与限流等待信号，并记录 Smart Search 的接受观察。",
+    "run_id": "run-transient-a1-20260826",
+    "goal": "审计 xAI、OpenAI、Exa、Tavily、Firecrawl 和 Jina Reader 的官方错误身份、重试边界与限流等待信号，并记录 Smart Search 的接受观察。",
+    "question": "审计 xAI、OpenAI、Exa、Tavily、Firecrawl 和 Jina Reader 的官方错误身份、重试边界与限流等待信号，并记录 Smart Search 的接受观察。",
+    "mode": "standard",
+    "status": "completed",
+    "current_phase": "root_decision",
+    "observed_timestamps": [
+      "2026-08-26T00:00:00Z"
+    ],
+    "updated_at": "2026-08-26T00:00:00Z",
+    "public_trace_path": "public_trace.jsonl",
+    "counts": {
+      "search_tasks": 0,
+      "evidence_mining_tasks": 10,
+      "execution_attempts": 10,
+      "delegate_requests": 10,
+      "delegate_results": 0,
+      "candidates": 0,
+      "candidate_cards": 0,
+      "key_source_proposals": 0,
+      "evidence_items": 10,
+      "claim_records": 10
+    },
+    "entrypoints": {
+      "initial_context": "initial_context.md",
+      "domain_methodology": "domain_methodology.md",
+      "main_log": "main_log.md",
+      "latest_dossier": "latest_dossier.json",
+      "checkpoints": "checkpoints/",
+      "evidence": "evidence/",
+      "tasks": {
+        "task-source-01": "task_task-source-01_57a2fd65/",
+        "task-source-02": "task_task-source-02_9d163404/",
+        "task-source-03": "task_task-source-03_5a98d0cf/",
+        "task-source-04": "task_task-source-04_12bec13e/",
+        "task-source-05": "task_task-source-05_aade74ca/",
+        "task-source-06": "task_task-source-06_5a8766fe/",
+        "task-source-07": "task_task-source-07_98ae035f/",
+        "task-source-08": "task_task-source-08_4287a3a0/",
+        "task-source-09": "task_task-source-09_c90e2099/",
+        "task-source-10": "task_task-source-10_1b4ca041/"
+      },
+      "final_synthesis": "final_synthesis.md",
+      "citation_verification": "evidence/citation_verification.json",
+      "reference_register": "evidence/reference_register.json",
+      "public_trace": "public_trace.jsonl",
+      "artifact_run_directory": "runtime/run-transient-a1-20260826",
+      "artifact_registry": "runtime/run-transient-a1-20260826/artifacts.jsonl",
+      "trace": "runtime/run-transient-a1-20260826/trace.jsonl"
+    }
+  }
+}

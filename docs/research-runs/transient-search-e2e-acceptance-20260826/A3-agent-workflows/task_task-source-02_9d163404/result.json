@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_38de145b0ec59f041debc018"
+      ],
+      "attempt_id": "attempt-source-02",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-openai-hitl.json",
+        "locator_label": "How the approval flow works; Long-running approvals"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_38de145b0ec59f041debc018",
+      "artifact_refs": [
+        "art_38de145b0ec59f041debc018"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://openai.github.io/openai-agents-python/human_in_the_loop/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-hitl",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-02",
+      "locator": {
+        "section": "How the approval flow works; Long-running approvals",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_d35364e94ba4c1abd7a0e92db12486c69344759403379b14e1680d175b197192",
+      "source_id": "source-a3-openai-hitl",
+      "stance": "support",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "text": "Use the human-in-the-loop (HITL) flow to pause agent execution until a person approves or rejects sensitive tool calls."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-02"
+}

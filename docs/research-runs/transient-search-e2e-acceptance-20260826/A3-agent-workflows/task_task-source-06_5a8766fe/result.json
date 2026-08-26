@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_647bc099d2bfe5938c33439d"
+      ],
+      "attempt_id": "attempt-source-06",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-langgraph-persistence.json",
+        "locator_label": "Checkpointer vs. store; MemorySaver does not persist between restarts"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_647bc099d2bfe5938c33439d",
+      "artifact_refs": [
+        "art_647bc099d2bfe5938c33439d"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-persistence",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-06",
+      "locator": {
+        "section": "Checkpointer vs. store; MemorySaver does not persist between restarts",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_55da8ce6f1e9eb241af30929371ab4f89e57b815b5057805fa54ad552a7363ff",
+      "source_id": "source-a3-langgraph-persistence",
+      "stance": "support",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "text": "LangGraph’s persistence layer gives agents short-term memory through checkpointers and long-term memory through stores."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-06"
+}

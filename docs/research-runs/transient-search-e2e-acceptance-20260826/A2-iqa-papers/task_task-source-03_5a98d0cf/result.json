@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_280e990cf84f37615207358a"
+      ],
+      "attempt_id": "attempt-source-03",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-arxiv-api-candidates.json",
+        "locator_label": "arXiv Atom entry: published and summary"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_280e990cf84f37615207358a",
+      "artifact_refs": [
+        "art_280e990cf84f37615207358a"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2608.18579",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-mriqa2",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-03",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_bd39c486518162e80ef8ec5951d1579a9c2df2c40c772083c3feae1b34885279",
+      "source_id": "source-a2-mriqa2",
+      "stance": "support",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "text": "We introduce MR-IQA-2, an actor-editor-judge framework that operationalizes reasoning-editing-reflection."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-03"
+}

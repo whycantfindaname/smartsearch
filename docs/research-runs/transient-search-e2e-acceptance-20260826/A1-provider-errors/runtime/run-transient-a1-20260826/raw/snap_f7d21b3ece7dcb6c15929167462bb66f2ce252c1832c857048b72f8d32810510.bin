@@ -1,0 +1,4 @@
+| Endpoint | Limit |
+| --- | --- |
+| `/search` | 10 QPS\* |
+| `/contents` | 100 QPS |

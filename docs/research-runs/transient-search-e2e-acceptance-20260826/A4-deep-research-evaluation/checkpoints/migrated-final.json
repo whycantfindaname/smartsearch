@@ -1,0 +1,3335 @@
+{
+  "candidate_cards": [],
+  "candidates": [],
+  "claim_records": [
+    {
+      "citation_map": {
+        "a4-dream-date": "evidence-source-01"
+      },
+      "claim_record_id": "record-claim-a4-dream-date",
+      "claim_spec_id": "claim-a4-dream-date",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM: Deep Research Evaluation with Agentic Metrics 的首次发布时间为 2026-02-21。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-01"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-date": "evidence-source-02"
+      },
+      "claim_record_id": "record-claim-a4-live-date",
+      "claim_spec_id": "claim-a4-live-date",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild 的首次发布时间为 2025-10-16。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-02"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-metrics-inventory": "evidence-source-03"
+      },
+      "claim_record_id": "record-claim-a4-dream-metrics-inventory",
+      "claim_spec_id": "claim-a4-dream-metrics-inventory",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Source Quality 指标包括 Factuality 与 Citation Integrity。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-03"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-paper-metrics": "evidence-source-04"
+      },
+      "claim_record_id": "record-claim-a4-live-paper-metrics",
+      "claim_spec_id": "claim-a4-live-paper-metrics",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench 论文提出的 DeepEval 覆盖 coverage、presentation、citation accuracy、citation association、consistency 与 analysis depth，未列出 DRA fault recovery。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-04"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-verification-pipelines": "evidence-source-05"
+      },
+      "claim_record_id": "record-claim-a4-dream-verification-pipelines",
+      "claim_spec_id": "claim-a4-dream-verification-pipelines",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Citation Integrity 使用 Claim Attribution 与 Citation Faithfulness 的调和平均。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-05"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-factuality-independent": "evidence-source-06"
+      },
+      "claim_record_id": "record-claim-a4-dream-factuality-independent",
+      "claim_spec_id": "claim-a4-dream-factuality-independent",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Factuality 独立于给定引用检索外部证据。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-06"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-kic-boundary": "evidence-source-07"
+      },
+      "claim_record_id": "record-claim-a4-dream-kic-boundary",
+      "claim_spec_id": "claim-a4-dream-kic-boundary",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Key-Information Coverage 将关键点转成时效性的 yes/no checklist，用于发现遗漏或过时内容，而不是测量来源集合覆盖率。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-07"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-taxonomy": "evidence-source-08"
+      },
+      "claim_record_id": "record-claim-a4-dream-taxonomy",
+      "claim_spec_id": "claim-a4-dream-taxonomy",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 将 Deep Research Evaluation 组织为 Presentation Quality、Task Compliance、Analytical Depth 与 Source Quality 四个 vertical。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-08"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-framework": "evidence-source-09"
+      },
+      "claim_record_id": "record-claim-a4-dream-framework",
+      "claim_spec_id": "claim-a4-dream-framework",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 把评测本身做成具有工具调用能力的 agentic framework。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-09"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-static-metrics": "evidence-source-10"
+      },
+      "claim_record_id": "record-claim-a4-dream-static-metrics",
+      "claim_spec_id": "claim-a4-dream-static-metrics",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的静态指标包括 Writing Quality、Factuality、Citation Integrity 与 Domain Authoritativeness。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-10"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-adaptive-kic": "evidence-source-11"
+      },
+      "claim_record_id": "record-claim-a4-dream-adaptive-kic",
+      "claim_spec_id": "claim-a4-dream-adaptive-kic",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Key-Information Coverage 通过检索最新来源并识别必要事实来构造可核验问题。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-11"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-reasoning-quality": "evidence-source-12"
+      },
+      "claim_record_id": "record-claim-a4-dream-reasoning-quality",
+      "claim_spec_id": "claim-a4-dream-reasoning-quality",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Reasoning Quality 使用 query-specific questions 与 structured validation plans 评估推理。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-12"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-factuality-boundary": "evidence-source-13"
+      },
+      "claim_record_id": "record-claim-a4-dream-factuality-boundary",
+      "claim_spec_id": "claim-a4-dream-factuality-boundary",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 论文指出 citation alignment 不足以完成 factuality evaluation。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-13"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-paper-scale": "evidence-source-14"
+      },
+      "claim_record_id": "record-claim-a4-live-paper-scale",
+      "claim_spec_id": "claim-a4-live-paper-scale",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench 论文将其定义为覆盖日常生活、企业和学术场景的 100 个专家策划任务的 benchmark。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-14"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-paper-systems": "evidence-source-15"
+      },
+      "claim_record_id": "record-claim-a4-live-paper-systems",
+      "claim_spec_id": "claim-a4-live-paper-systems",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench 论文报告了对 17 个 frontier deep research systems 的评估。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-15"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-dataset-fields": "evidence-source-16"
+      },
+      "claim_record_id": "record-claim-a4-live-dataset-fields",
+      "claim_spec_id": "claim-a4-live-dataset-fields",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench dataset 页面列出 question_with_checklist subset。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-16"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-dataset-question-only": "evidence-source-17"
+      },
+      "claim_record_id": "record-claim-a4-live-dataset-question-only",
+      "claim_spec_id": "claim-a4-live-dataset-question-only",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench dataset 页面列出 question_only subset。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-17"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-dataset-checklist": "evidence-source-18"
+      },
+      "claim_record_id": "record-claim-a4-live-dataset-checklist",
+      "claim_spec_id": "claim-a4-live-dataset-checklist",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench dataset 页面提供用于 coverage evaluation 的 checklist 字段。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-18"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-repo-identity": "evidence-source-19"
+      },
+      "claim_record_id": "record-claim-a4-live-repo-identity",
+      "claim_spec_id": "claim-a4-live-repo-identity",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench repository 同时包含 LiveResearchBench benchmark 与 DeepEval evaluation framework。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-19"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-resume": "evidence-source-20"
+      },
+      "claim_record_id": "record-claim-a4-live-resume",
+      "claim_spec_id": "claim-a4-live-resume",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench repository 的 README 说明评分中断后重新运行同一命令会自动继续。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-20"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-incremental": "evidence-source-21"
+      },
+      "claim_record_id": "record-claim-a4-live-incremental",
+      "claim_spec_id": "claim-a4-live-incremental",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench repository 会把已评分报告立即保存到按 criterion 区分的 JSONL 文件。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-21"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-excluded-browsecomp": "evidence-source-22"
+      },
+      "claim_record_id": "record-claim-a4-excluded-browsecomp",
+      "claim_spec_id": "claim-a4-excluded-browsecomp",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "Improving and Evaluating Open Deep Research Agents 提出 BrowseComp-Small，属于主题相关的 benchmark adaptation。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-22"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-excluded-date": "evidence-source-23"
+      },
+      "claim_record_id": "record-claim-a4-excluded-date",
+      "claim_spec_id": "claim-a4-excluded-date",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "Improving and Evaluating Open Deep Research Agents 的首次发布时间为 2025-08-13，早于本次窗口。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-23"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-excluded-updated": "evidence-source-24"
+      },
+      "claim_record_id": "record-claim-a4-excluded-updated",
+      "claim_spec_id": "claim-a4-excluded-updated",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "Improving and Evaluating Open Deep Research Agents 的当前版本更新时间为 2026-01-08，不能替代首次发布时间。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-24"
+      ]
+    }
+  ],
+  "delegate_requests": [
+    {
+      "artifact_refs": [
+        "art_b24591548709873c55b5eb92"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_b24591548709873c55b5eb92"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_79640f41adac3da6d8ed01f1",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-01",
+      "step_id": "step-source-01",
+      "target": "evidence_miner",
+      "task_id": "task-source-01"
+    },
+    {
+      "artifact_refs": [
+        "art_6f74a94defbb8841f666abfb"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_6f74a94defbb8841f666abfb"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_eba9645ef13f9c86100cf62e",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-02",
+      "step_id": "step-source-02",
+      "target": "evidence_miner",
+      "task_id": "task-source-02"
+    },
+    {
+      "artifact_refs": [
+        "art_ba147e6b8b5faada8190d938"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_ba147e6b8b5faada8190d938"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_8e40e19b822ecc64429e43a8",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-03",
+      "step_id": "step-source-03",
+      "target": "evidence_miner",
+      "task_id": "task-source-03"
+    },
+    {
+      "artifact_refs": [
+        "art_934ff150bb9a4c6fcde004e1"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_934ff150bb9a4c6fcde004e1"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_8de6d74637639b2dabf24666",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-04",
+      "step_id": "step-source-04",
+      "target": "evidence_miner",
+      "task_id": "task-source-04"
+    },
+    {
+      "artifact_refs": [
+        "art_74383003be613afa4cc3b795"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_74383003be613afa4cc3b795"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_53f0e1b2713e789d68d56276",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-05",
+      "step_id": "step-source-05",
+      "target": "evidence_miner",
+      "task_id": "task-source-05"
+    },
+    {
+      "artifact_refs": [
+        "art_e0107b871c3443ca463a92fc"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_e0107b871c3443ca463a92fc"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_f116e48464160555e4ca940f",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-06",
+      "step_id": "step-source-06",
+      "target": "evidence_miner",
+      "task_id": "task-source-06"
+    },
+    {
+      "artifact_refs": [
+        "art_00c14700b8698bb2f0bcc470"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_00c14700b8698bb2f0bcc470"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_a0435afd1ae407c3827a8609",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-07",
+      "step_id": "step-source-07",
+      "target": "evidence_miner",
+      "task_id": "task-source-07"
+    },
+    {
+      "artifact_refs": [
+        "art_aec8964e0a9032fcdeba30ed"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_aec8964e0a9032fcdeba30ed"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_d1a338be049b6cca65b8bc20",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-08",
+      "step_id": "step-source-08",
+      "target": "evidence_miner",
+      "task_id": "task-source-08"
+    },
+    {
+      "artifact_refs": [
+        "art_6e3d413e260cbbe6bcfebd08"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_6e3d413e260cbbe6bcfebd08"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_649085dd685543746429692d",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-09",
+      "step_id": "step-source-09",
+      "target": "evidence_miner",
+      "task_id": "task-source-09"
+    },
+    {
+      "artifact_refs": [
+        "art_3122d22d40ba88d2244b4355"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_3122d22d40ba88d2244b4355"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_7a8eae8a712896dbd9917276",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-10",
+      "step_id": "step-source-10",
+      "target": "evidence_miner",
+      "task_id": "task-source-10"
+    },
+    {
+      "artifact_refs": [
+        "art_84fbf02e9c49437622c7e4e2"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_84fbf02e9c49437622c7e4e2"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_16f3309b702fdc7040cc2725",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-11",
+      "step_id": "step-source-11",
+      "target": "evidence_miner",
+      "task_id": "task-source-11"
+    },
+    {
+      "artifact_refs": [
+        "art_91c0576ce7a80280601daf1e"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_91c0576ce7a80280601daf1e"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_cee4d770906a33a33aa340aa",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-12",
+      "step_id": "step-source-12",
+      "target": "evidence_miner",
+      "task_id": "task-source-12"
+    },
+    {
+      "artifact_refs": [
+        "art_28f01c0af0c336d3344f4c58"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_28f01c0af0c336d3344f4c58"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_c62dbf006a68c25bfaf29b25",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-13",
+      "step_id": "step-source-13",
+      "target": "evidence_miner",
+      "task_id": "task-source-13"
+    },
+    {
+      "artifact_refs": [
+        "art_fb47eca6845ef55a783d289c"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_fb47eca6845ef55a783d289c"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_93d7a459802f2268d93c76b5",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-14",
+      "step_id": "step-source-14",
+      "target": "evidence_miner",
+      "task_id": "task-source-14"
+    },
+    {
+      "artifact_refs": [
+        "art_66aa2877b1bd02a4cf2ed18f"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_66aa2877b1bd02a4cf2ed18f"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_5d9a1d74530ca0d6cf40daeb",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-15",
+      "step_id": "step-source-15",
+      "target": "evidence_miner",
+      "task_id": "task-source-15"
+    },
+    {
+      "artifact_refs": [
+        "art_6442c143d517b2ffc6f18822"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_6442c143d517b2ffc6f18822"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_2626919076c04e8b7d9f8ed6",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-16",
+      "step_id": "step-source-16",
+      "target": "evidence_miner",
+      "task_id": "task-source-16"
+    },
+    {
+      "artifact_refs": [
+        "art_179fb7e4fef8c944b9848d1a"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_179fb7e4fef8c944b9848d1a"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_b21f1a36ae5cbd0b5a50eac2",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-17",
+      "step_id": "step-source-17",
+      "target": "evidence_miner",
+      "task_id": "task-source-17"
+    },
+    {
+      "artifact_refs": [
+        "art_e4bb0bb1fe4e5d7ee8f400dc"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_e4bb0bb1fe4e5d7ee8f400dc"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_a6d1b80650d49f256385236e",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-18",
+      "step_id": "step-source-18",
+      "target": "evidence_miner",
+      "task_id": "task-source-18"
+    },
+    {
+      "artifact_refs": [
+        "art_cee871d12a501a7646183fc4"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_cee871d12a501a7646183fc4"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_bf63ac046fb03cd899048bc8",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-19",
+      "step_id": "step-source-19",
+      "target": "evidence_miner",
+      "task_id": "task-source-19"
+    },
+    {
+      "artifact_refs": [
+        "art_c82f1bb2b0460cf3fac604d2"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_c82f1bb2b0460cf3fac604d2"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_a4ca9fe04fd62596ea4d99f7",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-20",
+      "step_id": "step-source-20",
+      "target": "evidence_miner",
+      "task_id": "task-source-20"
+    },
+    {
+      "artifact_refs": [
+        "art_8f78f191526ebd3c925b4a92"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_8f78f191526ebd3c925b4a92"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_2895ae1750e7e6aca55cfe7e",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-21",
+      "step_id": "step-source-21",
+      "target": "evidence_miner",
+      "task_id": "task-source-21"
+    },
+    {
+      "artifact_refs": [
+        "art_abf13da65c730c80afe86611"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_abf13da65c730c80afe86611"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_e3b05aa9d3718eb289eb2e14",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-22",
+      "step_id": "step-source-22",
+      "target": "evidence_miner",
+      "task_id": "task-source-22"
+    },
+    {
+      "artifact_refs": [
+        "art_324bf425dbcc610ee9f7ee6e"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_324bf425dbcc610ee9f7ee6e"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_1acfb440b5587ae8f101c8ce",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-23",
+      "step_id": "step-source-23",
+      "target": "evidence_miner",
+      "task_id": "task-source-23"
+    },
+    {
+      "artifact_refs": [
+        "art_f0889c4b6948693c7cd17866"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_f0889c4b6948693c7cd17866"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_a18816a1778358e9aee1fb2e",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-24",
+      "step_id": "step-source-24",
+      "target": "evidence_miner",
+      "task_id": "task-source-24"
+    }
+  ],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_b24591548709873c55b5eb92",
+      "artifact_refs": [
+        "art_b24591548709873c55b5eb92"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940,2508.10152",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-date",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-01",
+      "locator": {
+        "section": "arxiv:2602.18940v1 entry published field",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_ce32e5d355f8af79ab14deb21721dcf12ee67b629adb210aa4e3efbac66db195",
+      "source_id": "source-a4-dream-date",
+      "stance": "support",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "text": "DREAM: Deep Research Evaluation with Agentic Metrics 2026-02-21T19:14:31Z"
+    },
+    {
+      "artifact_id": "art_6f74a94defbb8841f666abfb",
+      "artifact_refs": [
+        "art_6f74a94defbb8841f666abfb"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://export.arxiv.org/api/query?id_list=2510.14240",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-date",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-02",
+      "locator": {
+        "section": "arxiv:2510.14240v1 entry published field",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_31963b6ae1e90115b413da3842b47aa755fbc3a506392a87ec28fc955febf00f",
+      "source_id": "source-a4-live-date",
+      "stance": "support",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "text": "2025-10-16T02:49:16Z"
+    },
+    {
+      "artifact_id": "art_ba147e6b8b5faada8190d938",
+      "artifact_refs": [
+        "art_ba147e6b8b5faada8190d938"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-metrics-inventory",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-03",
+      "locator": {
+        "section": "Section 2 taxonomy table, Source Quality row",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_837f8f2959919ebab6e4b9ba559c78ce8f36f886ee857a2060dfcab8bb327a06",
+      "source_id": "source-a4-dream-metrics-inventory",
+      "stance": "support",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "text": "Source Quality | Factuality, Citation Integrity"
+    },
+    {
+      "artifact_id": "art_934ff150bb9a4c6fcde004e1",
+      "artifact_refs": [
+        "art_934ff150bb9a4c6fcde004e1"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2510.14240v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-paper-metrics",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-04",
+      "locator": {
+        "section": "Abstract and Section 4 DeepEval metric list",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_c2f8c87ac29b11ae0d2097117fe05f2bcf80113fafb8dfd1b6ab9e44eda4ee7c",
+      "source_id": "source-a4-live-paper-metrics",
+      "stance": "support",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "text": "including coverage, presentation, citation accuracy and association, consistency and depth of analysis"
+    },
+    {
+      "artifact_id": "art_74383003be613afa4cc3b795",
+      "artifact_refs": [
+        "art_74383003be613afa4cc3b795"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-verification-pipelines",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-05",
+      "locator": {
+        "section": "Section 3.2 Workflow Evaluator, Citation Integrity",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_c6d632acf069b7e664f6c09d9fd16b84968bc8ec224097411813bf570fe9b10c",
+      "source_id": "source-a4-dream-verification-pipelines",
+      "stance": "support",
+      "step_id": "step-source-05",
+      "task_id": "task-source-05",
+      "text": "the system computes the harmonic mean of *Claim Attribution* (the ratio of cited to total verifiable claims) and *Citation Faithfulness* (the alignment of cited claims with their source content)"
+    },
+    {
+      "artifact_id": "art_e0107b871c3443ca463a92fc",
+      "artifact_refs": [
+        "art_e0107b871c3443ca463a92fc"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-factuality-independent",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-06",
+      "locator": {
+        "section": "Section 3.2 Workflow Evaluator, Factuality",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_15a2f0d6c2cbc8fe8c33b490aaa5901750e8c38f5afb478659ebd53d97893a35",
+      "source_id": "source-a4-dream-factuality-independent",
+      "stance": "support",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "text": "For Factuality, claims are extracted and evaluated independently of citations"
+    },
+    {
+      "artifact_id": "art_00c14700b8698bb2f0bcc470",
+      "artifact_refs": [
+        "art_00c14700b8698bb2f0bcc470"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-kic-boundary",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-07",
+      "locator": {
+        "section": "Section 3.1 Adaptive Metrics, Key-Information Coverage",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_ca418648b4598a76c93a34b267e0ca12d9b971c4e09abd7fd76348a83d7326a3",
+      "source_id": "source-a4-dream-kic-boundary",
+      "stance": "support",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "text": "This transforms coverage assessment into a grounded, temporally aware checklist that flags missing or outdated content."
+    },
+    {
+      "artifact_id": "art_aec8964e0a9032fcdeba30ed",
+      "artifact_refs": [
+        "art_aec8964e0a9032fcdeba30ed"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-taxonomy",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-08",
+      "locator": {
+        "section": "Introduction and Section 2 taxonomy",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_9f4e15d8b090995b9d44810b0256d4d4ca9f8019f25211794a0296327a6e3092",
+      "source_id": "source-a4-dream-taxonomy",
+      "stance": "support",
+      "step_id": "step-source-08",
+      "task_id": "task-source-08",
+      "text": "four fundamental verticals: *Presentation Quality*, *Task Compliance*, *Analytical Depth*, and *Source Quality*"
+    },
+    {
+      "artifact_id": "art_6e3d413e260cbbe6bcfebd08",
+      "artifact_refs": [
+        "art_6e3d413e260cbbe6bcfebd08"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-framework",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-09",
+      "locator": {
+        "section": "Introduction, DREAM framework description",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_6ea5deae899e81dad62a8b6acc3df0eb87a948ad8819ec8df38298f317d139a0",
+      "source_id": "source-a4-dream-framework",
+      "stance": "support",
+      "step_id": "step-source-09",
+      "task_id": "task-source-09",
+      "text": "DREAM, a framework that makes evaluation itself agentic"
+    },
+    {
+      "artifact_id": "art_3122d22d40ba88d2244b4355",
+      "artifact_refs": [
+        "art_3122d22d40ba88d2244b4355"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-static-metrics",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-10",
+      "locator": {
+        "section": "Section 3.1 Static Metrics",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_6c9901e349a52b494379be88ec554f724f1bd2f1c91d7e57610c794d4ae76887",
+      "source_id": "source-a4-dream-static-metrics",
+      "stance": "support",
+      "step_id": "step-source-10",
+      "task_id": "task-source-10",
+      "text": "These query-agnostic criteria apply uniformly across tasks: (i) *Writing Quality (WQ)* assesses presentation quality along the fixed dimensions of Ideas and Content, Organization, and Sentence Fluency; (ii) *Factuality* validates claims against external knowledge independent of citation support; (iii) *Citation Integrity (CI)* verifies that claims are attributed to sources and supported by the cited content; and (iv) *Domain Authoritativeness (DA)* evaluates cited sources credibility to ensure reliance on reputable, high-quality domains."
+    },
+    {
+      "artifact_id": "art_84fbf02e9c49437622c7e4e2",
+      "artifact_refs": [
+        "art_84fbf02e9c49437622c7e4e2"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-adaptive-kic",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-11",
+      "locator": {
+        "section": "Section 3.1 Adaptive Metrics, Key-Information Coverage",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_8b471d94bfb39aab3efa07c32f6cec01704dff168f3d34e9c7500023f6040d54",
+      "source_id": "source-a4-dream-adaptive-kic",
+      "stance": "support",
+      "step_id": "step-source-11",
+      "task_id": "task-source-11",
+      "text": "Key-Information Coverage (KIC): The agent identifies essential facts by retrieving up-to-date sources and converting each key point into a verifiable *yes/no question*."
+    },
+    {
+      "artifact_id": "art_91c0576ce7a80280601daf1e",
+      "artifact_refs": [
+        "art_91c0576ce7a80280601daf1e"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-reasoning-quality",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-12",
+      "locator": {
+        "section": "Section 3.1 Adaptive Metrics, Reasoning Quality",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_1650f7e1318638f2ffe9e6b77824f65ce3a6da89fe843ba06188ffc69d8f7d97",
+      "source_id": "source-a4-dream-reasoning-quality",
+      "stance": "support",
+      "step_id": "step-source-12",
+      "task_id": "task-source-12",
+      "text": "Reasoning Quality (RQ): The agent generates query-specific questions paired with *structured validation plans*"
+    },
+    {
+      "artifact_id": "art_28f01c0af0c336d3344f4c58",
+      "artifact_refs": [
+        "art_28f01c0af0c336d3344f4c58"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-factuality-boundary",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-13",
+      "locator": {
+        "section": "Section 4.4 Grounding Beyond Citation Alignment",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_8ab851fc4706aeac619acf8bcdb1678651e6faeaeaf2717645807d9526a0b059",
+      "source_id": "source-a4-dream-factuality-boundary",
+      "stance": "support",
+      "step_id": "step-source-13",
+      "task_id": "task-source-13",
+      "text": "citation alignment is insufficient for factual evaluation"
+    },
+    {
+      "artifact_id": "art_fb47eca6845ef55a783d289c",
+      "artifact_refs": [
+        "art_fb47eca6845ef55a783d289c"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2510.14240v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-paper-scale",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-14",
+      "locator": {
+        "section": "Abstract",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_c41cf5e68f8a35450fef6300fce73d7fdb83e697511d91f9dd609554496ecf78",
+      "source_id": "source-a4-live-paper-scale",
+      "stance": "support",
+      "step_id": "step-source-14",
+      "task_id": "task-source-14",
+      "text": "a benchmark of 100 expert-curated tasks spanning daily life, enterprise, and academia"
+    },
+    {
+      "artifact_id": "art_66aa2877b1bd02a4cf2ed18f",
+      "artifact_refs": [
+        "art_66aa2877b1bd02a4cf2ed18f"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2510.14240v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-paper-systems",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-15",
+      "locator": {
+        "section": "Abstract and contribution summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_1017b416b85ef0dfb470c9c7ee8a087b00225f75e11e955ed289f9aa56bf0265",
+      "source_id": "source-a4-live-paper-systems",
+      "stance": "support",
+      "step_id": "step-source-15",
+      "task_id": "task-source-15",
+      "text": "Using LiveResearchBench and DeepEval, we conduct a comprehensive evaluation of 17 frontier deep research systems"
+    },
+    {
+      "artifact_id": "art_6442c143d517b2ffc6f18822",
+      "artifact_refs": [
+        "art_6442c143d517b2ffc6f18822"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-dataset-fields",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-16",
+      "locator": {
+        "section": "Dataset Fields, Subsets",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_1bd9fa860da0ef4f5f5b5a716047d676e973528e1bd316af6696bc85f80a83e0",
+      "source_id": "source-a4-live-dataset-fields",
+      "stance": "support",
+      "step_id": "step-source-16",
+      "task_id": "task-source-16",
+      "text": "question_with_checklist"
+    },
+    {
+      "artifact_id": "art_179fb7e4fef8c944b9848d1a",
+      "artifact_refs": [
+        "art_179fb7e4fef8c944b9848d1a"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-dataset-question-only",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-17",
+      "locator": {
+        "section": "Dataset Fields, Subsets",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_60da497264f3b2f704bf677527e9f71aa3d27275943d02c07730f6eaedb446a4",
+      "source_id": "source-a4-live-dataset-question-only",
+      "stance": "support",
+      "step_id": "step-source-17",
+      "task_id": "task-source-17",
+      "text": "question_only"
+    },
+    {
+      "artifact_id": "art_e4bb0bb1fe4e5d7ee8f400dc",
+      "artifact_refs": [
+        "art_e4bb0bb1fe4e5d7ee8f400dc"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-dataset-checklist",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-18",
+      "locator": {
+        "section": "Dataset Fields, checklist field",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_dfa0aba03114c6f884426371b89d7ff371623de49b46d2be490338791190caa7",
+      "source_id": "source-a4-live-dataset-checklist",
+      "stance": "support",
+      "step_id": "step-source-18",
+      "task_id": "task-source-18",
+      "text": "List of checklist items for coverage evaluation"
+    },
+    {
+      "artifact_id": "art_cee871d12a501a7646183fc4",
+      "artifact_refs": [
+        "art_cee871d12a501a7646183fc4"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-repo-identity",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-19",
+      "locator": {
+        "section": "README project description",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_b939bc91b7d84a9b0a2b3cea2878e831851a7915228b768e137cab37fd69fa4f",
+      "source_id": "source-a4-live-repo-identity",
+      "stance": "support",
+      "step_id": "step-source-19",
+      "task_id": "task-source-19",
+      "text": "including both the **LiveResearchBench benchmark** and the **DeepEval evaluation framework**"
+    },
+    {
+      "artifact_id": "art_c82f1bb2b0460cf3fac604d2",
+      "artifact_refs": [
+        "art_c82f1bb2b0460cf3fac604d2"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-resume",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-20",
+      "locator": {
+        "section": "README Resume Interrupted Runs",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_fa2dc669d917980959ed7c4a8be6a024764ebbc9869ea571884f7f55f8d54bf0",
+      "source_id": "source-a4-live-resume",
+      "stance": "support",
+      "step_id": "step-source-20",
+      "task_id": "task-source-20",
+      "text": "If your grading run is interrupted, simply **run the same command again** - it will automatically resume from where it left off."
+    },
+    {
+      "artifact_id": "art_8f78f191526ebd3c925b4a92",
+      "artifact_refs": [
+        "art_8f78f191526ebd3c925b4a92"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-incremental",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-21",
+      "locator": {
+        "section": "README How It Works, incremental grading",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_8bb4c5f1cde8b112ebebe8e98c58f9bcd1a9fd43c31a7f0acfac3cd25e9d917d",
+      "source_id": "source-a4-live-incremental",
+      "stance": "support",
+      "step_id": "step-source-21",
+      "task_id": "task-source-21",
+      "text": "Each graded report is immediately saved to criterion-specific JSONL files"
+    },
+    {
+      "artifact_id": "art_abf13da65c730c80afe86611",
+      "artifact_refs": [
+        "art_abf13da65c730c80afe86611"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940,2508.10152",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-excluded-browsecomp",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-22",
+      "locator": {
+        "section": "arxiv:2508.10152v2 abstract",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_28e87f004e95c7a15d69de1efe2e9fc87241cf121cdd5893267ef9074ff9306e",
+      "source_id": "source-a4-excluded-browsecomp",
+      "stance": "support",
+      "step_id": "step-source-22",
+      "task_id": "task-source-22",
+      "text": "We propose BrowseComp-Small (BC-Small), comprising a subset of BrowseComp"
+    },
+    {
+      "artifact_id": "art_324bf425dbcc610ee9f7ee6e",
+      "artifact_refs": [
+        "art_324bf425dbcc610ee9f7ee6e"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940,2508.10152",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-excluded-date",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-23",
+      "locator": {
+        "section": "arxiv:2508.10152v2 entry published field",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_d8e581a975d8cdb18f09b79df793fa4e7c533d92ae0be706945e9851a990b864",
+      "source_id": "source-a4-excluded-date",
+      "stance": "support",
+      "step_id": "step-source-23",
+      "task_id": "task-source-23",
+      "text": "2025-08-13T19:32:01Z"
+    },
+    {
+      "artifact_id": "art_f0889c4b6948693c7cd17866",
+      "artifact_refs": [
+        "art_f0889c4b6948693c7cd17866"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://export.arxiv.org/api/query?id_list=2602.18940,2508.10152",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-excluded-updated",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-24",
+      "locator": {
+        "section": "arxiv:2508.10152v2 entry updated field",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_f41ed354ca24758fe4756be2e69a63e669f913bfe615fad027150b23bd9f9ad7",
+      "source_id": "source-a4-excluded-updated",
+      "stance": "support",
+      "step_id": "step-source-24",
+      "task_id": "task-source-24",
+      "text": "2026-01-08T17:54:58Z"
+    }
+  ],
+  "evidence_mining_tasks": [
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_b24591548709873c55b5eb92"
+      ],
+      "artifact_refs": [
+        "art_b24591548709873c55b5eb92"
+      ],
+      "claim_spec_id": "claim-a4-dream-date",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_6f74a94defbb8841f666abfb"
+      ],
+      "artifact_refs": [
+        "art_6f74a94defbb8841f666abfb"
+      ],
+      "claim_spec_id": "claim-a4-live-date",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_ba147e6b8b5faada8190d938"
+      ],
+      "artifact_refs": [
+        "art_ba147e6b8b5faada8190d938"
+      ],
+      "claim_spec_id": "claim-a4-dream-metrics-inventory",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_934ff150bb9a4c6fcde004e1"
+      ],
+      "artifact_refs": [
+        "art_934ff150bb9a4c6fcde004e1"
+      ],
+      "claim_spec_id": "claim-a4-live-paper-metrics",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_74383003be613afa4cc3b795"
+      ],
+      "artifact_refs": [
+        "art_74383003be613afa4cc3b795"
+      ],
+      "claim_spec_id": "claim-a4-dream-verification-pipelines",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-05",
+      "task_id": "task-source-05",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_e0107b871c3443ca463a92fc"
+      ],
+      "artifact_refs": [
+        "art_e0107b871c3443ca463a92fc"
+      ],
+      "claim_spec_id": "claim-a4-dream-factuality-independent",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_00c14700b8698bb2f0bcc470"
+      ],
+      "artifact_refs": [
+        "art_00c14700b8698bb2f0bcc470"
+      ],
+      "claim_spec_id": "claim-a4-dream-kic-boundary",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_aec8964e0a9032fcdeba30ed"
+      ],
+      "artifact_refs": [
+        "art_aec8964e0a9032fcdeba30ed"
+      ],
+      "claim_spec_id": "claim-a4-dream-taxonomy",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-08",
+      "task_id": "task-source-08",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_6e3d413e260cbbe6bcfebd08"
+      ],
+      "artifact_refs": [
+        "art_6e3d413e260cbbe6bcfebd08"
+      ],
+      "claim_spec_id": "claim-a4-dream-framework",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-09",
+      "task_id": "task-source-09",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_3122d22d40ba88d2244b4355"
+      ],
+      "artifact_refs": [
+        "art_3122d22d40ba88d2244b4355"
+      ],
+      "claim_spec_id": "claim-a4-dream-static-metrics",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-10",
+      "task_id": "task-source-10",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_84fbf02e9c49437622c7e4e2"
+      ],
+      "artifact_refs": [
+        "art_84fbf02e9c49437622c7e4e2"
+      ],
+      "claim_spec_id": "claim-a4-dream-adaptive-kic",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-11",
+      "task_id": "task-source-11",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_91c0576ce7a80280601daf1e"
+      ],
+      "artifact_refs": [
+        "art_91c0576ce7a80280601daf1e"
+      ],
+      "claim_spec_id": "claim-a4-dream-reasoning-quality",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-12",
+      "task_id": "task-source-12",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_28f01c0af0c336d3344f4c58"
+      ],
+      "artifact_refs": [
+        "art_28f01c0af0c336d3344f4c58"
+      ],
+      "claim_spec_id": "claim-a4-dream-factuality-boundary",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-13",
+      "task_id": "task-source-13",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_fb47eca6845ef55a783d289c"
+      ],
+      "artifact_refs": [
+        "art_fb47eca6845ef55a783d289c"
+      ],
+      "claim_spec_id": "claim-a4-live-paper-scale",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-14",
+      "task_id": "task-source-14",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_66aa2877b1bd02a4cf2ed18f"
+      ],
+      "artifact_refs": [
+        "art_66aa2877b1bd02a4cf2ed18f"
+      ],
+      "claim_spec_id": "claim-a4-live-paper-systems",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-15",
+      "task_id": "task-source-15",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_6442c143d517b2ffc6f18822"
+      ],
+      "artifact_refs": [
+        "art_6442c143d517b2ffc6f18822"
+      ],
+      "claim_spec_id": "claim-a4-live-dataset-fields",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-16",
+      "task_id": "task-source-16",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_179fb7e4fef8c944b9848d1a"
+      ],
+      "artifact_refs": [
+        "art_179fb7e4fef8c944b9848d1a"
+      ],
+      "claim_spec_id": "claim-a4-live-dataset-question-only",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-17",
+      "task_id": "task-source-17",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_e4bb0bb1fe4e5d7ee8f400dc"
+      ],
+      "artifact_refs": [
+        "art_e4bb0bb1fe4e5d7ee8f400dc"
+      ],
+      "claim_spec_id": "claim-a4-live-dataset-checklist",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-18",
+      "task_id": "task-source-18",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_cee871d12a501a7646183fc4"
+      ],
+      "artifact_refs": [
+        "art_cee871d12a501a7646183fc4"
+      ],
+      "claim_spec_id": "claim-a4-live-repo-identity",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-19",
+      "task_id": "task-source-19",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_c82f1bb2b0460cf3fac604d2"
+      ],
+      "artifact_refs": [
+        "art_c82f1bb2b0460cf3fac604d2"
+      ],
+      "claim_spec_id": "claim-a4-live-resume",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-20",
+      "task_id": "task-source-20",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_8f78f191526ebd3c925b4a92"
+      ],
+      "artifact_refs": [
+        "art_8f78f191526ebd3c925b4a92"
+      ],
+      "claim_spec_id": "claim-a4-live-incremental",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-21",
+      "task_id": "task-source-21",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_abf13da65c730c80afe86611"
+      ],
+      "artifact_refs": [
+        "art_abf13da65c730c80afe86611"
+      ],
+      "claim_spec_id": "claim-a4-excluded-browsecomp",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-22",
+      "task_id": "task-source-22",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_324bf425dbcc610ee9f7ee6e"
+      ],
+      "artifact_refs": [
+        "art_324bf425dbcc610ee9f7ee6e"
+      ],
+      "claim_spec_id": "claim-a4-excluded-date",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-23",
+      "task_id": "task-source-23",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_f0889c4b6948693c7cd17866"
+      ],
+      "artifact_refs": [
+        "art_f0889c4b6948693c7cd17866"
+      ],
+      "claim_spec_id": "claim-a4-excluded-updated",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-24",
+      "task_id": "task-source-24",
+      "user_constraints": {}
+    }
+  ],
+  "key_source_proposals": [],
+  "run": {
+    "artifact_index_ref": "artifacts.jsonl",
+    "attempts": [
+      {
+        "artifact_refs": [
+          "art_b24591548709873c55b5eb92"
+        ],
+        "attempt_id": "attempt-source-01",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-arxiv-api-dates.json",
+          "locator_label": "arxiv:2602.18940v1 entry published field"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-01",
+        "task_id": "task-source-01",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_6f74a94defbb8841f666abfb"
+        ],
+        "attempt_id": "attempt-source-02",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-live-research-bench-date.json",
+          "locator_label": "arxiv:2510.14240v1 entry published field"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-02",
+        "task_id": "task-source-02",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_ba147e6b8b5faada8190d938"
+        ],
+        "attempt_id": "attempt-source-03",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-dream-arxiv.json",
+          "locator_label": "Section 2 taxonomy table, Source Quality row"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-03",
+        "task_id": "task-source-03",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_934ff150bb9a4c6fcde004e1"
+        ],
+        "attempt_id": "attempt-source-04",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-live-research-bench-paper.json",
+          "locator_label": "Abstract and Section 4 DeepEval metric list"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-04",
+        "task_id": "task-source-04",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_74383003be613afa4cc3b795"
+        ],
+        "attempt_id": "attempt-source-05",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-dream-arxiv.json",
+          "locator_label": "Section 3.2 Workflow Evaluator, Citation Integrity"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-05",
+        "task_id": "task-source-05",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_e0107b871c3443ca463a92fc"
+        ],
+        "attempt_id": "attempt-source-06",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-dream-arxiv.json",
+          "locator_label": "Section 3.2 Workflow Evaluator, Factuality"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-06",
+        "task_id": "task-source-06",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_00c14700b8698bb2f0bcc470"
+        ],
+        "attempt_id": "attempt-source-07",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-dream-arxiv.json",
+          "locator_label": "Section 3.1 Adaptive Metrics, Key-Information Coverage"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-07",
+        "task_id": "task-source-07",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_aec8964e0a9032fcdeba30ed"
+        ],
+        "attempt_id": "attempt-source-08",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-dream-arxiv.json",
+          "locator_label": "Introduction and Section 2 taxonomy"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-08",
+        "task_id": "task-source-08",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_6e3d413e260cbbe6bcfebd08"
+        ],
+        "attempt_id": "attempt-source-09",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-dream-arxiv.json",
+          "locator_label": "Introduction, DREAM framework description"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-09",
+        "task_id": "task-source-09",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_3122d22d40ba88d2244b4355"
+        ],
+        "attempt_id": "attempt-source-10",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-dream-arxiv.json",
+          "locator_label": "Section 3.1 Static Metrics"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-10",
+        "task_id": "task-source-10",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_84fbf02e9c49437622c7e4e2"
+        ],
+        "attempt_id": "attempt-source-11",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-dream-arxiv.json",
+          "locator_label": "Section 3.1 Adaptive Metrics, Key-Information Coverage"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-11",
+        "task_id": "task-source-11",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_91c0576ce7a80280601daf1e"
+        ],
+        "attempt_id": "attempt-source-12",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-dream-arxiv.json",
+          "locator_label": "Section 3.1 Adaptive Metrics, Reasoning Quality"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-12",
+        "task_id": "task-source-12",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_28f01c0af0c336d3344f4c58"
+        ],
+        "attempt_id": "attempt-source-13",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-dream-arxiv.json",
+          "locator_label": "Section 4.4 Grounding Beyond Citation Alignment"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-13",
+        "task_id": "task-source-13",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_fb47eca6845ef55a783d289c"
+        ],
+        "attempt_id": "attempt-source-14",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-live-research-bench-paper.json",
+          "locator_label": "Abstract"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-14",
+        "task_id": "task-source-14",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_66aa2877b1bd02a4cf2ed18f"
+        ],
+        "attempt_id": "attempt-source-15",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-live-research-bench-paper.json",
+          "locator_label": "Abstract and contribution summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-15",
+        "task_id": "task-source-15",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_6442c143d517b2ffc6f18822"
+        ],
+        "attempt_id": "attempt-source-16",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-live-research-bench.json",
+          "locator_label": "Dataset Fields, Subsets"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-16",
+        "task_id": "task-source-16",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_179fb7e4fef8c944b9848d1a"
+        ],
+        "attempt_id": "attempt-source-17",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-live-research-bench.json",
+          "locator_label": "Dataset Fields, Subsets"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-17",
+        "task_id": "task-source-17",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_e4bb0bb1fe4e5d7ee8f400dc"
+        ],
+        "attempt_id": "attempt-source-18",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-live-research-bench.json",
+          "locator_label": "Dataset Fields, checklist field"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-18",
+        "task_id": "task-source-18",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_cee871d12a501a7646183fc4"
+        ],
+        "attempt_id": "attempt-source-19",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-live-research-bench-repo.json",
+          "locator_label": "README project description"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-19",
+        "task_id": "task-source-19",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_c82f1bb2b0460cf3fac604d2"
+        ],
+        "attempt_id": "attempt-source-20",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-live-research-bench-repo.json",
+          "locator_label": "README Resume Interrupted Runs"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-20",
+        "task_id": "task-source-20",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_8f78f191526ebd3c925b4a92"
+        ],
+        "attempt_id": "attempt-source-21",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-live-research-bench-repo.json",
+          "locator_label": "README How It Works, incremental grading"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-21",
+        "task_id": "task-source-21",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_abf13da65c730c80afe86611"
+        ],
+        "attempt_id": "attempt-source-22",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-arxiv-api-dates.json",
+          "locator_label": "arxiv:2508.10152v2 abstract"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-22",
+        "task_id": "task-source-22",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_324bf425dbcc610ee9f7ee6e"
+        ],
+        "attempt_id": "attempt-source-23",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-arxiv-api-dates.json",
+          "locator_label": "arxiv:2508.10152v2 entry published field"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-23",
+        "task_id": "task-source-23",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_f0889c4b6948693c7cd17866"
+        ],
+        "attempt_id": "attempt-source-24",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "fetch-arxiv-api-dates.json",
+          "locator_label": "arxiv:2508.10152v2 entry updated field"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-24",
+        "task_id": "task-source-24",
+        "usage": {}
+      }
+    ],
+    "candidate_summary": {},
+    "capability_observed_at": "2026-08-26T00:00:00Z",
+    "capability_snapshot": {
+      "evidence_migration": {
+        "providers": [
+          {
+            "configured": true,
+            "entitled": true,
+            "name": "saved-acceptance-artifacts",
+            "reachable": true
+          }
+        ],
+        "tools": [
+          "document"
+        ]
+      }
+    },
+    "claims": [
+      {
+        "claim_spec_id": "claim-a4-dream-date",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM: Deep Research Evaluation with Agentic Metrics 的首次发布时间为 2026-02-21。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-live-date",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild 的首次发布时间为 2025-10-16。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-dream-metrics-inventory",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM 的 Source Quality 指标包括 Factuality 与 Citation Integrity。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-live-paper-metrics",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "LiveResearchBench 论文提出的 DeepEval 覆盖 coverage、presentation、citation accuracy、citation association、consistency 与 analysis depth，未列出 DRA fault recovery。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-dream-verification-pipelines",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM 的 Citation Integrity 使用 Claim Attribution 与 Citation Faithfulness 的调和平均。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-dream-factuality-independent",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM 的 Factuality 独立于给定引用检索外部证据。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-dream-kic-boundary",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM 的 Key-Information Coverage 将关键点转成时效性的 yes/no checklist，用于发现遗漏或过时内容，而不是测量来源集合覆盖率。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-dream-taxonomy",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM 将 Deep Research Evaluation 组织为 Presentation Quality、Task Compliance、Analytical Depth 与 Source Quality 四个 vertical。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-dream-framework",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM 把评测本身做成具有工具调用能力的 agentic framework。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-dream-static-metrics",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM 的静态指标包括 Writing Quality、Factuality、Citation Integrity 与 Domain Authoritativeness。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-dream-adaptive-kic",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM 的 Key-Information Coverage 通过检索最新来源并识别必要事实来构造可核验问题。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-dream-reasoning-quality",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM 的 Reasoning Quality 使用 query-specific questions 与 structured validation plans 评估推理。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-dream-factuality-boundary",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "DREAM 论文指出 citation alignment 不足以完成 factuality evaluation。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-live-paper-scale",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "LiveResearchBench 论文将其定义为覆盖日常生活、企业和学术场景的 100 个专家策划任务的 benchmark。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-live-paper-systems",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "LiveResearchBench 论文报告了对 17 个 frontier deep research systems 的评估。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-live-dataset-fields",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "LiveResearchBench dataset 页面列出 question_with_checklist subset。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-live-dataset-question-only",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "LiveResearchBench dataset 页面列出 question_only subset。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-live-dataset-checklist",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "LiveResearchBench dataset 页面提供用于 coverage evaluation 的 checklist 字段。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-live-repo-identity",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "LiveResearchBench repository 同时包含 LiveResearchBench benchmark 与 DeepEval evaluation framework。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-live-resume",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "LiveResearchBench repository 的 README 说明评分中断后重新运行同一命令会自动继续。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-live-incremental",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "LiveResearchBench repository 会把已评分报告立即保存到按 criterion 区分的 JSONL 文件。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-excluded-browsecomp",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "Improving and Evaluating Open Deep Research Agents 提出 BrowseComp-Small，属于主题相关的 benchmark adaptation。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-excluded-date",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "Improving and Evaluating Open Deep Research Agents 的首次发布时间为 2025-08-13，早于本次窗口。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a4-excluded-updated",
+        "decision_criteria": [],
+        "run_id": "run-transient-a4-20260826",
+        "schema_version": "1",
+        "statement": "Improving and Evaluating Open Deep Research Agents 的当前版本更新时间为 2026-01-08，不能替代首次发布时间。",
+        "terms_scope": {},
+        "time_boundary": {}
+      }
+    ],
+    "delegate_refs": [
+      "delegate_79640f41adac3da6d8ed01f1",
+      "delegate_eba9645ef13f9c86100cf62e",
+      "delegate_8e40e19b822ecc64429e43a8",
+      "delegate_8de6d74637639b2dabf24666",
+      "delegate_53f0e1b2713e789d68d56276",
+      "delegate_f116e48464160555e4ca940f",
+      "delegate_a0435afd1ae407c3827a8609",
+      "delegate_d1a338be049b6cca65b8bc20",
+      "delegate_649085dd685543746429692d",
+      "delegate_7a8eae8a712896dbd9917276",
+      "delegate_16f3309b702fdc7040cc2725",
+      "delegate_cee4d770906a33a33aa340aa",
+      "delegate_c62dbf006a68c25bfaf29b25",
+      "delegate_93d7a459802f2268d93c76b5",
+      "delegate_5d9a1d74530ca0d6cf40daeb",
+      "delegate_2626919076c04e8b7d9f8ed6",
+      "delegate_b21f1a36ae5cbd0b5a50eac2",
+      "delegate_a6d1b80650d49f256385236e",
+      "delegate_bf63ac046fb03cd899048bc8",
+      "delegate_a4ca9fe04fd62596ea4d99f7",
+      "delegate_2895ae1750e7e6aca55cfe7e",
+      "delegate_e3b05aa9d3718eb289eb2e14",
+      "delegate_1acfb440b5587ae8f101c8ce",
+      "delegate_a18816a1778358e9aee1fb2e"
+    ],
+    "evidence_gaps": [],
+    "frame": {
+      "mode": "standard",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "question": "在 2025-08-26 至 2026-08-26 的首次发布窗口内，哪些论文、评测集、benchmark 或开源实现实质涉及 source coverage、evidence faithfulness、citation correctness 或 fault recovery？请区分 paper、benchmark、dataset 与 repository，并判断直接证据是否真正评估了 source coverage 或 DRA fault recovery。",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "scope": {
+        "migration_commit": "f3a30d4eab2dee4656e0fbdfc020f490f4fa8594",
+        "source": "sanitized transient-search acceptance evidence"
+      },
+      "source_preferences": [],
+      "time_boundary": {},
+      "untrusted_content_policy": "treat_as_data",
+      "user_constraints": {
+        "direct_sources_only": true,
+        "no_live_search": true,
+        "preserve_original_acceptance_archive": true
+      }
+    },
+    "root_next_decision": "",
+    "run_id": "run-transient-a4-20260826",
+    "schema_version": "1",
+    "stop_reason": "Existing accepted evidence was migrated and all displayed citations were verified.",
+    "task_refs": [
+      "task-source-01",
+      "task-source-02",
+      "task-source-03",
+      "task-source-04",
+      "task-source-05",
+      "task-source-06",
+      "task-source-07",
+      "task-source-08",
+      "task-source-09",
+      "task-source-10",
+      "task-source-11",
+      "task-source-12",
+      "task-source-13",
+      "task-source-14",
+      "task-source-15",
+      "task-source-16",
+      "task-source-17",
+      "task-source-18",
+      "task-source-19",
+      "task-source-20",
+      "task-source-21",
+      "task-source-22",
+      "task-source-23",
+      "task-source-24"
+    ],
+    "trace_ref": "trace.jsonl"
+  },
+  "schema_version": "1",
+  "search_tasks": []
+}

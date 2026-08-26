@@ -1,0 +1,185 @@
+{
+  "claim_records": [
+    {
+      "citation_map": {
+        "c-xai-errors": "evidence-source-01"
+      },
+      "claim_record_id": "record-claim-xai-error-identity",
+      "claim_spec_id": "claim-xai-error-identity",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "statement": "xAI 官方 Debugging Errors 页面以 HTTP status 和错误消息描述错误，并将 429 定义为达到 inference rate limit；公开页面没有建立 Smart Search 本地 exact 504 + upstream_server_error marker 的 provider contract。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-01"
+      ]
+    },
+    {
+      "citation_map": {
+        "c-xai-rate": "evidence-source-02"
+      },
+      "claim_record_id": "record-claim-xai-rate-limits",
+      "claim_spec_id": "claim-xai-rate-limits",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "statement": "xAI 官方 Rate Limits 页面按 model 说明 RPS 与 TPM 限制，超过限制返回 429，并给出 exponential backoff 处理示例。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-02"
+      ]
+    },
+    {
+      "citation_map": {
+        "c-openai-errors": "evidence-source-03"
+      },
+      "claim_record_id": "record-claim-openai-error-boundary",
+      "claim_spec_id": "claim-openai-error-boundary",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "statement": "OpenAI 官方错误码页面在 HTTP 429 下区分 credits、temporary rate limit、organization/project spend limit 和 organization usage limit，并说明 billing、spend 或 quota 错误不能靠重试恢复。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-03"
+      ]
+    },
+    {
+      "citation_map": {
+        "c-openai-rate": "evidence-source-04"
+      },
+      "claim_record_id": "record-claim-openai-rate-signals",
+      "claim_spec_id": "claim-openai-rate-signals",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "statement": "OpenAI 官方 Rate Limits 页面把 Retry-After 定义为 temporary rate-limit error 的最小等待时间，并提供 x-ratelimit 相关 header。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-04"
+      ]
+    },
+    {
+      "citation_map": {
+        "c-exa-errors": "evidence-source-05"
+      },
+      "claim_record_id": "record-claim-exa-error-identity",
+      "claim_spec_id": "claim-exa-error-identity",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "statement": "Exa 官方错误码页面使用 requestId、error 和 tag 识别错误，并将 403 与 422 细分为权限、功能、内容策略和处理失败等 provider-native 情况。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-05"
+      ]
+    },
+    {
+      "citation_map": {
+        "c-exa-rate": "evidence-source-06"
+      },
+      "claim_record_id": "record-claim-exa-rate-limits",
+      "claim_spec_id": "claim-exa-rate-limits",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "statement": "Exa 官方 Rate Limits 页面按 endpoint 提供 QPS 限制。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-06"
+      ]
+    },
+    {
+      "citation_map": {
+        "c-tavily-errors": "evidence-source-07"
+      },
+      "claim_record_id": "record-claim-tavily-error-boundary",
+      "claim_spec_id": "claim-tavily-error-boundary",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "statement": "Tavily 官方错误页将 432/433 作为 plan 或 PAYGO limit，并要求升级 plan 或提高 limit；429 使用降速和 exponential backoff，500 可稍后重试。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-07"
+      ]
+    },
+    {
+      "citation_map": {
+        "c-tavily-rate": "evidence-source-08"
+      },
+      "claim_record_id": "record-claim-tavily-rate-signals",
+      "claim_spec_id": "claim-tavily-rate-signals",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "statement": "Tavily 官方 Rate Limits 页面说明 429 响应包含 retry-after 秒数，并要求 retry logic 尊重该值。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-08"
+      ]
+    },
+    {
+      "citation_map": {
+        "c-firecrawl-errors": "evidence-source-09"
+      },
+      "claim_record_id": "record-claim-firecrawl-retry-matrix",
+      "claim_spec_id": "claim-firecrawl-retry-matrix",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "statement": "Firecrawl 官方错误页要求以 Retryable 列作为恢复判断权威，而不是只根据 HTTP status 推断。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-09"
+      ]
+    },
+    {
+      "citation_map": {
+        "c-jina-rate": "evidence-source-10"
+      },
+      "claim_record_id": "record-claim-jina-rate-limit-evidence",
+      "claim_spec_id": "claim-jina-rate-limit-evidence",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "statement": "Jina Reader 官方页面核验了 RPM、TPM 以及按 IP/API key 执行的限流维度，但没有提供本次所需的 error identity、429 retry、backoff 或 Retry-After 证据。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-10"
+      ]
+    }
+  ],
+  "schema_version": "1"
+}

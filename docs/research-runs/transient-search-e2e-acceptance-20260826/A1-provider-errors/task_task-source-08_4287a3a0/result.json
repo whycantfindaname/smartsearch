@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_70d7e8631e3beda9ba6a9e03"
+      ],
+      "attempt_id": "attempt-source-08",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/15-tavily-rate-limits.json",
+        "locator_label": "Handling Rate Limit Responses"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-08",
+      "task_id": "task-source-08",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_70d7e8631e3beda9ba6a9e03",
+      "artifact_refs": [
+        "art_70d7e8631e3beda9ba6a9e03"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://docs.tavily.com/documentation/rate-limits",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-tavily-rate-signals",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-08",
+      "locator": {
+        "section": "Handling Rate Limit Responses",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_d0f88dc3979120bf286f0cc384eb3168c10e277f8861fd2704ec9640fc5e58a2",
+      "source_id": "source-a1-tavily-rate-limits",
+      "stance": "support",
+      "step_id": "step-source-08",
+      "task_id": "task-source-08",
+      "text": "When you exceed the rate limit, the API returns a `429 Too Many Requests` response with a `retry-after` header indicating the number of seconds to wait before making another request."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-08"
+}

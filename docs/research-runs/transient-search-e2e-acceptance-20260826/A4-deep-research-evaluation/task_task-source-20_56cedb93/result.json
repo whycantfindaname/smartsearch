@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_c82f1bb2b0460cf3fac604d2"
+      ],
+      "attempt_id": "attempt-source-20",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "fetch-live-research-bench-repo.json",
+        "locator_label": "README Resume Interrupted Runs"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-20",
+      "task_id": "task-source-20",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_c82f1bb2b0460cf3fac604d2",
+      "artifact_refs": [
+        "art_c82f1bb2b0460cf3fac604d2"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-resume",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-20",
+      "locator": {
+        "section": "README Resume Interrupted Runs",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_fa2dc669d917980959ed7c4a8be6a024764ebbc9869ea571884f7f55f8d54bf0",
+      "source_id": "source-a4-live-resume",
+      "stance": "support",
+      "step_id": "step-source-20",
+      "task_id": "task-source-20",
+      "text": "If your grading run is interrupted, simply **run the same command again** - it will automatically resume from where it left off."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-20"
+}

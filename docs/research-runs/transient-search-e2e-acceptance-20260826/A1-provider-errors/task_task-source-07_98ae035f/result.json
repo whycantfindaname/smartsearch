@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_ef484aafdfb2d8927a548bb5"
+      ],
+      "attempt_id": "attempt-source-07",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/14-tavily-http-errors.json",
+        "locator_label": "432 Plan Limit Exceeded; 433 Pay-As-You-Go Limit Exceeded; 429; 500 sections"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_ef484aafdfb2d8927a548bb5",
+      "artifact_refs": [
+        "art_ef484aafdfb2d8927a548bb5"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://help.tavily.com/articles/8645538886-understanding-http-errors",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-tavily-error-boundary",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-07",
+      "locator": {
+        "section": "432 Plan Limit Exceeded; 433 Pay-As-You-Go Limit Exceeded; 429; 500 sections",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_ae693e3d09bf857a5154088efd1c54ea8c5e776ee7c145e00a40e1acc9f81d1b",
+      "source_id": "source-a1-tavily-errors",
+      "stance": "support",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "text": "*   Upgrade your plan to increase your usage limits via the [Tavily Dashboard](https://app.tavily.com/account/plan)."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-07"
+}

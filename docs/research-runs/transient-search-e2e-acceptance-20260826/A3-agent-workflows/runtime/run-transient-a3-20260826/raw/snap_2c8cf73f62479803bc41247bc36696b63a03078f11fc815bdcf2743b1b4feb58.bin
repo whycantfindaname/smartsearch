@@ -1,0 +1,1 @@
+The resume payload becomes the return value of interrupt() inside the node

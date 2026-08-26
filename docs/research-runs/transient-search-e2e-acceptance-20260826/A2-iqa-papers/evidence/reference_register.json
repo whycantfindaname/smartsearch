@@ -1,0 +1,858 @@
+{
+  "projection": "derived_audit_reference_register",
+  "reference_count": 17,
+  "references": [
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_45b9532998b98dc6d6321cb4",
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2608.18579%2C2608.21180%2C2607.29253%2C2608.02549%2C2608.01301%2C2607.27084%2C2608.20713%2C2607.26333%2C2607.12375%2C2606.16082%2C2608.04567",
+          "raw_ref": "raw/snap_4964923df3f6732d344fb1b708ab31c79eb8a7f22906d4414da34ae8230fa3d2.bin",
+          "snapshot_id": "snap_4964923df3f6732d344fb1b708ab31c79eb8a7f22906d4414da34ae8230fa3d2"
+        }
+      ],
+      "citation_ids": [
+        "a2-window-record"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-window-record",
+          "claim_spec_id": "claim-a2-window-record"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_45b9532998b98dc6d6321cb4",
+          "attempt_id": "attempt-source-01",
+          "attempt_no": 1,
+          "canonical_url": "https://export.arxiv.org/api/query?id_list=2608.18579%2C2608.21180%2C2607.29253%2C2608.02549%2C2608.01301%2C2607.27084%2C2608.20713%2C2607.26333%2C2607.12375%2C2606.16082%2C2608.04567",
+          "claim_record_id": "record-claim-a2-window-record",
+          "claim_spec_id": "claim-a2-window-record",
+          "evidence_id": "evidence-source-01",
+          "locator": {
+            "section": "arXiv Atom candidate-set response and published fields",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_4964923df3f6732d344fb1b708ab31c79eb8a7f22906d4414da34ae8230fa3d2",
+          "step_id": "step-source-01",
+          "task_id": "task-source-01"
+        }
+      ],
+      "number": 1,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Tool-IQA and IQA-T1 exclusion-date records within the checked candidate set"
+        },
+        "canonical_url": "https://export.arxiv.org/api/query?id_list=2608.18579%2C2608.21180%2C2607.29253%2C2608.02549%2C2608.01301%2C2607.27084%2C2608.20713%2C2607.26333%2C2607.12375%2C2606.16082%2C2608.04567",
+        "canonical_urls": [
+          "https://export.arxiv.org/api/query?id_list=2608.18579%2C2608.21180%2C2607.29253%2C2608.02549%2C2608.01301%2C2607.27084%2C2608.20713%2C2607.26333%2C2607.12375%2C2606.16082%2C2608.04567"
+        ],
+        "source_id": "source-a2-window-record"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_84e7ec880bee52795fc31cab",
+          "canonical_url": "https://arxiv.org/abs/2607.27084",
+          "raw_ref": "raw/snap_7a24254451e16dba0433cebd37c82d5c4381d54f44e186644caec25eadc08e64.bin",
+          "snapshot_id": "snap_7a24254451e16dba0433cebd37c82d5c4381d54f44e186644caec25eadc08e64"
+        }
+      ],
+      "citation_ids": [
+        "a2-scifigqual"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-scifigqual",
+          "claim_spec_id": "claim-a2-scifigqual"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_84e7ec880bee52795fc31cab",
+          "attempt_id": "attempt-source-02",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2607.27084",
+          "claim_record_id": "record-claim-a2-scifigqual",
+          "claim_spec_id": "claim-a2-scifigqual",
+          "evidence_id": "evidence-source-02",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_7a24254451e16dba0433cebd37c82d5c4381d54f44e186644caec25eadc08e64",
+          "step_id": "step-source-02",
+          "task_id": "task-source-02"
+        }
+      ],
+      "number": 2,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "SciFigQual-Bench: A Benchmark for Scientific Figure Quality Assessment with Full-Manuscript Context"
+        },
+        "canonical_url": "https://arxiv.org/abs/2607.27084",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2607.27084"
+        ],
+        "source_id": "source-a2-scifigqual"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_280e990cf84f37615207358a",
+          "canonical_url": "https://arxiv.org/abs/2608.18579",
+          "raw_ref": "raw/snap_bd39c486518162e80ef8ec5951d1579a9c2df2c40c772083c3feae1b34885279.bin",
+          "snapshot_id": "snap_bd39c486518162e80ef8ec5951d1579a9c2df2c40c772083c3feae1b34885279"
+        }
+      ],
+      "citation_ids": [
+        "a2-mriqa2"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-mriqa2",
+          "claim_spec_id": "claim-a2-mriqa2"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_280e990cf84f37615207358a",
+          "attempt_id": "attempt-source-03",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2608.18579",
+          "claim_record_id": "record-claim-a2-mriqa2",
+          "claim_spec_id": "claim-a2-mriqa2",
+          "evidence_id": "evidence-source-03",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_bd39c486518162e80ef8ec5951d1579a9c2df2c40c772083c3feae1b34885279",
+          "step_id": "step-source-03",
+          "task_id": "task-source-03"
+        }
+      ],
+      "number": 3,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "MR-IQA-2: Faithful Image Quality Reflection via Fine-Grained Credit Assignment"
+        },
+        "canonical_url": "https://arxiv.org/abs/2608.18579",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2608.18579"
+        ],
+        "source_id": "source-a2-mriqa2"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_0f40b9c290dbbaec8c2a4ff0",
+          "canonical_url": "https://arxiv.org/abs/2608.21180",
+          "raw_ref": "raw/snap_a2e9c4ba54b34d66c6df9eb5658e05446931d289d4ec5fb1f4a7b0c53366b8ab.bin",
+          "snapshot_id": "snap_a2e9c4ba54b34d66c6df9eb5658e05446931d289d4ec5fb1f4a7b0c53366b8ab"
+        }
+      ],
+      "citation_ids": [
+        "a2-lge-mri"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-lge-mri",
+          "claim_spec_id": "claim-a2-lge-mri"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_0f40b9c290dbbaec8c2a4ff0",
+          "attempt_id": "attempt-source-04",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2608.21180",
+          "claim_record_id": "record-claim-a2-lge-mri",
+          "claim_spec_id": "claim-a2-lge-mri",
+          "evidence_id": "evidence-source-04",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_a2e9c4ba54b34d66c6df9eb5658e05446931d289d4ec5fb1f4a7b0c53366b8ab",
+          "step_id": "step-source-04",
+          "task_id": "task-source-04"
+        }
+      ],
+      "number": 4,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Toward Vision Language Model-based Assessment of Clinical Quality and Usability of LGE-MR Images for Cardiac Ablation Planning"
+        },
+        "canonical_url": "https://arxiv.org/abs/2608.21180",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2608.21180"
+        ],
+        "source_id": "source-a2-lge-mri"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_fb0e510fd6912221e4509fdd",
+          "canonical_url": "https://arxiv.org/abs/2608.02059",
+          "raw_ref": "raw/snap_cda54f21e19f05ca5499da8e1c0251746ac5f630603c21ce28adff7dd117c3c8.bin",
+          "snapshot_id": "snap_cda54f21e19f05ca5499da8e1c0251746ac5f630603c21ce28adff7dd117c3c8"
+        }
+      ],
+      "citation_ids": [
+        "a2-miescore"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-miescore",
+          "claim_spec_id": "claim-a2-miescore"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_fb0e510fd6912221e4509fdd",
+          "attempt_id": "attempt-source-05",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2608.02059",
+          "claim_record_id": "record-claim-a2-miescore",
+          "claim_spec_id": "claim-a2-miescore",
+          "evidence_id": "evidence-source-05",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_cda54f21e19f05ca5499da8e1c0251746ac5f630603c21ce28adff7dd117c3c8",
+          "step_id": "step-source-05",
+          "task_id": "task-source-05"
+        }
+      ],
+      "number": 5,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "MIEScore: Human-Aligned Evaluation for Multi-Source Image Editing"
+        },
+        "canonical_url": "https://arxiv.org/abs/2608.02059",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2608.02059"
+        ],
+        "source_id": "source-a2-miescore"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_39682afa9165b45343af40a1",
+          "canonical_url": "https://arxiv.org/abs/2607.26333",
+          "raw_ref": "raw/snap_5c4e41f6e3ebe3caf12d98af5ff6554a6958ae386c57c0a25757e4ba9c8e8bd7.bin",
+          "snapshot_id": "snap_5c4e41f6e3ebe3caf12d98af5ff6554a6958ae386c57c0a25757e4ba9c8e8bd7"
+        }
+      ],
+      "citation_ids": [
+        "a2-cxr"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-cxr",
+          "claim_spec_id": "claim-a2-cxr"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_39682afa9165b45343af40a1",
+          "attempt_id": "attempt-source-06",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2607.26333",
+          "claim_record_id": "record-claim-a2-cxr",
+          "claim_spec_id": "claim-a2-cxr",
+          "evidence_id": "evidence-source-06",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_5c4e41f6e3ebe3caf12d98af5ff6554a6958ae386c57c0a25757e4ba9c8e8bd7",
+          "step_id": "step-source-06",
+          "task_id": "task-source-06"
+        }
+      ],
+      "number": 6,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Rethinking Clinical Relevance in Chest X-ray Machine Learning: How Evaluation References Define Performance"
+        },
+        "canonical_url": "https://arxiv.org/abs/2607.26333",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2607.26333"
+        ],
+        "source_id": "source-a2-cxr"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_8ccd4b1df0b40390416ad3de",
+          "canonical_url": "https://arxiv.org/abs/2607.27628",
+          "raw_ref": "raw/snap_104f37891965f2536b874e0ca0ae1de2ba5fbc1b8a4411d04683c29fd7d9568c.bin",
+          "snapshot_id": "snap_104f37891965f2536b874e0ca0ae1de2ba5fbc1b8a4411d04683c29fd7d9568c"
+        }
+      ],
+      "citation_ids": [
+        "a2-blindpsnr"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-blindpsnr",
+          "claim_spec_id": "claim-a2-blindpsnr"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_8ccd4b1df0b40390416ad3de",
+          "attempt_id": "attempt-source-07",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2607.27628",
+          "claim_record_id": "record-claim-a2-blindpsnr",
+          "claim_spec_id": "claim-a2-blindpsnr",
+          "evidence_id": "evidence-source-07",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_104f37891965f2536b874e0ca0ae1de2ba5fbc1b8a4411d04683c29fd7d9568c",
+          "step_id": "step-source-07",
+          "task_id": "task-source-07"
+        }
+      ],
+      "number": 7,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "BlindPSNR: A No-Reference Fidelity Predictor for Low-Light Image Enhancement"
+        },
+        "canonical_url": "https://arxiv.org/abs/2607.27628",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2607.27628"
+        ],
+        "source_id": "source-a2-blindpsnr"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_7f2946150b81956f1fedc89b",
+          "canonical_url": "https://arxiv.org/abs/2607.29253",
+          "raw_ref": "raw/snap_0dd52a011b073534240e6b9871fe0a2f48ba5a93a3b8399296c08950d392550a.bin",
+          "snapshot_id": "snap_0dd52a011b073534240e6b9871fe0a2f48ba5a93a3b8399296c08950d392550a"
+        }
+      ],
+      "citation_ids": [
+        "a2-cbct"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-cbct",
+          "claim_spec_id": "claim-a2-cbct"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_7f2946150b81956f1fedc89b",
+          "attempt_id": "attempt-source-08",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2607.29253",
+          "claim_record_id": "record-claim-a2-cbct",
+          "claim_spec_id": "claim-a2-cbct",
+          "evidence_id": "evidence-source-08",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_0dd52a011b073534240e6b9871fe0a2f48ba5a93a3b8399296c08950d392550a",
+          "step_id": "step-source-08",
+          "task_id": "task-source-08"
+        }
+      ],
+      "number": 8,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "CBCT-IQ: A Publicly Available Annotated Cone-Beam CT Dataset for Image Quality Assessment and Benchmarking"
+        },
+        "canonical_url": "https://arxiv.org/abs/2607.29253",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2607.29253"
+        ],
+        "source_id": "source-a2-cbct"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_e8c86ed5bcadf1d988fd9029",
+          "canonical_url": "https://arxiv.org/abs/2608.01301",
+          "raw_ref": "raw/snap_3fe9b0dc623910b0fc1f25cd34a6349143998ecc20b78c4e436b89d6091e385d.bin",
+          "snapshot_id": "snap_3fe9b0dc623910b0fc1f25cd34a6349143998ecc20b78c4e436b89d6091e385d"
+        }
+      ],
+      "citation_ids": [
+        "a2-lpifm"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-lpifm",
+          "claim_spec_id": "claim-a2-lpifm"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_e8c86ed5bcadf1d988fd9029",
+          "attempt_id": "attempt-source-09",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2608.01301",
+          "claim_record_id": "record-claim-a2-lpifm",
+          "claim_spec_id": "claim-a2-lpifm",
+          "evidence_id": "evidence-source-09",
+          "locator": {
+            "section": "arXiv Atom entry: title, published, updated and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_3fe9b0dc623910b0fc1f25cd34a6349143998ecc20b78c4e436b89d6091e385d",
+          "step_id": "step-source-09",
+          "task_id": "task-source-09"
+        }
+      ],
+      "number": 9,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Ranking Image Fusion the Way Humans Do: A Learned Pairwise Preference Measure for Infrared-Visible Fusion Assessment"
+        },
+        "canonical_url": "https://arxiv.org/abs/2608.01301",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2608.01301"
+        ],
+        "source_id": "source-a2-lpifm"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_135045e003ad989cf1f84a92",
+          "canonical_url": "https://arxiv.org/abs/2608.02549",
+          "raw_ref": "raw/snap_16ae4d690eb9a01c7c5b77000a7c29d58cfc22c8804acbb5aad0ea8432060eb3.bin",
+          "snapshot_id": "snap_16ae4d690eb9a01c7c5b77000a7c29d58cfc22c8804acbb5aad0ea8432060eb3"
+        }
+      ],
+      "citation_ids": [
+        "a2-ssim"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-ssim",
+          "claim_spec_id": "claim-a2-ssim"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_135045e003ad989cf1f84a92",
+          "attempt_id": "attempt-source-10",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2608.02549",
+          "claim_record_id": "record-claim-a2-ssim",
+          "claim_spec_id": "claim-a2-ssim",
+          "evidence_id": "evidence-source-10",
+          "locator": {
+            "section": "arXiv Atom entry: published, updated and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_16ae4d690eb9a01c7c5b77000a7c29d58cfc22c8804acbb5aad0ea8432060eb3",
+          "step_id": "step-source-10",
+          "task_id": "task-source-10"
+        }
+      ],
+      "number": 10,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Estimating SSIM from MSE for DCT-Based Compressed Images via Modeling Local Error Statistics"
+        },
+        "canonical_url": "https://arxiv.org/abs/2608.02549",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2608.02549"
+        ],
+        "source_id": "source-a2-ssim"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_72b0b01df3733c8f07b9937e",
+          "canonical_url": "https://arxiv.org/abs/2608.13989",
+          "raw_ref": "raw/snap_85314cfe8a8d01bf5bec18776ae06db742a57f18967478600024d7dd0ac43b0d.bin",
+          "snapshot_id": "snap_85314cfe8a8d01bf5bec18776ae06db742a57f18967478600024d7dd0ac43b0d"
+        }
+      ],
+      "citation_ids": [
+        "a2-sharpness"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-sharpness",
+          "claim_spec_id": "claim-a2-sharpness"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_72b0b01df3733c8f07b9937e",
+          "attempt_id": "attempt-source-11",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2608.13989",
+          "claim_record_id": "record-claim-a2-sharpness",
+          "claim_spec_id": "claim-a2-sharpness",
+          "evidence_id": "evidence-source-11",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_85314cfe8a8d01bf5bec18776ae06db742a57f18967478600024d7dd0ac43b0d",
+          "step_id": "step-source-11",
+          "task_id": "task-source-11"
+        }
+      ],
+      "number": 11,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "A Subjective Study on a New Sharpness Informed Class of Metrics"
+        },
+        "canonical_url": "https://arxiv.org/abs/2608.13989",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2608.13989"
+        ],
+        "source_id": "source-a2-sharpness"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_211ea56ee0aab2380ffdd30b",
+          "canonical_url": "https://arxiv.org/abs/2608.20713",
+          "raw_ref": "raw/snap_375a27126731c16aa04cfdcf7ec92a0414dc91604be15b2da61e7739d17ada43.bin",
+          "snapshot_id": "snap_375a27126731c16aa04cfdcf7ec92a0414dc91604be15b2da61e7739d17ada43"
+        }
+      ],
+      "citation_ids": [
+        "a2-agidefect"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-agidefect",
+          "claim_spec_id": "claim-a2-agidefect"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_211ea56ee0aab2380ffdd30b",
+          "attempt_id": "attempt-source-12",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2608.20713",
+          "claim_record_id": "record-claim-a2-agidefect",
+          "claim_spec_id": "claim-a2-agidefect",
+          "evidence_id": "evidence-source-12",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_375a27126731c16aa04cfdcf7ec92a0414dc91604be15b2da61e7739d17ada43",
+          "step_id": "step-source-12",
+          "task_id": "task-source-12"
+        }
+      ],
+      "number": 12,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "AGIDefect-4K: A Richly Annotated Dataset for AI-Generated Image Defect Detection, Localization and Explanation"
+        },
+        "canonical_url": "https://arxiv.org/abs/2608.20713",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2608.20713"
+        ],
+        "source_id": "source-a2-agidefect"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_3906292770d93ce74a3b0f98",
+          "canonical_url": "https://arxiv.org/abs/2509.26006",
+          "raw_ref": "raw/snap_e77c5a3785d162fb4954edab6bacc199eb48658ae4810257cc86a5f334ced005.bin",
+          "snapshot_id": "snap_e77c5a3785d162fb4954edab6bacc199eb48658ae4810257cc86a5f334ced005"
+        }
+      ],
+      "citation_ids": [
+        "a2-agenticiqa"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-agenticiqa",
+          "claim_spec_id": "claim-a2-agenticiqa"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_3906292770d93ce74a3b0f98",
+          "attempt_id": "attempt-source-13",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2509.26006",
+          "claim_record_id": "record-claim-a2-agenticiqa",
+          "claim_spec_id": "claim-a2-agenticiqa",
+          "evidence_id": "evidence-source-13",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_e77c5a3785d162fb4954edab6bacc199eb48658ae4810257cc86a5f334ced005",
+          "step_id": "step-source-13",
+          "task_id": "task-source-13"
+        }
+      ],
+      "number": 13,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "AgenticIQA: An Agentic Framework for Adaptive and Interpretable Image Quality Assessment"
+        },
+        "canonical_url": "https://arxiv.org/abs/2509.26006",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2509.26006"
+        ],
+        "source_id": "source-a2-agenticiqa"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_53823d45bdf8105b68a45bc8",
+          "canonical_url": "https://arxiv.org/abs/2606.03005",
+          "raw_ref": "raw/snap_9b459fb2da6616e3970235f134d8aa200e428cce93013d8f4c683d195e663622.bin",
+          "snapshot_id": "snap_9b459fb2da6616e3970235f134d8aa200e428cce93013d8f4c683d195e663622"
+        }
+      ],
+      "citation_ids": [
+        "a2-muse"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-muse",
+          "claim_spec_id": "claim-a2-muse"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_53823d45bdf8105b68a45bc8",
+          "attempt_id": "attempt-source-14",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2606.03005",
+          "claim_record_id": "record-claim-a2-muse",
+          "claim_spec_id": "claim-a2-muse",
+          "evidence_id": "evidence-source-14",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_9b459fb2da6616e3970235f134d8aa200e428cce93013d8f4c683d195e663622",
+          "step_id": "step-source-14",
+          "task_id": "task-source-14"
+        }
+      ],
+      "number": 14,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "MUSE: A Unified Agentic Harness for MLLMs"
+        },
+        "canonical_url": "https://arxiv.org/abs/2606.03005",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2606.03005"
+        ],
+        "source_id": "source-a2-muse"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_13396799ae5469716cb612e8",
+          "canonical_url": "https://arxiv.org/abs/2606.16082",
+          "raw_ref": "raw/snap_1bd074c3aaa82d9d38f092f2f1973e013ececcad406b66e1ddacf63c38d9422f.bin",
+          "snapshot_id": "snap_1bd074c3aaa82d9d38f092f2f1973e013ececcad406b66e1ddacf63c38d9422f"
+        }
+      ],
+      "citation_ids": [
+        "a2-tooliqa"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-tooliqa",
+          "claim_spec_id": "claim-a2-tooliqa"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_13396799ae5469716cb612e8",
+          "attempt_id": "attempt-source-15",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2606.16082",
+          "claim_record_id": "record-claim-a2-tooliqa",
+          "claim_spec_id": "claim-a2-tooliqa",
+          "evidence_id": "evidence-source-15",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_1bd074c3aaa82d9d38f092f2f1973e013ececcad406b66e1ddacf63c38d9422f",
+          "step_id": "step-source-15",
+          "task_id": "task-source-15"
+        }
+      ],
+      "number": 15,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Tool-IQA: Augmenting Image Quality Assessment with Simple Tools"
+        },
+        "canonical_url": "https://arxiv.org/abs/2606.16082",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2606.16082"
+        ],
+        "source_id": "source-a2-tooliqa"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_f5ebddb5a8c3ba1fc591b2db",
+          "canonical_url": "https://arxiv.org/abs/2607.12375",
+          "raw_ref": "raw/snap_78c1950b04511a91b253eb0d4071fbedb3d7516c30a80df7cbeba40197094723.bin",
+          "snapshot_id": "snap_78c1950b04511a91b253eb0d4071fbedb3d7516c30a80df7cbeba40197094723"
+        }
+      ],
+      "citation_ids": [
+        "a2-iqat1"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-iqat1",
+          "claim_spec_id": "claim-a2-iqat1"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_f5ebddb5a8c3ba1fc591b2db",
+          "attempt_id": "attempt-source-16",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2607.12375",
+          "claim_record_id": "record-claim-a2-iqat1",
+          "claim_spec_id": "claim-a2-iqat1",
+          "evidence_id": "evidence-source-16",
+          "locator": {
+            "section": "arXiv Atom entry: published and summary",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_78c1950b04511a91b253eb0d4071fbedb3d7516c30a80df7cbeba40197094723",
+          "step_id": "step-source-16",
+          "task_id": "task-source-16"
+        }
+      ],
+      "number": 16,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "IQA-T1: Tool-based Visual Evidence Reasoning for Image Quality Assessment"
+        },
+        "canonical_url": "https://arxiv.org/abs/2607.12375",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2607.12375"
+        ],
+        "source_id": "source-a2-iqat1"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_e076ae72caec4a1f4b428476",
+          "canonical_url": "https://arxiv.org/abs/2608.04567",
+          "raw_ref": "raw/snap_71c1ad204124b5f4df9518bff1229ac966626d6f83e18487b313c352caa37228.bin",
+          "snapshot_id": "snap_71c1ad204124b5f4df9518bff1229ac966626d6f83e18487b313c352caa37228"
+        }
+      ],
+      "citation_ids": [
+        "a2-strive"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a2-strive",
+          "claim_spec_id": "claim-a2-strive"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_e076ae72caec4a1f4b428476",
+          "attempt_id": "attempt-source-17",
+          "attempt_no": 1,
+          "canonical_url": "https://arxiv.org/abs/2608.04567",
+          "claim_record_id": "record-claim-a2-strive",
+          "claim_spec_id": "claim-a2-strive",
+          "evidence_id": "evidence-source-17",
+          "locator": {
+            "section": "arXiv abstract page title; correction of the unsupported IQA candidate",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_71c1ad204124b5f4df9518bff1229ac966626d6f83e18487b313c352caa37228",
+          "step_id": "step-source-17",
+          "task_id": "task-source-17"
+        }
+      ],
+      "number": 17,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "STRIVE: Probing Reasoning Limits in Graded Plausibility Generation and Evaluation"
+        },
+        "canonical_url": "https://arxiv.org/abs/2608.04567",
+        "canonical_urls": [
+          "https://arxiv.org/abs/2608.04567"
+        ],
+        "source_id": "source-a2-strive"
+      }
+    }
+  ],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1"
+}

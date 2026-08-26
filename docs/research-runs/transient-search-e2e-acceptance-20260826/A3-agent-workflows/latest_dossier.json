@@ -1,0 +1,1725 @@
+{
+  "candidate_cards": [],
+  "candidates": [],
+  "claim_records": [
+    {
+      "citation_map": {
+        "a3-langgraph-persistence": "evidence-source-06",
+        "a3-openai-sessions": "evidence-source-01",
+        "a3-pydantic-durable": "evidence-source-10"
+      },
+      "claim_record_id": "record-claim-a3-persistence",
+      "claim_spec_id": "claim-a3-persistence",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "statement": "三者的 durable state 边界不同：LangGraph 原生围绕 thread-scoped graph checkpoint；OpenAI Agents SDK 的 Session 与 RunState 分别覆盖对话历史和暂停审批；PydanticAI 把跨重启 durable execution 放在官方集成。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-01",
+        "evidence-source-06",
+        "evidence-source-10"
+      ]
+    },
+    {
+      "citation_map": {
+        "a3-langgraph-fault": "evidence-source-07",
+        "a3-openai-exceptions": "evidence-source-04",
+        "a3-openai-retry": "evidence-source-03",
+        "a3-pydantic-agent-api": "evidence-source-11",
+        "a3-pydantic-http-retries": "evidence-source-12"
+      },
+      "claim_record_id": "record-claim-a3-retry",
+      "claim_spec_id": "claim-a3-retry",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "statement": "三者将失败与重试放在不同层：OpenAI Agents SDK 关注 model request 的 replay safety，LangGraph 关注 node 级 retry 与错误路由，PydanticAI 分开处理 validation/tool retry 与 HTTP transport retry。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-03",
+        "evidence-source-04",
+        "evidence-source-07",
+        "evidence-source-11",
+        "evidence-source-12"
+      ]
+    },
+    {
+      "citation_map": {
+        "a3-langgraph-interrupts": "evidence-source-08",
+        "a3-openai-hitl": "evidence-source-02",
+        "a3-pydantic-deferred": "evidence-source-13"
+      },
+      "claim_record_id": "record-claim-a3-hitl",
+      "claim_spec_id": "claim-a3-hitl",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "statement": "三者的 human-in-the-loop 边界不同：OpenAI Agents SDK 围绕敏感 tool approval，LangGraph 允许在 node 中暂停并恢复 graph state，PydanticAI 用 Deferred Tools 表达审批与外部执行的 continuation。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-02",
+        "evidence-source-08",
+        "evidence-source-13"
+      ]
+    },
+    {
+      "citation_map": {
+        "a3-langgraph-observability": "evidence-source-09",
+        "a3-openai-tracing": "evidence-source-05",
+        "a3-pydantic-logfire": "evidence-source-14"
+      },
+      "claim_record_id": "record-claim-a3-observability",
+      "claim_spec_id": "claim-a3-observability",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "statement": "三者都能形成运行轨迹，但归属不同：OpenAI Agents SDK 默认启用 runner tracing，LangGraph 通过 LangSmith 接入，PydanticAI 提供可选的 OpenTelemetry/Logfire instrumentation。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-05",
+        "evidence-source-09",
+        "evidence-source-14"
+      ]
+    }
+  ],
+  "delegate_requests": [
+    {
+      "artifact_refs": [
+        "art_6ddd2ced8b994b271aa56750"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_6ddd2ced8b994b271aa56750"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_3955fb819812f1d6fae5a598",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-01",
+      "step_id": "step-source-01",
+      "target": "evidence_miner",
+      "task_id": "task-source-01"
+    },
+    {
+      "artifact_refs": [
+        "art_38de145b0ec59f041debc018"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_38de145b0ec59f041debc018"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_16b223a186cd3ed64f2f895e",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-02",
+      "step_id": "step-source-02",
+      "target": "evidence_miner",
+      "task_id": "task-source-02"
+    },
+    {
+      "artifact_refs": [
+        "art_51126f5d0e6e6fe547dd8b40"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_51126f5d0e6e6fe547dd8b40"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_f1ae6583abb8b5d67444de92",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-03",
+      "step_id": "step-source-03",
+      "target": "evidence_miner",
+      "task_id": "task-source-03"
+    },
+    {
+      "artifact_refs": [
+        "art_adf16f3aa45aff0631dff6f9"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_adf16f3aa45aff0631dff6f9"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_7a5b3ae471ed78d1bcdafde2",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-04",
+      "step_id": "step-source-04",
+      "target": "evidence_miner",
+      "task_id": "task-source-04"
+    },
+    {
+      "artifact_refs": [
+        "art_dd54ca4cb67f41baf68b3ade"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_dd54ca4cb67f41baf68b3ade"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_267b876e2bb43ee8199bc96b",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-05",
+      "step_id": "step-source-05",
+      "target": "evidence_miner",
+      "task_id": "task-source-05"
+    },
+    {
+      "artifact_refs": [
+        "art_647bc099d2bfe5938c33439d"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_647bc099d2bfe5938c33439d"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_6184c23465700b07e1bfa92b",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-06",
+      "step_id": "step-source-06",
+      "target": "evidence_miner",
+      "task_id": "task-source-06"
+    },
+    {
+      "artifact_refs": [
+        "art_a7e3919632ff091c19b30162"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_a7e3919632ff091c19b30162"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_64c08e852b7b6660ce67ebb6",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-07",
+      "step_id": "step-source-07",
+      "target": "evidence_miner",
+      "task_id": "task-source-07"
+    },
+    {
+      "artifact_refs": [
+        "art_b5d2e4a2b1ecf06c668bb83f"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_b5d2e4a2b1ecf06c668bb83f"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_a2b0f4ad326c06c89db6082d",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-08",
+      "step_id": "step-source-08",
+      "target": "evidence_miner",
+      "task_id": "task-source-08"
+    },
+    {
+      "artifact_refs": [
+        "art_c7c39eee12cf637012e6d8c7"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_c7c39eee12cf637012e6d8c7"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_cd6d57b0726343d306153553",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-09",
+      "step_id": "step-source-09",
+      "target": "evidence_miner",
+      "task_id": "task-source-09"
+    },
+    {
+      "artifact_refs": [
+        "art_28da6d2e2db40f3f59ec1e45"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_28da6d2e2db40f3f59ec1e45"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_b0d035e53c72e8482e6a2236",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-10",
+      "step_id": "step-source-10",
+      "target": "evidence_miner",
+      "task_id": "task-source-10"
+    },
+    {
+      "artifact_refs": [
+        "art_9c8a2bdb2d164b03a16ec47a"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_9c8a2bdb2d164b03a16ec47a"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_c8d39b42f2b3189639ba60ea",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-11",
+      "step_id": "step-source-11",
+      "target": "evidence_miner",
+      "task_id": "task-source-11"
+    },
+    {
+      "artifact_refs": [
+        "art_3ffa05efc4eed2a4cd904610"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_3ffa05efc4eed2a4cd904610"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_41fa688c53d250954abdd680",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-12",
+      "step_id": "step-source-12",
+      "target": "evidence_miner",
+      "task_id": "task-source-12"
+    },
+    {
+      "artifact_refs": [
+        "art_2d1bd465e605dc4958f4f398"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_2d1bd465e605dc4958f4f398"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_90e4d1b2ae799782ca361542",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-13",
+      "step_id": "step-source-13",
+      "target": "evidence_miner",
+      "task_id": "task-source-13"
+    },
+    {
+      "artifact_refs": [
+        "art_9bfb1f6c82e7951effe09d86"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_9bfb1f6c82e7951effe09d86"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_f266c707cf7ff7ea26b7db06",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-14",
+      "step_id": "step-source-14",
+      "target": "evidence_miner",
+      "task_id": "task-source-14"
+    }
+  ],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_6ddd2ced8b994b271aa56750",
+      "artifact_refs": [
+        "art_6ddd2ced8b994b271aa56750"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://openai.github.io/openai-agents-python/sessions/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-persistence",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-01",
+      "locator": {
+        "section": "Core session behavior; Resuming interrupted runs with the same session; Built-in session implementations",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_76b468366c7b3bb6b681741ce1a88a5ea7ad0b5e2f6109583aefa4b53eb39ca1",
+      "source_id": "source-a3-openai-sessions",
+      "stance": "support",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "text": "The Agents SDK provides built-in session memory to automatically maintain conversation history across multiple agent runs"
+    },
+    {
+      "artifact_id": "art_38de145b0ec59f041debc018",
+      "artifact_refs": [
+        "art_38de145b0ec59f041debc018"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://openai.github.io/openai-agents-python/human_in_the_loop/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-hitl",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-02",
+      "locator": {
+        "section": "How the approval flow works; Long-running approvals",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_d35364e94ba4c1abd7a0e92db12486c69344759403379b14e1680d175b197192",
+      "source_id": "source-a3-openai-hitl",
+      "stance": "support",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "text": "Use the human-in-the-loop (HITL) flow to pause agent execution until a person approves or rejects sensitive tool calls."
+    },
+    {
+      "artifact_id": "art_51126f5d0e6e6fe547dd8b40",
+      "artifact_refs": [
+        "art_51126f5d0e6e6fe547dd8b40"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://openai.github.io/openai-agents-python/ref/retry/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-retry",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-03",
+      "locator": {
+        "section": "RetryDecision; RetryPolicyContext; ModelRetrySettings",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_b9459eec067ca6b12dd704db77c44168f1cd79ba41b1236d202863a8ffbc5866",
+      "source_id": "source-a3-openai-retry",
+      "stance": "support",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "text": "Opt-in runner-managed retry settings for model calls."
+    },
+    {
+      "artifact_id": "art_adf16f3aa45aff0631dff6f9",
+      "artifact_refs": [
+        "art_adf16f3aa45aff0631dff6f9"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://openai.github.io/openai-agents-python/ref/exceptions/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-retry",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-04",
+      "locator": {
+        "section": "RunErrorDetails; MaxTurnsExceeded; ModelBehaviorError; ToolTimeoutError",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_01101e73922f839ba8e98c9c6b18bd722186993bd4d933536e564cffc5d793ae",
+      "source_id": "source-a3-openai-exceptions",
+      "stance": "support",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "text": "Data collected from an agent run when an exception occurs."
+    },
+    {
+      "artifact_id": "art_dd54ca4cb67f41baf68b3ade",
+      "artifact_refs": [
+        "art_dd54ca4cb67f41baf68b3ade"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://openai.github.io/openai-agents-python/tracing/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-observability",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-05",
+      "locator": {
+        "section": "Default tracing; Sensitive data; Custom tracing processors",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_1b0ea41399c789b0eb61dc736bdabcea7bc1506bf2bfbf237b8d76f803459ffa",
+      "source_id": "source-a3-openai-tracing",
+      "stance": "support",
+      "step_id": "step-source-05",
+      "task_id": "task-source-05",
+      "text": "By default, the SDK traces the following:"
+    },
+    {
+      "artifact_id": "art_647bc099d2bfe5938c33439d",
+      "artifact_refs": [
+        "art_647bc099d2bfe5938c33439d"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-persistence",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-06",
+      "locator": {
+        "section": "Checkpointer vs. store; MemorySaver does not persist between restarts",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_55da8ce6f1e9eb241af30929371ab4f89e57b815b5057805fa54ad552a7363ff",
+      "source_id": "source-a3-langgraph-persistence",
+      "stance": "support",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "text": "LangGraph’s persistence layer gives agents short-term memory through checkpointers and long-term memory through stores."
+    },
+    {
+      "artifact_id": "art_a7e3919632ff091c19b30162",
+      "artifact_refs": [
+        "art_a7e3919632ff091c19b30162"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://docs.langchain.com/oss/python/langgraph/fault-tolerance",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-retry",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-07",
+      "locator": {
+        "section": "Retries; Parameters; Error handling; Route with Command",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_e80cf9aae884824e41543b91036cc4b7da644b17c7fed9a0763646ff2259ac86",
+      "source_id": "source-a3-langgraph-fault",
+      "stance": "support",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "text": "Maximum number of attempts, including the first."
+    },
+    {
+      "artifact_id": "art_b5d2e4a2b1ecf06c668bb83f",
+      "artifact_refs": [
+        "art_b5d2e4a2b1ecf06c668bb83f"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://docs.langchain.com/oss/python/langgraph/interrupts",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-hitl",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-08",
+      "locator": {
+        "section": "Resuming interrupts; Review and edit state; Rules of interrupts",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_2c8cf73f62479803bc41247bc36696b63a03078f11fc815bdcf2743b1b4feb58",
+      "source_id": "source-a3-langgraph-interrupts",
+      "stance": "support",
+      "step_id": "step-source-08",
+      "task_id": "task-source-08",
+      "text": "The resume payload becomes the return value of interrupt() inside the node"
+    },
+    {
+      "artifact_id": "art_c7c39eee12cf637012e6d8c7",
+      "artifact_refs": [
+        "art_c7c39eee12cf637012e6d8c7"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://docs.langchain.com/langsmith/trace-with-langgraph",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-observability",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-09",
+      "locator": {
+        "section": "With LangChain; Without LangChain",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_987a318bc6b0559237c49b8d3e54932940cc499211b1c14470416b947e39c076",
+      "source_id": "source-a3-langgraph-observability",
+      "stance": "support",
+      "step_id": "step-source-09",
+      "task_id": "task-source-09",
+      "text": "# Decorating the tool function will automatically trace it with the correct context\n@traceable(run_type=\"tool\", name=\"Search Tool\")"
+    },
+    {
+      "artifact_id": "art_28da6d2e2db40f3f59ec1e45",
+      "artifact_refs": [
+        "art_28da6d2e2db40f3f59ec1e45"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://ai.pydantic.dev/durable_execution/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-persistence",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-10",
+      "locator": {
+        "section": "Durable Execution overview and supported solutions list",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_1274152afc49f8bb1839a446d7647dd853c0b3411dc4ba9316c8d2c499f98f3b",
+      "source_id": "source-a3-pydantic-durable",
+      "stance": "support",
+      "step_id": "step-source-10",
+      "task_id": "task-source-10",
+      "text": "Pydantic AI officially supports four durable execution solutions:"
+    },
+    {
+      "artifact_id": "art_9c8a2bdb2d164b03a16ec47a",
+      "artifact_refs": [
+        "art_9c8a2bdb2d164b03a16ec47a"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://ai.pydantic.dev/api/agent/index.md",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-retry",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-11",
+      "locator": {
+        "section": "Agent.__init__ retries and instrument parameters",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_e678c4923b34042fadde8cf2273d5e8aac1623ee24950f47ea8aca8fdbf1d11b",
+      "source_id": "source-a3-pydantic-agent-api",
+      "stance": "support",
+      "step_id": "step-source-11",
+      "task_id": "task-source-11",
+      "text": "Defaults to 1 for both. On the text path, `output` is a global budget shared across all output-validation retries in a run"
+    },
+    {
+      "artifact_id": "art_3ffa05efc4eed2a4cd904610",
+      "artifact_refs": [
+        "art_3ffa05efc4eed2a4cd904610"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://pydantic.dev/docs/ai/models/http-request-retries/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-retry",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-12",
+      "locator": {
+        "section": "Usage Example; Best Practices; Error Handling",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_904d869c6ed8ef58a3265ce7587c0c690277f28d422897ed98f2bc4a7970eebf",
+      "source_id": "source-a3-pydantic-http-retries",
+      "stance": "support",
+      "step_id": "step-source-12",
+      "task_id": "task-source-12",
+      "text": "Pydantic AI provides retry functionality for HTTP requests made by model providers through custom HTTP transports."
+    },
+    {
+      "artifact_id": "art_2d1bd465e605dc4958f4f398",
+      "artifact_refs": [
+        "art_2d1bd465e605dc4958f4f398"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://pydantic.dev/docs/ai/tools-toolsets/deferred-tools/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-hitl",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-13",
+      "locator": {
+        "section": "Deferred Tools introduction; Resolving deferred calls with a handler; Human-in-the-Loop Tool Approval",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_c564a941f219c7c73f37f1c67c68eb34eb4478f9a3381a276e1589d04fdf9cd0",
+      "source_id": "source-a3-pydantic-deferred",
+      "stance": "support",
+      "step_id": "step-source-13",
+      "task_id": "task-source-13",
+      "text": "There are a few scenarios where the model should be able to call a tool that should not or cannot be executed during the same agent run inside the same Python process:"
+    },
+    {
+      "artifact_id": "art_9bfb1f6c82e7951effe09d86",
+      "artifact_refs": [
+        "art_9bfb1f6c82e7951effe09d86"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://ai.pydantic.dev/logfire/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-observability",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-14",
+      "locator": {
+        "section": "Using Logfire; Using OpenTelemetry; OTel without Logfire",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_608c3002607edd392209180040754062ecc4314f063d73c87f892e75ecadd68c",
+      "source_id": "source-a3-pydantic-logfire",
+      "stance": "support",
+      "step_id": "step-source-14",
+      "task_id": "task-source-14",
+      "text": "This means you can debug and monitor Pydantic AI with any OpenTelemetry backend."
+    }
+  ],
+  "evidence_mining_tasks": [
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_6ddd2ced8b994b271aa56750"
+      ],
+      "artifact_refs": [
+        "art_6ddd2ced8b994b271aa56750"
+      ],
+      "claim_spec_id": "claim-a3-persistence",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_38de145b0ec59f041debc018"
+      ],
+      "artifact_refs": [
+        "art_38de145b0ec59f041debc018"
+      ],
+      "claim_spec_id": "claim-a3-hitl",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_51126f5d0e6e6fe547dd8b40"
+      ],
+      "artifact_refs": [
+        "art_51126f5d0e6e6fe547dd8b40"
+      ],
+      "claim_spec_id": "claim-a3-retry",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_adf16f3aa45aff0631dff6f9"
+      ],
+      "artifact_refs": [
+        "art_adf16f3aa45aff0631dff6f9"
+      ],
+      "claim_spec_id": "claim-a3-retry",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_dd54ca4cb67f41baf68b3ade"
+      ],
+      "artifact_refs": [
+        "art_dd54ca4cb67f41baf68b3ade"
+      ],
+      "claim_spec_id": "claim-a3-observability",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-05",
+      "task_id": "task-source-05",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_647bc099d2bfe5938c33439d"
+      ],
+      "artifact_refs": [
+        "art_647bc099d2bfe5938c33439d"
+      ],
+      "claim_spec_id": "claim-a3-persistence",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_a7e3919632ff091c19b30162"
+      ],
+      "artifact_refs": [
+        "art_a7e3919632ff091c19b30162"
+      ],
+      "claim_spec_id": "claim-a3-retry",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_b5d2e4a2b1ecf06c668bb83f"
+      ],
+      "artifact_refs": [
+        "art_b5d2e4a2b1ecf06c668bb83f"
+      ],
+      "claim_spec_id": "claim-a3-hitl",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-08",
+      "task_id": "task-source-08",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_c7c39eee12cf637012e6d8c7"
+      ],
+      "artifact_refs": [
+        "art_c7c39eee12cf637012e6d8c7"
+      ],
+      "claim_spec_id": "claim-a3-observability",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-09",
+      "task_id": "task-source-09",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_28da6d2e2db40f3f59ec1e45"
+      ],
+      "artifact_refs": [
+        "art_28da6d2e2db40f3f59ec1e45"
+      ],
+      "claim_spec_id": "claim-a3-persistence",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-10",
+      "task_id": "task-source-10",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_9c8a2bdb2d164b03a16ec47a"
+      ],
+      "artifact_refs": [
+        "art_9c8a2bdb2d164b03a16ec47a"
+      ],
+      "claim_spec_id": "claim-a3-retry",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-11",
+      "task_id": "task-source-11",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_3ffa05efc4eed2a4cd904610"
+      ],
+      "artifact_refs": [
+        "art_3ffa05efc4eed2a4cd904610"
+      ],
+      "claim_spec_id": "claim-a3-retry",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-12",
+      "task_id": "task-source-12",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_2d1bd465e605dc4958f4f398"
+      ],
+      "artifact_refs": [
+        "art_2d1bd465e605dc4958f4f398"
+      ],
+      "claim_spec_id": "claim-a3-hitl",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-13",
+      "task_id": "task-source-13",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_9bfb1f6c82e7951effe09d86"
+      ],
+      "artifact_refs": [
+        "art_9bfb1f6c82e7951effe09d86"
+      ],
+      "claim_spec_id": "claim-a3-observability",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-14",
+      "task_id": "task-source-14",
+      "user_constraints": {}
+    }
+  ],
+  "key_source_proposals": [],
+  "run": {
+    "artifact_index_ref": "artifacts.jsonl",
+    "attempts": [
+      {
+        "artifact_refs": [
+          "art_6ddd2ced8b994b271aa56750"
+        ],
+        "attempt_id": "attempt-source-01",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-openai-sessions.json",
+          "locator_label": "Core session behavior; Resuming interrupted runs with the same session; Built-in session implementations"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-01",
+        "task_id": "task-source-01",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_38de145b0ec59f041debc018"
+        ],
+        "attempt_id": "attempt-source-02",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-openai-hitl.json",
+          "locator_label": "How the approval flow works; Long-running approvals"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-02",
+        "task_id": "task-source-02",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_51126f5d0e6e6fe547dd8b40"
+        ],
+        "attempt_id": "attempt-source-03",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-openai-retry.json",
+          "locator_label": "RetryDecision; RetryPolicyContext; ModelRetrySettings"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-03",
+        "task_id": "task-source-03",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_adf16f3aa45aff0631dff6f9"
+        ],
+        "attempt_id": "attempt-source-04",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-openai-exceptions.json",
+          "locator_label": "RunErrorDetails; MaxTurnsExceeded; ModelBehaviorError; ToolTimeoutError"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-04",
+        "task_id": "task-source-04",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_dd54ca4cb67f41baf68b3ade"
+        ],
+        "attempt_id": "attempt-source-05",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-openai-tracing.json",
+          "locator_label": "Default tracing; Sensitive data; Custom tracing processors"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-05",
+        "task_id": "task-source-05",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_647bc099d2bfe5938c33439d"
+        ],
+        "attempt_id": "attempt-source-06",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-langgraph-persistence.json",
+          "locator_label": "Checkpointer vs. store; MemorySaver does not persist between restarts"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-06",
+        "task_id": "task-source-06",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_a7e3919632ff091c19b30162"
+        ],
+        "attempt_id": "attempt-source-07",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-langgraph-fault-tolerance.json",
+          "locator_label": "Retries; Parameters; Error handling; Route with Command"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-07",
+        "task_id": "task-source-07",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_b5d2e4a2b1ecf06c668bb83f"
+        ],
+        "attempt_id": "attempt-source-08",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-langgraph-interrupts.json",
+          "locator_label": "Resuming interrupts; Review and edit state; Rules of interrupts"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-08",
+        "task_id": "task-source-08",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_c7c39eee12cf637012e6d8c7"
+        ],
+        "attempt_id": "attempt-source-09",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-langgraph-observability.json",
+          "locator_label": "With LangChain; Without LangChain"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-09",
+        "task_id": "task-source-09",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_28da6d2e2db40f3f59ec1e45"
+        ],
+        "attempt_id": "attempt-source-10",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-pydantic-durable.json",
+          "locator_label": "Durable Execution overview and supported solutions list"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-10",
+        "task_id": "task-source-10",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_9c8a2bdb2d164b03a16ec47a"
+        ],
+        "attempt_id": "attempt-source-11",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-pydantic-agent-api.json",
+          "locator_label": "Agent.__init__ retries and instrument parameters"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-11",
+        "task_id": "task-source-11",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_3ffa05efc4eed2a4cd904610"
+        ],
+        "attempt_id": "attempt-source-12",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-pydantic-model-retries.json",
+          "locator_label": "Usage Example; Best Practices; Error Handling"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-12",
+        "task_id": "task-source-12",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_2d1bd465e605dc4958f4f398"
+        ],
+        "attempt_id": "attempt-source-13",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-pydantic-deferred-tools.json",
+          "locator_label": "Deferred Tools introduction; Resolving deferred calls with a handler; Human-in-the-Loop Tool Approval"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-13",
+        "task_id": "task-source-13",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_9bfb1f6c82e7951effe09d86"
+        ],
+        "attempt_id": "attempt-source-14",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-pydantic-logfire.json",
+          "locator_label": "Using Logfire; Using OpenTelemetry; OTel without Logfire"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-14",
+        "task_id": "task-source-14",
+        "usage": {}
+      }
+    ],
+    "candidate_summary": {},
+    "capability_observed_at": "2026-08-26T00:00:00Z",
+    "capability_snapshot": {
+      "evidence_migration": {
+        "providers": [
+          {
+            "configured": true,
+            "entitled": true,
+            "name": "saved-acceptance-artifacts",
+            "reachable": true
+          }
+        ],
+        "tools": [
+          "document"
+        ]
+      }
+    },
+    "claims": [
+      {
+        "claim_spec_id": "claim-a3-persistence",
+        "decision_criteria": [],
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "statement": "三者的 durable state 边界不同：LangGraph 原生围绕 thread-scoped graph checkpoint；OpenAI Agents SDK 的 Session 与 RunState 分别覆盖对话历史和暂停审批；PydanticAI 把跨重启 durable execution 放在官方集成。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a3-retry",
+        "decision_criteria": [],
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "statement": "三者将失败与重试放在不同层：OpenAI Agents SDK 关注 model request 的 replay safety，LangGraph 关注 node 级 retry 与错误路由，PydanticAI 分开处理 validation/tool retry 与 HTTP transport retry。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a3-hitl",
+        "decision_criteria": [],
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "statement": "三者的 human-in-the-loop 边界不同：OpenAI Agents SDK 围绕敏感 tool approval，LangGraph 允许在 node 中暂停并恢复 graph state，PydanticAI 用 Deferred Tools 表达审批与外部执行的 continuation。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a3-observability",
+        "decision_criteria": [],
+        "run_id": "run-transient-a3-20260826",
+        "schema_version": "1",
+        "statement": "三者都能形成运行轨迹，但归属不同：OpenAI Agents SDK 默认启用 runner tracing，LangGraph 通过 LangSmith 接入，PydanticAI 提供可选的 OpenTelemetry/Logfire instrumentation。",
+        "terms_scope": {},
+        "time_boundary": {}
+      }
+    ],
+    "delegate_refs": [
+      "delegate_3955fb819812f1d6fae5a598",
+      "delegate_16b223a186cd3ed64f2f895e",
+      "delegate_f1ae6583abb8b5d67444de92",
+      "delegate_7a5b3ae471ed78d1bcdafde2",
+      "delegate_267b876e2bb43ee8199bc96b",
+      "delegate_6184c23465700b07e1bfa92b",
+      "delegate_64c08e852b7b6660ce67ebb6",
+      "delegate_a2b0f4ad326c06c89db6082d",
+      "delegate_cd6d57b0726343d306153553",
+      "delegate_b0d035e53c72e8482e6a2236",
+      "delegate_c8d39b42f2b3189639ba60ea",
+      "delegate_41fa688c53d250954abdd680",
+      "delegate_90e4d1b2ae799782ca361542",
+      "delegate_f266c707cf7ff7ea26b7db06"
+    ],
+    "evidence_gaps": [],
+    "frame": {
+      "mode": "standard",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "question": "比较 OpenAI Agents SDK、LangGraph 与 PydanticAI 在持久化与检查点、失败与重试、人工介入以及可观测性方面的 Python 官方接口与适用边界。",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "scope": {
+        "migration_commit": "f3a30d4eab2dee4656e0fbdfc020f490f4fa8594",
+        "source": "sanitized transient-search acceptance evidence"
+      },
+      "source_preferences": [],
+      "time_boundary": {},
+      "untrusted_content_policy": "treat_as_data",
+      "user_constraints": {
+        "direct_sources_only": true,
+        "no_live_search": true,
+        "preserve_original_acceptance_archive": true
+      }
+    },
+    "root_next_decision": "",
+    "run_id": "run-transient-a3-20260826",
+    "schema_version": "1",
+    "stop_reason": "Existing accepted evidence was migrated and all displayed citations were verified.",
+    "task_refs": [
+      "task-source-01",
+      "task-source-02",
+      "task-source-03",
+      "task-source-04",
+      "task-source-05",
+      "task-source-06",
+      "task-source-07",
+      "task-source-08",
+      "task-source-09",
+      "task-source-10",
+      "task-source-11",
+      "task-source-12",
+      "task-source-13",
+      "task-source-14"
+    ],
+    "trace_ref": "trace.jsonl"
+  },
+  "schema_version": "1",
+  "search_tasks": []
+}

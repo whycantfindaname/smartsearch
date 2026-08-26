@@ -1,0 +1,166 @@
+{
+  "case_id": "A3",
+  "run_id": "run-transient-a3-20260826",
+  "question": "比较 OpenAI Agents SDK、LangGraph 与 PydanticAI 在持久化与检查点、失败与重试、人工介入以及可观测性方面的 Python 官方接口与适用边界。",
+  "mode": "standard",
+  "claims": [
+    {
+      "claim_spec_id": "claim-a3-persistence",
+      "statement": "三者的 durable state 边界不同：LangGraph 原生围绕 thread-scoped graph checkpoint；OpenAI Agents SDK 的 Session 与 RunState 分别覆盖对话历史和暂停审批；PydanticAI 把跨重启 durable execution 放在官方集成。"
+    },
+    {
+      "claim_spec_id": "claim-a3-retry",
+      "statement": "三者将失败与重试放在不同层：OpenAI Agents SDK 关注 model request 的 replay safety，LangGraph 关注 node 级 retry 与错误路由，PydanticAI 分开处理 validation/tool retry 与 HTTP transport retry。"
+    },
+    {
+      "claim_spec_id": "claim-a3-hitl",
+      "statement": "三者的 human-in-the-loop 边界不同：OpenAI Agents SDK 围绕敏感 tool approval，LangGraph 允许在 node 中暂停并恢复 graph state，PydanticAI 用 Deferred Tools 表达审批与外部执行的 continuation。"
+    },
+    {
+      "claim_spec_id": "claim-a3-observability",
+      "statement": "三者都能形成运行轨迹，但归属不同：OpenAI Agents SDK 默认启用 runner tracing，LangGraph 通过 LangSmith 接入，PydanticAI 提供可选的 OpenTelemetry/Logfire instrumentation。"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "source-a3-openai-sessions",
+      "citation_id": "a3-openai-sessions",
+      "claim_spec_id": "claim-a3-persistence",
+      "title": "Sessions - OpenAI Agents SDK",
+      "url": "https://openai.github.io/openai-agents-python/sessions/",
+      "locator_label": "Core session behavior; Resuming interrupted runs with the same session; Built-in session implementations",
+      "command_file": "commands/fetch-openai-sessions.json",
+      "excerpt": "The Agents SDK provides built-in session memory to automatically maintain conversation history across multiple agent runs"
+    },
+    {
+      "source_id": "source-a3-openai-hitl",
+      "citation_id": "a3-openai-hitl",
+      "claim_spec_id": "claim-a3-hitl",
+      "title": "Human-in-the-loop - OpenAI Agents SDK",
+      "url": "https://openai.github.io/openai-agents-python/human_in_the_loop/",
+      "locator_label": "How the approval flow works; Long-running approvals",
+      "command_file": "commands/fetch-openai-hitl.json",
+      "excerpt": "Use the human-in-the-loop (HITL) flow to pause agent execution until a person approves or rejects sensitive tool calls."
+    },
+    {
+      "source_id": "source-a3-openai-retry",
+      "citation_id": "a3-openai-retry",
+      "claim_spec_id": "claim-a3-retry",
+      "title": "Retry - OpenAI Agents SDK API Reference",
+      "url": "https://openai.github.io/openai-agents-python/ref/retry/",
+      "locator_label": "RetryDecision; RetryPolicyContext; ModelRetrySettings",
+      "command_file": "commands/fetch-openai-retry.json",
+      "excerpt": "Opt-in runner-managed retry settings for model calls."
+    },
+    {
+      "source_id": "source-a3-openai-exceptions",
+      "citation_id": "a3-openai-exceptions",
+      "claim_spec_id": "claim-a3-retry",
+      "title": "Exceptions - OpenAI Agents SDK API Reference",
+      "url": "https://openai.github.io/openai-agents-python/ref/exceptions/",
+      "locator_label": "RunErrorDetails; MaxTurnsExceeded; ModelBehaviorError; ToolTimeoutError",
+      "command_file": "commands/fetch-openai-exceptions.json",
+      "excerpt": "Data collected from an agent run when an exception occurs."
+    },
+    {
+      "source_id": "source-a3-openai-tracing",
+      "citation_id": "a3-openai-tracing",
+      "claim_spec_id": "claim-a3-observability",
+      "title": "Tracing - OpenAI Agents SDK",
+      "url": "https://openai.github.io/openai-agents-python/tracing/",
+      "locator_label": "Default tracing; Sensitive data; Custom tracing processors",
+      "command_file": "commands/fetch-openai-tracing.json",
+      "excerpt": "By default, the SDK traces the following:"
+    },
+    {
+      "source_id": "source-a3-langgraph-persistence",
+      "citation_id": "a3-langgraph-persistence",
+      "claim_spec_id": "claim-a3-persistence",
+      "title": "Persistence - LangGraph",
+      "url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+      "locator_label": "Checkpointer vs. store; MemorySaver does not persist between restarts",
+      "command_file": "commands/fetch-langgraph-persistence.json",
+      "excerpt": "LangGraph’s persistence layer gives agents short-term memory through checkpointers and long-term memory through stores."
+    },
+    {
+      "source_id": "source-a3-langgraph-fault",
+      "citation_id": "a3-langgraph-fault",
+      "claim_spec_id": "claim-a3-retry",
+      "title": "Fault tolerance - LangGraph",
+      "url": "https://docs.langchain.com/oss/python/langgraph/fault-tolerance",
+      "locator_label": "Retries; Parameters; Error handling; Route with Command",
+      "command_file": "commands/fetch-langgraph-fault-tolerance.json",
+      "excerpt": "Maximum number of attempts, including the first."
+    },
+    {
+      "source_id": "source-a3-langgraph-interrupts",
+      "citation_id": "a3-langgraph-interrupts",
+      "claim_spec_id": "claim-a3-hitl",
+      "title": "Interrupts - LangGraph",
+      "url": "https://docs.langchain.com/oss/python/langgraph/interrupts",
+      "locator_label": "Resuming interrupts; Review and edit state; Rules of interrupts",
+      "command_file": "commands/fetch-langgraph-interrupts.json",
+      "excerpt": "The resume payload becomes the return value of interrupt() inside the node"
+    },
+    {
+      "source_id": "source-a3-langgraph-observability",
+      "citation_id": "a3-langgraph-observability",
+      "claim_spec_id": "claim-a3-observability",
+      "title": "Trace LangGraph applications - LangSmith",
+      "url": "https://docs.langchain.com/langsmith/trace-with-langgraph",
+      "locator_label": "With LangChain; Without LangChain",
+      "command_file": "commands/fetch-langgraph-observability.json",
+      "excerpt": "# Decorating the tool function will automatically trace it with the correct context\n@traceable(run_type=\"tool\", name=\"Search Tool\")"
+    },
+    {
+      "source_id": "source-a3-pydantic-durable",
+      "citation_id": "a3-pydantic-durable",
+      "claim_spec_id": "claim-a3-persistence",
+      "title": "Durable Execution - PydanticAI",
+      "url": "https://ai.pydantic.dev/durable_execution/",
+      "locator_label": "Durable Execution overview and supported solutions list",
+      "command_file": "commands/fetch-pydantic-durable.json",
+      "excerpt": "Pydantic AI officially supports four durable execution solutions:"
+    },
+    {
+      "source_id": "source-a3-pydantic-agent-api",
+      "citation_id": "a3-pydantic-agent-api",
+      "claim_spec_id": "claim-a3-retry",
+      "title": "pydantic_ai.agent API",
+      "url": "https://ai.pydantic.dev/api/agent/index.md",
+      "locator_label": "Agent.__init__ retries and instrument parameters",
+      "command_file": "commands/fetch-pydantic-agent-api.json",
+      "excerpt": "Defaults to 1 for both. On the text path, `output` is a global budget shared across all output-validation retries in a run"
+    },
+    {
+      "source_id": "source-a3-pydantic-http-retries",
+      "citation_id": "a3-pydantic-http-retries",
+      "claim_spec_id": "claim-a3-retry",
+      "title": "HTTP Request Retries - PydanticAI",
+      "url": "https://pydantic.dev/docs/ai/models/http-request-retries/",
+      "locator_label": "Usage Example; Best Practices; Error Handling",
+      "command_file": "commands/fetch-pydantic-model-retries.json",
+      "excerpt": "Pydantic AI provides retry functionality for HTTP requests made by model providers through custom HTTP transports."
+    },
+    {
+      "source_id": "source-a3-pydantic-deferred",
+      "citation_id": "a3-pydantic-deferred",
+      "claim_spec_id": "claim-a3-hitl",
+      "title": "Deferred Tools - PydanticAI",
+      "url": "https://pydantic.dev/docs/ai/tools-toolsets/deferred-tools/",
+      "locator_label": "Deferred Tools introduction; Resolving deferred calls with a handler; Human-in-the-Loop Tool Approval",
+      "command_file": "commands/fetch-pydantic-deferred-tools.json",
+      "excerpt": "There are a few scenarios where the model should be able to call a tool that should not or cannot be executed during the same agent run inside the same Python process:"
+    },
+    {
+      "source_id": "source-a3-pydantic-logfire",
+      "citation_id": "a3-pydantic-logfire",
+      "claim_spec_id": "claim-a3-observability",
+      "title": "Pydantic Logfire Debugging and Monitoring",
+      "url": "https://ai.pydantic.dev/logfire/",
+      "locator_label": "Using Logfire; Using OpenTelemetry; OTel without Logfire",
+      "command_file": "commands/fetch-pydantic-logfire.json",
+      "excerpt": "This means you can debug and monitor Pydantic AI with any OpenTelemetry backend."
+    }
+  ]
+}

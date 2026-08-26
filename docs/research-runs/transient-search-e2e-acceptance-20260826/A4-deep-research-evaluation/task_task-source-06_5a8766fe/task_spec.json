@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_e0107b871c3443ca463a92fc"
+  ],
+  "artifact_refs": [
+    "art_e0107b871c3443ca463a92fc"
+  ],
+  "claim_spec_id": "claim-a4-dream-factuality-independent",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-06",
+  "task_id": "task-source-06",
+  "user_constraints": {}
+}

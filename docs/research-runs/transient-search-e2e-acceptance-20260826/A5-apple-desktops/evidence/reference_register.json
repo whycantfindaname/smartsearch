@@ -1,0 +1,208 @@
+{
+  "projection": "derived_audit_reference_register",
+  "reference_count": 4,
+  "references": [
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_9a75c92dc05a0ccff182a9cf",
+          "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-unveils-a-more-powerful-mac-mini-featuring-the-all-new-m6-and-m5-pro",
+          "raw_ref": "raw/snap_c623ccfc54446185042ffc2bfc62c9cd2a393405215aa104baea8fabfd66f2cf.bin",
+          "snapshot_id": "snap_c623ccfc54446185042ffc2bfc62c9cd2a393405215aa104baea8fabfd66f2cf"
+        }
+      ],
+      "citation_ids": [
+        "a5-mini-newsroom"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a5-mini-newsroom",
+          "claim_spec_id": "claim-a5-mini-newsroom"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_9a75c92dc05a0ccff182a9cf",
+          "attempt_id": "attempt-source-01",
+          "attempt_no": 1,
+          "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-unveils-a-more-powerful-mac-mini-featuring-the-all-new-m6-and-m5-pro",
+          "claim_record_id": "record-claim-a5-mini-newsroom",
+          "claim_spec_id": "claim-a5-mini-newsroom",
+          "evidence_id": "evidence-source-01",
+          "locator": {
+            "section": "page date; Mac mini with the All-New M6; Mac mini with M5 Pro; Best-in-Class Connectivity; Pricing and Availability",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_c623ccfc54446185042ffc2bfc62c9cd2a393405215aa104baea8fabfd66f2cf",
+          "step_id": "step-source-01",
+          "task_id": "task-source-01"
+        }
+      ],
+      "number": 1,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Apple’s new Mac mini, featuring M6 and M5 Pro, delivers a massive leap in AI performance, supercharging the leading desktop for always-on agentic computing"
+        },
+        "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-unveils-a-more-powerful-mac-mini-featuring-the-all-new-m6-and-m5-pro",
+        "canonical_urls": [
+          "https://www.apple.com/newsroom/2026/08/apple-unveils-a-more-powerful-mac-mini-featuring-the-all-new-m6-and-m5-pro"
+        ],
+        "source_id": "source-a5-mini-newsroom"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_6da17cc42c941490f8db657f",
+          "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra",
+          "raw_ref": "raw/snap_d52fd61364f3a4ed00eed709ae5b9c91f27884a64c6b45ab647daad01b8cdb3c.bin",
+          "snapshot_id": "snap_d52fd61364f3a4ed00eed709ae5b9c91f27884a64c6b45ab647daad01b8cdb3c"
+        }
+      ],
+      "citation_ids": [
+        "a5-studio-newsroom"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a5-studio-newsroom",
+          "claim_spec_id": "claim-a5-studio-newsroom"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_6da17cc42c941490f8db657f",
+          "attempt_id": "attempt-source-03",
+          "attempt_no": 1,
+          "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra",
+          "claim_record_id": "record-claim-a5-studio-newsroom",
+          "claim_spec_id": "claim-a5-studio-newsroom",
+          "evidence_id": "evidence-source-03",
+          "locator": {
+            "section": "page date; Mac Studio with M5 Max; Mac Studio with M5 Ultra; Blazing-Fast Storage and Pro Connectivity; Pricing and Availability",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_d52fd61364f3a4ed00eed709ae5b9c91f27884a64c6b45ab647daad01b8cdb3c",
+          "step_id": "step-source-03",
+          "task_id": "task-source-03"
+        }
+      ],
+      "number": 2,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Apple introduces new Mac Studio with M5 Max and M5 Ultra - Apple"
+        },
+        "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra",
+        "canonical_urls": [
+          "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra"
+        ],
+        "source_id": "source-a5-studio-newsroom"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_d532bc06cc8452943d276a5e",
+          "canonical_url": "https://www.apple.com/mac-mini/specs",
+          "raw_ref": "raw/snap_e91a8e0a67a01484e5754600bffe221350057fd4dd8dc34b52be1c591008d1a9.bin",
+          "snapshot_id": "snap_e91a8e0a67a01484e5754600bffe221350057fd4dd8dc34b52be1c591008d1a9"
+        }
+      ],
+      "citation_ids": [
+        "a5-mini-specs"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a5-mini-specs",
+          "claim_spec_id": "claim-a5-mini-specs"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_d532bc06cc8452943d276a5e",
+          "attempt_id": "attempt-source-02",
+          "attempt_no": 1,
+          "canonical_url": "https://www.apple.com/mac-mini/specs",
+          "claim_record_id": "record-claim-a5-mini-specs",
+          "claim_spec_id": "claim-a5-mini-specs",
+          "evidence_id": "evidence-source-02",
+          "locator": {
+            "section": "Chip; Memory; Display Support; Connections and Expansion; Size and Weight",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_e91a8e0a67a01484e5754600bffe221350057fd4dd8dc34b52be1c591008d1a9",
+          "step_id": "step-source-02",
+          "task_id": "task-source-02"
+        }
+      ],
+      "number": 3,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Mac mini - Technical Specifications - Apple"
+        },
+        "canonical_url": "https://www.apple.com/mac-mini/specs",
+        "canonical_urls": [
+          "https://www.apple.com/mac-mini/specs"
+        ],
+        "source_id": "source-a5-mini-specs"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_6d64236092880041447af3ad",
+          "canonical_url": "https://www.apple.com/mac-studio/specs",
+          "raw_ref": "raw/snap_c32705742bac0c2a43a2a4e8eec0df84d63d876ef311a68ecacfe0998b7f2cf2.bin",
+          "snapshot_id": "snap_c32705742bac0c2a43a2a4e8eec0df84d63d876ef311a68ecacfe0998b7f2cf2"
+        }
+      ],
+      "citation_ids": [
+        "a5-studio-specs"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a5-studio-specs",
+          "claim_spec_id": "claim-a5-studio-specs"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_6d64236092880041447af3ad",
+          "attempt_id": "attempt-source-04",
+          "attempt_no": 1,
+          "canonical_url": "https://www.apple.com/mac-studio/specs",
+          "claim_record_id": "record-claim-a5-studio-specs",
+          "claim_spec_id": "claim-a5-studio-specs",
+          "evidence_id": "evidence-source-04",
+          "locator": {
+            "section": "Chip; Memory; Display Support; Connections and Expansion; Size and Weight",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_c32705742bac0c2a43a2a4e8eec0df84d63d876ef311a68ecacfe0998b7f2cf2",
+          "step_id": "step-source-04",
+          "task_id": "task-source-04"
+        }
+      ],
+      "number": 4,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Mac Studio - Technical Specifications - Apple"
+        },
+        "canonical_url": "https://www.apple.com/mac-studio/specs",
+        "canonical_urls": [
+          "https://www.apple.com/mac-studio/specs"
+        ],
+        "source_id": "source-a5-studio-specs"
+      }
+    }
+  ],
+  "run_id": "run-transient-a5-20260826",
+  "schema_version": "1"
+}

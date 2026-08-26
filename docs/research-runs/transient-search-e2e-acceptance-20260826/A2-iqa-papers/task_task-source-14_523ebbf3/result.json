@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_53823d45bdf8105b68a45bc8"
+      ],
+      "attempt_id": "attempt-source-14",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-arxiv-api-agentic-outside-window.json",
+        "locator_label": "arXiv Atom entry: published and summary"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-14",
+      "task_id": "task-source-14",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_53823d45bdf8105b68a45bc8",
+      "artifact_refs": [
+        "art_53823d45bdf8105b68a45bc8"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2606.03005",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-muse",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-14",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_9b459fb2da6616e3970235f134d8aa200e428cce93013d8f4c683d195e663622",
+      "source_id": "source-a2-muse",
+      "stance": "support",
+      "step_id": "step-source-14",
+      "task_id": "task-source-14",
+      "text": "We introduce MUSE, a multimodal unified structured execution harness that wraps any off-the-shelf MLLM with composable modules"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-14"
+}

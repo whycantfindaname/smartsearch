@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_91c0576ce7a80280601daf1e"
+  ],
+  "artifact_refs": [
+    "art_91c0576ce7a80280601daf1e"
+  ],
+  "claim_spec_id": "claim-a4-dream-reasoning-quality",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-12",
+  "task_id": "task-source-12",
+  "user_constraints": {}
+}

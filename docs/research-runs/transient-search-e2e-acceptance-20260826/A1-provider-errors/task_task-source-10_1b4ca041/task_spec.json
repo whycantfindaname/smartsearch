@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_e3589efac4f491c198c3a009"
+  ],
+  "artifact_refs": [
+    "art_e3589efac4f491c198c3a009"
+  ],
+  "claim_spec_id": "claim-jina-rate-limit-evidence",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-10",
+  "task_id": "task-source-10",
+  "user_constraints": {}
+}

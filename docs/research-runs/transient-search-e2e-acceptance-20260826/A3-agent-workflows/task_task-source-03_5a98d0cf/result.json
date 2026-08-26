@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_51126f5d0e6e6fe547dd8b40"
+      ],
+      "attempt_id": "attempt-source-03",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-openai-retry.json",
+        "locator_label": "RetryDecision; RetryPolicyContext; ModelRetrySettings"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_51126f5d0e6e6fe547dd8b40",
+      "artifact_refs": [
+        "art_51126f5d0e6e6fe547dd8b40"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://openai.github.io/openai-agents-python/ref/retry/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-retry",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-03",
+      "locator": {
+        "section": "RetryDecision; RetryPolicyContext; ModelRetrySettings",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_b9459eec067ca6b12dd704db77c44168f1cd79ba41b1236d202863a8ffbc5866",
+      "source_id": "source-a3-openai-retry",
+      "stance": "support",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "text": "Opt-in runner-managed retry settings for model calls."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-03"
+}

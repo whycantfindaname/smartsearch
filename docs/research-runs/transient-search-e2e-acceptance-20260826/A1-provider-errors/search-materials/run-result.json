@@ -1,0 +1,121 @@
+{
+  "status": "completed",
+  "answer_complete": true,
+  "observed_errors": [
+    {
+      "stage": "broad_search",
+      "error_type": "rate_limited",
+      "signature": "HTTP 429 concurrency_limit_exceeded",
+      "occurrences": 2,
+      "final_outcome": "third logical attempt succeeded"
+    },
+    {
+      "stage": "official_discovery_parallel_invocation",
+      "signature": "parallel Smart Search invocations are not permitted",
+      "occurrences": 4,
+      "error_type_observed": false,
+      "structured_recovery_present": false
+    },
+    {
+      "stage": "jina_openapi_fetch",
+      "error_type": "parameter_error",
+      "signature": "HTTP 422 AssertionFailureError: Could not resolve hostname",
+      "provider_attempts": [
+        "tavily:empty",
+        "jina:parameter_error",
+        "firecrawl:empty"
+      ],
+      "fallback_used": true,
+      "structured_recovery_present": false
+    }
+  ],
+  "recovery_actions": [
+    {
+      "stage": "broad_search",
+      "action": "waited for built-in bounded logical replay; no outer retry"
+    },
+    {
+      "stage": "official_discovery_parallel_invocation",
+      "action": "after the parallel condition ended, changed the queries and issued one fresh serialized discovery request per failed provider"
+    },
+    {
+      "stage": "jina_openapi_fetch",
+      "action": "did not repeat the failed URL; narrowed Jina claims to the successfully fetched official Reader page"
+    }
+  ],
+  "doctor_calls": 0,
+  "sources": [
+    {
+      "title": "Debugging Errors | xAI Docs",
+      "url": "https://docs.x.ai/developers/debugging",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Status Codes; 4XX Status Codes table"
+    },
+    {
+      "title": "Rate Limits | xAI Docs",
+      "url": "https://docs.x.ai/developers/rate-limits",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Per-model limits; Handling rate limit errors"
+    },
+    {
+      "title": "Error codes | OpenAI API",
+      "url": "https://developers.openai.com/api/docs/guides/error-codes",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "API errors table; RateLimitError; APIConnectionError and InternalServerError sections"
+    },
+    {
+      "title": "Rate limits | OpenAI API",
+      "url": "https://developers.openai.com/api/docs/guides/rate-limits",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Rate-limit response headers table; Retrying with exponential backoff"
+    },
+    {
+      "title": "Error Codes | Exa",
+      "url": "https://exa.ai/docs/reference/error-codes",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "API errors; Error Response Structure; API Error Tags; Content Fetch Status Tags"
+    },
+    {
+      "title": "Rate Limits | Exa",
+      "url": "https://exa.ai/docs/reference/rate-limits",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Default endpoint QPS table"
+    },
+    {
+      "title": "Errors Code | Tavily Help Center",
+      "url": "https://help.tavily.com/articles/8645538886-understanding-http-errors",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "400, 401, 432, 433, 429, and 500 sections"
+    },
+    {
+      "title": "Rate Limits | Tavily Docs",
+      "url": "https://docs.tavily.com/documentation/rate-limits",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Environment and endpoint rate-limit tables; Handling Rate Limit Responses"
+    },
+    {
+      "title": "Errors | Firecrawl Docs",
+      "url": "https://docs.firecrawl.dev/api-reference/errors",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Error response shape; Errors table; Retry guidance; 429 responses"
+    },
+    {
+      "title": "Reader | Jina AI",
+      "url": "https://jina.ai/reader/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Rate Limit; FAQ: What's the rate limit?"
+    }
+  ],
+  "native_web_used": false,
+  "security_incident": false
+}

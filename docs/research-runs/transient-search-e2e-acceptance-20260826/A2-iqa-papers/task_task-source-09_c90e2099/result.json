@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_e8c86ed5bcadf1d988fd9029"
+      ],
+      "attempt_id": "attempt-source-09",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-arxiv-api-candidates.json",
+        "locator_label": "arXiv Atom entry: title, published, updated and summary"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-09",
+      "task_id": "task-source-09",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_e8c86ed5bcadf1d988fd9029",
+      "artifact_refs": [
+        "art_e8c86ed5bcadf1d988fd9029"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2608.01301",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-lpifm",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-09",
+      "locator": {
+        "section": "arXiv Atom entry: title, published, updated and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_3fe9b0dc623910b0fc1f25cd34a6349143998ecc20b78c4e436b89d6091e385d",
+      "source_id": "source-a2-lpifm",
+      "stance": "support",
+      "step_id": "step-source-09",
+      "task_id": "task-source-09",
+      "text": "LPIFM jointly observes the two sources and two fused candidates and predicts whether A is better, B is better, or the two are perceptually equivalent."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-09"
+}

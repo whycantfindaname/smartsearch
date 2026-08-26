@@ -1,0 +1,20 @@
+# A5 Citation-backed Research Workspace
+
+This directory is the durable Workspace for **在 2026-08-26 的时间边界内，比较最新 Mac mini 与 Mac Studio 的芯片、unified memory、接口与扩展、外接显示器支持、尺寸重量和美国起售价，并区分 Apple 的产品定位与基于规格的比较判断。**. It was
+generated from the accepted, sanitized local evidence using Smart Search commit
+`f3a30d4`; no live provider call or diagnostic probe was made during migration.
+
+## Entry points
+
+- [Final report](final_synthesis.md)
+- [Citation verification](evidence/citation_verification.json)
+- [Reference register](evidence/reference_register.json)
+- [Latest Research Dossier](latest_dossier.json)
+- [Public Trace](public_trace.jsonl)
+- [Artifact registry](runtime/run-transient-a5-20260826/artifacts.jsonl)
+- [Sanitized search materials](search-materials/)
+- [Migration input](input/migration_input.json)
+
+The reader-facing report contains no internal audit IDs. Use the reference
+register and citation verification when auditing ClaimRecord, EvidenceItem,
+artifact snapshot, locator, attempt, and Trace links.

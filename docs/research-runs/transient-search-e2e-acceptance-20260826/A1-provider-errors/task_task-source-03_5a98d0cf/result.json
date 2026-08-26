@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_39c709cf58667c2e1aacd0f8"
+      ],
+      "attempt_id": "attempt-source-03",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/10-openai-error-codes.json",
+        "locator_label": "API errors table; billing, spend, and quota guidance"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_39c709cf58667c2e1aacd0f8",
+      "artifact_refs": [
+        "art_39c709cf58667c2e1aacd0f8"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://developers.openai.com/api/docs/guides/error-codes",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-openai-error-boundary",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-03",
+      "locator": {
+        "section": "API errors table; billing, spend, and quota guidance",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_ecf6aa6c7f8ae12a2f7392626ba310a960246b8321190c5f577cf3deb2bdf841",
+      "source_id": "source-a1-openai-errors",
+      "stance": "support",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "text": "Retrying billing, spend, or quota errors won’t restore API access. Update the relevant credits or limits before sending another request."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-03"
+}

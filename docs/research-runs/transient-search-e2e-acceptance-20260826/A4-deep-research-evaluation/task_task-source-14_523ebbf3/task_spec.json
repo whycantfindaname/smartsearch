@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_fb47eca6845ef55a783d289c"
+  ],
+  "artifact_refs": [
+    "art_fb47eca6845ef55a783d289c"
+  ],
+  "claim_spec_id": "claim-a4-live-paper-scale",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-14",
+  "task_id": "task-source-14",
+  "user_constraints": {}
+}

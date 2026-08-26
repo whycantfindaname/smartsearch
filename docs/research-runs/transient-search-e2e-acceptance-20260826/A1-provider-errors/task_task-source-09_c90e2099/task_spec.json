@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_c9b7a70b9c6d7c98f8ef56eb"
+  ],
+  "artifact_refs": [
+    "art_c9b7a70b9c6d7c98f8ef56eb"
+  ],
+  "claim_spec_id": "claim-firecrawl-retry-matrix",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-09",
+  "task_id": "task-source-09",
+  "user_constraints": {}
+}

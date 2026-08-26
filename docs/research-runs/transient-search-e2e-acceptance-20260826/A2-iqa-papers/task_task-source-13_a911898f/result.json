@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_3906292770d93ce74a3b0f98"
+      ],
+      "attempt_id": "attempt-source-13",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-arxiv-api-agentic-outside-window.json",
+        "locator_label": "arXiv Atom entry: published and summary"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-13",
+      "task_id": "task-source-13",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_3906292770d93ce74a3b0f98",
+      "artifact_refs": [
+        "art_3906292770d93ce74a3b0f98"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2509.26006",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-agenticiqa",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-13",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_e77c5a3785d162fb4954edab6bacc199eb48658ae4810257cc86a5f334ced005",
+      "source_id": "source-a2-agenticiqa",
+      "stance": "support",
+      "step_id": "step-source-13",
+      "task_id": "task-source-13",
+      "text": "AgenticIQA decomposes IQA into four subtasks -- distortion detection, distortion analysis, tool selection, and tool execution -- coordinated by a planner, executor, and summarizer."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-13"
+}

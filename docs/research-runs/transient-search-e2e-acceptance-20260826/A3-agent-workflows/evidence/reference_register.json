@@ -1,0 +1,708 @@
+{
+  "projection": "derived_audit_reference_register",
+  "reference_count": 14,
+  "references": [
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_647bc099d2bfe5938c33439d",
+          "canonical_url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+          "raw_ref": "raw/snap_55da8ce6f1e9eb241af30929371ab4f89e57b815b5057805fa54ad552a7363ff.bin",
+          "snapshot_id": "snap_55da8ce6f1e9eb241af30929371ab4f89e57b815b5057805fa54ad552a7363ff"
+        }
+      ],
+      "citation_ids": [
+        "a3-langgraph-persistence"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-persistence",
+          "claim_spec_id": "claim-a3-persistence"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_647bc099d2bfe5938c33439d",
+          "attempt_id": "attempt-source-06",
+          "attempt_no": 1,
+          "canonical_url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+          "claim_record_id": "record-claim-a3-persistence",
+          "claim_spec_id": "claim-a3-persistence",
+          "evidence_id": "evidence-source-06",
+          "locator": {
+            "section": "Checkpointer vs. store; MemorySaver does not persist between restarts",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_55da8ce6f1e9eb241af30929371ab4f89e57b815b5057805fa54ad552a7363ff",
+          "step_id": "step-source-06",
+          "task_id": "task-source-06"
+        }
+      ],
+      "number": 1,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Persistence - LangGraph"
+        },
+        "canonical_url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+        "canonical_urls": [
+          "https://docs.langchain.com/oss/python/langgraph/persistence"
+        ],
+        "source_id": "source-a3-langgraph-persistence"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_a7e3919632ff091c19b30162",
+          "canonical_url": "https://docs.langchain.com/oss/python/langgraph/fault-tolerance",
+          "raw_ref": "raw/snap_e80cf9aae884824e41543b91036cc4b7da644b17c7fed9a0763646ff2259ac86.bin",
+          "snapshot_id": "snap_e80cf9aae884824e41543b91036cc4b7da644b17c7fed9a0763646ff2259ac86"
+        }
+      ],
+      "citation_ids": [
+        "a3-langgraph-fault"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-retry",
+          "claim_spec_id": "claim-a3-retry"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_a7e3919632ff091c19b30162",
+          "attempt_id": "attempt-source-07",
+          "attempt_no": 1,
+          "canonical_url": "https://docs.langchain.com/oss/python/langgraph/fault-tolerance",
+          "claim_record_id": "record-claim-a3-retry",
+          "claim_spec_id": "claim-a3-retry",
+          "evidence_id": "evidence-source-07",
+          "locator": {
+            "section": "Retries; Parameters; Error handling; Route with Command",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_e80cf9aae884824e41543b91036cc4b7da644b17c7fed9a0763646ff2259ac86",
+          "step_id": "step-source-07",
+          "task_id": "task-source-07"
+        }
+      ],
+      "number": 2,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Fault tolerance - LangGraph"
+        },
+        "canonical_url": "https://docs.langchain.com/oss/python/langgraph/fault-tolerance",
+        "canonical_urls": [
+          "https://docs.langchain.com/oss/python/langgraph/fault-tolerance"
+        ],
+        "source_id": "source-a3-langgraph-fault"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_b5d2e4a2b1ecf06c668bb83f",
+          "canonical_url": "https://docs.langchain.com/oss/python/langgraph/interrupts",
+          "raw_ref": "raw/snap_2c8cf73f62479803bc41247bc36696b63a03078f11fc815bdcf2743b1b4feb58.bin",
+          "snapshot_id": "snap_2c8cf73f62479803bc41247bc36696b63a03078f11fc815bdcf2743b1b4feb58"
+        }
+      ],
+      "citation_ids": [
+        "a3-langgraph-interrupts"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-hitl",
+          "claim_spec_id": "claim-a3-hitl"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_b5d2e4a2b1ecf06c668bb83f",
+          "attempt_id": "attempt-source-08",
+          "attempt_no": 1,
+          "canonical_url": "https://docs.langchain.com/oss/python/langgraph/interrupts",
+          "claim_record_id": "record-claim-a3-hitl",
+          "claim_spec_id": "claim-a3-hitl",
+          "evidence_id": "evidence-source-08",
+          "locator": {
+            "section": "Resuming interrupts; Review and edit state; Rules of interrupts",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_2c8cf73f62479803bc41247bc36696b63a03078f11fc815bdcf2743b1b4feb58",
+          "step_id": "step-source-08",
+          "task_id": "task-source-08"
+        }
+      ],
+      "number": 3,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Interrupts - LangGraph"
+        },
+        "canonical_url": "https://docs.langchain.com/oss/python/langgraph/interrupts",
+        "canonical_urls": [
+          "https://docs.langchain.com/oss/python/langgraph/interrupts"
+        ],
+        "source_id": "source-a3-langgraph-interrupts"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_6ddd2ced8b994b271aa56750",
+          "canonical_url": "https://openai.github.io/openai-agents-python/sessions",
+          "raw_ref": "raw/snap_76b468366c7b3bb6b681741ce1a88a5ea7ad0b5e2f6109583aefa4b53eb39ca1.bin",
+          "snapshot_id": "snap_76b468366c7b3bb6b681741ce1a88a5ea7ad0b5e2f6109583aefa4b53eb39ca1"
+        }
+      ],
+      "citation_ids": [
+        "a3-openai-sessions"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-persistence",
+          "claim_spec_id": "claim-a3-persistence"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_6ddd2ced8b994b271aa56750",
+          "attempt_id": "attempt-source-01",
+          "attempt_no": 1,
+          "canonical_url": "https://openai.github.io/openai-agents-python/sessions",
+          "claim_record_id": "record-claim-a3-persistence",
+          "claim_spec_id": "claim-a3-persistence",
+          "evidence_id": "evidence-source-01",
+          "locator": {
+            "section": "Core session behavior; Resuming interrupted runs with the same session; Built-in session implementations",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_76b468366c7b3bb6b681741ce1a88a5ea7ad0b5e2f6109583aefa4b53eb39ca1",
+          "step_id": "step-source-01",
+          "task_id": "task-source-01"
+        }
+      ],
+      "number": 4,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Sessions - OpenAI Agents SDK"
+        },
+        "canonical_url": "https://openai.github.io/openai-agents-python/sessions",
+        "canonical_urls": [
+          "https://openai.github.io/openai-agents-python/sessions"
+        ],
+        "source_id": "source-a3-openai-sessions"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_38de145b0ec59f041debc018",
+          "canonical_url": "https://openai.github.io/openai-agents-python/human_in_the_loop",
+          "raw_ref": "raw/snap_d35364e94ba4c1abd7a0e92db12486c69344759403379b14e1680d175b197192.bin",
+          "snapshot_id": "snap_d35364e94ba4c1abd7a0e92db12486c69344759403379b14e1680d175b197192"
+        }
+      ],
+      "citation_ids": [
+        "a3-openai-hitl"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-hitl",
+          "claim_spec_id": "claim-a3-hitl"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_38de145b0ec59f041debc018",
+          "attempt_id": "attempt-source-02",
+          "attempt_no": 1,
+          "canonical_url": "https://openai.github.io/openai-agents-python/human_in_the_loop",
+          "claim_record_id": "record-claim-a3-hitl",
+          "claim_spec_id": "claim-a3-hitl",
+          "evidence_id": "evidence-source-02",
+          "locator": {
+            "section": "How the approval flow works; Long-running approvals",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_d35364e94ba4c1abd7a0e92db12486c69344759403379b14e1680d175b197192",
+          "step_id": "step-source-02",
+          "task_id": "task-source-02"
+        }
+      ],
+      "number": 5,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Human-in-the-loop - OpenAI Agents SDK"
+        },
+        "canonical_url": "https://openai.github.io/openai-agents-python/human_in_the_loop",
+        "canonical_urls": [
+          "https://openai.github.io/openai-agents-python/human_in_the_loop"
+        ],
+        "source_id": "source-a3-openai-hitl"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_51126f5d0e6e6fe547dd8b40",
+          "canonical_url": "https://openai.github.io/openai-agents-python/ref/retry",
+          "raw_ref": "raw/snap_b9459eec067ca6b12dd704db77c44168f1cd79ba41b1236d202863a8ffbc5866.bin",
+          "snapshot_id": "snap_b9459eec067ca6b12dd704db77c44168f1cd79ba41b1236d202863a8ffbc5866"
+        }
+      ],
+      "citation_ids": [
+        "a3-openai-retry"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-retry",
+          "claim_spec_id": "claim-a3-retry"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_51126f5d0e6e6fe547dd8b40",
+          "attempt_id": "attempt-source-03",
+          "attempt_no": 1,
+          "canonical_url": "https://openai.github.io/openai-agents-python/ref/retry",
+          "claim_record_id": "record-claim-a3-retry",
+          "claim_spec_id": "claim-a3-retry",
+          "evidence_id": "evidence-source-03",
+          "locator": {
+            "section": "RetryDecision; RetryPolicyContext; ModelRetrySettings",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_b9459eec067ca6b12dd704db77c44168f1cd79ba41b1236d202863a8ffbc5866",
+          "step_id": "step-source-03",
+          "task_id": "task-source-03"
+        }
+      ],
+      "number": 6,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Retry - OpenAI Agents SDK API Reference"
+        },
+        "canonical_url": "https://openai.github.io/openai-agents-python/ref/retry",
+        "canonical_urls": [
+          "https://openai.github.io/openai-agents-python/ref/retry"
+        ],
+        "source_id": "source-a3-openai-retry"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_9c8a2bdb2d164b03a16ec47a",
+          "canonical_url": "https://ai.pydantic.dev/api/agent/index.md",
+          "raw_ref": "raw/snap_e678c4923b34042fadde8cf2273d5e8aac1623ee24950f47ea8aca8fdbf1d11b.bin",
+          "snapshot_id": "snap_e678c4923b34042fadde8cf2273d5e8aac1623ee24950f47ea8aca8fdbf1d11b"
+        }
+      ],
+      "citation_ids": [
+        "a3-pydantic-agent-api"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-retry",
+          "claim_spec_id": "claim-a3-retry"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_9c8a2bdb2d164b03a16ec47a",
+          "attempt_id": "attempt-source-11",
+          "attempt_no": 1,
+          "canonical_url": "https://ai.pydantic.dev/api/agent/index.md",
+          "claim_record_id": "record-claim-a3-retry",
+          "claim_spec_id": "claim-a3-retry",
+          "evidence_id": "evidence-source-11",
+          "locator": {
+            "section": "Agent.__init__ retries and instrument parameters",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_e678c4923b34042fadde8cf2273d5e8aac1623ee24950f47ea8aca8fdbf1d11b",
+          "step_id": "step-source-11",
+          "task_id": "task-source-11"
+        }
+      ],
+      "number": 7,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "pydantic_ai.agent API"
+        },
+        "canonical_url": "https://ai.pydantic.dev/api/agent/index.md",
+        "canonical_urls": [
+          "https://ai.pydantic.dev/api/agent/index.md"
+        ],
+        "source_id": "source-a3-pydantic-agent-api"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_2d1bd465e605dc4958f4f398",
+          "canonical_url": "https://pydantic.dev/docs/ai/tools-toolsets/deferred-tools",
+          "raw_ref": "raw/snap_c564a941f219c7c73f37f1c67c68eb34eb4478f9a3381a276e1589d04fdf9cd0.bin",
+          "snapshot_id": "snap_c564a941f219c7c73f37f1c67c68eb34eb4478f9a3381a276e1589d04fdf9cd0"
+        }
+      ],
+      "citation_ids": [
+        "a3-pydantic-deferred"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-hitl",
+          "claim_spec_id": "claim-a3-hitl"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_2d1bd465e605dc4958f4f398",
+          "attempt_id": "attempt-source-13",
+          "attempt_no": 1,
+          "canonical_url": "https://pydantic.dev/docs/ai/tools-toolsets/deferred-tools",
+          "claim_record_id": "record-claim-a3-hitl",
+          "claim_spec_id": "claim-a3-hitl",
+          "evidence_id": "evidence-source-13",
+          "locator": {
+            "section": "Deferred Tools introduction; Resolving deferred calls with a handler; Human-in-the-Loop Tool Approval",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_c564a941f219c7c73f37f1c67c68eb34eb4478f9a3381a276e1589d04fdf9cd0",
+          "step_id": "step-source-13",
+          "task_id": "task-source-13"
+        }
+      ],
+      "number": 8,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Deferred Tools - PydanticAI"
+        },
+        "canonical_url": "https://pydantic.dev/docs/ai/tools-toolsets/deferred-tools",
+        "canonical_urls": [
+          "https://pydantic.dev/docs/ai/tools-toolsets/deferred-tools"
+        ],
+        "source_id": "source-a3-pydantic-deferred"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_28da6d2e2db40f3f59ec1e45",
+          "canonical_url": "https://ai.pydantic.dev/durable_execution",
+          "raw_ref": "raw/snap_1274152afc49f8bb1839a446d7647dd853c0b3411dc4ba9316c8d2c499f98f3b.bin",
+          "snapshot_id": "snap_1274152afc49f8bb1839a446d7647dd853c0b3411dc4ba9316c8d2c499f98f3b"
+        }
+      ],
+      "citation_ids": [
+        "a3-pydantic-durable"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-persistence",
+          "claim_spec_id": "claim-a3-persistence"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_28da6d2e2db40f3f59ec1e45",
+          "attempt_id": "attempt-source-10",
+          "attempt_no": 1,
+          "canonical_url": "https://ai.pydantic.dev/durable_execution",
+          "claim_record_id": "record-claim-a3-persistence",
+          "claim_spec_id": "claim-a3-persistence",
+          "evidence_id": "evidence-source-10",
+          "locator": {
+            "section": "Durable Execution overview and supported solutions list",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_1274152afc49f8bb1839a446d7647dd853c0b3411dc4ba9316c8d2c499f98f3b",
+          "step_id": "step-source-10",
+          "task_id": "task-source-10"
+        }
+      ],
+      "number": 9,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Durable Execution - PydanticAI"
+        },
+        "canonical_url": "https://ai.pydantic.dev/durable_execution",
+        "canonical_urls": [
+          "https://ai.pydantic.dev/durable_execution"
+        ],
+        "source_id": "source-a3-pydantic-durable"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_9bfb1f6c82e7951effe09d86",
+          "canonical_url": "https://ai.pydantic.dev/logfire",
+          "raw_ref": "raw/snap_608c3002607edd392209180040754062ecc4314f063d73c87f892e75ecadd68c.bin",
+          "snapshot_id": "snap_608c3002607edd392209180040754062ecc4314f063d73c87f892e75ecadd68c"
+        }
+      ],
+      "citation_ids": [
+        "a3-pydantic-logfire"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-observability",
+          "claim_spec_id": "claim-a3-observability"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_9bfb1f6c82e7951effe09d86",
+          "attempt_id": "attempt-source-14",
+          "attempt_no": 1,
+          "canonical_url": "https://ai.pydantic.dev/logfire",
+          "claim_record_id": "record-claim-a3-observability",
+          "claim_spec_id": "claim-a3-observability",
+          "evidence_id": "evidence-source-14",
+          "locator": {
+            "section": "Using Logfire; Using OpenTelemetry; OTel without Logfire",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_608c3002607edd392209180040754062ecc4314f063d73c87f892e75ecadd68c",
+          "step_id": "step-source-14",
+          "task_id": "task-source-14"
+        }
+      ],
+      "number": 10,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Pydantic Logfire Debugging and Monitoring"
+        },
+        "canonical_url": "https://ai.pydantic.dev/logfire",
+        "canonical_urls": [
+          "https://ai.pydantic.dev/logfire"
+        ],
+        "source_id": "source-a3-pydantic-logfire"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_dd54ca4cb67f41baf68b3ade",
+          "canonical_url": "https://openai.github.io/openai-agents-python/tracing",
+          "raw_ref": "raw/snap_1b0ea41399c789b0eb61dc736bdabcea7bc1506bf2bfbf237b8d76f803459ffa.bin",
+          "snapshot_id": "snap_1b0ea41399c789b0eb61dc736bdabcea7bc1506bf2bfbf237b8d76f803459ffa"
+        }
+      ],
+      "citation_ids": [
+        "a3-openai-tracing"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-observability",
+          "claim_spec_id": "claim-a3-observability"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_dd54ca4cb67f41baf68b3ade",
+          "attempt_id": "attempt-source-05",
+          "attempt_no": 1,
+          "canonical_url": "https://openai.github.io/openai-agents-python/tracing",
+          "claim_record_id": "record-claim-a3-observability",
+          "claim_spec_id": "claim-a3-observability",
+          "evidence_id": "evidence-source-05",
+          "locator": {
+            "section": "Default tracing; Sensitive data; Custom tracing processors",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_1b0ea41399c789b0eb61dc736bdabcea7bc1506bf2bfbf237b8d76f803459ffa",
+          "step_id": "step-source-05",
+          "task_id": "task-source-05"
+        }
+      ],
+      "number": 11,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Tracing - OpenAI Agents SDK"
+        },
+        "canonical_url": "https://openai.github.io/openai-agents-python/tracing",
+        "canonical_urls": [
+          "https://openai.github.io/openai-agents-python/tracing"
+        ],
+        "source_id": "source-a3-openai-tracing"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_adf16f3aa45aff0631dff6f9",
+          "canonical_url": "https://openai.github.io/openai-agents-python/ref/exceptions",
+          "raw_ref": "raw/snap_01101e73922f839ba8e98c9c6b18bd722186993bd4d933536e564cffc5d793ae.bin",
+          "snapshot_id": "snap_01101e73922f839ba8e98c9c6b18bd722186993bd4d933536e564cffc5d793ae"
+        }
+      ],
+      "citation_ids": [
+        "a3-openai-exceptions"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-retry",
+          "claim_spec_id": "claim-a3-retry"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_adf16f3aa45aff0631dff6f9",
+          "attempt_id": "attempt-source-04",
+          "attempt_no": 1,
+          "canonical_url": "https://openai.github.io/openai-agents-python/ref/exceptions",
+          "claim_record_id": "record-claim-a3-retry",
+          "claim_spec_id": "claim-a3-retry",
+          "evidence_id": "evidence-source-04",
+          "locator": {
+            "section": "RunErrorDetails; MaxTurnsExceeded; ModelBehaviorError; ToolTimeoutError",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_01101e73922f839ba8e98c9c6b18bd722186993bd4d933536e564cffc5d793ae",
+          "step_id": "step-source-04",
+          "task_id": "task-source-04"
+        }
+      ],
+      "number": 12,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Exceptions - OpenAI Agents SDK API Reference"
+        },
+        "canonical_url": "https://openai.github.io/openai-agents-python/ref/exceptions",
+        "canonical_urls": [
+          "https://openai.github.io/openai-agents-python/ref/exceptions"
+        ],
+        "source_id": "source-a3-openai-exceptions"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_3ffa05efc4eed2a4cd904610",
+          "canonical_url": "https://pydantic.dev/docs/ai/models/http-request-retries",
+          "raw_ref": "raw/snap_904d869c6ed8ef58a3265ce7587c0c690277f28d422897ed98f2bc4a7970eebf.bin",
+          "snapshot_id": "snap_904d869c6ed8ef58a3265ce7587c0c690277f28d422897ed98f2bc4a7970eebf"
+        }
+      ],
+      "citation_ids": [
+        "a3-pydantic-http-retries"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-retry",
+          "claim_spec_id": "claim-a3-retry"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_3ffa05efc4eed2a4cd904610",
+          "attempt_id": "attempt-source-12",
+          "attempt_no": 1,
+          "canonical_url": "https://pydantic.dev/docs/ai/models/http-request-retries",
+          "claim_record_id": "record-claim-a3-retry",
+          "claim_spec_id": "claim-a3-retry",
+          "evidence_id": "evidence-source-12",
+          "locator": {
+            "section": "Usage Example; Best Practices; Error Handling",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_904d869c6ed8ef58a3265ce7587c0c690277f28d422897ed98f2bc4a7970eebf",
+          "step_id": "step-source-12",
+          "task_id": "task-source-12"
+        }
+      ],
+      "number": 13,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "HTTP Request Retries - PydanticAI"
+        },
+        "canonical_url": "https://pydantic.dev/docs/ai/models/http-request-retries",
+        "canonical_urls": [
+          "https://pydantic.dev/docs/ai/models/http-request-retries"
+        ],
+        "source_id": "source-a3-pydantic-http-retries"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "artifact_id": "art_c7c39eee12cf637012e6d8c7",
+          "canonical_url": "https://docs.langchain.com/langsmith/trace-with-langgraph",
+          "raw_ref": "raw/snap_987a318bc6b0559237c49b8d3e54932940cc499211b1c14470416b947e39c076.bin",
+          "snapshot_id": "snap_987a318bc6b0559237c49b8d3e54932940cc499211b1c14470416b947e39c076"
+        }
+      ],
+      "citation_ids": [
+        "a3-langgraph-observability"
+      ],
+      "claim_records": [
+        {
+          "claim_record_id": "record-claim-a3-observability",
+          "claim_spec_id": "claim-a3-observability"
+        }
+      ],
+      "evidence_items": [
+        {
+          "artifact_id": "art_c7c39eee12cf637012e6d8c7",
+          "attempt_id": "attempt-source-09",
+          "attempt_no": 1,
+          "canonical_url": "https://docs.langchain.com/langsmith/trace-with-langgraph",
+          "claim_record_id": "record-claim-a3-observability",
+          "claim_spec_id": "claim-a3-observability",
+          "evidence_id": "evidence-source-09",
+          "locator": {
+            "section": "With LangChain; Without LangChain",
+            "type": "section"
+          },
+          "retrieved_at": "2026-08-26T00:00:00Z",
+          "snapshot_id": "snap_987a318bc6b0559237c49b8d3e54932940cc499211b1c14470416b947e39c076",
+          "step_id": "step-source-09",
+          "task_id": "task-source-09"
+        }
+      ],
+      "number": 14,
+      "source": {
+        "bibliographic": {
+          "accessed_at": "2026-08-26",
+          "title": "Trace LangGraph applications - LangSmith"
+        },
+        "canonical_url": "https://docs.langchain.com/langsmith/trace-with-langgraph",
+        "canonical_urls": [
+          "https://docs.langchain.com/langsmith/trace-with-langgraph"
+        ],
+        "source_id": "source-a3-langgraph-observability"
+      }
+    }
+  ],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1"
+}

@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_d8fe771f96def7ff069160d5"
+  ],
+  "artifact_refs": [
+    "art_d8fe771f96def7ff069160d5"
+  ],
+  "claim_spec_id": "claim-xai-error-identity",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-01",
+  "task_id": "task-source-01",
+  "user_constraints": {}
+}

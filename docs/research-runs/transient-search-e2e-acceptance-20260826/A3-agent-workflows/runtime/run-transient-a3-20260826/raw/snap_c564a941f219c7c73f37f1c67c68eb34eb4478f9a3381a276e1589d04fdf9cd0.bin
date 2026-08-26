@@ -1,0 +1,1 @@
+There are a few scenarios where the model should be able to call a tool that should not or cannot be executed during the same agent run inside the same Python process:

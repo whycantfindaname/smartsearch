@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_72b0b01df3733c8f07b9937e"
+  ],
+  "artifact_refs": [
+    "art_72b0b01df3733c8f07b9937e"
+  ],
+  "claim_spec_id": "claim-a2-sharpness",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-11",
+  "task_id": "task-source-11",
+  "user_constraints": {}
+}

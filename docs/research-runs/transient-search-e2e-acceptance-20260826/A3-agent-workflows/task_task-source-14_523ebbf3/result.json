@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_9bfb1f6c82e7951effe09d86"
+      ],
+      "attempt_id": "attempt-source-14",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-pydantic-logfire.json",
+        "locator_label": "Using Logfire; Using OpenTelemetry; OTel without Logfire"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-14",
+      "task_id": "task-source-14",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_9bfb1f6c82e7951effe09d86",
+      "artifact_refs": [
+        "art_9bfb1f6c82e7951effe09d86"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://ai.pydantic.dev/logfire/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-observability",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-14",
+      "locator": {
+        "section": "Using Logfire; Using OpenTelemetry; OTel without Logfire",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_608c3002607edd392209180040754062ecc4314f063d73c87f892e75ecadd68c",
+      "source_id": "source-a3-pydantic-logfire",
+      "stance": "support",
+      "step_id": "step-source-14",
+      "task_id": "task-source-14",
+      "text": "This means you can debug and monitor Pydantic AI with any OpenTelemetry backend."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-14"
+}

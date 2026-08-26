@@ -1,0 +1,2383 @@
+{
+  "candidate_cards": [],
+  "candidates": [],
+  "claim_records": [
+    {
+      "citation_map": {
+        "a2-window-record": "evidence-source-01"
+      },
+      "claim_record_id": "record-claim-a2-window-record",
+      "claim_spec_id": "claim-a2-window-record",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "按 arXiv 官方 Atom 的 published 字段判定首次 arXiv 公开日期，窗口内确认了 11 项与静态图像质量评估直接相关或紧邻的工作；在给定来源范围内没有核验到原文明确自称 multi-agent IQA 的窗口内新论文。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-01"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-scifigqual": "evidence-source-02"
+      },
+      "claim_record_id": "record-claim-a2-scifigqual",
+      "claim_spec_id": "claim-a2-scifigqual",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "SciFigQual-Bench 使用全文上下文和 6,308 幅图的五维专家标注，并提出 staged cross-modal SFQ-Agent 收集与融合模态证据，属于 agentic/workflow 型 IQA，但不能据此直接称为 multi-agent。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-02"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-mriqa2": "evidence-source-03"
+      },
+      "claim_record_id": "record-claim-a2-mriqa2",
+      "claim_spec_id": "claim-a2-mriqa2",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "MR-IQA-2 采用 actor-editor-judge 的 reasoning-editing-reflection，并用图像编辑与冻结 judge 为推理提供反思监督；它属于多组件、多阶段视觉反思，不直接等于 multi-agent。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-03"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-lge-mri": "evidence-source-04"
+      },
+      "claim_record_id": "record-claim-a2-lge-mri",
+      "claim_spec_id": "claim-a2-lge-mri",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "LGE-MRI 工作采用 two-stage VLM 流程：第一阶段生成五项 radiology-style 质量报告，第二阶段生成结构化质量分数和临床可用性二分类，并使用 20 名患者的 60 个 image slice-text pairs。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-04"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-miescore": "evidence-source-05"
+      },
+      "claim_record_id": "record-claim-a2-miescore",
+      "claim_spec_id": "claim-a2-miescore",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "MIEScore 面向多源图像编辑质量，建立 MIE-Bench，并在摘要中给出 3,000 个 editing instances、16 个任务、36K 张编辑图和超过 108K 个 MOS；摘要没有表明在线工具调用或多 Agent 协作。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-05"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-cxr": "evidence-source-06"
+      },
+      "claim_record_id": "record-claim-a2-cxr",
+      "claim_spec_id": "claim-a2-cxr",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "Chest X-ray 工作研究 evaluation reference 如何改变性能估计和模型排序，并指出 SSIM、PSNR 等 IQA 指标可能与专家诊断可用性判断不一致。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-06"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-blindpsnr": "evidence-source-07"
+      },
+      "claim_record_id": "record-claim-a2-blindpsnr",
+      "claim_spec_id": "claim-a2-blindpsnr",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "BlindPSNR 在无 ground-truth 时预测低光增强结果的 PSNR，通过 windowed cross-attention 融合增强图与低光输入，并用 heteroscedastic regression 估计 PSNR；它属于 signal fidelity assessment 边界。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-07"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-cbct": "evidence-source-08"
+      },
+      "claim_record_id": "record-claim-a2-cbct",
+      "claim_spec_id": "claim-a2-cbct",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "CBCT-IQ 发布 1,764 个专家标注切片，三名临床专家使用四级量表评价整体与 ROI 质量，并比较 26 个 full-reference/no-reference IQA measures。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-08"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-lpifm": "evidence-source-09"
+      },
+      "claim_record_id": "record-claim-a2-lpifm",
+      "claim_spec_id": "claim-a2-lpifm",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "LPIFM 观察两幅源图和两个融合候选，预测 A、B 或 Tie；数据覆盖 21 个 VIFB 场景、25 个 fusion methods 的 6,300 个无序比较，并按 published 2026-08-02 而非 updated 2026-08-07 纳入。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-09"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-ssim": "evidence-source-10"
+      },
+      "claim_record_id": "record-claim-a2-ssim",
+      "claim_spec_id": "claim-a2-ssim",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "SSIM-from-MSE 工作用 reference image 的 local statistics 按 variance 或 standard-deviation weighting 重分配 global MSE，以近似 local MSE 和 SSIM；其 published 为 2026-08-03，updated 为 2026-08-19。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-10"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-sharpness": "evidence-source-11"
+      },
+      "claim_record_id": "record-claim-a2-sharpness",
+      "claim_spec_id": "claim-a2-sharpness",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "Sharpness Informed IQA 工作通过四协议主观实验提出包括 SI-PSNR 在内的指标，并报告 sharpness-aware loss 的图像在二值比较中平均有 67% 获得偏好。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-11"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-agidefect": "evidence-source-12"
+      },
+      "claim_record_id": "record-claim-a2-agidefect",
+      "claim_spec_id": "claim-a2-agidefect",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "AGIDefect-4K 提供来自 15 个生成模型的 4,000 张图像，包含缺陷检测标签、像素级掩码、文本解释和 overall quality score，并提出基于 MLLM 的 AGIDA。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-12"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-agenticiqa": "evidence-source-13"
+      },
+      "claim_record_id": "record-claim-a2-agenticiqa",
+      "claim_spec_id": "claim-a2-agenticiqa",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "AgenticIQA 首次 arXiv 日期为 2025-09-30，将 IQA 拆为 distortion detection、distortion analysis、tool selection 和 tool execution，由 planner、executor、summarizer 协调，因此是窗口外的 agentic IQA 背景。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-13"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-muse": "evidence-source-14"
+      },
+      "claim_record_id": "record-claim-a2-muse",
+      "claim_spec_id": "claim-a2-muse",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "MUSE 首次 arXiv 日期为 2026-06-02，以可组合模块封装现成 MLLM，覆盖视觉处理、感知工具、结构化解析、确定性验证和 verifier-guided repair，且不重新训练模型；它是通用 agentic harness 而非窗口内新 IQA 论文。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-14"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-tooliqa": "evidence-source-15"
+      },
+      "claim_record_id": "record-claim-a2-tooliqa",
+      "claim_spec_id": "claim-a2-tooliqa",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "Tool-IQA 首次 arXiv 日期为 2026-06-15，使用 Magnifier 和 Gamma Corrector，并将 IQA 组织成 observation、tool-assisted inspection 和 final quantification 的 tool-augmented workflow。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-15"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-iqat1": "evidence-source-16"
+      },
+      "claim_record_id": "record-claim-a2-iqat1",
+      "claim_spec_id": "claim-a2-iqat1",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "IQA-T1 首次 arXiv 日期为 2026-07-14，让 MLLM 调用工具生成 noise residual maps、gradient statistics 和 frequency spectra，并用 Q-Tool 保存 11k 条基于工具证据的多模态推理链；它早于窗口起点。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-16"
+      ]
+    },
+    {
+      "citation_map": {
+        "a2-strive": "evidence-source-17"
+      },
+      "claim_record_id": "record-claim-a2-strive",
+      "claim_spec_id": "claim-a2-strive",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "statement": "arXiv:2608.04567 的官方记录实际对应 STRIVE: Probing Reasoning Limits in Graded Plausibility Generation and Evaluation，属于 Computation and Language，不是 IQA 论文，因此剔除 AGENT-IQA 候选。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-17"
+      ]
+    }
+  ],
+  "delegate_requests": [
+    {
+      "artifact_refs": [
+        "art_45b9532998b98dc6d6321cb4"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_45b9532998b98dc6d6321cb4"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_ac7c6b129a50a90db01f8f2b",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-01",
+      "step_id": "step-source-01",
+      "target": "evidence_miner",
+      "task_id": "task-source-01"
+    },
+    {
+      "artifact_refs": [
+        "art_84e7ec880bee52795fc31cab"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_84e7ec880bee52795fc31cab"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_45bdaf3e168687aba8175a28",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-02",
+      "step_id": "step-source-02",
+      "target": "evidence_miner",
+      "task_id": "task-source-02"
+    },
+    {
+      "artifact_refs": [
+        "art_280e990cf84f37615207358a"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_280e990cf84f37615207358a"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_da89abc6c1b910037a4fa522",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-03",
+      "step_id": "step-source-03",
+      "target": "evidence_miner",
+      "task_id": "task-source-03"
+    },
+    {
+      "artifact_refs": [
+        "art_0f40b9c290dbbaec8c2a4ff0"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_0f40b9c290dbbaec8c2a4ff0"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_62a8819169fa93185794967f",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-04",
+      "step_id": "step-source-04",
+      "target": "evidence_miner",
+      "task_id": "task-source-04"
+    },
+    {
+      "artifact_refs": [
+        "art_fb0e510fd6912221e4509fdd"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_fb0e510fd6912221e4509fdd"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_e675234fea5e00a8e3945344",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-05",
+      "step_id": "step-source-05",
+      "target": "evidence_miner",
+      "task_id": "task-source-05"
+    },
+    {
+      "artifact_refs": [
+        "art_39682afa9165b45343af40a1"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_39682afa9165b45343af40a1"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_efdf112f8d443cb094d1a125",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-06",
+      "step_id": "step-source-06",
+      "target": "evidence_miner",
+      "task_id": "task-source-06"
+    },
+    {
+      "artifact_refs": [
+        "art_8ccd4b1df0b40390416ad3de"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_8ccd4b1df0b40390416ad3de"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_fe0b076d1b68b4c16bda2d20",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-07",
+      "step_id": "step-source-07",
+      "target": "evidence_miner",
+      "task_id": "task-source-07"
+    },
+    {
+      "artifact_refs": [
+        "art_7f2946150b81956f1fedc89b"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_7f2946150b81956f1fedc89b"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_9e47364fd0e9737a5bcce9cc",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-08",
+      "step_id": "step-source-08",
+      "target": "evidence_miner",
+      "task_id": "task-source-08"
+    },
+    {
+      "artifact_refs": [
+        "art_e8c86ed5bcadf1d988fd9029"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_e8c86ed5bcadf1d988fd9029"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_f2560b43ddc2e568bfa5c6ba",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-09",
+      "step_id": "step-source-09",
+      "target": "evidence_miner",
+      "task_id": "task-source-09"
+    },
+    {
+      "artifact_refs": [
+        "art_135045e003ad989cf1f84a92"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_135045e003ad989cf1f84a92"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_7211f7d14b3a8bd016d921fd",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-10",
+      "step_id": "step-source-10",
+      "target": "evidence_miner",
+      "task_id": "task-source-10"
+    },
+    {
+      "artifact_refs": [
+        "art_72b0b01df3733c8f07b9937e"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_72b0b01df3733c8f07b9937e"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_6b88e9712776ebf8b4135144",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-11",
+      "step_id": "step-source-11",
+      "target": "evidence_miner",
+      "task_id": "task-source-11"
+    },
+    {
+      "artifact_refs": [
+        "art_211ea56ee0aab2380ffdd30b"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_211ea56ee0aab2380ffdd30b"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_12ce21307187bdc917ab926f",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-12",
+      "step_id": "step-source-12",
+      "target": "evidence_miner",
+      "task_id": "task-source-12"
+    },
+    {
+      "artifact_refs": [
+        "art_3906292770d93ce74a3b0f98"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_3906292770d93ce74a3b0f98"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_a831edefe9182c20ed41421a",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-13",
+      "step_id": "step-source-13",
+      "target": "evidence_miner",
+      "task_id": "task-source-13"
+    },
+    {
+      "artifact_refs": [
+        "art_53823d45bdf8105b68a45bc8"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_53823d45bdf8105b68a45bc8"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_1e2e2cb56ffba6b5400e5d91",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-14",
+      "step_id": "step-source-14",
+      "target": "evidence_miner",
+      "task_id": "task-source-14"
+    },
+    {
+      "artifact_refs": [
+        "art_13396799ae5469716cb612e8"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_13396799ae5469716cb612e8"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_fefe0a5bc5282a3a9d632e52",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-15",
+      "step_id": "step-source-15",
+      "target": "evidence_miner",
+      "task_id": "task-source-15"
+    },
+    {
+      "artifact_refs": [
+        "art_f5ebddb5a8c3ba1fc591b2db"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_f5ebddb5a8c3ba1fc591b2db"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_55556719ccb66f24044c0267",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-16",
+      "step_id": "step-source-16",
+      "target": "evidence_miner",
+      "task_id": "task-source-16"
+    },
+    {
+      "artifact_refs": [
+        "art_e076ae72caec4a1f4b428476"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_e076ae72caec4a1f4b428476"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_cba46edfb3b52402c67dd575",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-17",
+      "step_id": "step-source-17",
+      "target": "evidence_miner",
+      "task_id": "task-source-17"
+    }
+  ],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_45b9532998b98dc6d6321cb4",
+      "artifact_refs": [
+        "art_45b9532998b98dc6d6321cb4"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://export.arxiv.org/api/query?id_list=2608.18579,2608.21180,2607.29253,2608.02549,2608.01301,2607.27084,2608.20713,2607.26333,2607.12375,2606.16082,2608.04567",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-window-record",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-01",
+      "locator": {
+        "section": "arXiv Atom candidate-set response and published fields",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_4964923df3f6732d344fb1b708ab31c79eb8a7f22906d4414da34ae8230fa3d2",
+      "source_id": "source-a2-window-record",
+      "stance": "support",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "text": "2026-08-26T11:36:55Z 10 11 0  http://arxiv.org/abs/2607.26333v1"
+    },
+    {
+      "artifact_id": "art_84e7ec880bee52795fc31cab",
+      "artifact_refs": [
+        "art_84e7ec880bee52795fc31cab"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2607.27084",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-scifigqual",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-02",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_7a24254451e16dba0433cebd37c82d5c4381d54f44e186644caec25eadc08e64",
+      "source_id": "source-a2-scifigqual",
+      "stance": "support",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "text": "we designed a staged cross-modal evaluation framework SFQ-Agent to achieve auditable and refined scoring through the collection and fusion of modal evidence."
+    },
+    {
+      "artifact_id": "art_280e990cf84f37615207358a",
+      "artifact_refs": [
+        "art_280e990cf84f37615207358a"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2608.18579",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-mriqa2",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-03",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_bd39c486518162e80ef8ec5951d1579a9c2df2c40c772083c3feae1b34885279",
+      "source_id": "source-a2-mriqa2",
+      "stance": "support",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "text": "We introduce MR-IQA-2, an actor-editor-judge framework that operationalizes reasoning-editing-reflection."
+    },
+    {
+      "artifact_id": "art_0f40b9c290dbbaec8c2a4ff0",
+      "artifact_refs": [
+        "art_0f40b9c290dbbaec8c2a4ff0"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2608.21180",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-lge-mri",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-04",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_a2e9c4ba54b34d66c6df9eb5658e05446931d289d4ec5fb1f4a7b0c53366b8ab",
+      "source_id": "source-a2-lge-mri",
+      "stance": "support",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "text": "we propose a two-stage vision language model (VLM) framework for clinically grounded image quality assessment of left atrial LGE-MRI."
+    },
+    {
+      "artifact_id": "art_fb0e510fd6912221e4509fdd",
+      "artifact_refs": [
+        "art_fb0e510fd6912221e4509fdd"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2608.02059",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-miescore",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-05",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_cda54f21e19f05ca5499da8e1c0251746ac5f630603c21ce28adff7dd117c3c8",
+      "source_id": "source-a2-miescore",
+      "stance": "support",
+      "step_id": "step-source-05",
+      "task_id": "task-source-05",
+      "text": "MIE-Bench includes 3,000 editing instances across 16 tasks"
+    },
+    {
+      "artifact_id": "art_39682afa9165b45343af40a1",
+      "artifact_refs": [
+        "art_39682afa9165b45343af40a1"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2607.26333",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-cxr",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-06",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_5c4e41f6e3ebe3caf12d98af5ff6554a6958ae386c57c0a25757e4ba9c8e8bd7",
+      "source_id": "source-a2-cxr",
+      "stance": "support",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "text": "We systematically investigate how evaluation-reference choices affect model performance and ranking in both pathology classification and image quality assessment (IQA)."
+    },
+    {
+      "artifact_id": "art_8ccd4b1df0b40390416ad3de",
+      "artifact_refs": [
+        "art_8ccd4b1df0b40390416ad3de"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2607.27628",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-blindpsnr",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-07",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_104f37891965f2536b874e0ca0ae1de2ba5fbc1b8a4411d04683c29fd7d9568c",
+      "source_id": "source-a2-blindpsnr",
+      "stance": "support",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "text": "BlindPSNR, a lightweight no-reference network that fuses the enhanced image with the degraded low-light input via windowed cross-attention and estimates PSNR through heteroscedastic regression."
+    },
+    {
+      "artifact_id": "art_7f2946150b81956f1fedc89b",
+      "artifact_refs": [
+        "art_7f2946150b81956f1fedc89b"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2607.29253",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-cbct",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-08",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_0dd52a011b073534240e6b9871fe0a2f48ba5a93a3b8399296c08950d392550a",
+      "source_id": "source-a2-cbct",
+      "stance": "support",
+      "step_id": "step-source-08",
+      "task_id": "task-source-08",
+      "text": "Three clinical experts graded the overall image quality and a predefined regions of interest (ROI) using a four-level scoring scheme."
+    },
+    {
+      "artifact_id": "art_e8c86ed5bcadf1d988fd9029",
+      "artifact_refs": [
+        "art_e8c86ed5bcadf1d988fd9029"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2608.01301",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-lpifm",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-09",
+      "locator": {
+        "section": "arXiv Atom entry: title, published, updated and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_3fe9b0dc623910b0fc1f25cd34a6349143998ecc20b78c4e436b89d6091e385d",
+      "source_id": "source-a2-lpifm",
+      "stance": "support",
+      "step_id": "step-source-09",
+      "task_id": "task-source-09",
+      "text": "LPIFM jointly observes the two sources and two fused candidates and predicts whether A is better, B is better, or the two are perceptually equivalent."
+    },
+    {
+      "artifact_id": "art_135045e003ad989cf1f84a92",
+      "artifact_refs": [
+        "art_135045e003ad989cf1f84a92"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2608.02549",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-ssim",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-10",
+      "locator": {
+        "section": "arXiv Atom entry: published, updated and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_16ae4d690eb9a01c7c5b77000a7c29d58cfc22c8804acbb5aad0ea8432060eb3",
+      "source_id": "source-a2-ssim",
+      "stance": "support",
+      "step_id": "step-source-10",
+      "task_id": "task-source-10",
+      "text": "we propose two approaches to approximate local MSE by redistributing the global MSE using variance or standard-deviation-based weighting."
+    },
+    {
+      "artifact_id": "art_72b0b01df3733c8f07b9937e",
+      "artifact_refs": [
+        "art_72b0b01df3733c8f07b9937e"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2608.13989",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-sharpness",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-11",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_85314cfe8a8d01bf5bec18776ae06db742a57f18967478600024d7dd0ac43b0d",
+      "source_id": "source-a2-sharpness",
+      "stance": "support",
+      "step_id": "step-source-11",
+      "task_id": "task-source-11",
+      "text": "67% of binarized comparisons, as opposed to losses that do not explicitly target sharpness."
+    },
+    {
+      "artifact_id": "art_211ea56ee0aab2380ffdd30b",
+      "artifact_refs": [
+        "art_211ea56ee0aab2380ffdd30b"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2608.20713",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-agidefect",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-12",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_375a27126731c16aa04cfdcf7ec92a0414dc91604be15b2da61e7739d17ada43",
+      "source_id": "source-a2-agidefect",
+      "stance": "support",
+      "step_id": "step-source-12",
+      "task_id": "task-source-12",
+      "text": "AGIDefect-4K features hierarchical defect annotations: (1) detection labels identifying whether defects exist, (2) pixel-level segmentation masks localizing defective regions, and (3) detailed textual explanations characterizing defect types and their perceptual impact."
+    },
+    {
+      "artifact_id": "art_3906292770d93ce74a3b0f98",
+      "artifact_refs": [
+        "art_3906292770d93ce74a3b0f98"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2509.26006",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-agenticiqa",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-13",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_e77c5a3785d162fb4954edab6bacc199eb48658ae4810257cc86a5f334ced005",
+      "source_id": "source-a2-agenticiqa",
+      "stance": "support",
+      "step_id": "step-source-13",
+      "task_id": "task-source-13",
+      "text": "AgenticIQA decomposes IQA into four subtasks -- distortion detection, distortion analysis, tool selection, and tool execution -- coordinated by a planner, executor, and summarizer."
+    },
+    {
+      "artifact_id": "art_53823d45bdf8105b68a45bc8",
+      "artifact_refs": [
+        "art_53823d45bdf8105b68a45bc8"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2606.03005",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-muse",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-14",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_9b459fb2da6616e3970235f134d8aa200e428cce93013d8f4c683d195e663622",
+      "source_id": "source-a2-muse",
+      "stance": "support",
+      "step_id": "step-source-14",
+      "task_id": "task-source-14",
+      "text": "We introduce MUSE, a multimodal unified structured execution harness that wraps any off-the-shelf MLLM with composable modules"
+    },
+    {
+      "artifact_id": "art_13396799ae5469716cb612e8",
+      "artifact_refs": [
+        "art_13396799ae5469716cb612e8"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2606.16082",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-tooliqa",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-15",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_1bd074c3aaa82d9d38f092f2f1973e013ececcad406b66e1ddacf63c38d9422f",
+      "source_id": "source-a2-tooliqa",
+      "stance": "support",
+      "step_id": "step-source-15",
+      "task_id": "task-source-15",
+      "text": "Tool-IQA, shifting the assessment mechanism from passive scoring to a tool-augmented workflow."
+    },
+    {
+      "artifact_id": "art_f5ebddb5a8c3ba1fc591b2db",
+      "artifact_refs": [
+        "art_f5ebddb5a8c3ba1fc591b2db"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2607.12375",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-iqat1",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-16",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_78c1950b04511a91b253eb0d4071fbedb3d7516c30a80df7cbeba40197094723",
+      "source_id": "source-a2-iqat1",
+      "stance": "support",
+      "step_id": "step-source-16",
+      "task_id": "task-source-16",
+      "text": "We propose IQA-T1, a tool-based visual evidence reasoning framework that augments MLLM reasoning with explicit perceptual observations."
+    },
+    {
+      "artifact_id": "art_e076ae72caec4a1f4b428476",
+      "artifact_refs": [
+        "art_e076ae72caec4a1f4b428476"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2608.04567",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-strive",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-17",
+      "locator": {
+        "section": "arXiv abstract page title; correction of the unsupported IQA candidate",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_71c1ad204124b5f4df9518bff1229ac966626d6f83e18487b313c352caa37228",
+      "source_id": "source-a2-strive",
+      "stance": "support",
+      "step_id": "step-source-17",
+      "task_id": "task-source-17",
+      "text": "# Title:STRIVE: Probing Reasoning Limits in Graded Plausibility Generation and Evaluation"
+    }
+  ],
+  "evidence_mining_tasks": [
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_45b9532998b98dc6d6321cb4"
+      ],
+      "artifact_refs": [
+        "art_45b9532998b98dc6d6321cb4"
+      ],
+      "claim_spec_id": "claim-a2-window-record",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_84e7ec880bee52795fc31cab"
+      ],
+      "artifact_refs": [
+        "art_84e7ec880bee52795fc31cab"
+      ],
+      "claim_spec_id": "claim-a2-scifigqual",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_280e990cf84f37615207358a"
+      ],
+      "artifact_refs": [
+        "art_280e990cf84f37615207358a"
+      ],
+      "claim_spec_id": "claim-a2-mriqa2",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_0f40b9c290dbbaec8c2a4ff0"
+      ],
+      "artifact_refs": [
+        "art_0f40b9c290dbbaec8c2a4ff0"
+      ],
+      "claim_spec_id": "claim-a2-lge-mri",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_fb0e510fd6912221e4509fdd"
+      ],
+      "artifact_refs": [
+        "art_fb0e510fd6912221e4509fdd"
+      ],
+      "claim_spec_id": "claim-a2-miescore",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-05",
+      "task_id": "task-source-05",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_39682afa9165b45343af40a1"
+      ],
+      "artifact_refs": [
+        "art_39682afa9165b45343af40a1"
+      ],
+      "claim_spec_id": "claim-a2-cxr",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_8ccd4b1df0b40390416ad3de"
+      ],
+      "artifact_refs": [
+        "art_8ccd4b1df0b40390416ad3de"
+      ],
+      "claim_spec_id": "claim-a2-blindpsnr",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_7f2946150b81956f1fedc89b"
+      ],
+      "artifact_refs": [
+        "art_7f2946150b81956f1fedc89b"
+      ],
+      "claim_spec_id": "claim-a2-cbct",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-08",
+      "task_id": "task-source-08",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_e8c86ed5bcadf1d988fd9029"
+      ],
+      "artifact_refs": [
+        "art_e8c86ed5bcadf1d988fd9029"
+      ],
+      "claim_spec_id": "claim-a2-lpifm",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-09",
+      "task_id": "task-source-09",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_135045e003ad989cf1f84a92"
+      ],
+      "artifact_refs": [
+        "art_135045e003ad989cf1f84a92"
+      ],
+      "claim_spec_id": "claim-a2-ssim",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-10",
+      "task_id": "task-source-10",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_72b0b01df3733c8f07b9937e"
+      ],
+      "artifact_refs": [
+        "art_72b0b01df3733c8f07b9937e"
+      ],
+      "claim_spec_id": "claim-a2-sharpness",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-11",
+      "task_id": "task-source-11",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_211ea56ee0aab2380ffdd30b"
+      ],
+      "artifact_refs": [
+        "art_211ea56ee0aab2380ffdd30b"
+      ],
+      "claim_spec_id": "claim-a2-agidefect",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-12",
+      "task_id": "task-source-12",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_3906292770d93ce74a3b0f98"
+      ],
+      "artifact_refs": [
+        "art_3906292770d93ce74a3b0f98"
+      ],
+      "claim_spec_id": "claim-a2-agenticiqa",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-13",
+      "task_id": "task-source-13",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_53823d45bdf8105b68a45bc8"
+      ],
+      "artifact_refs": [
+        "art_53823d45bdf8105b68a45bc8"
+      ],
+      "claim_spec_id": "claim-a2-muse",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-14",
+      "task_id": "task-source-14",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_13396799ae5469716cb612e8"
+      ],
+      "artifact_refs": [
+        "art_13396799ae5469716cb612e8"
+      ],
+      "claim_spec_id": "claim-a2-tooliqa",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-15",
+      "task_id": "task-source-15",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_f5ebddb5a8c3ba1fc591b2db"
+      ],
+      "artifact_refs": [
+        "art_f5ebddb5a8c3ba1fc591b2db"
+      ],
+      "claim_spec_id": "claim-a2-iqat1",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-16",
+      "task_id": "task-source-16",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_e076ae72caec4a1f4b428476"
+      ],
+      "artifact_refs": [
+        "art_e076ae72caec4a1f4b428476"
+      ],
+      "claim_spec_id": "claim-a2-strive",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-17",
+      "task_id": "task-source-17",
+      "user_constraints": {}
+    }
+  ],
+  "key_source_proposals": [],
+  "run": {
+    "artifact_index_ref": "artifacts.jsonl",
+    "attempts": [
+      {
+        "artifact_refs": [
+          "art_45b9532998b98dc6d6321cb4"
+        ],
+        "attempt_id": "attempt-source-01",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-candidates.json",
+          "locator_label": "arXiv Atom candidate-set response and published fields"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-01",
+        "task_id": "task-source-01",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_84e7ec880bee52795fc31cab"
+        ],
+        "attempt_id": "attempt-source-02",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-candidates.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-02",
+        "task_id": "task-source-02",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_280e990cf84f37615207358a"
+        ],
+        "attempt_id": "attempt-source-03",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-candidates.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-03",
+        "task_id": "task-source-03",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_0f40b9c290dbbaec8c2a4ff0"
+        ],
+        "attempt_id": "attempt-source-04",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-candidates.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-04",
+        "task_id": "task-source-04",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_fb0e510fd6912221e4509fdd"
+        ],
+        "attempt_id": "attempt-source-05",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-secondary.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-05",
+        "task_id": "task-source-05",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_39682afa9165b45343af40a1"
+        ],
+        "attempt_id": "attempt-source-06",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-candidates.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-06",
+        "task_id": "task-source-06",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_8ccd4b1df0b40390416ad3de"
+        ],
+        "attempt_id": "attempt-source-07",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-secondary.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-07",
+        "task_id": "task-source-07",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_7f2946150b81956f1fedc89b"
+        ],
+        "attempt_id": "attempt-source-08",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-candidates.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-08",
+        "task_id": "task-source-08",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_e8c86ed5bcadf1d988fd9029"
+        ],
+        "attempt_id": "attempt-source-09",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-candidates.json",
+          "locator_label": "arXiv Atom entry: title, published, updated and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-09",
+        "task_id": "task-source-09",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_135045e003ad989cf1f84a92"
+        ],
+        "attempt_id": "attempt-source-10",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-secondary.json",
+          "locator_label": "arXiv Atom entry: published, updated and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-10",
+        "task_id": "task-source-10",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_72b0b01df3733c8f07b9937e"
+        ],
+        "attempt_id": "attempt-source-11",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-secondary.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-11",
+        "task_id": "task-source-11",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_211ea56ee0aab2380ffdd30b"
+        ],
+        "attempt_id": "attempt-source-12",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-candidates.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-12",
+        "task_id": "task-source-12",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_3906292770d93ce74a3b0f98"
+        ],
+        "attempt_id": "attempt-source-13",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-agentic-outside-window.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-13",
+        "task_id": "task-source-13",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_53823d45bdf8105b68a45bc8"
+        ],
+        "attempt_id": "attempt-source-14",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-agentic-outside-window.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-14",
+        "task_id": "task-source-14",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_13396799ae5469716cb612e8"
+        ],
+        "attempt_id": "attempt-source-15",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-candidates.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-15",
+        "task_id": "task-source-15",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_f5ebddb5a8c3ba1fc591b2db"
+        ],
+        "attempt_id": "attempt-source-16",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-arxiv-api-candidates.json",
+          "locator_label": "arXiv Atom entry: published and summary"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-16",
+        "task_id": "task-source-16",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_e076ae72caec4a1f4b428476"
+        ],
+        "attempt_id": "attempt-source-17",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/fetch-hallucinated-agent-iqa.json",
+          "locator_label": "arXiv abstract page title; correction of the unsupported IQA candidate"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-17",
+        "task_id": "task-source-17",
+        "usage": {}
+      }
+    ],
+    "candidate_summary": {},
+    "capability_observed_at": "2026-08-26T00:00:00Z",
+    "capability_snapshot": {
+      "evidence_migration": {
+        "providers": [
+          {
+            "configured": true,
+            "entitled": true,
+            "name": "saved-acceptance-artifacts",
+            "reachable": true
+          }
+        ],
+        "tools": [
+          "document"
+        ]
+      }
+    },
+    "claims": [
+      {
+        "claim_spec_id": "claim-a2-window-record",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "按 arXiv 官方 Atom 的 published 字段判定首次 arXiv 公开日期，窗口内确认了 11 项与静态图像质量评估直接相关或紧邻的工作；在给定来源范围内没有核验到原文明确自称 multi-agent IQA 的窗口内新论文。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-scifigqual",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "SciFigQual-Bench 使用全文上下文和 6,308 幅图的五维专家标注，并提出 staged cross-modal SFQ-Agent 收集与融合模态证据，属于 agentic/workflow 型 IQA，但不能据此直接称为 multi-agent。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-mriqa2",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "MR-IQA-2 采用 actor-editor-judge 的 reasoning-editing-reflection，并用图像编辑与冻结 judge 为推理提供反思监督；它属于多组件、多阶段视觉反思，不直接等于 multi-agent。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-lge-mri",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "LGE-MRI 工作采用 two-stage VLM 流程：第一阶段生成五项 radiology-style 质量报告，第二阶段生成结构化质量分数和临床可用性二分类，并使用 20 名患者的 60 个 image slice-text pairs。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-miescore",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "MIEScore 面向多源图像编辑质量，建立 MIE-Bench，并在摘要中给出 3,000 个 editing instances、16 个任务、36K 张编辑图和超过 108K 个 MOS；摘要没有表明在线工具调用或多 Agent 协作。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-cxr",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "Chest X-ray 工作研究 evaluation reference 如何改变性能估计和模型排序，并指出 SSIM、PSNR 等 IQA 指标可能与专家诊断可用性判断不一致。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-blindpsnr",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "BlindPSNR 在无 ground-truth 时预测低光增强结果的 PSNR，通过 windowed cross-attention 融合增强图与低光输入，并用 heteroscedastic regression 估计 PSNR；它属于 signal fidelity assessment 边界。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-cbct",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "CBCT-IQ 发布 1,764 个专家标注切片，三名临床专家使用四级量表评价整体与 ROI 质量，并比较 26 个 full-reference/no-reference IQA measures。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-lpifm",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "LPIFM 观察两幅源图和两个融合候选，预测 A、B 或 Tie；数据覆盖 21 个 VIFB 场景、25 个 fusion methods 的 6,300 个无序比较，并按 published 2026-08-02 而非 updated 2026-08-07 纳入。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-ssim",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "SSIM-from-MSE 工作用 reference image 的 local statistics 按 variance 或 standard-deviation weighting 重分配 global MSE，以近似 local MSE 和 SSIM；其 published 为 2026-08-03，updated 为 2026-08-19。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-sharpness",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "Sharpness Informed IQA 工作通过四协议主观实验提出包括 SI-PSNR 在内的指标，并报告 sharpness-aware loss 的图像在二值比较中平均有 67% 获得偏好。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-agidefect",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "AGIDefect-4K 提供来自 15 个生成模型的 4,000 张图像，包含缺陷检测标签、像素级掩码、文本解释和 overall quality score，并提出基于 MLLM 的 AGIDA。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-agenticiqa",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "AgenticIQA 首次 arXiv 日期为 2025-09-30，将 IQA 拆为 distortion detection、distortion analysis、tool selection 和 tool execution，由 planner、executor、summarizer 协调，因此是窗口外的 agentic IQA 背景。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-muse",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "MUSE 首次 arXiv 日期为 2026-06-02，以可组合模块封装现成 MLLM，覆盖视觉处理、感知工具、结构化解析、确定性验证和 verifier-guided repair，且不重新训练模型；它是通用 agentic harness 而非窗口内新 IQA 论文。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-tooliqa",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "Tool-IQA 首次 arXiv 日期为 2026-06-15，使用 Magnifier 和 Gamma Corrector，并将 IQA 组织成 observation、tool-assisted inspection 和 final quantification 的 tool-augmented workflow。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-iqat1",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "IQA-T1 首次 arXiv 日期为 2026-07-14，让 MLLM 调用工具生成 noise residual maps、gradient statistics 和 frequency spectra，并用 Q-Tool 保存 11k 条基于工具证据的多模态推理链；它早于窗口起点。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a2-strive",
+        "decision_criteria": [],
+        "run_id": "run-transient-a2-20260826",
+        "schema_version": "1",
+        "statement": "arXiv:2608.04567 的官方记录实际对应 STRIVE: Probing Reasoning Limits in Graded Plausibility Generation and Evaluation，属于 Computation and Language，不是 IQA 论文，因此剔除 AGENT-IQA 候选。",
+        "terms_scope": {},
+        "time_boundary": {}
+      }
+    ],
+    "delegate_refs": [
+      "delegate_ac7c6b129a50a90db01f8f2b",
+      "delegate_45bdaf3e168687aba8175a28",
+      "delegate_da89abc6c1b910037a4fa522",
+      "delegate_62a8819169fa93185794967f",
+      "delegate_e675234fea5e00a8e3945344",
+      "delegate_efdf112f8d443cb094d1a125",
+      "delegate_fe0b076d1b68b4c16bda2d20",
+      "delegate_9e47364fd0e9737a5bcce9cc",
+      "delegate_f2560b43ddc2e568bfa5c6ba",
+      "delegate_7211f7d14b3a8bd016d921fd",
+      "delegate_6b88e9712776ebf8b4135144",
+      "delegate_12ce21307187bdc917ab926f",
+      "delegate_a831edefe9182c20ed41421a",
+      "delegate_1e2e2cb56ffba6b5400e5d91",
+      "delegate_fefe0a5bc5282a3a9d632e52",
+      "delegate_55556719ccb66f24044c0267",
+      "delegate_cba46edfb3b52402c67dd575"
+    ],
+    "evidence_gaps": [],
+    "frame": {
+      "mode": "standard",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "question": "在 2026-07-28 至 2026-08-26 的窗口内，哪些首次公开的静态图像质量评估工作与 Agentic IQA、workflow、tool-augmented、multi-stage 或 multi-agent 方向相关？哪些工作值得继续跟进，哪些应排除？",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "scope": {
+        "migration_commit": "f3a30d4eab2dee4656e0fbdfc020f490f4fa8594",
+        "source": "sanitized transient-search acceptance evidence"
+      },
+      "source_preferences": [],
+      "time_boundary": {},
+      "untrusted_content_policy": "treat_as_data",
+      "user_constraints": {
+        "direct_sources_only": true,
+        "no_live_search": true,
+        "preserve_original_acceptance_archive": true
+      }
+    },
+    "root_next_decision": "",
+    "run_id": "run-transient-a2-20260826",
+    "schema_version": "1",
+    "stop_reason": "Existing accepted evidence was migrated and all displayed citations were verified.",
+    "task_refs": [
+      "task-source-01",
+      "task-source-02",
+      "task-source-03",
+      "task-source-04",
+      "task-source-05",
+      "task-source-06",
+      "task-source-07",
+      "task-source-08",
+      "task-source-09",
+      "task-source-10",
+      "task-source-11",
+      "task-source-12",
+      "task-source-13",
+      "task-source-14",
+      "task-source-15",
+      "task-source-16",
+      "task-source-17"
+    ],
+    "trace_ref": "trace.jsonl"
+  },
+  "schema_version": "1",
+  "search_tasks": []
+}

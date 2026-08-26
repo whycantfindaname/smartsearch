@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_74383003be613afa4cc3b795"
+      ],
+      "attempt_id": "attempt-source-05",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "fetch-dream-arxiv.json",
+        "locator_label": "Section 3.2 Workflow Evaluator, Citation Integrity"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-05",
+      "task_id": "task-source-05",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_74383003be613afa4cc3b795",
+      "artifact_refs": [
+        "art_74383003be613afa4cc3b795"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-verification-pipelines",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-05",
+      "locator": {
+        "section": "Section 3.2 Workflow Evaluator, Citation Integrity",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_c6d632acf069b7e664f6c09d9fd16b84968bc8ec224097411813bf570fe9b10c",
+      "source_id": "source-a4-dream-verification-pipelines",
+      "stance": "support",
+      "step_id": "step-source-05",
+      "task_id": "task-source-05",
+      "text": "the system computes the harmonic mean of *Claim Attribution* (the ratio of cited to total verifiable claims) and *Citation Faithfulness* (the alignment of cited claims with their source content)"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-05"
+}

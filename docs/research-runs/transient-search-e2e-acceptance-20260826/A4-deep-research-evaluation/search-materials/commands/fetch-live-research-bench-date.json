@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "url": "https://export.arxiv.org/api/query?id_list=2510.14240",
+  "provider": "tavily",
+  "content": " https://arxiv.org/api/p0Zvn3UtjViKjCvNpwb2gVRSUT0 arXiv Query: search\\_query=&id\\_list=2510.14240&start=0&max\\_results=10 2026-08-26T14:58:21Z 10 1 0  http://arxiv.org/abs/2510.14240v5 LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild 2026-04-18T20:15:08Z Deep research -- producing comprehensive, citation-grounded reports by searching and synthesizing information from hundreds of live web sources -- marks an important frontier for agentic systems. To rigorously evaluate this ability, four principles are essential: tasks should be (1) user-centric, reflecting realistic information needs, (2) dynamic, requiring up-to-date information beyond parametric knowledge, (3) unambiguous, ensuring consistent interpretation across users, and (4) multi-faceted and search-intensive, requiring search over numerous web sources and in-depth analysis. Existing benchmarks fall short of these principles, often focusing on narrow domains or posing ambiguous questions that hinder fair comparison. Guided by these principles, we introduce LiveResearchBench, a benchmark of 100 expert-curated tasks spanning daily life, enterprise, and academia, each requiring extensive, dynamic, real-time web search and synthesis. Built with over 1,500 hours of human labor, LiveResearchBench provides a rigorous basis for systematic evaluation. To evaluate citation-grounded long-form reports, we introduce DeepEval, a comprehensive suite covering both content- and report-level quality, including coverage, presentation, citation accuracy and association, consistency and depth of analysis. DeepEval integrates four complementary evaluation protocols, each designed to ensure stable assessment and high agreement with human judgments. Using LiveResearchBench and DeepEval, we conduct a comprehensive evaluation of 17 frontier deep research systems, including single-agent web search, single-agent deep research, and multi-agent systems. Our analysis reveals current strengths, recurring failure modes, and key system components needed to advance reliable, insightful deep research. Our code is available at: https://github.com/SalesforceAIResearch/LiveResearchBench. 2025-10-16T02:49:16Z Accepted to ICLR 2026  Jiayu Wang   Yifei Ming   Riya Dulepet   Qinglin Chen   Austin Xu   Zixuan Ke   Frederic Sala   Aws Albarghouthi   Caiming Xiong   Shafiq Joty    ",
+  "provider_attempts": [
+    {
+      "capability": "web_fetch",
+      "provider": "tavily",
+      "status": "ok",
+      "error_type": "",
+      "error": "",
+      "elapsed_ms": 1260.55,
+      "result_count": 1
+    }
+  ],
+  "fallback_used": false,
+  "elapsed_ms": 1260.78
+}

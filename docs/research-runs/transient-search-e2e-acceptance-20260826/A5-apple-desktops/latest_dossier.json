@@ -1,0 +1,615 @@
+{
+  "candidate_cards": [],
+  "candidates": [],
+  "claim_records": [
+    {
+      "citation_map": {
+        "a5-mini-newsroom": "evidence-source-01"
+      },
+      "claim_record_id": "record-claim-a5-mini-newsroom",
+      "claim_spec_id": "claim-a5-mini-newsroom",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "statement": "在本报告截至 2026-08-26 的时间边界内，Apple 于 2026-08-25 公布的 Mac mini 产品线包含 M6 与 M5 Pro，并将其定位为可服务家庭、专业 studio 和常驻式 agentic computing 的多用途桌面，同时给出 U.S. 起售价。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-01"
+      ]
+    },
+    {
+      "citation_map": {
+        "a5-mini-specs": "evidence-source-02"
+      },
+      "claim_record_id": "record-claim-a5-mini-specs",
+      "claim_spec_id": "claim-a5-mini-specs",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "statement": "Apple Mac mini Technical Specifications 列出 M6 与 M5 Pro 的芯片、unified memory、最多三台外接显示器、Connections and Expansion 以及尺寸重量边界。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-02"
+      ]
+    },
+    {
+      "citation_map": {
+        "a5-studio-newsroom": "evidence-source-03"
+      },
+      "claim_record_id": "record-claim-a5-studio-newsroom",
+      "claim_spec_id": "claim-a5-studio-newsroom",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "statement": "在本报告截至 2026-08-26 的时间边界内，Apple 于 2026-08-25 公布的 Mac Studio 产品线包含 M5 Max 与 M5 Ultra，并将其定位为面向 on-device AI 和最极端专业工作流的桌面，同时给出 U.S. 起售价。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-03"
+      ]
+    },
+    {
+      "citation_map": {
+        "a5-studio-specs": "evidence-source-04"
+      },
+      "claim_record_id": "record-claim-a5-studio-specs",
+      "claim_spec_id": "claim-a5-studio-specs",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "statement": "Apple Mac Studio Technical Specifications 列出 M5 Max 与 M5 Ultra 的芯片、unified memory、最多五台或八台外接显示器、Thunderbolt 5 与其他 Connections and Expansion 以及尺寸重量边界。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-04"
+      ]
+    }
+  ],
+  "delegate_requests": [
+    {
+      "artifact_refs": [
+        "art_9a75c92dc05a0ccff182a9cf"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_9a75c92dc05a0ccff182a9cf"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_ebc636086ddcbe8998869169",
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-01",
+      "step_id": "step-source-01",
+      "target": "evidence_miner",
+      "task_id": "task-source-01"
+    },
+    {
+      "artifact_refs": [
+        "art_d532bc06cc8452943d276a5e"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_d532bc06cc8452943d276a5e"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_98697998f321838453f3c07d",
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-02",
+      "step_id": "step-source-02",
+      "target": "evidence_miner",
+      "task_id": "task-source-02"
+    },
+    {
+      "artifact_refs": [
+        "art_6da17cc42c941490f8db657f"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_6da17cc42c941490f8db657f"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_acebbcab05231a4c284d9c10",
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-03",
+      "step_id": "step-source-03",
+      "target": "evidence_miner",
+      "task_id": "task-source-03"
+    },
+    {
+      "artifact_refs": [
+        "art_6d64236092880041447af3ad"
+      ],
+      "attempt_no": 1,
+      "input_artifact_ids": [
+        "art_6d64236092880041447af3ad"
+      ],
+      "output_schema": "evidence_items",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "request_id": "delegate_bccecf1e9bc3ba2b9331daa7",
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "source_task_id": "task-source-04",
+      "step_id": "step-source-04",
+      "target": "evidence_miner",
+      "task_id": "task-source-04"
+    }
+  ],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_9a75c92dc05a0ccff182a9cf",
+      "artifact_refs": [
+        "art_9a75c92dc05a0ccff182a9cf"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-unveils-a-more-powerful-mac-mini-featuring-the-all-new-m6-and-m5-pro/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a5-mini-newsroom",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-01",
+      "locator": {
+        "section": "page date; Mac mini with the All-New M6; Mac mini with M5 Pro; Best-in-Class Connectivity; Pricing and Availability",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_c623ccfc54446185042ffc2bfc62c9cd2a393405215aa104baea8fabfd66f2cf",
+      "source_id": "source-a5-mini-newsroom",
+      "stance": "support",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "text": "CUPERTINO, CALIFORNIAApple today announced the new[Mac mini](https://www.apple.com/mac-mini/)with the all-new M6 and powerful M5 Pro, delivering a dramatic boost in performance and even more versatility in its supersmall desktop design."
+    },
+    {
+      "artifact_id": "art_d532bc06cc8452943d276a5e",
+      "artifact_refs": [
+        "art_d532bc06cc8452943d276a5e"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://www.apple.com/mac-mini/specs/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a5-mini-specs",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-02",
+      "locator": {
+        "section": "Chip; Memory; Display Support; Connections and Expansion; Size and Weight",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_e91a8e0a67a01484e5754600bffe221350057fd4dd8dc34b52be1c591008d1a9",
+      "source_id": "source-a5-mini-specs",
+      "stance": "support",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "text": "Supports up to three external displays using Thunderbolt and HDMI ports:"
+    },
+    {
+      "artifact_id": "art_6da17cc42c941490f8db657f",
+      "artifact_refs": [
+        "art_6da17cc42c941490f8db657f"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a5-studio-newsroom",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-03",
+      "locator": {
+        "section": "page date; Mac Studio with M5 Max; Mac Studio with M5 Ultra; Blazing-Fast Storage and Pro Connectivity; Pricing and Availability",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_d52fd61364f3a4ed00eed709ae5b9c91f27884a64c6b45ab647daad01b8cdb3c",
+      "source_id": "source-a5-studio-newsroom",
+      "stance": "support",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "text": "CUPERTINO, CALIFORNIAApple today announced the new[Mac Studio](https://www.apple.com/mac-studio/), featuring M5 Max and the all-new M5 Ultra, delivering a monumental leap in AI performance and even faster graphics for the most demanding pro workflows"
+    },
+    {
+      "artifact_id": "art_6d64236092880041447af3ad",
+      "artifact_refs": [
+        "art_6d64236092880041447af3ad"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://www.apple.com/mac-studio/specs/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a5-studio-specs",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-04",
+      "locator": {
+        "section": "Chip; Memory; Display Support; Connections and Expansion; Size and Weight",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_c32705742bac0c2a43a2a4e8eec0df84d63d876ef311a68ecacfe0998b7f2cf2",
+      "source_id": "source-a5-studio-specs",
+      "stance": "support",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "text": "Supports up to eight external displays over any combination of Thunderbolt and HDMI ports:"
+    }
+  ],
+  "evidence_mining_tasks": [
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_9a75c92dc05a0ccff182a9cf"
+      ],
+      "artifact_refs": [
+        "art_9a75c92dc05a0ccff182a9cf"
+      ],
+      "claim_spec_id": "claim-a5-mini-newsroom",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_d532bc06cc8452943d276a5e"
+      ],
+      "artifact_refs": [
+        "art_d532bc06cc8452943d276a5e"
+      ],
+      "claim_spec_id": "claim-a5-mini-specs",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_6da17cc42c941490f8db657f"
+      ],
+      "artifact_refs": [
+        "art_6da17cc42c941490f8db657f"
+      ],
+      "claim_spec_id": "claim-a5-studio-newsroom",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "user_constraints": {}
+    },
+    {
+      "allowed_tools": [
+        "grep",
+        "navigate",
+        "open",
+        "read",
+        "search"
+      ],
+      "artifact_ids": [
+        "art_6d64236092880041447af3ad"
+      ],
+      "artifact_refs": [
+        "art_6d64236092880041447af3ad"
+      ],
+      "claim_spec_id": "claim-a5-studio-specs",
+      "expected_output": "evidence_items",
+      "platform_constraints": {},
+      "read_locators": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "user_constraints": {}
+    }
+  ],
+  "key_source_proposals": [],
+  "run": {
+    "artifact_index_ref": "artifacts.jsonl",
+    "attempts": [
+      {
+        "artifact_refs": [
+          "art_9a75c92dc05a0ccff182a9cf"
+        ],
+        "attempt_id": "attempt-source-01",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/mac-mini-newsroom-compat.json",
+          "locator_label": "page date; Mac mini with the All-New M6; Mac mini with M5 Pro; Best-in-Class Connectivity; Pricing and Availability"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a5-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-01",
+        "task_id": "task-source-01",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_d532bc06cc8452943d276a5e"
+        ],
+        "attempt_id": "attempt-source-02",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/mac-mini-specs-compat.json",
+          "locator_label": "Chip; Memory; Display Support; Connections and Expansion; Size and Weight"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a5-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-02",
+        "task_id": "task-source-02",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_6da17cc42c941490f8db657f"
+        ],
+        "attempt_id": "attempt-source-03",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/mac-studio-newsroom-compat.json",
+          "locator_label": "page date; Mac Studio with M5 Max; Mac Studio with M5 Ultra; Blazing-Fast Storage and Pro Connectivity; Pricing and Availability"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a5-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-03",
+        "task_id": "task-source-03",
+        "usage": {}
+      },
+      {
+        "artifact_refs": [
+          "art_6d64236092880041447af3ad"
+        ],
+        "attempt_id": "attempt-source-04",
+        "attempt_no": 1,
+        "capability": "evidence_migration",
+        "completed_at": "2026-08-26T00:00:00Z",
+        "deadline_at": "",
+        "degraded_reason": "",
+        "error": "",
+        "execution_kind": "project_agent",
+        "external_state": {},
+        "provider": "saved-acceptance-artifacts",
+        "request_summary": {
+          "command_file": "commands/mac-studio-specs-compat.json",
+          "locator_label": "Chip; Memory; Display Support; Connections and Expansion; Size and Weight"
+        },
+        "retry_safe": false,
+        "run_id": "run-transient-a5-20260826",
+        "schema_version": "1",
+        "started_at": "",
+        "status": "success",
+        "step_id": "step-source-04",
+        "task_id": "task-source-04",
+        "usage": {}
+      }
+    ],
+    "candidate_summary": {},
+    "capability_observed_at": "2026-08-26T00:00:00Z",
+    "capability_snapshot": {
+      "evidence_migration": {
+        "providers": [
+          {
+            "configured": true,
+            "entitled": true,
+            "name": "saved-acceptance-artifacts",
+            "reachable": true
+          }
+        ],
+        "tools": [
+          "document"
+        ]
+      }
+    },
+    "claims": [
+      {
+        "claim_spec_id": "claim-a5-mini-newsroom",
+        "decision_criteria": [],
+        "run_id": "run-transient-a5-20260826",
+        "schema_version": "1",
+        "statement": "在本报告截至 2026-08-26 的时间边界内，Apple 于 2026-08-25 公布的 Mac mini 产品线包含 M6 与 M5 Pro，并将其定位为可服务家庭、专业 studio 和常驻式 agentic computing 的多用途桌面，同时给出 U.S. 起售价。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a5-mini-specs",
+        "decision_criteria": [],
+        "run_id": "run-transient-a5-20260826",
+        "schema_version": "1",
+        "statement": "Apple Mac mini Technical Specifications 列出 M6 与 M5 Pro 的芯片、unified memory、最多三台外接显示器、Connections and Expansion 以及尺寸重量边界。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a5-studio-newsroom",
+        "decision_criteria": [],
+        "run_id": "run-transient-a5-20260826",
+        "schema_version": "1",
+        "statement": "在本报告截至 2026-08-26 的时间边界内，Apple 于 2026-08-25 公布的 Mac Studio 产品线包含 M5 Max 与 M5 Ultra，并将其定位为面向 on-device AI 和最极端专业工作流的桌面，同时给出 U.S. 起售价。",
+        "terms_scope": {},
+        "time_boundary": {}
+      },
+      {
+        "claim_spec_id": "claim-a5-studio-specs",
+        "decision_criteria": [],
+        "run_id": "run-transient-a5-20260826",
+        "schema_version": "1",
+        "statement": "Apple Mac Studio Technical Specifications 列出 M5 Max 与 M5 Ultra 的芯片、unified memory、最多五台或八台外接显示器、Thunderbolt 5 与其他 Connections and Expansion 以及尺寸重量边界。",
+        "terms_scope": {},
+        "time_boundary": {}
+      }
+    ],
+    "delegate_refs": [
+      "delegate_ebc636086ddcbe8998869169",
+      "delegate_98697998f321838453f3c07d",
+      "delegate_acebbcab05231a4c284d9c10",
+      "delegate_bccecf1e9bc3ba2b9331daa7"
+    ],
+    "evidence_gaps": [],
+    "frame": {
+      "mode": "standard",
+      "permissions": [
+        "public_web_saved_evidence"
+      ],
+      "question": "在 2026-08-26 的时间边界内，比较最新 Mac mini 与 Mac Studio 的芯片、unified memory、接口与扩展、外接显示器支持、尺寸重量和美国起售价，并区分 Apple 的产品定位与基于规格的比较判断。",
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "scope": {
+        "migration_commit": "f3a30d4eab2dee4656e0fbdfc020f490f4fa8594",
+        "source": "sanitized transient-search acceptance evidence"
+      },
+      "source_preferences": [],
+      "time_boundary": {},
+      "untrusted_content_policy": "treat_as_data",
+      "user_constraints": {
+        "direct_sources_only": true,
+        "no_live_search": true,
+        "preserve_original_acceptance_archive": true
+      }
+    },
+    "root_next_decision": "",
+    "run_id": "run-transient-a5-20260826",
+    "schema_version": "1",
+    "stop_reason": "Existing accepted evidence was migrated and all displayed citations were verified.",
+    "task_refs": [
+      "task-source-01",
+      "task-source-02",
+      "task-source-03",
+      "task-source-04"
+    ],
+    "trace_ref": "trace.jsonl"
+  },
+  "schema_version": "1",
+  "search_tasks": []
+}

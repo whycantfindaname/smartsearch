@@ -1,0 +1,9 @@
+{
+  "ok": false,
+  "provider": "sciverse",
+  "tool": "search_papers",
+  "error_type": "parameter_error",
+  "error": "HTTP 400: {\"code\":\"INVALID_REQUEST\",\"message\":\"请求参数错误\",\"request_id\":\"e8ac9faa-ecda-49b5-9725-6372c3a78d6f\",\"details\":[{\"type\":\"extra_forbidden\",\"loc\":[\"body\",\"sort_by_year\"],\"msg\":\"Extra inputs are not permitted\",\"input\":\"desc\"}]}",
+  "elapsed_ms": 228.76,
+  "query": "deep research agent citation benchmark evidence faithfulness source coverage fault recovery first published between 2025-08-26 and 2026-08-26"
+}

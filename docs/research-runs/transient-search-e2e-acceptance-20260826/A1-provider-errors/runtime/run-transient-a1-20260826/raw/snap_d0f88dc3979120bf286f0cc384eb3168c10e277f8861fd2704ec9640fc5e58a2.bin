@@ -1,0 +1,1 @@
+When you exceed the rate limit, the API returns a `429 Too Many Requests` response with a `retry-after` header indicating the number of seconds to wait before making another request.

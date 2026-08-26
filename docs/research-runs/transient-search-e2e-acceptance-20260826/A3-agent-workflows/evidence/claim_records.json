@@ -1,0 +1,97 @@
+{
+  "claim_records": [
+    {
+      "citation_map": {
+        "a3-langgraph-persistence": "evidence-source-06",
+        "a3-openai-sessions": "evidence-source-01",
+        "a3-pydantic-durable": "evidence-source-10"
+      },
+      "claim_record_id": "record-claim-a3-persistence",
+      "claim_spec_id": "claim-a3-persistence",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "statement": "三者的 durable state 边界不同：LangGraph 原生围绕 thread-scoped graph checkpoint；OpenAI Agents SDK 的 Session 与 RunState 分别覆盖对话历史和暂停审批；PydanticAI 把跨重启 durable execution 放在官方集成。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-01",
+        "evidence-source-06",
+        "evidence-source-10"
+      ]
+    },
+    {
+      "citation_map": {
+        "a3-langgraph-fault": "evidence-source-07",
+        "a3-openai-exceptions": "evidence-source-04",
+        "a3-openai-retry": "evidence-source-03",
+        "a3-pydantic-agent-api": "evidence-source-11",
+        "a3-pydantic-http-retries": "evidence-source-12"
+      },
+      "claim_record_id": "record-claim-a3-retry",
+      "claim_spec_id": "claim-a3-retry",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "statement": "三者将失败与重试放在不同层：OpenAI Agents SDK 关注 model request 的 replay safety，LangGraph 关注 node 级 retry 与错误路由，PydanticAI 分开处理 validation/tool retry 与 HTTP transport retry。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-03",
+        "evidence-source-04",
+        "evidence-source-07",
+        "evidence-source-11",
+        "evidence-source-12"
+      ]
+    },
+    {
+      "citation_map": {
+        "a3-langgraph-interrupts": "evidence-source-08",
+        "a3-openai-hitl": "evidence-source-02",
+        "a3-pydantic-deferred": "evidence-source-13"
+      },
+      "claim_record_id": "record-claim-a3-hitl",
+      "claim_spec_id": "claim-a3-hitl",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "statement": "三者的 human-in-the-loop 边界不同：OpenAI Agents SDK 围绕敏感 tool approval，LangGraph 允许在 node 中暂停并恢复 graph state，PydanticAI 用 Deferred Tools 表达审批与外部执行的 continuation。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-02",
+        "evidence-source-08",
+        "evidence-source-13"
+      ]
+    },
+    {
+      "citation_map": {
+        "a3-langgraph-observability": "evidence-source-09",
+        "a3-openai-tracing": "evidence-source-05",
+        "a3-pydantic-logfire": "evidence-source-14"
+      },
+      "claim_record_id": "record-claim-a3-observability",
+      "claim_spec_id": "claim-a3-observability",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "statement": "三者都能形成运行轨迹，但归属不同：OpenAI Agents SDK 默认启用 runner tracing，LangGraph 通过 LangSmith 接入，PydanticAI 提供可选的 OpenTelemetry/Logfire instrumentation。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-05",
+        "evidence-source-09",
+        "evidence-source-14"
+      ]
+    }
+  ],
+  "schema_version": "1"
+}

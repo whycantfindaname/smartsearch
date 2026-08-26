@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_791c0bc5f65640941599298d"
+      ],
+      "attempt_id": "attempt-source-06",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/13-exa-rate-limits.json",
+        "locator_label": "Default endpoint QPS table"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_791c0bc5f65640941599298d",
+      "artifact_refs": [
+        "art_791c0bc5f65640941599298d"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://exa.ai/docs/reference/rate-limits",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-exa-rate-limits",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-06",
+      "locator": {
+        "section": "Default endpoint QPS table",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_f7d21b3ece7dcb6c15929167462bb66f2ce252c1832c857048b72f8d32810510",
+      "source_id": "source-a1-exa-rate-limits",
+      "stance": "support",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "text": "| Endpoint | Limit |\n| --- | --- |\n| `/search` | 10 QPS\\* |\n| `/contents` | 100 QPS |"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-06"
+}

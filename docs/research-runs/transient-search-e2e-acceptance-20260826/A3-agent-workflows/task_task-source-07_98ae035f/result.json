@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_a7e3919632ff091c19b30162"
+      ],
+      "attempt_id": "attempt-source-07",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-langgraph-fault-tolerance.json",
+        "locator_label": "Retries; Parameters; Error handling; Route with Command"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_a7e3919632ff091c19b30162",
+      "artifact_refs": [
+        "art_a7e3919632ff091c19b30162"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://docs.langchain.com/oss/python/langgraph/fault-tolerance",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-retry",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-07",
+      "locator": {
+        "section": "Retries; Parameters; Error handling; Route with Command",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_e80cf9aae884824e41543b91036cc4b7da644b17c7fed9a0763646ff2259ac86",
+      "source_id": "source-a3-langgraph-fault",
+      "stance": "support",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "text": "Maximum number of attempts, including the first."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-07"
+}

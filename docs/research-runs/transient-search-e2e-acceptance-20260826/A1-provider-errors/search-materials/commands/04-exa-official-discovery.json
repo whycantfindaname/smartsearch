@@ -1,0 +1,73 @@
+{
+  "ok": true,
+  "query": "Exa API official errors rate limits retry documentation",
+  "search_type": "neural",
+  "results": [
+    {
+      "id": "https://exa.ai/docs/reference/error-codes",
+      "title": "",
+      "url": "https://exa.ai/docs/reference/error-codes",
+      "publishedDate": null,
+      "author": "",
+      "score": 1
+    },
+    {
+      "id": "https://exa.ai/docs/reference/search-api-guide",
+      "title": "",
+      "url": "https://exa.ai/docs/reference/search-api-guide",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.8571428571428572
+    },
+    {
+      "id": "https://exa.ai/docs/reference/rate-limits",
+      "title": "Rate Limits - Exa",
+      "url": "https://exa.ai/docs/reference/rate-limits",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.7142857142857143
+    },
+    {
+      "id": "https://exa.ai/docs/reference/agent-api-guide",
+      "title": "",
+      "url": "https://exa.ai/docs/reference/agent-api-guide",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.5714285714285714
+    },
+    {
+      "id": "https://exa.ai/docs/reference/search-api-guide-for-coding-agents",
+      "title": "",
+      "url": "https://exa.ai/docs/reference/search-api-guide-for-coding-agents",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.4285714285714286
+    },
+    {
+      "id": "https://exa.ai/docs/reference/search-best-practices",
+      "title": "",
+      "url": "https://exa.ai/docs/reference/search-best-practices",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.2857142857142857
+    },
+    {
+      "id": "https://exa.ai/pricing?tab=api",
+      "title": "Exa API Pricing | Pay-as-You-Go Plans for AI Search",
+      "url": "https://exa.ai/pricing?tab=api",
+      "publishedDate": null,
+      "author": "Exa Labs",
+      "score": 0.1428571428571429
+    },
+    {
+      "id": "https://exa.ai/docs/sdks/python-sdk-specification",
+      "title": "",
+      "url": "https://exa.ai/docs/sdks/python-sdk-specification",
+      "publishedDate": null,
+      "author": "",
+      "score": 0
+    }
+  ],
+  "total": 8,
+  "elapsed_ms": 460.58
+}

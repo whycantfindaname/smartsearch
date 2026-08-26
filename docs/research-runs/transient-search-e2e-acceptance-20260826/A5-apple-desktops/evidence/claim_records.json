@@ -1,0 +1,77 @@
+{
+  "claim_records": [
+    {
+      "citation_map": {
+        "a5-mini-newsroom": "evidence-source-01"
+      },
+      "claim_record_id": "record-claim-a5-mini-newsroom",
+      "claim_spec_id": "claim-a5-mini-newsroom",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "statement": "在本报告截至 2026-08-26 的时间边界内，Apple 于 2026-08-25 公布的 Mac mini 产品线包含 M6 与 M5 Pro，并将其定位为可服务家庭、专业 studio 和常驻式 agentic computing 的多用途桌面，同时给出 U.S. 起售价。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-01"
+      ]
+    },
+    {
+      "citation_map": {
+        "a5-mini-specs": "evidence-source-02"
+      },
+      "claim_record_id": "record-claim-a5-mini-specs",
+      "claim_spec_id": "claim-a5-mini-specs",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "statement": "Apple Mac mini Technical Specifications 列出 M6 与 M5 Pro 的芯片、unified memory、最多三台外接显示器、Connections and Expansion 以及尺寸重量边界。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-02"
+      ]
+    },
+    {
+      "citation_map": {
+        "a5-studio-newsroom": "evidence-source-03"
+      },
+      "claim_record_id": "record-claim-a5-studio-newsroom",
+      "claim_spec_id": "claim-a5-studio-newsroom",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "statement": "在本报告截至 2026-08-26 的时间边界内，Apple 于 2026-08-25 公布的 Mac Studio 产品线包含 M5 Max 与 M5 Ultra，并将其定位为面向 on-device AI 和最极端专业工作流的桌面，同时给出 U.S. 起售价。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-03"
+      ]
+    },
+    {
+      "citation_map": {
+        "a5-studio-specs": "evidence-source-04"
+      },
+      "claim_record_id": "record-claim-a5-studio-specs",
+      "claim_spec_id": "claim-a5-studio-specs",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "statement": "Apple Mac Studio Technical Specifications 列出 M5 Max 与 M5 Ultra 的芯片、unified memory、最多五台或八台外接显示器、Thunderbolt 5 与其他 Connections and Expansion 以及尺寸重量边界。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-04"
+      ]
+    }
+  ],
+  "schema_version": "1"
+}

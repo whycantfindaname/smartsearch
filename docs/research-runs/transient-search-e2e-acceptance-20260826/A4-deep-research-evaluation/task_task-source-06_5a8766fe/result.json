@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_e0107b871c3443ca463a92fc"
+      ],
+      "attempt_id": "attempt-source-06",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "fetch-dream-arxiv.json",
+        "locator_label": "Section 3.2 Workflow Evaluator, Factuality"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_e0107b871c3443ca463a92fc",
+      "artifact_refs": [
+        "art_e0107b871c3443ca463a92fc"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-factuality-independent",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-06",
+      "locator": {
+        "section": "Section 3.2 Workflow Evaluator, Factuality",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_15a2f0d6c2cbc8fe8c33b490aaa5901750e8c38f5afb478659ebd53d97893a35",
+      "source_id": "source-a4-dream-factuality-independent",
+      "stance": "support",
+      "step_id": "step-source-06",
+      "task_id": "task-source-06",
+      "text": "For Factuality, claims are extracted and evaluated independently of citations"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-06"
+}

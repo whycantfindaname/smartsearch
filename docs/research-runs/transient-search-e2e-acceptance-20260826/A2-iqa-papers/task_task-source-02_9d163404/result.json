@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_84e7ec880bee52795fc31cab"
+      ],
+      "attempt_id": "attempt-source-02",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-arxiv-api-candidates.json",
+        "locator_label": "arXiv Atom entry: published and summary"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_84e7ec880bee52795fc31cab",
+      "artifact_refs": [
+        "art_84e7ec880bee52795fc31cab"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2607.27084",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-scifigqual",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-02",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_7a24254451e16dba0433cebd37c82d5c4381d54f44e186644caec25eadc08e64",
+      "source_id": "source-a2-scifigqual",
+      "stance": "support",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "text": "we designed a staged cross-modal evaluation framework SFQ-Agent to achieve auditable and refined scoring through the collection and fusion of modal evidence."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-02"
+}

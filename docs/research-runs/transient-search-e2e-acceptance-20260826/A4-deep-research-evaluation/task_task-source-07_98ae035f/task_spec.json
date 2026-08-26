@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_00c14700b8698bb2f0bcc470"
+  ],
+  "artifact_refs": [
+    "art_00c14700b8698bb2f0bcc470"
+  ],
+  "claim_spec_id": "claim-a4-dream-kic-boundary",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-07",
+  "task_id": "task-source-07",
+  "user_constraints": {}
+}

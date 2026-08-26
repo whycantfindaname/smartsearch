@@ -1,0 +1,437 @@
+{
+  "claim_records": [
+    {
+      "citation_map": {
+        "a4-dream-date": "evidence-source-01"
+      },
+      "claim_record_id": "record-claim-a4-dream-date",
+      "claim_spec_id": "claim-a4-dream-date",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM: Deep Research Evaluation with Agentic Metrics 的首次发布时间为 2026-02-21。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-01"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-date": "evidence-source-02"
+      },
+      "claim_record_id": "record-claim-a4-live-date",
+      "claim_spec_id": "claim-a4-live-date",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild 的首次发布时间为 2025-10-16。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-02"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-metrics-inventory": "evidence-source-03"
+      },
+      "claim_record_id": "record-claim-a4-dream-metrics-inventory",
+      "claim_spec_id": "claim-a4-dream-metrics-inventory",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Source Quality 指标包括 Factuality 与 Citation Integrity。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-03"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-paper-metrics": "evidence-source-04"
+      },
+      "claim_record_id": "record-claim-a4-live-paper-metrics",
+      "claim_spec_id": "claim-a4-live-paper-metrics",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench 论文提出的 DeepEval 覆盖 coverage、presentation、citation accuracy、citation association、consistency 与 analysis depth，未列出 DRA fault recovery。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-04"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-verification-pipelines": "evidence-source-05"
+      },
+      "claim_record_id": "record-claim-a4-dream-verification-pipelines",
+      "claim_spec_id": "claim-a4-dream-verification-pipelines",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Citation Integrity 使用 Claim Attribution 与 Citation Faithfulness 的调和平均。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-05"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-factuality-independent": "evidence-source-06"
+      },
+      "claim_record_id": "record-claim-a4-dream-factuality-independent",
+      "claim_spec_id": "claim-a4-dream-factuality-independent",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Factuality 独立于给定引用检索外部证据。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-06"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-kic-boundary": "evidence-source-07"
+      },
+      "claim_record_id": "record-claim-a4-dream-kic-boundary",
+      "claim_spec_id": "claim-a4-dream-kic-boundary",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Key-Information Coverage 将关键点转成时效性的 yes/no checklist，用于发现遗漏或过时内容，而不是测量来源集合覆盖率。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-07"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-taxonomy": "evidence-source-08"
+      },
+      "claim_record_id": "record-claim-a4-dream-taxonomy",
+      "claim_spec_id": "claim-a4-dream-taxonomy",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 将 Deep Research Evaluation 组织为 Presentation Quality、Task Compliance、Analytical Depth 与 Source Quality 四个 vertical。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-08"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-framework": "evidence-source-09"
+      },
+      "claim_record_id": "record-claim-a4-dream-framework",
+      "claim_spec_id": "claim-a4-dream-framework",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 把评测本身做成具有工具调用能力的 agentic framework。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-09"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-static-metrics": "evidence-source-10"
+      },
+      "claim_record_id": "record-claim-a4-dream-static-metrics",
+      "claim_spec_id": "claim-a4-dream-static-metrics",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的静态指标包括 Writing Quality、Factuality、Citation Integrity 与 Domain Authoritativeness。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-10"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-adaptive-kic": "evidence-source-11"
+      },
+      "claim_record_id": "record-claim-a4-dream-adaptive-kic",
+      "claim_spec_id": "claim-a4-dream-adaptive-kic",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Key-Information Coverage 通过检索最新来源并识别必要事实来构造可核验问题。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-11"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-reasoning-quality": "evidence-source-12"
+      },
+      "claim_record_id": "record-claim-a4-dream-reasoning-quality",
+      "claim_spec_id": "claim-a4-dream-reasoning-quality",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 的 Reasoning Quality 使用 query-specific questions 与 structured validation plans 评估推理。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-12"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-dream-factuality-boundary": "evidence-source-13"
+      },
+      "claim_record_id": "record-claim-a4-dream-factuality-boundary",
+      "claim_spec_id": "claim-a4-dream-factuality-boundary",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "DREAM 论文指出 citation alignment 不足以完成 factuality evaluation。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-13"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-paper-scale": "evidence-source-14"
+      },
+      "claim_record_id": "record-claim-a4-live-paper-scale",
+      "claim_spec_id": "claim-a4-live-paper-scale",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench 论文将其定义为覆盖日常生活、企业和学术场景的 100 个专家策划任务的 benchmark。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-14"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-paper-systems": "evidence-source-15"
+      },
+      "claim_record_id": "record-claim-a4-live-paper-systems",
+      "claim_spec_id": "claim-a4-live-paper-systems",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench 论文报告了对 17 个 frontier deep research systems 的评估。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-15"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-dataset-fields": "evidence-source-16"
+      },
+      "claim_record_id": "record-claim-a4-live-dataset-fields",
+      "claim_spec_id": "claim-a4-live-dataset-fields",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench dataset 页面列出 question_with_checklist subset。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-16"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-dataset-question-only": "evidence-source-17"
+      },
+      "claim_record_id": "record-claim-a4-live-dataset-question-only",
+      "claim_spec_id": "claim-a4-live-dataset-question-only",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench dataset 页面列出 question_only subset。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-17"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-dataset-checklist": "evidence-source-18"
+      },
+      "claim_record_id": "record-claim-a4-live-dataset-checklist",
+      "claim_spec_id": "claim-a4-live-dataset-checklist",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench dataset 页面提供用于 coverage evaluation 的 checklist 字段。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-18"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-repo-identity": "evidence-source-19"
+      },
+      "claim_record_id": "record-claim-a4-live-repo-identity",
+      "claim_spec_id": "claim-a4-live-repo-identity",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench repository 同时包含 LiveResearchBench benchmark 与 DeepEval evaluation framework。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-19"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-resume": "evidence-source-20"
+      },
+      "claim_record_id": "record-claim-a4-live-resume",
+      "claim_spec_id": "claim-a4-live-resume",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench repository 的 README 说明评分中断后重新运行同一命令会自动继续。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-20"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-live-incremental": "evidence-source-21"
+      },
+      "claim_record_id": "record-claim-a4-live-incremental",
+      "claim_spec_id": "claim-a4-live-incremental",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "LiveResearchBench repository 会把已评分报告立即保存到按 criterion 区分的 JSONL 文件。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-21"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-excluded-browsecomp": "evidence-source-22"
+      },
+      "claim_record_id": "record-claim-a4-excluded-browsecomp",
+      "claim_spec_id": "claim-a4-excluded-browsecomp",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "Improving and Evaluating Open Deep Research Agents 提出 BrowseComp-Small，属于主题相关的 benchmark adaptation。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-22"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-excluded-date": "evidence-source-23"
+      },
+      "claim_record_id": "record-claim-a4-excluded-date",
+      "claim_spec_id": "claim-a4-excluded-date",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "Improving and Evaluating Open Deep Research Agents 的首次发布时间为 2025-08-13，早于本次窗口。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-23"
+      ]
+    },
+    {
+      "citation_map": {
+        "a4-excluded-updated": "evidence-source-24"
+      },
+      "claim_record_id": "record-claim-a4-excluded-updated",
+      "claim_spec_id": "claim-a4-excluded-updated",
+      "conflicts": [],
+      "contradict_evidence_ids": [],
+      "gaps": [],
+      "qualify_evidence_ids": [],
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "statement": "Improving and Evaluating Open Deep Research Agents 的当前版本更新时间为 2026-01-08，不能替代首次发布时间。",
+      "status": "supported",
+      "support_evidence_ids": [
+        "evidence-source-24"
+      ]
+    }
+  ],
+  "schema_version": "1"
+}

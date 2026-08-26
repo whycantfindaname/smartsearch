@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_87b7cc69fdfa717302d1c375"
+      ],
+      "attempt_id": "attempt-source-05",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/12-exa-error-codes.json",
+        "locator_label": "Error Response Structure; API Error Tags; Content Fetch Status Tags"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-05",
+      "task_id": "task-source-05",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_87b7cc69fdfa717302d1c375",
+      "artifact_refs": [
+        "art_87b7cc69fdfa717302d1c375"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://exa.ai/docs/reference/error-codes",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-exa-error-identity",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-05",
+      "locator": {
+        "section": "Error Response Structure; API Error Tags; Content Fetch Status Tags",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_4dc852c84285eeb4ee3e3f293e4ba03ae0ad143eba3a490a3945d9ccea2454ca",
+      "source_id": "source-a1-exa-errors",
+      "stance": "support",
+      "step_id": "step-source-05",
+      "task_id": "task-source-05",
+      "text": "All error responses include a `requestId` field, `error` message, and an error `tag`:"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-05"
+}

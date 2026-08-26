@@ -1,0 +1,1 @@
+Every xAI API team has per-model rate limits on two dimensions: **requests per second (RPS)** and **tokens per minute (TPM)**.

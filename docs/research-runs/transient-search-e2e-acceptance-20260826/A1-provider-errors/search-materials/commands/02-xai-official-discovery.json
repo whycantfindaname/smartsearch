@@ -1,0 +1,57 @@
+{
+  "ok": true,
+  "query": "xAI API official debugging errors rate limits retry documentation",
+  "search_type": "neural",
+  "results": [
+    {
+      "id": "https://docs.x.ai/developers/debugging",
+      "title": "",
+      "url": "https://docs.x.ai/developers/debugging",
+      "publishedDate": null,
+      "author": "",
+      "score": 1
+    },
+    {
+      "id": "https://docs.x.ai/developers/rate-limits",
+      "title": "",
+      "url": "https://docs.x.ai/developers/rate-limits",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.8
+    },
+    {
+      "id": "https://api.x.ai/docs/",
+      "title": "Swagger UI",
+      "url": "https://api.x.ai/docs/",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.6
+    },
+    {
+      "id": "https://docs.x.ai/developers/rest-api-reference/management/auth",
+      "title": "",
+      "url": "https://docs.x.ai/developers/rest-api-reference/management/auth",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.4
+    },
+    {
+      "id": "https://docs.x.ai/developers/advanced-api-usage/deferred-chat-completions",
+      "title": "",
+      "url": "https://docs.x.ai/developers/advanced-api-usage/deferred-chat-completions",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.19999999999999996
+    },
+    {
+      "id": "https://docs.x.ai/developers/tools/tool-usage-details",
+      "title": "",
+      "url": "https://docs.x.ai/developers/tools/tool-usage-details",
+      "publishedDate": null,
+      "author": "",
+      "score": 0
+    }
+  ],
+  "total": 6,
+  "elapsed_ms": 524.53
+}

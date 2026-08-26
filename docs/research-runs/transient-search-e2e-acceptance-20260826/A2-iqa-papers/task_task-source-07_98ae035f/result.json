@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_8ccd4b1df0b40390416ad3de"
+      ],
+      "attempt_id": "attempt-source-07",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-arxiv-api-secondary.json",
+        "locator_label": "arXiv Atom entry: published and summary"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_8ccd4b1df0b40390416ad3de",
+      "artifact_refs": [
+        "art_8ccd4b1df0b40390416ad3de"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/abs/2607.27628",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a2-blindpsnr",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-07",
+      "locator": {
+        "section": "arXiv Atom entry: published and summary",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a2-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_104f37891965f2536b874e0ca0ae1de2ba5fbc1b8a4411d04683c29fd7d9568c",
+      "source_id": "source-a2-blindpsnr",
+      "stance": "support",
+      "step_id": "step-source-07",
+      "task_id": "task-source-07",
+      "text": "BlindPSNR, a lightweight no-reference network that fuses the enhanced image with the degraded low-light input via windowed cross-attention and estimates PSNR through heteroscedastic regression."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-07"
+}

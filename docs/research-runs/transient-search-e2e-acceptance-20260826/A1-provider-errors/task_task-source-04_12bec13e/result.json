@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_18c9f5cb96f89f16bd4c009c"
+      ],
+      "attempt_id": "attempt-source-04",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/11-openai-rate-limits.json",
+        "locator_label": "Rate-limit response headers table; Retrying with exponential backoff"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_18c9f5cb96f89f16bd4c009c",
+      "artifact_refs": [
+        "art_18c9f5cb96f89f16bd4c009c"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://developers.openai.com/api/docs/guides/rate-limits",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-openai-rate-signals",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-04",
+      "locator": {
+        "section": "Rate-limit response headers table; Retrying with exponential backoff",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_b6dbafae9bf93b6c830e1e91ad9c774f5dce0468522abccd0f9354a9e85d0d1f",
+      "source_id": "source-a1-openai-rate-limits",
+      "stance": "support",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "text": "| Retry-After | 56 | The minimum number of seconds to wait before retrying a temporary rate-limit error, when present. |"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-04"
+}

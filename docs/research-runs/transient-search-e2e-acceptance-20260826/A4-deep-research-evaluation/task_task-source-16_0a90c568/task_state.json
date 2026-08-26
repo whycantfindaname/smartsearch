@@ -1,0 +1,20 @@
+{
+  "attempt_count": 1,
+  "attempt_statuses": [
+    "success"
+  ],
+  "delegate_request_ids": [
+    "delegate_2626919076c04e8b7d9f8ed6"
+  ],
+  "delegate_result_ids": [],
+  "result_counts": {
+    "candidates": 0,
+    "evidence_items": 1,
+    "key_source_proposals": 0
+  },
+  "role": "evidence_miner",
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "status": "completed",
+  "task_id": "task-source-16"
+}

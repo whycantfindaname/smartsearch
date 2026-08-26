@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_adf16f3aa45aff0631dff6f9"
+      ],
+      "attempt_id": "attempt-source-04",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-openai-exceptions.json",
+        "locator_label": "RunErrorDetails; MaxTurnsExceeded; ModelBehaviorError; ToolTimeoutError"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_adf16f3aa45aff0631dff6f9",
+      "artifact_refs": [
+        "art_adf16f3aa45aff0631dff6f9"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://openai.github.io/openai-agents-python/ref/exceptions/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-retry",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-04",
+      "locator": {
+        "section": "RunErrorDetails; MaxTurnsExceeded; ModelBehaviorError; ToolTimeoutError",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_01101e73922f839ba8e98c9c6b18bd722186993bd4d933536e564cffc5d793ae",
+      "source_id": "source-a3-openai-exceptions",
+      "stance": "support",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "text": "Data collected from an agent run when an exception occurs."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-04"
+}

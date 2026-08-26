@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_ef484aafdfb2d8927a548bb5"
+  ],
+  "artifact_refs": [
+    "art_ef484aafdfb2d8927a548bb5"
+  ],
+  "claim_spec_id": "claim-tavily-error-boundary",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-07",
+  "task_id": "task-source-07",
+  "user_constraints": {}
+}

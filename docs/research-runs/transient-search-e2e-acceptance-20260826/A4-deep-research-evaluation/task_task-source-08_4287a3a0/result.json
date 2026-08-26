@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_aec8964e0a9032fcdeba30ed"
+      ],
+      "attempt_id": "attempt-source-08",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "fetch-dream-arxiv.json",
+        "locator_label": "Introduction and Section 2 taxonomy"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-08",
+      "task_id": "task-source-08",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_aec8964e0a9032fcdeba30ed",
+      "artifact_refs": [
+        "art_aec8964e0a9032fcdeba30ed"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2602.18940v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-dream-taxonomy",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-08",
+      "locator": {
+        "section": "Introduction and Section 2 taxonomy",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_9f4e15d8b090995b9d44810b0256d4d4ca9f8019f25211794a0296327a6e3092",
+      "source_id": "source-a4-dream-taxonomy",
+      "stance": "support",
+      "step_id": "step-source-08",
+      "task_id": "task-source-08",
+      "text": "four fundamental verticals: *Presentation Quality*, *Task Compliance*, *Analytical Depth*, and *Source Quality*"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-08"
+}

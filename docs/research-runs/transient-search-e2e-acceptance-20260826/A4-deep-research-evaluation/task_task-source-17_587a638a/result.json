@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_179fb7e4fef8c944b9848d1a"
+      ],
+      "attempt_id": "attempt-source-17",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "fetch-live-research-bench.json",
+        "locator_label": "Dataset Fields, Subsets"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-17",
+      "task_id": "task-source-17",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_179fb7e4fef8c944b9848d1a",
+      "artifact_refs": [
+        "art_179fb7e4fef8c944b9848d1a"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-dataset-question-only",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-17",
+      "locator": {
+        "section": "Dataset Fields, Subsets",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_60da497264f3b2f704bf677527e9f71aa3d27275943d02c07730f6eaedb446a4",
+      "source_id": "source-a4-live-dataset-question-only",
+      "stance": "support",
+      "step_id": "step-source-17",
+      "task_id": "task-source-17",
+      "text": "question_only"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-17"
+}

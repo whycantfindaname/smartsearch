@@ -1,0 +1,234 @@
+{
+  "artifact_index_ref": "artifacts.jsonl",
+  "backtrace": {
+    "a3-langgraph-fault": {
+      "artifact_id": "art_a7e3919632ff091c19b30162",
+      "attempt_id": "attempt-source-07",
+      "claim_record_id": "record-claim-a3-retry",
+      "claim_spec_id": "claim-a3-retry",
+      "evidence_id": "evidence-source-07",
+      "raw_ref": "raw/snap_e80cf9aae884824e41543b91036cc4b7da644b17c7fed9a0763646ff2259ac86.bin",
+      "snapshot_id": "snap_e80cf9aae884824e41543b91036cc4b7da644b17c7fed9a0763646ff2259ac86",
+      "task_id": "task-source-07"
+    },
+    "a3-langgraph-interrupts": {
+      "artifact_id": "art_b5d2e4a2b1ecf06c668bb83f",
+      "attempt_id": "attempt-source-08",
+      "claim_record_id": "record-claim-a3-hitl",
+      "claim_spec_id": "claim-a3-hitl",
+      "evidence_id": "evidence-source-08",
+      "raw_ref": "raw/snap_2c8cf73f62479803bc41247bc36696b63a03078f11fc815bdcf2743b1b4feb58.bin",
+      "snapshot_id": "snap_2c8cf73f62479803bc41247bc36696b63a03078f11fc815bdcf2743b1b4feb58",
+      "task_id": "task-source-08"
+    },
+    "a3-langgraph-observability": {
+      "artifact_id": "art_c7c39eee12cf637012e6d8c7",
+      "attempt_id": "attempt-source-09",
+      "claim_record_id": "record-claim-a3-observability",
+      "claim_spec_id": "claim-a3-observability",
+      "evidence_id": "evidence-source-09",
+      "raw_ref": "raw/snap_987a318bc6b0559237c49b8d3e54932940cc499211b1c14470416b947e39c076.bin",
+      "snapshot_id": "snap_987a318bc6b0559237c49b8d3e54932940cc499211b1c14470416b947e39c076",
+      "task_id": "task-source-09"
+    },
+    "a3-langgraph-persistence": {
+      "artifact_id": "art_647bc099d2bfe5938c33439d",
+      "attempt_id": "attempt-source-06",
+      "claim_record_id": "record-claim-a3-persistence",
+      "claim_spec_id": "claim-a3-persistence",
+      "evidence_id": "evidence-source-06",
+      "raw_ref": "raw/snap_55da8ce6f1e9eb241af30929371ab4f89e57b815b5057805fa54ad552a7363ff.bin",
+      "snapshot_id": "snap_55da8ce6f1e9eb241af30929371ab4f89e57b815b5057805fa54ad552a7363ff",
+      "task_id": "task-source-06"
+    },
+    "a3-openai-exceptions": {
+      "artifact_id": "art_adf16f3aa45aff0631dff6f9",
+      "attempt_id": "attempt-source-04",
+      "claim_record_id": "record-claim-a3-retry",
+      "claim_spec_id": "claim-a3-retry",
+      "evidence_id": "evidence-source-04",
+      "raw_ref": "raw/snap_01101e73922f839ba8e98c9c6b18bd722186993bd4d933536e564cffc5d793ae.bin",
+      "snapshot_id": "snap_01101e73922f839ba8e98c9c6b18bd722186993bd4d933536e564cffc5d793ae",
+      "task_id": "task-source-04"
+    },
+    "a3-openai-hitl": {
+      "artifact_id": "art_38de145b0ec59f041debc018",
+      "attempt_id": "attempt-source-02",
+      "claim_record_id": "record-claim-a3-hitl",
+      "claim_spec_id": "claim-a3-hitl",
+      "evidence_id": "evidence-source-02",
+      "raw_ref": "raw/snap_d35364e94ba4c1abd7a0e92db12486c69344759403379b14e1680d175b197192.bin",
+      "snapshot_id": "snap_d35364e94ba4c1abd7a0e92db12486c69344759403379b14e1680d175b197192",
+      "task_id": "task-source-02"
+    },
+    "a3-openai-retry": {
+      "artifact_id": "art_51126f5d0e6e6fe547dd8b40",
+      "attempt_id": "attempt-source-03",
+      "claim_record_id": "record-claim-a3-retry",
+      "claim_spec_id": "claim-a3-retry",
+      "evidence_id": "evidence-source-03",
+      "raw_ref": "raw/snap_b9459eec067ca6b12dd704db77c44168f1cd79ba41b1236d202863a8ffbc5866.bin",
+      "snapshot_id": "snap_b9459eec067ca6b12dd704db77c44168f1cd79ba41b1236d202863a8ffbc5866",
+      "task_id": "task-source-03"
+    },
+    "a3-openai-sessions": {
+      "artifact_id": "art_6ddd2ced8b994b271aa56750",
+      "attempt_id": "attempt-source-01",
+      "claim_record_id": "record-claim-a3-persistence",
+      "claim_spec_id": "claim-a3-persistence",
+      "evidence_id": "evidence-source-01",
+      "raw_ref": "raw/snap_76b468366c7b3bb6b681741ce1a88a5ea7ad0b5e2f6109583aefa4b53eb39ca1.bin",
+      "snapshot_id": "snap_76b468366c7b3bb6b681741ce1a88a5ea7ad0b5e2f6109583aefa4b53eb39ca1",
+      "task_id": "task-source-01"
+    },
+    "a3-openai-tracing": {
+      "artifact_id": "art_dd54ca4cb67f41baf68b3ade",
+      "attempt_id": "attempt-source-05",
+      "claim_record_id": "record-claim-a3-observability",
+      "claim_spec_id": "claim-a3-observability",
+      "evidence_id": "evidence-source-05",
+      "raw_ref": "raw/snap_1b0ea41399c789b0eb61dc736bdabcea7bc1506bf2bfbf237b8d76f803459ffa.bin",
+      "snapshot_id": "snap_1b0ea41399c789b0eb61dc736bdabcea7bc1506bf2bfbf237b8d76f803459ffa",
+      "task_id": "task-source-05"
+    },
+    "a3-pydantic-agent-api": {
+      "artifact_id": "art_9c8a2bdb2d164b03a16ec47a",
+      "attempt_id": "attempt-source-11",
+      "claim_record_id": "record-claim-a3-retry",
+      "claim_spec_id": "claim-a3-retry",
+      "evidence_id": "evidence-source-11",
+      "raw_ref": "raw/snap_e678c4923b34042fadde8cf2273d5e8aac1623ee24950f47ea8aca8fdbf1d11b.bin",
+      "snapshot_id": "snap_e678c4923b34042fadde8cf2273d5e8aac1623ee24950f47ea8aca8fdbf1d11b",
+      "task_id": "task-source-11"
+    },
+    "a3-pydantic-deferred": {
+      "artifact_id": "art_2d1bd465e605dc4958f4f398",
+      "attempt_id": "attempt-source-13",
+      "claim_record_id": "record-claim-a3-hitl",
+      "claim_spec_id": "claim-a3-hitl",
+      "evidence_id": "evidence-source-13",
+      "raw_ref": "raw/snap_c564a941f219c7c73f37f1c67c68eb34eb4478f9a3381a276e1589d04fdf9cd0.bin",
+      "snapshot_id": "snap_c564a941f219c7c73f37f1c67c68eb34eb4478f9a3381a276e1589d04fdf9cd0",
+      "task_id": "task-source-13"
+    },
+    "a3-pydantic-durable": {
+      "artifact_id": "art_28da6d2e2db40f3f59ec1e45",
+      "attempt_id": "attempt-source-10",
+      "claim_record_id": "record-claim-a3-persistence",
+      "claim_spec_id": "claim-a3-persistence",
+      "evidence_id": "evidence-source-10",
+      "raw_ref": "raw/snap_1274152afc49f8bb1839a446d7647dd853c0b3411dc4ba9316c8d2c499f98f3b.bin",
+      "snapshot_id": "snap_1274152afc49f8bb1839a446d7647dd853c0b3411dc4ba9316c8d2c499f98f3b",
+      "task_id": "task-source-10"
+    },
+    "a3-pydantic-http-retries": {
+      "artifact_id": "art_3ffa05efc4eed2a4cd904610",
+      "attempt_id": "attempt-source-12",
+      "claim_record_id": "record-claim-a3-retry",
+      "claim_spec_id": "claim-a3-retry",
+      "evidence_id": "evidence-source-12",
+      "raw_ref": "raw/snap_904d869c6ed8ef58a3265ce7587c0c690277f28d422897ed98f2bc4a7970eebf.bin",
+      "snapshot_id": "snap_904d869c6ed8ef58a3265ce7587c0c690277f28d422897ed98f2bc4a7970eebf",
+      "task_id": "task-source-12"
+    },
+    "a3-pydantic-logfire": {
+      "artifact_id": "art_9bfb1f6c82e7951effe09d86",
+      "attempt_id": "attempt-source-14",
+      "claim_record_id": "record-claim-a3-observability",
+      "claim_spec_id": "claim-a3-observability",
+      "evidence_id": "evidence-source-14",
+      "raw_ref": "raw/snap_608c3002607edd392209180040754062ecc4314f063d73c87f892e75ecadd68c.bin",
+      "snapshot_id": "snap_608c3002607edd392209180040754062ecc4314f063d73c87f892e75ecadd68c",
+      "task_id": "task-source-14"
+    }
+  },
+  "citation_count": 14,
+  "locator_checks": {
+    "evidence-source-01": {
+      "artifact_id": "art_6ddd2ced8b994b271aa56750",
+      "locator_type": "section",
+      "snapshot_id": "snap_76b468366c7b3bb6b681741ce1a88a5ea7ad0b5e2f6109583aefa4b53eb39ca1",
+      "text_length": 121
+    },
+    "evidence-source-02": {
+      "artifact_id": "art_38de145b0ec59f041debc018",
+      "locator_type": "section",
+      "snapshot_id": "snap_d35364e94ba4c1abd7a0e92db12486c69344759403379b14e1680d175b197192",
+      "text_length": 119
+    },
+    "evidence-source-03": {
+      "artifact_id": "art_51126f5d0e6e6fe547dd8b40",
+      "locator_type": "section",
+      "snapshot_id": "snap_b9459eec067ca6b12dd704db77c44168f1cd79ba41b1236d202863a8ffbc5866",
+      "text_length": 53
+    },
+    "evidence-source-04": {
+      "artifact_id": "art_adf16f3aa45aff0631dff6f9",
+      "locator_type": "section",
+      "snapshot_id": "snap_01101e73922f839ba8e98c9c6b18bd722186993bd4d933536e564cffc5d793ae",
+      "text_length": 58
+    },
+    "evidence-source-05": {
+      "artifact_id": "art_dd54ca4cb67f41baf68b3ade",
+      "locator_type": "section",
+      "snapshot_id": "snap_1b0ea41399c789b0eb61dc736bdabcea7bc1506bf2bfbf237b8d76f803459ffa",
+      "text_length": 41
+    },
+    "evidence-source-06": {
+      "artifact_id": "art_647bc099d2bfe5938c33439d",
+      "locator_type": "section",
+      "snapshot_id": "snap_55da8ce6f1e9eb241af30929371ab4f89e57b815b5057805fa54ad552a7363ff",
+      "text_length": 119
+    },
+    "evidence-source-07": {
+      "artifact_id": "art_a7e3919632ff091c19b30162",
+      "locator_type": "section",
+      "snapshot_id": "snap_e80cf9aae884824e41543b91036cc4b7da644b17c7fed9a0763646ff2259ac86",
+      "text_length": 48
+    },
+    "evidence-source-08": {
+      "artifact_id": "art_b5d2e4a2b1ecf06c668bb83f",
+      "locator_type": "section",
+      "snapshot_id": "snap_2c8cf73f62479803bc41247bc36696b63a03078f11fc815bdcf2743b1b4feb58",
+      "text_length": 74
+    },
+    "evidence-source-09": {
+      "artifact_id": "art_c7c39eee12cf637012e6d8c7",
+      "locator_type": "section",
+      "snapshot_id": "snap_987a318bc6b0559237c49b8d3e54932940cc499211b1c14470416b947e39c076",
+      "text_length": 131
+    },
+    "evidence-source-10": {
+      "artifact_id": "art_28da6d2e2db40f3f59ec1e45",
+      "locator_type": "section",
+      "snapshot_id": "snap_1274152afc49f8bb1839a446d7647dd853c0b3411dc4ba9316c8d2c499f98f3b",
+      "text_length": 65
+    },
+    "evidence-source-11": {
+      "artifact_id": "art_9c8a2bdb2d164b03a16ec47a",
+      "locator_type": "section",
+      "snapshot_id": "snap_e678c4923b34042fadde8cf2273d5e8aac1623ee24950f47ea8aca8fdbf1d11b",
+      "text_length": 122
+    },
+    "evidence-source-12": {
+      "artifact_id": "art_3ffa05efc4eed2a4cd904610",
+      "locator_type": "section",
+      "snapshot_id": "snap_904d869c6ed8ef58a3265ce7587c0c690277f28d422897ed98f2bc4a7970eebf",
+      "text_length": 114
+    },
+    "evidence-source-13": {
+      "artifact_id": "art_2d1bd465e605dc4958f4f398",
+      "locator_type": "section",
+      "snapshot_id": "snap_c564a941f219c7c73f37f1c67c68eb34eb4478f9a3381a276e1589d04fdf9cd0",
+      "text_length": 167
+    },
+    "evidence-source-14": {
+      "artifact_id": "art_9bfb1f6c82e7951effe09d86",
+      "locator_type": "section",
+      "snapshot_id": "snap_608c3002607edd392209180040754062ecc4314f063d73c87f892e75ecadd68c",
+      "text_length": 80
+    }
+  },
+  "ok": true,
+  "trace_ref": "trace.jsonl"
+}

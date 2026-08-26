@@ -1,0 +1,137 @@
+{
+  "status": "completed",
+  "answer_complete": true,
+  "observed_errors": [
+    {
+      "command": "context7-library OpenAI Agents SDK",
+      "error_type": "network_error",
+      "public_error": "HTTP 503 service_unavailable",
+      "structured_recovery_present": false
+    },
+    {
+      "command": "parallel Exa discovery for OpenAI",
+      "error_type": "local_invocation_error",
+      "public_error": "parallel Smart Search invocations are not permitted",
+      "structured_json_present": false
+    },
+    {
+      "command": "parallel Exa discovery for PydanticAI",
+      "error_type": "local_invocation_error",
+      "public_error": "parallel Smart Search invocations are not permitted",
+      "structured_json_present": false
+    }
+  ],
+  "recovery_actions": [
+    {
+      "after": "Context7 HTTP 503",
+      "action": "Switched to same-capability Exa official-domain discovery without repeating the failed Context7 command."
+    },
+    {
+      "after": "Parallel invocation rejection",
+      "action": "Serialized subsequent Smart Search invocations and used changed OpenAI and PydanticAI discovery queries."
+    }
+  ],
+  "doctor_calls": 0,
+  "sources": [
+    {
+      "title": "Sessions - OpenAI Agents SDK",
+      "url": "https://openai.github.io/openai-agents-python/sessions/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Core session behavior; Resuming interrupted runs with the same session; Built-in session implementations"
+    },
+    {
+      "title": "Human-in-the-loop - OpenAI Agents SDK",
+      "url": "https://openai.github.io/openai-agents-python/human_in_the_loop/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "How the approval flow works; Long-running approvals"
+    },
+    {
+      "title": "Retry - OpenAI Agents SDK API Reference",
+      "url": "https://openai.github.io/openai-agents-python/ref/retry/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "RetryDecision; RetryPolicyContext; ModelRetrySettings"
+    },
+    {
+      "title": "Exceptions - OpenAI Agents SDK API Reference",
+      "url": "https://openai.github.io/openai-agents-python/ref/exceptions/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "RunErrorDetails; MaxTurnsExceeded; ModelBehaviorError; ToolTimeoutError"
+    },
+    {
+      "title": "Tracing - OpenAI Agents SDK",
+      "url": "https://openai.github.io/openai-agents-python/tracing/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Default tracing; Sensitive data; Custom tracing processors"
+    },
+    {
+      "title": "Persistence - LangGraph",
+      "url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Checkpointer vs. store; MemorySaver does not persist between restarts"
+    },
+    {
+      "title": "Fault tolerance - LangGraph",
+      "url": "https://docs.langchain.com/oss/python/langgraph/fault-tolerance",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Retries; Parameters; Error handling; Route with Command"
+    },
+    {
+      "title": "Interrupts - LangGraph",
+      "url": "https://docs.langchain.com/oss/python/langgraph/interrupts",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Resuming interrupts; Review and edit state; Rules of interrupts"
+    },
+    {
+      "title": "Trace LangGraph applications - LangSmith",
+      "url": "https://docs.langchain.com/langsmith/trace-with-langgraph",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "With LangChain; Without LangChain"
+    },
+    {
+      "title": "Durable Execution - PydanticAI",
+      "url": "https://ai.pydantic.dev/durable_execution/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Durable Execution overview and supported solutions list"
+    },
+    {
+      "title": "pydantic_ai.agent API",
+      "url": "https://ai.pydantic.dev/api/agent/index.md",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Agent.__init__ retries and instrument parameters"
+    },
+    {
+      "title": "HTTP Request Retries - PydanticAI",
+      "url": "https://pydantic.dev/docs/ai/models/http-request-retries/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Usage Example; Best Practices; Error Handling"
+    },
+    {
+      "title": "Deferred Tools - PydanticAI",
+      "url": "https://pydantic.dev/docs/ai/tools-toolsets/deferred-tools/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Deferred Tools introduction; Resolving deferred calls with a handler; Human-in-the-Loop Tool Approval"
+    },
+    {
+      "title": "Pydantic Logfire Debugging and Monitoring",
+      "url": "https://ai.pydantic.dev/logfire/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Using Logfire; Using OpenTelemetry; OTel without Logfire"
+    }
+  ],
+  "native_web_used": false,
+  "security_incident": false
+}

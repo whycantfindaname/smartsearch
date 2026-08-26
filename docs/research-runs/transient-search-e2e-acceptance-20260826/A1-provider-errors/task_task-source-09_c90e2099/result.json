@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_c9b7a70b9c6d7c98f8ef56eb"
+      ],
+      "attempt_id": "attempt-source-09",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/16-firecrawl-errors.json",
+        "locator_label": "Errors table; Retry guidance; 429 responses"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-09",
+      "task_id": "task-source-09",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_c9b7a70b9c6d7c98f8ef56eb",
+      "artifact_refs": [
+        "art_c9b7a70b9c6d7c98f8ef56eb"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://docs.firecrawl.dev/api-reference/errors",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-firecrawl-retry-matrix",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-09",
+      "locator": {
+        "section": "Errors table; Retry guidance; 429 responses",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_5382ca9485f2a5fd1bf7f916c738fa2ce4cade5ab6912fdd53a254e49ed0962b",
+      "source_id": "source-a1-firecrawl-errors",
+      "stance": "support",
+      "step_id": "step-source-09",
+      "task_id": "task-source-09",
+      "text": "Treat the **Retryable** column as authoritative; do not infer from the HTTP status alone."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-09"
+}

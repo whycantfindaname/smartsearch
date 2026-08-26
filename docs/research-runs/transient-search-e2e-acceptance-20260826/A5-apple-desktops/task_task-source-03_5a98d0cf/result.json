@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_6da17cc42c941490f8db657f"
+      ],
+      "attempt_id": "attempt-source-03",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/mac-studio-newsroom-compat.json",
+        "locator_label": "page date; Mac Studio with M5 Max; Mac Studio with M5 Ultra; Blazing-Fast Storage and Pro Connectivity; Pricing and Availability"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_6da17cc42c941490f8db657f",
+      "artifact_refs": [
+        "art_6da17cc42c941490f8db657f"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a5-studio-newsroom",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-03",
+      "locator": {
+        "section": "page date; Mac Studio with M5 Max; Mac Studio with M5 Ultra; Blazing-Fast Storage and Pro Connectivity; Pricing and Availability",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a5-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_d52fd61364f3a4ed00eed709ae5b9c91f27884a64c6b45ab647daad01b8cdb3c",
+      "source_id": "source-a5-studio-newsroom",
+      "stance": "support",
+      "step_id": "step-source-03",
+      "task_id": "task-source-03",
+      "text": "CUPERTINO, CALIFORNIAApple today announced the new[Mac Studio](https://www.apple.com/mac-studio/), featuring M5 Max and the all-new M5 Ultra, delivering a monumental leap in AI performance and even faster graphics for the most demanding pro workflows"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a5-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-03"
+}

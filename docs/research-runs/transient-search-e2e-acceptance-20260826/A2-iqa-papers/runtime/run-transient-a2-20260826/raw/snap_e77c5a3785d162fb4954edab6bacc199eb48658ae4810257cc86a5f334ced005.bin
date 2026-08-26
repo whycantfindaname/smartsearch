@@ -1,0 +1,1 @@
+AgenticIQA decomposes IQA into four subtasks -- distortion detection, distortion analysis, tool selection, and tool execution -- coordinated by a planner, executor, and summarizer.

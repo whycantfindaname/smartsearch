@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_3ffa05efc4eed2a4cd904610"
+      ],
+      "attempt_id": "attempt-source-12",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-pydantic-model-retries.json",
+        "locator_label": "Usage Example; Best Practices; Error Handling"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-12",
+      "task_id": "task-source-12",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_3ffa05efc4eed2a4cd904610",
+      "artifact_refs": [
+        "art_3ffa05efc4eed2a4cd904610"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://pydantic.dev/docs/ai/models/http-request-retries/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-retry",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-12",
+      "locator": {
+        "section": "Usage Example; Best Practices; Error Handling",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_904d869c6ed8ef58a3265ce7587c0c690277f28d422897ed98f2bc4a7970eebf",
+      "source_id": "source-a3-pydantic-http-retries",
+      "stance": "support",
+      "step_id": "step-source-12",
+      "task_id": "task-source-12",
+      "text": "Pydantic AI provides retry functionality for HTTP requests made by model providers through custom HTTP transports."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-12"
+}

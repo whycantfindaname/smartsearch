@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_51126f5d0e6e6fe547dd8b40"
+  ],
+  "artifact_refs": [
+    "art_51126f5d0e6e6fe547dd8b40"
+  ],
+  "claim_spec_id": "claim-a3-retry",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-03",
+  "task_id": "task-source-03",
+  "user_constraints": {}
+}

@@ -1,0 +1,78 @@
+{
+  "case_id": "A5",
+  "run_id": "run-transient-a5-20260826",
+  "question": "在 2026-08-26 的时间边界内，比较最新 Mac mini 与 Mac Studio 的芯片、unified memory、接口与扩展、外接显示器支持、尺寸重量和美国起售价，并区分 Apple 的产品定位与基于规格的比较判断。",
+  "mode": "standard",
+  "claims": [
+    {
+      "claim_spec_id": "claim-a5-mini-newsroom",
+      "statement": "在本报告截至 2026-08-26 的时间边界内，Apple 于 2026-08-25 公布的 Mac mini 产品线包含 M6 与 M5 Pro，并将其定位为可服务家庭、专业 studio 和常驻式 agentic computing 的多用途桌面，同时给出 U.S. 起售价。"
+    },
+    {
+      "claim_spec_id": "claim-a5-mini-specs",
+      "statement": "Apple Mac mini Technical Specifications 列出 M6 与 M5 Pro 的芯片、unified memory、最多三台外接显示器、Connections and Expansion 以及尺寸重量边界。"
+    },
+    {
+      "claim_spec_id": "claim-a5-studio-newsroom",
+      "statement": "在本报告截至 2026-08-26 的时间边界内，Apple 于 2026-08-25 公布的 Mac Studio 产品线包含 M5 Max 与 M5 Ultra，并将其定位为面向 on-device AI 和最极端专业工作流的桌面，同时给出 U.S. 起售价。"
+    },
+    {
+      "claim_spec_id": "claim-a5-studio-specs",
+      "statement": "Apple Mac Studio Technical Specifications 列出 M5 Max 与 M5 Ultra 的芯片、unified memory、最多五台或八台外接显示器、Thunderbolt 5 与其他 Connections and Expansion 以及尺寸重量边界。"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "source-a5-mini-newsroom",
+      "citation_id": "a5-mini-newsroom",
+      "claim_spec_id": "claim-a5-mini-newsroom",
+      "title": "Apple’s new Mac mini, featuring M6 and M5 Pro, delivers a massive leap in AI performance, supercharging the leading desktop for always-on agentic computing",
+      "publisher": "Apple",
+      "url": "https://www.apple.com/newsroom/2026/08/apple-unveils-a-more-powerful-mac-mini-featuring-the-all-new-m6-and-m5-pro/",
+      "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-unveils-a-more-powerful-mac-mini-featuring-the-all-new-m6-and-m5-pro/",
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "locator_label": "page date; Mac mini with the All-New M6; Mac mini with M5 Pro; Best-in-Class Connectivity; Pricing and Availability",
+      "command_file": "commands/mac-mini-newsroom-compat.json",
+      "excerpt": "CUPERTINO, CALIFORNIAApple today announced the new[Mac mini](https://www.apple.com/mac-mini/)with the all-new M6 and powerful M5 Pro, delivering a dramatic boost in performance and even more versatility in its supersmall desktop design."
+    },
+    {
+      "source_id": "source-a5-mini-specs",
+      "citation_id": "a5-mini-specs",
+      "claim_spec_id": "claim-a5-mini-specs",
+      "title": "Mac mini - Technical Specifications - Apple",
+      "publisher": "Apple",
+      "url": "https://www.apple.com/mac-mini/specs/",
+      "canonical_url": "https://www.apple.com/mac-mini/specs/",
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "locator_label": "Chip; Memory; Display Support; Connections and Expansion; Size and Weight",
+      "command_file": "commands/mac-mini-specs-compat.json",
+      "excerpt": "Supports up to three external displays using Thunderbolt and HDMI ports:"
+    },
+    {
+      "source_id": "source-a5-studio-newsroom",
+      "citation_id": "a5-studio-newsroom",
+      "claim_spec_id": "claim-a5-studio-newsroom",
+      "title": "Apple introduces new Mac Studio with M5 Max and M5 Ultra - Apple",
+      "publisher": "Apple",
+      "url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
+      "canonical_url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "locator_label": "page date; Mac Studio with M5 Max; Mac Studio with M5 Ultra; Blazing-Fast Storage and Pro Connectivity; Pricing and Availability",
+      "command_file": "commands/mac-studio-newsroom-compat.json",
+      "excerpt": "CUPERTINO, CALIFORNIAApple today announced the new[Mac Studio](https://www.apple.com/mac-studio/), featuring M5 Max and the all-new M5 Ultra, delivering a monumental leap in AI performance and even faster graphics for the most demanding pro workflows"
+    },
+    {
+      "source_id": "source-a5-studio-specs",
+      "citation_id": "a5-studio-specs",
+      "claim_spec_id": "claim-a5-studio-specs",
+      "title": "Mac Studio - Technical Specifications - Apple",
+      "publisher": "Apple",
+      "url": "https://www.apple.com/mac-studio/specs/",
+      "canonical_url": "https://www.apple.com/mac-studio/specs/",
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "locator_label": "Chip; Memory; Display Support; Connections and Expansion; Size and Weight",
+      "command_file": "commands/mac-studio-specs-compat.json",
+      "excerpt": "Supports up to eight external displays over any combination of Thunderbolt and HDMI ports:"
+    }
+  ]
+}

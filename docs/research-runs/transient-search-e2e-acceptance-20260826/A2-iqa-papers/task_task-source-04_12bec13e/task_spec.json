@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_0f40b9c290dbbaec8c2a4ff0"
+  ],
+  "artifact_refs": [
+    "art_0f40b9c290dbbaec8c2a4ff0"
+  ],
+  "claim_spec_id": "claim-a2-lge-mri",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-04",
+  "task_id": "task-source-04",
+  "user_constraints": {}
+}

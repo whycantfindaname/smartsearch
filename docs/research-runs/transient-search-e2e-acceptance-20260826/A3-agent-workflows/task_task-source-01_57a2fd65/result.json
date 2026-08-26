@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_6ddd2ced8b994b271aa56750"
+      ],
+      "attempt_id": "attempt-source-01",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-openai-sessions.json",
+        "locator_label": "Core session behavior; Resuming interrupted runs with the same session; Built-in session implementations"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_6ddd2ced8b994b271aa56750",
+      "artifact_refs": [
+        "art_6ddd2ced8b994b271aa56750"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://openai.github.io/openai-agents-python/sessions/",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-persistence",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-01",
+      "locator": {
+        "section": "Core session behavior; Resuming interrupted runs with the same session; Built-in session implementations",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_76b468366c7b3bb6b681741ce1a88a5ea7ad0b5e2f6109583aefa4b53eb39ca1",
+      "source_id": "source-a3-openai-sessions",
+      "stance": "support",
+      "step_id": "step-source-01",
+      "task_id": "task-source-01",
+      "text": "The Agents SDK provides built-in session memory to automatically maintain conversation history across multiple agent runs"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-01"
+}

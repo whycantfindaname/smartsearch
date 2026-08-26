@@ -1,0 +1,59 @@
+{
+  "schema_version": "1",
+  "source_commit": "f3a30d4eab2dee4656e0fbdfc020f490f4fa8594",
+  "source_archive": ".trellis/tasks/archive/2026-08/08-26-transient-search-e2e-acceptance/artifacts/acceptance-final",
+  "cases": {
+    "A1": {
+      "run_id": "run-transient-a1-20260826",
+      "counts": {
+        "claims": 10,
+        "cited_sources": 10,
+        "citations": 10,
+        "displayed_references": 10,
+        "search_commands": 18
+      }
+    },
+    "A2": {
+      "run_id": "run-transient-a2-20260826",
+      "counts": {
+        "claims": 17,
+        "cited_sources": 17,
+        "citations": 17,
+        "displayed_references": 17,
+        "search_commands": 27
+      }
+    },
+    "A3": {
+      "run_id": "run-transient-a3-20260826",
+      "counts": {
+        "claims": 4,
+        "cited_sources": 14,
+        "citations": 14,
+        "displayed_references": 14,
+        "search_commands": 24
+      }
+    },
+    "A4": {
+      "run_id": "run-transient-a4-20260826",
+      "counts": {
+        "claims": 24,
+        "cited_sources": 24,
+        "citations": 24,
+        "displayed_references": 24,
+        "search_commands": 13
+      }
+    },
+    "A5": {
+      "run_id": "run-transient-a5-20260826",
+      "counts": {
+        "claims": 4,
+        "cited_sources": 4,
+        "citations": 4,
+        "displayed_references": 4,
+        "search_commands": 9
+      }
+    }
+  },
+  "doctor_probes_replayed": 0,
+  "live_searches_performed_during_migration": 0
+}

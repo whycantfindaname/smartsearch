@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_39c709cf58667c2e1aacd0f8"
+  ],
+  "artifact_refs": [
+    "art_39c709cf58667c2e1aacd0f8"
+  ],
+  "claim_spec_id": "claim-openai-error-boundary",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-03",
+  "task_id": "task-source-03",
+  "user_constraints": {}
+}

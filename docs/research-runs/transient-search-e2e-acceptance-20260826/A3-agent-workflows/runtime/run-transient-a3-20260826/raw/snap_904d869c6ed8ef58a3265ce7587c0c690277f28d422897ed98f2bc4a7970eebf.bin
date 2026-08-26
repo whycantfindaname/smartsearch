@@ -1,0 +1,1 @@
+Pydantic AI provides retry functionality for HTTP requests made by model providers through custom HTTP transports.

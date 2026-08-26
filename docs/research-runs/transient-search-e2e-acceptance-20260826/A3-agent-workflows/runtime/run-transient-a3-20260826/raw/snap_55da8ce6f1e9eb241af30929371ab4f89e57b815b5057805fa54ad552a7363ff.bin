@@ -1,0 +1,1 @@
+LangGraph’s persistence layer gives agents short-term memory through checkpointers and long-term memory through stores.

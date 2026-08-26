@@ -1,0 +1,2 @@
+# Decorating the tool function will automatically trace it with the correct context
+@traceable(run_type="tool", name="Search Tool")

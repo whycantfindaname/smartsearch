@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_9c8a2bdb2d164b03a16ec47a"
+      ],
+      "attempt_id": "attempt-source-11",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/fetch-pydantic-agent-api.json",
+        "locator_label": "Agent.__init__ retries and instrument parameters"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-11",
+      "task_id": "task-source-11",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_9c8a2bdb2d164b03a16ec47a",
+      "artifact_refs": [
+        "art_9c8a2bdb2d164b03a16ec47a"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://ai.pydantic.dev/api/agent/index.md",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a3-retry",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-11",
+      "locator": {
+        "section": "Agent.__init__ retries and instrument parameters",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a3-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_e678c4923b34042fadde8cf2273d5e8aac1623ee24950f47ea8aca8fdbf1d11b",
+      "source_id": "source-a3-pydantic-agent-api",
+      "stance": "support",
+      "step_id": "step-source-11",
+      "task_id": "task-source-11",
+      "text": "Defaults to 1 for both. On the text path, `output` is a global budget shared across all output-validation retries in a run"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a3-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-11"
+}

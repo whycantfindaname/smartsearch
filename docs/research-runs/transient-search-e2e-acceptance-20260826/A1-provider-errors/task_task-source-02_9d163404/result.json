@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_4db17b2335f3d9774644f862"
+      ],
+      "attempt_id": "attempt-source-02",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "commands/09-xai-rate-limits.json",
+        "locator_label": "Per-model limits; Handling rate limit errors"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_4db17b2335f3d9774644f862",
+      "artifact_refs": [
+        "art_4db17b2335f3d9774644f862"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://docs.x.ai/developers/rate-limits",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-xai-rate-limits",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-02",
+      "locator": {
+        "section": "Per-model limits; Handling rate limit errors",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a1-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_6acf32c5472eb743392ed3534a400d6912c06c04650bb8e912d3740ae21190e0",
+      "source_id": "source-a1-xai-rate-limits",
+      "stance": "support",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "text": "Every xAI API team has per-model rate limits on two dimensions: **requests per second (RPS)** and **tokens per minute (TPM)**."
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-02"
+}

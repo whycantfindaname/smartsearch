@@ -1,0 +1,1 @@
+Defaults to 1 for both. On the text path, `output` is a global budget shared across all output-validation retries in a run

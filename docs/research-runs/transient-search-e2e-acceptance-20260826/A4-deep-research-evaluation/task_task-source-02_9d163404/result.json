@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_6f74a94defbb8841f666abfb"
+      ],
+      "attempt_id": "attempt-source-02",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "fetch-live-research-bench-date.json",
+        "locator_label": "arxiv:2510.14240v1 entry published field"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_6f74a94defbb8841f666abfb",
+      "artifact_refs": [
+        "art_6f74a94defbb8841f666abfb"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://export.arxiv.org/api/query?id_list=2510.14240",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-date",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-02",
+      "locator": {
+        "section": "arxiv:2510.14240v1 entry published field",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_31963b6ae1e90115b413da3842b47aa755fbc3a506392a87ec28fc955febf00f",
+      "source_id": "source-a4-live-date",
+      "stance": "support",
+      "step_id": "step-source-02",
+      "task_id": "task-source-02",
+      "text": "2025-10-16T02:49:16Z"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-02"
+}

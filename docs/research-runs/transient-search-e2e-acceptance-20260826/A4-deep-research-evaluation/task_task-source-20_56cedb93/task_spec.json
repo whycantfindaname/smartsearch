@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_c82f1bb2b0460cf3fac604d2"
+  ],
+  "artifact_refs": [
+    "art_c82f1bb2b0460cf3fac604d2"
+  ],
+  "claim_spec_id": "claim-a4-live-resume",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-20",
+  "task_id": "task-source-20",
+  "user_constraints": {}
+}

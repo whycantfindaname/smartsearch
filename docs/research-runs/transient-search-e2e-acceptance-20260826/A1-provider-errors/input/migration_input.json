@@ -1,0 +1,150 @@
+{
+  "case_id": "A1",
+  "run_id": "run-transient-a1-20260826",
+  "question": "审计 xAI、OpenAI、Exa、Tavily、Firecrawl 和 Jina Reader 的官方错误身份、重试边界与限流等待信号，并记录 Smart Search 的接受观察。",
+  "mode": "standard",
+  "claims": [
+    {
+      "claim_spec_id": "claim-xai-error-identity",
+      "statement": "xAI 官方 Debugging Errors 页面以 HTTP status 和错误消息描述错误，并将 429 定义为达到 inference rate limit；公开页面没有建立 Smart Search 本地 exact 504 + upstream_server_error marker 的 provider contract。"
+    },
+    {
+      "claim_spec_id": "claim-xai-rate-limits",
+      "statement": "xAI 官方 Rate Limits 页面按 model 说明 RPS 与 TPM 限制，超过限制返回 429，并给出 exponential backoff 处理示例。"
+    },
+    {
+      "claim_spec_id": "claim-openai-error-boundary",
+      "statement": "OpenAI 官方错误码页面在 HTTP 429 下区分 credits、temporary rate limit、organization/project spend limit 和 organization usage limit，并说明 billing、spend 或 quota 错误不能靠重试恢复。"
+    },
+    {
+      "claim_spec_id": "claim-openai-rate-signals",
+      "statement": "OpenAI 官方 Rate Limits 页面把 Retry-After 定义为 temporary rate-limit error 的最小等待时间，并提供 x-ratelimit 相关 header。"
+    },
+    {
+      "claim_spec_id": "claim-exa-error-identity",
+      "statement": "Exa 官方错误码页面使用 requestId、error 和 tag 识别错误，并将 403 与 422 细分为权限、功能、内容策略和处理失败等 provider-native 情况。"
+    },
+    {
+      "claim_spec_id": "claim-exa-rate-limits",
+      "statement": "Exa 官方 Rate Limits 页面按 endpoint 提供 QPS 限制。"
+    },
+    {
+      "claim_spec_id": "claim-tavily-error-boundary",
+      "statement": "Tavily 官方错误页将 432/433 作为 plan 或 PAYGO limit，并要求升级 plan 或提高 limit；429 使用降速和 exponential backoff，500 可稍后重试。"
+    },
+    {
+      "claim_spec_id": "claim-tavily-rate-signals",
+      "statement": "Tavily 官方 Rate Limits 页面说明 429 响应包含 retry-after 秒数，并要求 retry logic 尊重该值。"
+    },
+    {
+      "claim_spec_id": "claim-firecrawl-retry-matrix",
+      "statement": "Firecrawl 官方错误页要求以 Retryable 列作为恢复判断权威，而不是只根据 HTTP status 推断。"
+    },
+    {
+      "claim_spec_id": "claim-jina-rate-limit-evidence",
+      "statement": "Jina Reader 官方页面核验了 RPM、TPM 以及按 IP/API key 执行的限流维度，但没有提供本次所需的 error identity、429 retry、backoff 或 Retry-After 证据。"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "source-a1-xai-errors",
+      "citation_id": "c-xai-errors",
+      "claim_spec_id": "claim-xai-error-identity",
+      "title": "Debugging Errors | xAI Docs",
+      "url": "https://docs.x.ai/developers/debugging",
+      "locator_label": "Status Codes; 4XX Status Codes table",
+      "command_file": "commands/08-xai-debugging.json",
+      "excerpt": "| **429** Too Many Requests | Inference endpoints | You are sending requests too frequently and have reached the rate limit. |"
+    },
+    {
+      "source_id": "source-a1-xai-rate-limits",
+      "citation_id": "c-xai-rate",
+      "claim_spec_id": "claim-xai-rate-limits",
+      "title": "Rate Limits | xAI Docs",
+      "url": "https://docs.x.ai/developers/rate-limits",
+      "locator_label": "Per-model limits; Handling rate limit errors",
+      "command_file": "commands/09-xai-rate-limits.json",
+      "excerpt": "Every xAI API team has per-model rate limits on two dimensions: **requests per second (RPS)** and **tokens per minute (TPM)**."
+    },
+    {
+      "source_id": "source-a1-openai-errors",
+      "citation_id": "c-openai-errors",
+      "claim_spec_id": "claim-openai-error-boundary",
+      "title": "Error codes | OpenAI API",
+      "url": "https://developers.openai.com/api/docs/guides/error-codes",
+      "locator_label": "API errors table; billing, spend, and quota guidance",
+      "command_file": "commands/10-openai-error-codes.json",
+      "excerpt": "Retrying billing, spend, or quota errors won’t restore API access. Update the relevant credits or limits before sending another request."
+    },
+    {
+      "source_id": "source-a1-openai-rate-limits",
+      "citation_id": "c-openai-rate",
+      "claim_spec_id": "claim-openai-rate-signals",
+      "title": "Rate limits | OpenAI API",
+      "url": "https://developers.openai.com/api/docs/guides/rate-limits",
+      "locator_label": "Rate-limit response headers table; Retrying with exponential backoff",
+      "command_file": "commands/11-openai-rate-limits.json",
+      "excerpt": "| Retry-After | 56 | The minimum number of seconds to wait before retrying a temporary rate-limit error, when present. |"
+    },
+    {
+      "source_id": "source-a1-exa-errors",
+      "citation_id": "c-exa-errors",
+      "claim_spec_id": "claim-exa-error-identity",
+      "title": "Error Codes | Exa",
+      "url": "https://exa.ai/docs/reference/error-codes",
+      "locator_label": "Error Response Structure; API Error Tags; Content Fetch Status Tags",
+      "command_file": "commands/12-exa-error-codes.json",
+      "excerpt": "All error responses include a `requestId` field, `error` message, and an error `tag`:"
+    },
+    {
+      "source_id": "source-a1-exa-rate-limits",
+      "citation_id": "c-exa-rate",
+      "claim_spec_id": "claim-exa-rate-limits",
+      "title": "Rate Limits | Exa",
+      "url": "https://exa.ai/docs/reference/rate-limits",
+      "locator_label": "Default endpoint QPS table",
+      "command_file": "commands/13-exa-rate-limits.json",
+      "excerpt": "| Endpoint | Limit |\n| --- | --- |\n| `/search` | 10 QPS\\* |\n| `/contents` | 100 QPS |"
+    },
+    {
+      "source_id": "source-a1-tavily-errors",
+      "citation_id": "c-tavily-errors",
+      "claim_spec_id": "claim-tavily-error-boundary",
+      "title": "Errors Code | Tavily Help Center",
+      "url": "https://help.tavily.com/articles/8645538886-understanding-http-errors",
+      "locator_label": "432 Plan Limit Exceeded; 433 Pay-As-You-Go Limit Exceeded; 429; 500 sections",
+      "command_file": "commands/14-tavily-http-errors.json",
+      "excerpt": "*   Upgrade your plan to increase your usage limits via the [Tavily Dashboard](https://app.tavily.com/account/plan)."
+    },
+    {
+      "source_id": "source-a1-tavily-rate-limits",
+      "citation_id": "c-tavily-rate",
+      "claim_spec_id": "claim-tavily-rate-signals",
+      "title": "Rate Limits | Tavily Docs",
+      "url": "https://docs.tavily.com/documentation/rate-limits",
+      "locator_label": "Handling Rate Limit Responses",
+      "command_file": "commands/15-tavily-rate-limits.json",
+      "excerpt": "When you exceed the rate limit, the API returns a `429 Too Many Requests` response with a `retry-after` header indicating the number of seconds to wait before making another request."
+    },
+    {
+      "source_id": "source-a1-firecrawl-errors",
+      "citation_id": "c-firecrawl-errors",
+      "claim_spec_id": "claim-firecrawl-retry-matrix",
+      "title": "Errors | Firecrawl Docs",
+      "url": "https://docs.firecrawl.dev/api-reference/errors",
+      "locator_label": "Errors table; Retry guidance; 429 responses",
+      "command_file": "commands/16-firecrawl-errors.json",
+      "excerpt": "Treat the **Retryable** column as authoritative; do not infer from the HTTP status alone."
+    },
+    {
+      "source_id": "source-a1-jina-reader",
+      "citation_id": "c-jina-rate",
+      "claim_spec_id": "claim-jina-rate-limit-evidence",
+      "title": "Reader | Jina AI",
+      "url": "https://jina.ai/reader/",
+      "locator_label": "Rate Limit; FAQ: What's the rate limit?",
+      "command_file": "commands/17-jina-reader.json",
+      "excerpt": "Rate limits are tracked in three ways: **RPM** (requests per minute), and **TPM** (tokens per minute). Limits are enforced per IP/API key and will be triggered when either the RPM or TPM threshold is reached first. When you provide an API key in the request header, we track rate limits by key rather than IP address."
+    }
+  ]
+}

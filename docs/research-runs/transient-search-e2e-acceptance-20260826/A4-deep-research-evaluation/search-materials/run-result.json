@@ -1,0 +1,102 @@
+{
+  "status": "completed",
+  "answer_complete": true,
+  "observed_errors": [
+    {
+      "command_category": "exa-source-first-discovery",
+      "error_type": "provider_error",
+      "public_signature": "HTTP 402 payment_required"
+    },
+    {
+      "command_category": "sciverse-explicit-academic-discovery",
+      "error_type": "parameter_error",
+      "public_signature": "INVALID_REQUEST extra_forbidden: year_from, year_to"
+    },
+    {
+      "command_category": "sciverse-corrected-explicit-academic-discovery",
+      "error_type": "parameter_error",
+      "public_signature": "INVALID_REQUEST extra_forbidden: sort_by_year"
+    },
+    {
+      "command_category": "zhipu-explicit-broad-discovery",
+      "error_type": "config_error",
+      "public_signature": "provider not configured"
+    }
+  ],
+  "recovery_actions": [
+    {
+      "after": "exa-source-first-discovery",
+      "action": "stopped Exa and switched to an explicit academic provider"
+    },
+    {
+      "after": "sciverse-explicit-academic-discovery",
+      "action": "removed only the rejected date fields, retained the date window in the query, and made the single permitted corrected request"
+    },
+    {
+      "after": "sciverse-corrected-explicit-academic-discovery",
+      "action": "stopped Sciverse after the correction budget was exhausted and switched provider"
+    },
+    {
+      "after": "zhipu-explicit-broad-discovery",
+      "action": "did not retry or modify configuration; used a remaining broad discovery route"
+    },
+    {
+      "after": "broad-search",
+      "action": "treated returned URLs as candidates only and fetched direct sources before verification"
+    }
+  ],
+  "doctor_calls": 0,
+  "sources": [
+    {
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Abstract; sections 2, 3, 4.4, 5; Appendix C.3 and C.5"
+    },
+    {
+      "title": "arXiv API metadata for 2602.18940 and 2508.10152",
+      "url": "https://export.arxiv.org/api/query?id_list=2602.18940,2508.10152",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "entry published and updated fields for arxiv:2602.18940v1 and arxiv:2508.10152v2"
+    },
+    {
+      "title": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild",
+      "url": "https://arxiv.org/html/2510.14240v1",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Abstract and evaluation-dimension descriptions"
+    },
+    {
+      "title": "arXiv API metadata for 2510.14240",
+      "url": "https://export.arxiv.org/api/query?id_list=2510.14240",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "entry published field for arxiv:2510.14240v1"
+    },
+    {
+      "title": "Salesforce/LiveResearchBench dataset",
+      "url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Dataset Overview; Quick Links; Dataset Fields; Citation"
+    },
+    {
+      "title": "SalesforceAIResearch/LiveResearchBench repository",
+      "url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "repository tree; README incremental grading and resume grading sections"
+    },
+    {
+      "title": "Improving and Evaluating Open Deep Research Agents",
+      "url": "https://arxiv.org/abs/2508.10152",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "title and bibliographic metadata; excluded using official API publication date"
+    }
+  ],
+  "native_web_used": false,
+  "security_incident": false
+}

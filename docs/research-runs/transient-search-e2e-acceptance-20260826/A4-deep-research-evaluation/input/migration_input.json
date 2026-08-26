@@ -1,0 +1,346 @@
+{
+  "case_id": "A4",
+  "run_id": "run-transient-a4-20260826",
+  "question": "在 2025-08-26 至 2026-08-26 的首次发布窗口内，哪些论文、评测集、benchmark 或开源实现实质涉及 source coverage、evidence faithfulness、citation correctness 或 fault recovery？请区分 paper、benchmark、dataset 与 repository，并判断直接证据是否真正评估了 source coverage 或 DRA fault recovery。",
+  "mode": "standard",
+  "claims": [
+    {
+      "claim_spec_id": "claim-a4-dream-date",
+      "statement": "DREAM: Deep Research Evaluation with Agentic Metrics 的首次发布时间为 2026-02-21。"
+    },
+    {
+      "claim_spec_id": "claim-a4-live-date",
+      "statement": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild 的首次发布时间为 2025-10-16。"
+    },
+    {
+      "claim_spec_id": "claim-a4-dream-metrics-inventory",
+      "statement": "DREAM 的 Source Quality 指标包括 Factuality 与 Citation Integrity。"
+    },
+    {
+      "claim_spec_id": "claim-a4-live-paper-metrics",
+      "statement": "LiveResearchBench 论文提出的 DeepEval 覆盖 coverage、presentation、citation accuracy、citation association、consistency 与 analysis depth，未列出 DRA fault recovery。"
+    },
+    {
+      "claim_spec_id": "claim-a4-dream-verification-pipelines",
+      "statement": "DREAM 的 Citation Integrity 使用 Claim Attribution 与 Citation Faithfulness 的调和平均。"
+    },
+    {
+      "claim_spec_id": "claim-a4-dream-factuality-independent",
+      "statement": "DREAM 的 Factuality 独立于给定引用检索外部证据。"
+    },
+    {
+      "claim_spec_id": "claim-a4-dream-kic-boundary",
+      "statement": "DREAM 的 Key-Information Coverage 将关键点转成时效性的 yes/no checklist，用于发现遗漏或过时内容，而不是测量来源集合覆盖率。"
+    },
+    {
+      "claim_spec_id": "claim-a4-dream-taxonomy",
+      "statement": "DREAM 将 Deep Research Evaluation 组织为 Presentation Quality、Task Compliance、Analytical Depth 与 Source Quality 四个 vertical。"
+    },
+    {
+      "claim_spec_id": "claim-a4-dream-framework",
+      "statement": "DREAM 把评测本身做成具有工具调用能力的 agentic framework。"
+    },
+    {
+      "claim_spec_id": "claim-a4-dream-static-metrics",
+      "statement": "DREAM 的静态指标包括 Writing Quality、Factuality、Citation Integrity 与 Domain Authoritativeness。"
+    },
+    {
+      "claim_spec_id": "claim-a4-dream-adaptive-kic",
+      "statement": "DREAM 的 Key-Information Coverage 通过检索最新来源并识别必要事实来构造可核验问题。"
+    },
+    {
+      "claim_spec_id": "claim-a4-dream-reasoning-quality",
+      "statement": "DREAM 的 Reasoning Quality 使用 query-specific questions 与 structured validation plans 评估推理。"
+    },
+    {
+      "claim_spec_id": "claim-a4-dream-factuality-boundary",
+      "statement": "DREAM 论文指出 citation alignment 不足以完成 factuality evaluation。"
+    },
+    {
+      "claim_spec_id": "claim-a4-live-paper-scale",
+      "statement": "LiveResearchBench 论文将其定义为覆盖日常生活、企业和学术场景的 100 个专家策划任务的 benchmark。"
+    },
+    {
+      "claim_spec_id": "claim-a4-live-paper-systems",
+      "statement": "LiveResearchBench 论文报告了对 17 个 frontier deep research systems 的评估。"
+    },
+    {
+      "claim_spec_id": "claim-a4-live-dataset-fields",
+      "statement": "LiveResearchBench dataset 页面列出 question_with_checklist subset。"
+    },
+    {
+      "claim_spec_id": "claim-a4-live-dataset-question-only",
+      "statement": "LiveResearchBench dataset 页面列出 question_only subset。"
+    },
+    {
+      "claim_spec_id": "claim-a4-live-dataset-checklist",
+      "statement": "LiveResearchBench dataset 页面提供用于 coverage evaluation 的 checklist 字段。"
+    },
+    {
+      "claim_spec_id": "claim-a4-live-repo-identity",
+      "statement": "LiveResearchBench repository 同时包含 LiveResearchBench benchmark 与 DeepEval evaluation framework。"
+    },
+    {
+      "claim_spec_id": "claim-a4-live-resume",
+      "statement": "LiveResearchBench repository 的 README 说明评分中断后重新运行同一命令会自动继续。"
+    },
+    {
+      "claim_spec_id": "claim-a4-live-incremental",
+      "statement": "LiveResearchBench repository 会把已评分报告立即保存到按 criterion 区分的 JSONL 文件。"
+    },
+    {
+      "claim_spec_id": "claim-a4-excluded-browsecomp",
+      "statement": "Improving and Evaluating Open Deep Research Agents 提出 BrowseComp-Small，属于主题相关的 benchmark adaptation。"
+    },
+    {
+      "claim_spec_id": "claim-a4-excluded-date",
+      "statement": "Improving and Evaluating Open Deep Research Agents 的首次发布时间为 2025-08-13，早于本次窗口。"
+    },
+    {
+      "claim_spec_id": "claim-a4-excluded-updated",
+      "statement": "Improving and Evaluating Open Deep Research Agents 的当前版本更新时间为 2026-01-08，不能替代首次发布时间。"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "source-a4-dream-date",
+      "citation_id": "a4-dream-date",
+      "claim_spec_id": "claim-a4-dream-date",
+      "title": "arXiv API metadata for 2602.18940 and 2508.10152",
+      "url": "https://export.arxiv.org/api/query?id_list=2602.18940,2508.10152",
+      "locator_label": "arxiv:2602.18940v1 entry published field",
+      "command_file": "fetch-arxiv-api-dates.json",
+      "excerpt": "DREAM: Deep Research Evaluation with Agentic Metrics 2026-02-21T19:14:31Z"
+    },
+    {
+      "source_id": "source-a4-live-date",
+      "citation_id": "a4-live-date",
+      "claim_spec_id": "claim-a4-live-date",
+      "title": "arXiv API metadata for 2510.14240",
+      "url": "https://export.arxiv.org/api/query?id_list=2510.14240",
+      "locator_label": "arxiv:2510.14240v1 entry published field",
+      "command_file": "fetch-live-research-bench-date.json",
+      "excerpt": "2025-10-16T02:49:16Z"
+    },
+    {
+      "source_id": "source-a4-dream-metrics-inventory",
+      "citation_id": "a4-dream-metrics-inventory",
+      "claim_spec_id": "claim-a4-dream-metrics-inventory",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "locator_label": "Section 2 taxonomy table, Source Quality row",
+      "command_file": "fetch-dream-arxiv.json",
+      "excerpt": "Source Quality | Factuality, Citation Integrity"
+    },
+    {
+      "source_id": "source-a4-live-paper-metrics",
+      "citation_id": "a4-live-paper-metrics",
+      "claim_spec_id": "claim-a4-live-paper-metrics",
+      "title": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild",
+      "url": "https://arxiv.org/html/2510.14240v1",
+      "locator_label": "Abstract and Section 4 DeepEval metric list",
+      "command_file": "fetch-live-research-bench-paper.json",
+      "excerpt": "including coverage, presentation, citation accuracy and association, consistency and depth of analysis"
+    },
+    {
+      "source_id": "source-a4-dream-verification-pipelines",
+      "citation_id": "a4-dream-verification-pipelines",
+      "claim_spec_id": "claim-a4-dream-verification-pipelines",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "locator_label": "Section 3.2 Workflow Evaluator, Citation Integrity",
+      "command_file": "fetch-dream-arxiv.json",
+      "excerpt": "the system computes the harmonic mean of *Claim Attribution* (the ratio of cited to total verifiable claims) and *Citation Faithfulness* (the alignment of cited claims with their source content)"
+    },
+    {
+      "source_id": "source-a4-dream-factuality-independent",
+      "citation_id": "a4-dream-factuality-independent",
+      "claim_spec_id": "claim-a4-dream-factuality-independent",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "locator_label": "Section 3.2 Workflow Evaluator, Factuality",
+      "command_file": "fetch-dream-arxiv.json",
+      "excerpt": "For Factuality, claims are extracted and evaluated independently of citations"
+    },
+    {
+      "source_id": "source-a4-dream-kic-boundary",
+      "citation_id": "a4-dream-kic-boundary",
+      "claim_spec_id": "claim-a4-dream-kic-boundary",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "locator_label": "Section 3.1 Adaptive Metrics, Key-Information Coverage",
+      "command_file": "fetch-dream-arxiv.json",
+      "excerpt": "This transforms coverage assessment into a grounded, temporally aware checklist that flags missing or outdated content."
+    },
+    {
+      "source_id": "source-a4-dream-taxonomy",
+      "citation_id": "a4-dream-taxonomy",
+      "claim_spec_id": "claim-a4-dream-taxonomy",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "locator_label": "Introduction and Section 2 taxonomy",
+      "command_file": "fetch-dream-arxiv.json",
+      "excerpt": "four fundamental verticals: *Presentation Quality*, *Task Compliance*, *Analytical Depth*, and *Source Quality*"
+    },
+    {
+      "source_id": "source-a4-dream-framework",
+      "citation_id": "a4-dream-framework",
+      "claim_spec_id": "claim-a4-dream-framework",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "locator_label": "Introduction, DREAM framework description",
+      "command_file": "fetch-dream-arxiv.json",
+      "excerpt": "DREAM, a framework that makes evaluation itself agentic"
+    },
+    {
+      "source_id": "source-a4-dream-static-metrics",
+      "citation_id": "a4-dream-static-metrics",
+      "claim_spec_id": "claim-a4-dream-static-metrics",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "locator_label": "Section 3.1 Static Metrics",
+      "command_file": "fetch-dream-arxiv.json",
+      "excerpt": "These query-agnostic criteria apply uniformly across tasks: (i) *Writing Quality (WQ)* assesses presentation quality along the fixed dimensions of Ideas and Content, Organization, and Sentence Fluency; (ii) *Factuality* validates claims against external knowledge independent of citation support; (iii) *Citation Integrity (CI)* verifies that claims are attributed to sources and supported by the cited content; and (iv) *Domain Authoritativeness (DA)* evaluates cited sources credibility to ensure reliance on reputable, high-quality domains."
+    },
+    {
+      "source_id": "source-a4-dream-adaptive-kic",
+      "citation_id": "a4-dream-adaptive-kic",
+      "claim_spec_id": "claim-a4-dream-adaptive-kic",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "locator_label": "Section 3.1 Adaptive Metrics, Key-Information Coverage",
+      "command_file": "fetch-dream-arxiv.json",
+      "excerpt": "Key-Information Coverage (KIC): The agent identifies essential facts by retrieving up-to-date sources and converting each key point into a verifiable *yes/no question*."
+    },
+    {
+      "source_id": "source-a4-dream-reasoning-quality",
+      "citation_id": "a4-dream-reasoning-quality",
+      "claim_spec_id": "claim-a4-dream-reasoning-quality",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "locator_label": "Section 3.1 Adaptive Metrics, Reasoning Quality",
+      "command_file": "fetch-dream-arxiv.json",
+      "excerpt": "Reasoning Quality (RQ): The agent generates query-specific questions paired with *structured validation plans*"
+    },
+    {
+      "source_id": "source-a4-dream-factuality-boundary",
+      "citation_id": "a4-dream-factuality-boundary",
+      "claim_spec_id": "claim-a4-dream-factuality-boundary",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "locator_label": "Section 4.4 Grounding Beyond Citation Alignment",
+      "command_file": "fetch-dream-arxiv.json",
+      "excerpt": "citation alignment is insufficient for factual evaluation"
+    },
+    {
+      "source_id": "source-a4-live-paper-scale",
+      "citation_id": "a4-live-paper-scale",
+      "claim_spec_id": "claim-a4-live-paper-scale",
+      "title": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild",
+      "url": "https://arxiv.org/html/2510.14240v1",
+      "locator_label": "Abstract",
+      "command_file": "fetch-live-research-bench-paper.json",
+      "excerpt": "a benchmark of 100 expert-curated tasks spanning daily life, enterprise, and academia"
+    },
+    {
+      "source_id": "source-a4-live-paper-systems",
+      "citation_id": "a4-live-paper-systems",
+      "claim_spec_id": "claim-a4-live-paper-systems",
+      "title": "LiveResearchBench: A Live Benchmark for User-Centric Deep Research in the Wild",
+      "url": "https://arxiv.org/html/2510.14240v1",
+      "locator_label": "Abstract and contribution summary",
+      "command_file": "fetch-live-research-bench-paper.json",
+      "excerpt": "Using LiveResearchBench and DeepEval, we conduct a comprehensive evaluation of 17 frontier deep research systems"
+    },
+    {
+      "source_id": "source-a4-live-dataset-fields",
+      "citation_id": "a4-live-dataset-fields",
+      "claim_spec_id": "claim-a4-live-dataset-fields",
+      "title": "Salesforce/LiveResearchBench dataset",
+      "url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+      "locator_label": "Dataset Fields, Subsets",
+      "command_file": "fetch-live-research-bench.json",
+      "excerpt": "question_with_checklist"
+    },
+    {
+      "source_id": "source-a4-live-dataset-question-only",
+      "citation_id": "a4-live-dataset-question-only",
+      "claim_spec_id": "claim-a4-live-dataset-question-only",
+      "title": "Salesforce/LiveResearchBench dataset",
+      "url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+      "locator_label": "Dataset Fields, Subsets",
+      "command_file": "fetch-live-research-bench.json",
+      "excerpt": "question_only"
+    },
+    {
+      "source_id": "source-a4-live-dataset-checklist",
+      "citation_id": "a4-live-dataset-checklist",
+      "claim_spec_id": "claim-a4-live-dataset-checklist",
+      "title": "Salesforce/LiveResearchBench dataset",
+      "url": "https://huggingface.co/datasets/Salesforce/LiveResearchBench",
+      "locator_label": "Dataset Fields, checklist field",
+      "command_file": "fetch-live-research-bench.json",
+      "excerpt": "List of checklist items for coverage evaluation"
+    },
+    {
+      "source_id": "source-a4-live-repo-identity",
+      "citation_id": "a4-live-repo-identity",
+      "claim_spec_id": "claim-a4-live-repo-identity",
+      "title": "SalesforceAIResearch/LiveResearchBench repository",
+      "url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+      "locator_label": "README project description",
+      "command_file": "fetch-live-research-bench-repo.json",
+      "excerpt": "including both the **LiveResearchBench benchmark** and the **DeepEval evaluation framework**"
+    },
+    {
+      "source_id": "source-a4-live-resume",
+      "citation_id": "a4-live-resume",
+      "claim_spec_id": "claim-a4-live-resume",
+      "title": "SalesforceAIResearch/LiveResearchBench repository",
+      "url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+      "locator_label": "README Resume Interrupted Runs",
+      "command_file": "fetch-live-research-bench-repo.json",
+      "excerpt": "If your grading run is interrupted, simply **run the same command again** - it will automatically resume from where it left off."
+    },
+    {
+      "source_id": "source-a4-live-incremental",
+      "citation_id": "a4-live-incremental",
+      "claim_spec_id": "claim-a4-live-incremental",
+      "title": "SalesforceAIResearch/LiveResearchBench repository",
+      "url": "https://github.com/SalesforceAIResearch/LiveResearchBench",
+      "locator_label": "README How It Works, incremental grading",
+      "command_file": "fetch-live-research-bench-repo.json",
+      "excerpt": "Each graded report is immediately saved to criterion-specific JSONL files"
+    },
+    {
+      "source_id": "source-a4-excluded-browsecomp",
+      "citation_id": "a4-excluded-browsecomp",
+      "claim_spec_id": "claim-a4-excluded-browsecomp",
+      "title": "arXiv API metadata for 2602.18940 and 2508.10152",
+      "url": "https://export.arxiv.org/api/query?id_list=2602.18940,2508.10152",
+      "locator_label": "arxiv:2508.10152v2 abstract",
+      "command_file": "fetch-arxiv-api-dates.json",
+      "excerpt": "We propose BrowseComp-Small (BC-Small), comprising a subset of BrowseComp"
+    },
+    {
+      "source_id": "source-a4-excluded-date",
+      "citation_id": "a4-excluded-date",
+      "claim_spec_id": "claim-a4-excluded-date",
+      "title": "arXiv API metadata for 2602.18940 and 2508.10152",
+      "url": "https://export.arxiv.org/api/query?id_list=2602.18940,2508.10152",
+      "locator_label": "arxiv:2508.10152v2 entry published field",
+      "command_file": "fetch-arxiv-api-dates.json",
+      "excerpt": "2025-08-13T19:32:01Z"
+    },
+    {
+      "source_id": "source-a4-excluded-updated",
+      "citation_id": "a4-excluded-updated",
+      "claim_spec_id": "claim-a4-excluded-updated",
+      "title": "arXiv API metadata for 2602.18940 and 2508.10152",
+      "url": "https://export.arxiv.org/api/query?id_list=2602.18940,2508.10152",
+      "locator_label": "arxiv:2508.10152v2 entry updated field",
+      "command_file": "fetch-arxiv-api-dates.json",
+      "excerpt": "2026-01-08T17:54:58Z"
+    }
+  ]
+}

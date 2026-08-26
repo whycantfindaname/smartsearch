@@ -1,0 +1,75 @@
+{
+  "attempts": [
+    {
+      "artifact_refs": [
+        "art_934ff150bb9a4c6fcde004e1"
+      ],
+      "attempt_id": "attempt-source-04",
+      "attempt_no": 1,
+      "capability": "evidence_migration",
+      "completed_at": "2026-08-26T00:00:00Z",
+      "deadline_at": "",
+      "degraded_reason": "",
+      "error": "",
+      "execution_kind": "project_agent",
+      "external_state": {},
+      "provider": "saved-acceptance-artifacts",
+      "request_summary": {
+        "command_file": "fetch-live-research-bench-paper.json",
+        "locator_label": "Abstract and Section 4 DeepEval metric list"
+      },
+      "retry_safe": false,
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "started_at": "",
+      "status": "success",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "usage": {}
+    }
+  ],
+  "candidates": [],
+  "delegate_results": [],
+  "evidence_items": [
+    {
+      "artifact_id": "art_934ff150bb9a4c6fcde004e1",
+      "artifact_refs": [
+        "art_934ff150bb9a4c6fcde004e1"
+      ],
+      "attempt_no": 1,
+      "canonical_url": "https://arxiv.org/html/2510.14240v1",
+      "chunker_id": "",
+      "chunker_version": "",
+      "claim_spec_id": "claim-a4-live-paper-metrics",
+      "content_type": "text/plain",
+      "evidence_id": "evidence-source-04",
+      "locator": {
+        "section": "Abstract and Section 4 DeepEval metric list",
+        "type": "section"
+      },
+      "parser_id": "",
+      "parser_version": "",
+      "quality": {
+        "authority": "official_or_original",
+        "directness": "direct",
+        "freshness": "verified_2026-08-26",
+        "independence": "source_specific",
+        "locator_quality": "exact_excerpt",
+        "methodological_fit": "fit"
+      },
+      "retrieved_at": "2026-08-26T00:00:00Z",
+      "run_id": "run-transient-a4-20260826",
+      "schema_version": "1",
+      "snapshot_id": "snap_c2f8c87ac29b11ae0d2097117fe05f2bcf80113fafb8dfd1b6ab9e44eda4ee7c",
+      "source_id": "source-a4-live-paper-metrics",
+      "stance": "support",
+      "step_id": "step-source-04",
+      "task_id": "task-source-04",
+      "text": "including coverage, presentation, citation accuracy and association, consistency and depth of analysis"
+    }
+  ],
+  "key_source_proposals": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "task_id": "task-source-04"
+}

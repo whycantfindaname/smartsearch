@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_87b7cc69fdfa717302d1c375"
+  ],
+  "artifact_refs": [
+    "art_87b7cc69fdfa717302d1c375"
+  ],
+  "claim_spec_id": "claim-exa-error-identity",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a1-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-05",
+  "task_id": "task-source-05",
+  "user_constraints": {}
+}

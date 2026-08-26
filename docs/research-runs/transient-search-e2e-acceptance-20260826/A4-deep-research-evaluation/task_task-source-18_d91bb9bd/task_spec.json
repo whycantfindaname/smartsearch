@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_e4bb0bb1fe4e5d7ee8f400dc"
+  ],
+  "artifact_refs": [
+    "art_e4bb0bb1fe4e5d7ee8f400dc"
+  ],
+  "claim_spec_id": "claim-a4-live-dataset-checklist",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a4-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-18",
+  "task_id": "task-source-18",
+  "user_constraints": {}
+}

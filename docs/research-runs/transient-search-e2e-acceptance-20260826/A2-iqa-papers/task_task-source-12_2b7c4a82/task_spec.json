@@ -1,0 +1,24 @@
+{
+  "allowed_tools": [
+    "grep",
+    "navigate",
+    "open",
+    "read",
+    "search"
+  ],
+  "artifact_ids": [
+    "art_211ea56ee0aab2380ffdd30b"
+  ],
+  "artifact_refs": [
+    "art_211ea56ee0aab2380ffdd30b"
+  ],
+  "claim_spec_id": "claim-a2-agidefect",
+  "expected_output": "evidence_items",
+  "platform_constraints": {},
+  "read_locators": [],
+  "run_id": "run-transient-a2-20260826",
+  "schema_version": "1",
+  "step_id": "step-source-12",
+  "task_id": "task-source-12",
+  "user_constraints": {}
+}

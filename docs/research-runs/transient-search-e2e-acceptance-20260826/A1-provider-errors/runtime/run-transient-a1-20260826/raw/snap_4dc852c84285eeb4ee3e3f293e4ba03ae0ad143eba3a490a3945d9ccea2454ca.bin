@@ -1,0 +1,1 @@
+All error responses include a `requestId` field, `error` message, and an error `tag`:
