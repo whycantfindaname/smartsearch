@@ -77,18 +77,10 @@ Intent router rules:
 - `setup` and `config` read/write the local Smart Search config file and do not call providers.
 - `model current` reports explicit provider model settings. `model set` is retained only as a parameter-error migration guard; use `config set XAI_MODEL ...` or `config set OPENAI_COMPATIBLE_MODEL ...` to change models.
 
-Provider attempt errors:
+Provider attempt states:
 
-- Provider exceptions must be visible as `provider_attempts[].status="error"`, never silently converted to empty output. Use the stable taxonomy and replay rules in `references/error-recovery.md`; do not infer automatic replay from a broad error category.
+- Provider exceptions must be visible as `provider_attempts[].status="error"`, never silently converted to empty output. Read [`error-recovery.md`](error-recovery.md) for their classification and handling.
 - A successfully decoded response with no normalized candidates or content is `status="empty"`, so same-capability fallback can continue without misreporting a provider failure.
-
-## Error Recovery Policy
-
-`references/error-recovery.md` is the single extensible catalog for `429`,
-`499`, `5xx`, timeout, network, and uncertain-submission handling. It defines
-the only safe logical replay markers, the structured `recovery` object, and the
-one-probe procedure. Add future documentation-only handling rules there
-instead of duplicating them in this routing reference or `SKILL.md`.
 
 Zhipu Web Search API:
 
@@ -114,7 +106,7 @@ Jina Reader:
 - Anonymous Jina Reader calls may be used only as explicit/experimental degraded fetch behavior; they must not make standard setup pass.
 - `JINA_RESPOND_WITH=readerlm-v2` requires `JINA_API_KEY` and should report a configuration error without a network request when the key is missing.
 - Jina Reader is `web_fetch` only, not `web_search`.
-- Jina 401/403, 422, 429, timeout, network errors, and low-quality challenge pages such as `Title: Just a moment...` must be reported as failed provider attempts and allow same-capability fallback.
+- Jina failure and challenge-page handling is defined in the Jina Reader section of [`error-recovery.md`](error-recovery.md).
 
 AnySearch:
 
@@ -157,7 +149,7 @@ Exa domain filters:
 
 ## Provider Output Details
 
-- Exa HTTP `400` or `422` failures are returned as `ok=false` with `error_type=parameter_error`; use this to distinguish bad CLI/domain/date/category arguments from upstream network failures.
+- Exa failure classification and operator handling are defined in the Exa section of [`error-recovery.md`](error-recovery.md).
 - AnySearch experimental output should preserve structured results without URLs as raw/structured evidence.
 - Sciverse experimental output should preserve raw response data under `raw` while exposing normalized `fields`, `results`, `hits`, `text`, or `items` depending on the command.
 - Diagnostic output should report Firecrawl status as whether `FIRECRAWL_API_KEY` is configured; it is not currently a live Firecrawl request.

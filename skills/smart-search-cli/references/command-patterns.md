@@ -5,7 +5,7 @@
 - Evidence files
 - Common commands
 - Short aliases
-- Transient search recovery
+- Error handling
 - Guardrails
 
 ## Evidence Files
@@ -129,19 +129,12 @@ smart-search sm --format json
 smart-search reg
 ```
 
-## Transient Search Recovery
+## Error Handling
 
-Use the CLI-managed path and read `references/error-recovery.md` for the
-decision matrix and recovery procedure:
-
-```bash
-smart-search search "query" --timeout 120 --max-try 5 --format json --output result.json
-```
-
-`--max-try` defaults to `5` and is limited to the safe logical replay cases
-listed in the catalog. Do not add an agent-side retry loop around this command.
-The catalog, rather than this example file, is the place to record a new error
-handling rule.
+For any failed command, read
+[`error-recovery.md`](error-recovery.md) before choosing a retry, replay,
+fallback, diagnostic, or stop action. Add new status-specific or
+provider-specific guidance to that catalog, not to this command example file.
 
 ## Guardrails
 
@@ -152,6 +145,5 @@ handling rule.
 - Prefer `exa-search --include-domains` for official documentation when likely domains are known.
 - Do not expose API keys. Treat `doctor` output as safe only because it is expected to mask secrets.
 - In this CLI-first workflow, native `web_search` is disabled unless the user explicitly configures another approved route.
-- If `doctor` or a command fails, report the failure and recovery steps; do not silently fall back to another web-search route.
 - Do not use legacy MCP tool names in prompts, notes, or generated instructions for this workflow.
 - Treat key rotation as a hard safety gate when previous key values were pasted into chat or logs.

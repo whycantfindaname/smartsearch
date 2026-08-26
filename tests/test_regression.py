@@ -174,18 +174,18 @@ def test_deep_research_cli_contract_documents_plan_and_smoke_matrix():
         assert marker in packaged_contract
 
 
-def test_search_transient_recovery_catalog_is_distributable():
-    public_text = _read_skill_tree(PUBLIC_SKILL_DIR)
-    packaged_text = _read_skill_tree(PACKAGED_SKILL_DIR)
-    public_contract = _read_reference_tree(PUBLIC_SKILL_DIR)
-    packaged_contract = _read_reference_tree(PACKAGED_SKILL_DIR)
+def test_search_error_recovery_catalog_is_the_single_instruction_source():
+    catalog_relative_path = Path("references/error-recovery.md")
+    public_skill = (PUBLIC_SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+    packaged_skill = (PACKAGED_SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+    public_catalog = (PUBLIC_SKILL_DIR / catalog_relative_path).read_text(encoding="utf-8")
+    packaged_catalog = (PACKAGED_SKILL_DIR / catalog_relative_path).read_text(encoding="utf-8")
 
-    skill_markers = [
-        "Transient Search Recovery",
+    entrypoint_markers = [
+        "## Error Handling",
         "references/error-recovery.md",
-        "--timeout 120 --max-try 5",
-        "single diagnostic probe",
-        "Do not copy individual error rules into this file",
+        "only instruction source for status-specific and provider-specific handling",
+        "Change code and tests only when machine classification, automatic",
     ]
     contract_markers = [
         "single extensible decision catalog",
@@ -196,12 +196,25 @@ def test_search_transient_recovery_catalog_is_distributable():
         "documentation-only operator response belongs here alone",
     ]
 
-    for marker in skill_markers:
-        assert marker in public_text
-        assert marker in packaged_text
+    for marker in entrypoint_markers:
+        assert marker in public_skill
+        assert marker in packaged_skill
     for marker in contract_markers:
-        assert marker in public_contract
-        assert marker in packaged_contract
+        assert marker in public_catalog
+        assert marker in packaged_catalog
+
+    status_specific_markers = [
+        "concurrency_limit_exceeded",
+        "request_cancelled",
+        "safe_to_replay",
+        "doctor_max_attempts",
+    ]
+    for skill_dir in (PUBLIC_SKILL_DIR, PACKAGED_SKILL_DIR):
+        for path, text in _skill_text_files(skill_dir).items():
+            if path == catalog_relative_path.as_posix():
+                continue
+            for marker in status_specific_markers:
+                assert marker not in text, f"{marker!r} must be owned by {catalog_relative_path}, not {path}"
 
 
 def test_deep_research_readme_documents_capability_orchestration():

@@ -18,19 +18,23 @@ Use the local `smart-search` command as the default execution layer for web rese
 
 ## Default Workflow
 
-1. Run `smart-search doctor --format json` once when configuration or availability is uncertain. During a transient search incident, treat it as a single diagnostic probe; do not repeat it as a repair loop.
-2. If `doctor` reports missing configuration, use `smart-search setup` or `smart-search config set KEY VALUE` when the user provides keys. Do not ask users to edit global environment variables by default.
-3. If OpenAI-compatible `search` hangs or times out after `doctor` succeeds, run `smart-search diagnose openai-compatible --format markdown` and use its summary.
-4. For resilient xAI search, run `smart-search search "QUERY" --timeout 120 --max-try 5 --format json` and wait for the CLI to finish; do not implement another retry loop in the agent.
-5. If `doctor` returns `ok: true`, use only `smart-search` CLI subcommands for web research. Do not call Codex native web search in the same task.
-6. Use `smart-search skills status --targets codex --format json` when the installed global skill may be stale; use `smart-search skills update --targets codex --format json` to refresh it without rerunning setup.
-7. Use `smart-search smoke --mock --format json` after CLI/provider architecture changes. Use `--live` only when real keys are available and the user expects live checks.
-8. Treat `TAVILY_ENABLED=false` as an intentional no-network boundary: do not work around it with direct Tavily or `map` calls. Check `doctor` and live smoke for disabled/skipped Tavily state; Firecrawl remains independently configured.
-9. Preserve command lines and source URLs in your answer. Prefer citing fetched pages or `primary_sources`; treat `extra_sources` as follow-up candidates until fetched.
+1. Run `smart-search search "QUERY" --format json` for ordinary web research and wait for the CLI to finish.
+2. When setup, configuration, or current provider availability is uncertain, read `references/setup-config.md` and use its diagnostic path. Do not ask users to edit global environment variables by default.
+3. After the minimum provider profile is healthy, use only `smart-search` CLI subcommands for web research. Do not call Codex native web search in the same task.
+4. Use `smart-search skills status --targets codex --format json` when the installed global skill may be stale; use `smart-search skills update --targets codex --format json` to refresh it without rerunning setup.
+5. Use `smart-search smoke --mock --format json` after CLI/provider architecture changes. Use `--live` only when real keys are available and the user expects live checks.
+6. Treat `TAVILY_ENABLED=false` as an intentional no-network boundary: do not work around it with direct Tavily or `map` calls. Check diagnostics and live smoke for disabled/skipped Tavily state; Firecrawl remains independently configured.
+7. Preserve command lines and source URLs in your answer. Prefer citing fetched pages or `primary_sources`; treat `extra_sources` as follow-up candidates until fetched.
 
-## Transient Search Recovery
+## Error Handling
 
-Read `references/error-recovery.md` for the complete, extensible error-handling catalog. The default search budget is `--timeout 120 --max-try 5`; the catalog is the source of truth for replay safety, cooldowns, the one allowed doctor probe, and the next action. Do not copy individual error rules into this file.
+When a command returns a provider or recovery failure, read
+[`references/error-recovery.md`](references/error-recovery.md) before deciding
+whether to retry, replay, fall back, diagnose, or stop. That catalog is the
+only instruction source for status-specific and provider-specific handling.
+Record future operator guidance there instead of adding error rules to this
+entrypoint. Change code and tests only when machine classification, automatic
+behavior, or the structured output contract must change.
 
 ## Routing
 
@@ -57,13 +61,11 @@ Read `references/error-recovery.md` for the complete, extensible error-handling 
 - xAI Responses and OpenAI-compatible are peer `main_search` providers. Do not reuse one provider's URL/key to fabricate the other provider as fallback.
 - For current-news, policy, finance, health, and other high-risk facts, do not answer from broad `search.content` alone. Fetch key pages and summarize only what fetched text supports.
 - Native `web_search` is disabled in this CLI-first workflow unless the user explicitly configures another approved route; do not silently fall back to another web-search route.
-- `doctor` is a diagnostic probe, not a repair operation. If a recovery object recommends it, run `smart-search doctor --format json` at most once, then follow the catalog's next step instead of creating another agent-side retry loop.
 
 ## References
 
 - Current OPPO Linux search flow, Embedding trigger conditions, provider layout, and Mermaid diagram: `references/current-search-flow.md`
-- Command examples, evidence files, transient search recovery, and guardrails: `references/command-patterns.md`
-- Error taxonomy, replay matrix, structured recovery fields, and the one-probe workflow: `references/error-recovery.md`
+- Command examples, evidence files, and guardrails: `references/command-patterns.md`
 - Deep Research planner/executor workflow, plan fields, gap check, and smoke matrix: `references/deep-research-mode.md`
 - CLI entrypoints, command signatures, aliases, output fields, exit codes, and tool policy: `references/cli-core.md`
 - Setup, config storage, skill installation, provider endpoints, and OpenAI-compatible diagnostics: `references/setup-config.md`

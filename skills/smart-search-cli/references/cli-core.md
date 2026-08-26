@@ -68,7 +68,7 @@ Nested aliases: `config path`/`cfg p`, `config list`/`cfg ls`/`cfg l`, `config s
 - `--format markdown` is the human-readable report format. `route --format markdown`, `route-calibrate --format markdown`, `doctor --format markdown`, and `diagnose openai-compatible --format markdown` must render useful reports rather than raw JSON dumps.
 - `--format content` prints only the `content` field for content-bearing commands such as `search`, `fetch`, `context7-docs`, and `research`. Commands without a `content` field, including `route`, `route-calibrate`, `doctor`, `smoke`, `config`, and `model`, must print a compact non-empty text summary.
 - Successful search output includes `ok`, `query`, `primary_api_mode`, `content`, `sources`, `sources_count`, `primary_sources`, `primary_sources_count`, `extra_sources`, `extra_sources_count`, `source_warning`, `routing_decision`, `providers_used`, `provider_attempts`, `fallback_used`, `validation_level`, and `elapsed_ms`.
-- Search output also includes `logical_attempts`, `logical_retry_used`, and `logical_retry_max_attempts`. Failed searches may include a structured `recovery` object; its `safe_to_replay`, `wait_seconds`, `doctor_command`, `doctor_max_attempts`, and `recommendation` fields are the authoritative next-step contract. See `references/error-recovery.md`.
+- Search output also includes `logical_attempts`, `logical_retry_used`, and `logical_retry_max_attempts`. Failed searches may include a structured `recovery` object; its schema and handling rules are defined only in [`error-recovery.md`](error-recovery.md).
 - Route diagnostic output includes `ok`, `query`, `executed_search=false`, `provider_selection=not_executed`, backward-compatible fields `docs_intent`, `zh_current_intent`, `web_current_intent`, `fetch_intent`, `supplemental_paths`, and unified intent-router fields `intent_router_mode`, `required_capabilities`, `intent_signals`, `confidence`, `router_engines_used`, `degraded`, `degraded_reason`, `reasons`, `embedding_model`, `embedding_threshold`, `embedding_margin`, `embedding_threshold_source`, and `embedding_margin_source`. `smart-search route` must not call search/docs/fetch providers.
 - Route calibration output includes `ok`, `metric`, `primary_metric=semantic_macro_f1`, `full_route_metric_role=validation`, `models`, `model_results`, `dataset_size`, `dataset_counts`, `capabilities`, `recommended_model`, `recommended_threshold`, `recommended_margin`, and `failed_models`.
 - Fetch output includes `ok`, `url`, `provider`, `content`, `provider_attempts`, `fallback_used`, and `elapsed_ms`.
@@ -94,7 +94,7 @@ Nested aliases: `config path`/`cfg p`, `config list`/`cfg ls`/`cfg l`, `config s
 
 ## Search Error Recovery
 
-Read `references/error-recovery.md` before deciding whether a failed `search` may be replayed. `--max-try` is a bounded logical-attempt budget, not permission to repeat arbitrary provider failures.
+Read [`error-recovery.md`](error-recovery.md) before deciding how to handle a failed `search`. Add future error rules to that catalog rather than expanding this command contract.
 
 ## Tool Policy
 
