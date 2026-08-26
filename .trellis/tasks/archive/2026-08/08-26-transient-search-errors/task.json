@@ -1,0 +1,33 @@
+{
+  "id": "transient-search-errors",
+  "name": "transient-search-errors",
+  "title": "Handle transient Smart Search errors across branches",
+  "description": "Classify and safely recover from OpenAI-compatible 429 concurrency and 499 cancellation failures on Smart Search development branches, keep main as the read-only remote baseline, then synchronize the governed Skill.",
+  "status": "completed",
+  "dev_type": "backend",
+  "scope": "smartsearch main/lwj_dev/preview plus governed smart-search-cli synchronization",
+  "package": null,
+  "priority": "P2",
+  "creator": "jasonliao",
+  "assignee": "jasonliao",
+  "createdAt": "2026-08-26",
+  "completedAt": "2026-08-26",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "src/smart_search/provider_errors.py",
+    "src/smart_search/cli.py",
+    "tests/test_provider_errors.py",
+    "tests/test_cli.py",
+    "skills/smart-search-cli",
+    "src/smart_search/assets/skills/smart-search-cli"
+  ],
+  "notes": "Keep Smart Search main read-only and equal to remote main; implement on lwj_dev, then integrate preview. No push or release.",
+  "meta": {}
+}
