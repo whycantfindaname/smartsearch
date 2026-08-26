@@ -70,3 +70,40 @@ Added a committed Stage G research index and paper-style References; exported a 
 ### Status
 
 [OK] **Completed**
+
+
+## Session 4: Bound transient Smart Search error recovery
+
+**Date**: 2026-08-26
+**Task**: Bound transient Smart Search error recovery
+**Branch**: `preview/multi-source-agentic-research`
+
+### Summary
+
+Implemented bounded recovery for safe concurrency replays and explicit cancellation outcomes; integrated lwj_dev into preview, synchronized governed Skills, refreshed macOS projections, and completed runtime verification.
+
+### Main Changes
+
+- Added request_cancelled classification for HTTP 499 and structured recovery guidance with one diagnostic probe.
+- Kept Smart Search main read-only; integrated lwj_dev into preview while preserving preview research assets.
+- Synchronized smart-search-cli through personal Skills main, macos, oppo_windows, and oppo_linux with provenance.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ef3af983729219e8a3a31428bf1f51049467d4fe` | (see git log) |
+| `de038a41573f3e8fb5fce5d308dbb277fab3abd7` | (see git log) |
+
+### Testing
+
+- [OK] Smart Search main 420 passed; lwj_dev 450 passed; preview 572 passed; Skill parity passed on all branches.
+- [OK] Governed macOS validation and workspace layout checks passed; one doctor probe and one live search succeeded.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- No further action in this task; future documentation-only recovery rules belong in references/error-recovery.md.
