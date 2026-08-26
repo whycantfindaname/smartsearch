@@ -190,8 +190,188 @@ def test_search_help_exposes_timeout(capsys):
     out = capsys.readouterr().out
     assert "--timeout SECONDS" in out
     assert "--max-try ATTEMPTS" in out
+    assert "concurrency_limit_exceeded" in out
     assert "--stream" in out
     assert "--no-stream" in out
+
+
+def test_search_defaults_to_transient_recovery_budget():
+    args = cli.build_parser().parse_args(["search", "query"])
+
+    assert args.timeout == 120
+    assert args.max_try == 5
+
+
+def _failed_search_result(query, *, error_type, error, provider="OpenAI-compatible"):
+    return {
+        "ok": False,
+        "query": query,
+        "provider": provider,
+        "error_type": error_type,
+        "error": error,
+        "provider_attempts": [
+            {
+                "provider": provider,
+                "status": "error",
+                "error_type": error_type,
+                "error": error,
+            }
+        ],
+    }
+
+
+def test_search_replays_only_concurrency_limit_and_records_logical_attempts(monkeypatch, capsys):
+    calls = []
+    sleeps = []
+
+    async def fake_search(query, **kwargs):
+        calls.append((query, kwargs))
+        if len(calls) < 3:
+            return _failed_search_result(
+                query,
+                error_type="rate_limited",
+                error='OpenAI-compatible HTTP 429: {"code":"concurrency_limit_exceeded"}',
+            )
+        return {"ok": True, "query": query, "content": "Answer", "sources": [], "sources_count": 0}
+
+    async def fake_sleep(seconds):
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(cli.service, "search", fake_search)
+    monkeypatch.setattr(cli.asyncio, "sleep", fake_sleep)
+    monkeypatch.setattr(cli.random, "uniform", lambda start, end: 3.0)
+
+    code = cli.main(["search", "retry", "--providers", "openai-compatible", "--format", "json"])
+
+    data = json.loads(capsys.readouterr().out)
+    assert code == cli.EXIT_OK
+    assert len(calls) == 3
+    assert sleeps == [3.0, 3.0]
+    assert data["logical_attempts"] == 3
+    assert data["logical_retry_used"] is True
+    assert data["logical_retry_max_attempts"] == 5
+    assert [attempt["logical_attempt"] for attempt in data["provider_attempts"]] == [1, 2]
+
+
+def test_search_concurrency_recovery_is_bounded_and_actionable(monkeypatch, capsys):
+    calls = []
+
+    async def fake_search(query, **kwargs):
+        calls.append(query)
+        return _failed_search_result(
+            query,
+            error_type="rate_limited",
+            error='OpenAI-compatible HTTP 429: {"code":"concurrency_limit_exceeded"}',
+        )
+
+    async def fake_sleep(_seconds):
+        return None
+
+    monkeypatch.setattr(cli.service, "search", fake_search)
+    monkeypatch.setattr(cli.asyncio, "sleep", fake_sleep)
+    monkeypatch.setattr(cli.random, "uniform", lambda start, end: 2.0)
+
+    code = cli.main(
+        ["search", "retry-me", "--providers", "openai-compatible", "--max-try", "3", "--format", "json"]
+    )
+
+    data = json.loads(capsys.readouterr().out)
+    recovery = data["recovery"]
+    assert code == cli.EXIT_NETWORK_ERROR
+    assert len(calls) == 3
+    assert data["logical_attempts"] == 3
+    assert recovery["kind"] == "concurrency_limit_exceeded"
+    assert recovery["transient"] is True
+    assert recovery["safe_to_replay"] is True
+    assert recovery["automatic_retry_exhausted"] is True
+    assert recovery["wait_seconds"] == 30
+    assert recovery["doctor_command"] == "smart-search doctor --format json"
+    assert recovery["doctor_max_attempts"] == 1
+    assert "retry-me" not in recovery["doctor_command"]
+    assert "Wait 30 seconds" in recovery["recommendation"]
+
+
+@pytest.mark.parametrize(
+    ("error_type", "error"),
+    [
+        ("rate_limited", "OpenAI-compatible HTTP 429: too many requests"),
+        ("network_error", "OpenAI-compatible HTTP 503: upstream unavailable"),
+        ("request_cancelled", "OpenAI-compatible HTTP 499: request_cancelled"),
+    ],
+)
+def test_search_does_not_replay_generic_or_ambiguous_failures(monkeypatch, capsys, error_type, error):
+    calls = []
+
+    async def fake_search(query, **kwargs):
+        calls.append(query)
+        return _failed_search_result(query, error_type=error_type, error=error)
+
+    monkeypatch.setattr(cli.service, "search", fake_search)
+
+    code = cli.main(
+        ["search", "no-replay", "--providers", "openai-compatible", "--format", "json"]
+    )
+
+    data = json.loads(capsys.readouterr().out)
+    assert len(calls) == 1
+    assert data["logical_attempts"] == 1
+    if error_type == "request_cancelled":
+        assert code == cli.EXIT_NETWORK_ERROR
+        assert data["recovery"]["safe_to_replay"] is False
+        assert data["recovery"]["doctor_max_attempts"] == 1
+    else:
+        assert code == cli.EXIT_NETWORK_ERROR
+        assert "recovery" not in data
+
+
+def test_search_recovery_markdown_contains_next_step_without_query_in_command():
+    data = _failed_search_result(
+        "private query",
+        error_type="request_cancelled",
+        error="OpenAI-compatible HTTP 499: request_cancelled",
+    )
+    data["logical_attempts"] = 1
+    data["logical_retry_used"] = False
+    data["logical_retry_max_attempts"] = 5
+    data["recovery"] = cli._search_recovery(data, retry_reason="", logical_attempts=1, max_try=5)
+
+    markdown = cli._format_markdown("search", data)
+
+    assert "## Recovery" in markdown
+    assert "`safe_to_replay`: NO" in markdown
+    assert "`doctor_max_attempts`: 1" in markdown
+    assert "smart-search doctor --format json" in markdown
+    assert "private query" in markdown
+    assert "private query" not in data["recovery"]["doctor_command"]
+
+
+def test_unknown_submission_result_is_never_replayed():
+    data = _failed_search_result(
+        "uncertain",
+        error_type="network_error",
+        error="xAI request outcome unknown after the connection closed",
+        provider="xAI Responses",
+    )
+    data["provider_attempts"][0]["status"] = "unknown"
+
+    assert cli._logical_retry_reason(data) == ""
+
+
+def test_concurrency_marker_requires_exact_code_and_provider_identity():
+    unrelated_provider = _failed_search_result(
+        "unrelated",
+        error_type="rate_limited",
+        error='Other provider HTTP 429: {"code":"concurrency_limit_exceeded"}',
+        provider="Other provider",
+    )
+    near_match = _failed_search_result(
+        "near-match",
+        error_type="rate_limited",
+        error='OpenAI-compatible HTTP 429: {"code":"not_concurrency_limit_exceeded"}',
+    )
+
+    assert cli._logical_retry_reason(unrelated_provider) == ""
+    assert cli._logical_retry_reason(near_match) == ""
 
 
 def test_diagnose_openai_compatible_defaults_to_markdown(monkeypatch, capsys):

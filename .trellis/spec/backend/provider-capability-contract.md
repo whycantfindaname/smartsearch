@@ -603,11 +603,20 @@ Output contracts:
 - Include observability fields: `routing_decision`, `providers_used`,
   `provider_attempts`, `fallback_used`, `validation_level`,
   `minimum_profile_ok`, and `capability_status`.
-- `search --max-try N` defaults to one logical attempt and replays only a
-  completed xAI Responses `HTTP 504` containing `upstream_server_error`.
-  Search output records `logical_attempts`, `logical_retry_used`,
+- `search --timeout` defaults to `120` seconds and `search --max-try N`
+  defaults to five logical attempts. Logical replay is allowed only for an
+  xAI Responses `HTTP 504` containing `upstream_server_error` or an
+  OpenAI-compatible `HTTP 429` containing the exact
+  `concurrency_limit_exceeded` code. Generic `429`, `499`, ordinary `5xx`,
+  timeout, network, and uncertain-submission outcomes are not logically
+  replayed. Search output records `logical_attempts`, `logical_retry_used`,
   `logical_retry_max_attempts`, and annotates aggregated `provider_attempts`
   with `logical_attempt`.
+- Actionable concurrency and cancellation failures include a `recovery` object
+  with `transient`, `safe_to_replay`, `automatic_retry_exhausted`,
+  `wait_seconds`, `doctor_command`, `doctor_max_attempts=1`, and
+  `recommendation`. `doctor` is a diagnostic probe, not a repair operation;
+  the recovery procedure permits at most one probe and one fresh search.
 - `research` JSON must include `final_answer`, `content`, `citations`,
   `evidence_items`, `gap_check`, `provider_attempts`, `fallback_used`,
   `degraded`, `route_policy_version`, and `evidence_dir`.
@@ -669,12 +678,12 @@ Output contracts:
   errors. The provider should expose `error_type="parameter_error"` so the CLI
   and docs-search fallback path can report bad user arguments accurately.
 - Provider-call boundaries must classify exceptions consistently: HTTP `400` or
-  `422` is `parameter_error`, `401` or `403` is `auth_error`, timeout is
-  `timeout`, `429` is `rate_limited`, `5xx` and request failures are
-  `network_error`, invalid response decoding is `parse_error`, and explicit
-  upstream tool failures are `provider_error`. Unexpected local failures are
-  `runtime_error`. A normal decoded response with no normalized content is an
-  `empty` attempt, not an error attempt.
+  `422` is `parameter_error`, `401` or `403` is `auth_error`, `408` is
+  `timeout`, `429` is `rate_limited`, `499` is `request_cancelled`, `5xx` and
+  request failures are `network_error`, invalid response decoding is
+  `parse_error`, and explicit upstream tool failures are `provider_error`.
+  Unexpected local failures are `runtime_error`. A normal decoded response
+  with no normalized content is an `empty` attempt, not an error attempt.
 - Smoke output must include `status` (`healthy`, `degraded`, or `failed`) and
   `skipped_cases` in addition to its existing case lists. Healthy and degraded
   smoke preserve backward-compatible `ok=true` and exit code `0`; failed smoke
@@ -851,8 +860,10 @@ smart-search doctor --format json
 | `anysearch-batch` receives more than five queries | Return `error_type: "parameter_error"` without a network request |
 | Exa `--include-domains` / `--exclude-domains` receives comma-separated, whitespace-separated, or PowerShell-split values | Normalize to a flat domain list before sending `includeDomains` / `excludeDomains` to Exa |
 | Exa returns HTTP 400 or 422 | Return `error_type: "parameter_error"` and preserve the Exa response body excerpt for diagnosis |
-| Provider HTTP/network/timeout/schema error | Record `provider_attempts[].status="error"` and try next same-capability provider when fallback is `auto` |
-| Explicit terminal xAI HTTP 504 and `--max-try N` has remaining attempts | Start a new logical search attempt after 2-5 seconds; stop on success, a different terminal outcome, or attempt `N` |
+| Provider HTTP/network/timeout/schema error | Record `provider_attempts[].status="error"` and try next same-capability provider when fallback is `auto`; this is provider fallback, not logical replay |
+| xAI HTTP 504 with `upstream_server_error`, or OpenAI-compatible HTTP 429 with exact `concurrency_limit_exceeded`, and `--max-try N` has remaining attempts | Start a new logical search attempt after bounded jitter; stop on success, a different terminal outcome, or attempt `N` |
+| HTTP 499 / `request_cancelled` | Classify as `request_cancelled`, stop main-search peer fallback, and return structured recovery with `safe_to_replay=false` |
+| Generic 429, ordinary 5xx, timeout, network failure, or uncertain submission result | Preserve the failure and do not start another logical search attempt |
 | Provider returns empty normalized result | Record `status="empty"` and try next same-capability provider when fallback is `auto` |
 | `TAVILY_ENABLED=false` with a saved Tavily key | Remove Tavily from configured capability routes; direct Tavily boundaries, doctor, and smoke make no Tavily network call; `map` returns local `config_error` |
 | Tavily or Firecrawl raises while another same-capability provider is available | Record a classified `error` attempt rather than swallowing it; keep fallback within the capability |
@@ -1009,9 +1020,11 @@ When this contract changes, add or update tests that assert:
 - `search` CLI timeout results include provider/model/stream context when
   available plus the next diagnostic command
   `smart-search diagnose openai-compatible --format markdown`;
-- `search --max-try` defaults to one, rejects values below one, retries only
-  explicit terminal xAI 504 results, stops on other failures, and annotates
-  aggregated provider attempts with their logical attempt number;
+- `search --timeout` defaults to `120`, `search --max-try` defaults to `5`,
+  rejects values below one, retries only the two catalogued safe markers,
+  stops on generic 429/499/5xx, timeout, network, and uncertain-submission
+  results, and annotates aggregated provider attempts with their logical
+  attempt number;
 - AnySearch config keys are listed, settable, masked where secret, and optional
   for the `standard` minimum profile;
 - AnySearch capability status is `vertical_search`, `experimental=true`, and

@@ -1156,6 +1156,31 @@ async def test_search_stops_provider_fallback_when_xai_submission_outcome_is_unk
 
 
 @pytest.mark.asyncio
+async def test_search_stops_provider_fallback_on_http_499(monkeypatch):
+    monkeypatch.setenv("XAI_API_KEY", "xai-test-secret")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_URL", "https://relay.example.com/v1")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_KEY", "relay-test-secret")
+
+    async def cancelled_xai(self, query, platform="", ctx=None):
+        request = httpx.Request("POST", "https://api.x.ai/v1/responses")
+        response = httpx.Response(499, text="client cancelled", request=request)
+        raise httpx.HTTPStatusError("client cancelled", request=request, response=response)
+
+    async def should_not_replay(self, query, platform="", ctx=None):
+        raise AssertionError("HTTP 499 must not trigger another provider submission")
+
+    monkeypatch.setattr(service.XAIResponsesSearchProvider, "search", cancelled_xai)
+    monkeypatch.setattr(service.OpenAICompatibleSearchProvider, "search", should_not_replay)
+
+    result = await service.search("what is example")
+
+    assert result["ok"] is False
+    assert result["error_type"] == "request_cancelled"
+    assert result["fallback_used"] is False
+    assert [attempt["provider"] for attempt in result["provider_attempts"]] == ["xAI Responses"]
+
+
+@pytest.mark.asyncio
 async def test_search_does_not_fake_openai_compatible_fallback_when_only_xai_configured(monkeypatch):
     monkeypatch.setenv("XAI_API_KEY", "xai-test-secret")
 
@@ -1896,6 +1921,7 @@ async def test_search_reports_primary_provider_http_error(monkeypatch):
         (408, "timeout"),
         (422, "parameter_error"),
         (429, "rate_limited"),
+        (499, "request_cancelled"),
         (500, "network_error"),
     ],
 )

@@ -174,23 +174,26 @@ def test_deep_research_cli_contract_documents_plan_and_smoke_matrix():
         assert marker in packaged_contract
 
 
-def test_search_timeout_retry_policy_is_distributable():
+def test_search_transient_recovery_catalog_is_distributable():
     public_text = _read_skill_tree(PUBLIC_SKILL_DIR)
     packaged_text = _read_skill_tree(PACKAGED_SKILL_DIR)
     public_contract = _read_reference_tree(PUBLIC_SKILL_DIR)
     packaged_contract = _read_reference_tree(PACKAGED_SKILL_DIR)
 
     skill_markers = [
-        "Timeout Retry Policy",
-        '`smart-search search "QUERY" --timeout 120 --max-try 5 --format json`',
-        "wait for the CLI to finish",
-        "do not implement another retry loop in the agent",
+        "Transient Search Recovery",
+        "references/error-recovery.md",
+        "--timeout 120 --max-try 5",
+        "single diagnostic probe",
+        "Do not copy individual error rules into this file",
     ]
     contract_markers = [
-        "Use the CLI-managed retry path",
-        'smart-search search "query" --timeout 120 --max-try 5',
-        "`--max-try` defaults to one",
-        "Do not add an agent-side retry loop",
+        "single extensible decision catalog",
+        "concurrency_limit_exceeded",
+        "request_cancelled",
+        "doctor_max_attempts",
+        "`doctor` is a diagnostic probe, not a repair operation",
+        "documentation-only operator response belongs here alone",
     ]
 
     for marker in skill_markers:

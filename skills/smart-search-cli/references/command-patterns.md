@@ -5,7 +5,7 @@
 - Evidence files
 - Common commands
 - Short aliases
-- Timeout retry policy
+- Transient search recovery
 - Guardrails
 
 ## Evidence Files
@@ -23,10 +23,10 @@ Deep Research planner output uses an explicit `--evidence-dir` when supplied, ot
 ## Common Commands
 
 ```powershell
-smart-search search "query" --extra-sources 5 --timeout 90 --format json --output result.json
+smart-search search "query" --extra-sources 5 --timeout 120 --max-try 5 --format json --output result.json
 smart-search search "query" --stream --format json
 smart-search diagnose openai-compatible --format markdown
-smart-search search "query" --platform "Reuters" --model "model-id" --extra-sources 3 --timeout 90 --format json
+smart-search search "query" --platform "Reuters" --model "model-id" --extra-sources 3 --timeout 120 --max-try 5 --format json
 smart-search search "nba战报" --format content
 smart-search search "query" --validation strict --fallback auto --providers auto --format json
 smart-search exa-search "query" --num-results 5 --search-type neural --include-text --include-highlights --include-domains docs.example.com developer.mozilla.org --format json
@@ -129,15 +129,19 @@ smart-search sm --format json
 smart-search reg
 ```
 
-## Timeout Retry Policy
+## Transient Search Recovery
 
-Use the CLI-managed retry path and wait for the single command to finish:
+Use the CLI-managed path and read `references/error-recovery.md` for the
+decision matrix and recovery procedure:
 
 ```bash
-smart-search search "query" --timeout 120 --max-try 5 --extra-sources 1 --format json --output result.json
+smart-search search "query" --timeout 120 --max-try 5 --format json --output result.json
 ```
 
-`--max-try` defaults to one. Do not add an agent-side retry loop around this command.
+`--max-try` defaults to `5` and is limited to the safe logical replay cases
+listed in the catalog. Do not add an agent-side retry loop around this command.
+The catalog, rather than this example file, is the place to record a new error
+handling rule.
 
 ## Guardrails
 
