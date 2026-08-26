@@ -2,6 +2,7 @@ import asyncio
 import json
 from pathlib import Path
 
+import httpx
 import pytest
 
 from smart_search import cli, skill_installer
@@ -251,6 +252,58 @@ def test_search_replays_only_concurrency_limit_and_records_logical_attempts(monk
     assert data["logical_retry_used"] is True
     assert data["logical_retry_max_attempts"] == 5
     assert [attempt["logical_attempt"] for attempt in data["provider_attempts"]] == [1, 2]
+
+
+def test_search_safe_concurrency_replay_is_not_blocked_by_model_breaker(monkeypatch, capsys):
+    cli.service.reset_runtime_breakers()
+    monkeypatch.setenv("XAI_API_KEY", "")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_URL", "https://relay.example.com/v1")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_KEY", "relay-test-secret")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_MODEL", "primary-model")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_FALLBACK_MODELS", "")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_STREAM", "false")
+    monkeypatch.setenv("SMART_SEARCH_MINIMUM_PROFILE", "off")
+    monkeypatch.setenv("SMART_SEARCH_INTENT_ROUTER", "rules")
+    calls = []
+    sleeps = []
+
+    async def reject_twice_then_succeed(self, query, platform="", ctx=None):
+        calls.append(self.model)
+        if len(calls) < 3:
+            request = httpx.Request("POST", "https://relay.example.com/v1/chat/completions")
+            response = httpx.Response(
+                429,
+                request=request,
+                json={"error": {"code": "concurrency_limit_exceeded"}},
+            )
+            raise httpx.HTTPStatusError(
+                "concurrency limited",
+                request=request,
+                response=response,
+            )
+        return "Recovered answer."
+
+    async def record_sleep(seconds):
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(cli.service.OpenAICompatibleSearchProvider, "search", reject_twice_then_succeed)
+    monkeypatch.setattr(cli.asyncio, "sleep", record_sleep)
+    monkeypatch.setattr(cli.random, "uniform", lambda start, end: 2.0)
+
+    code = cli.main(
+        ["search", "retry", "--providers", "openai-compatible", "--max-try", "5", "--format", "json"]
+    )
+
+    data = json.loads(capsys.readouterr().out)
+    assert code == cli.EXIT_OK
+    assert calls == ["primary-model", "primary-model", "primary-model"]
+    assert sleeps == [2.0, 2.0]
+    assert data["logical_attempts"] == 3
+    assert data["logical_retry_used"] is True
+    assert all(attempt.get("status") != "skipped" for attempt in data["provider_attempts"])
+    assert cli.service._openai_model_breaker_state(
+        "https://relay.example.com/v1", "primary-model"
+    )["state"] == "closed"
 
 
 def test_search_concurrency_recovery_is_bounded_and_actionable(monkeypatch, capsys):
