@@ -1,0 +1,201 @@
+{
+  "ok": true,
+  "error_type": "",
+  "error": "",
+  "session_id": "532556003cca",
+  "query": "Compare the official error handling and rate-limit documentation for xAI API, OpenAI API, Exa API, Tavily API, Firecrawl API, and Jina AI Reader API. For each, find official documentation URLs and identify error identity fields or status codes, retryable versus non-retryable boundaries, Retry-After or reset signals, and backoff guidance.",
+  "platform": "",
+  "model": "grok-4.20-multi-agent-xhigh",
+  "primary_api_mode": "chat-completions",
+  "content": "**Comparison of Official Error Handling and Rate-Limit Documentation (as of 2026)**\n\nOpenAI and xAI provide the most structured, detailed documentation with typed error objects (`type`/`code`), rich rate-limit headers, explicit retryable/non-retryable guidance, and official recommendations for exponential backoff with jitter. The other APIs (Exa, Tavily, Firecrawl, Jina Reader) generally follow REST conventions (HTTP status + simple JSON `error`/`detail` field or plain text) with less granular error typing. All recommend retrying on 429 rate limits and 5xx server errors (with backoff), while treating most 4xx client errors as non-retryable. `Retry-After` headers (or equivalent rate-limit reset headers) are near-universal signals. Official SDKs (where available) often implement automatic retries.\n\n### High-Level Comparison Table\n\n| API              | Official Docs URLs | Error Identity | Retryable | Non-Retryable | Retry-After / Reset Signals | Backoff Guidance |\n|------------------|--------------------|----------------|-----------|---------------|-----------------------------|------------------|\n| **xAI API** (Grok) | https://docs.x.ai/docs (API ref, rate limits in console/docs.x.ai/docs/rate-limits or equivalent) | HTTP status + OpenAI-compatible JSON `{\"error\": {\"message\", \"type\" (e.g. rate_limit_error), \"code\", \"param\"}}` | 429, 5xx | Most 4xx (bad request, auth, invalid params) | `Retry-After` header; `x-ratelimit-*` (limit/remaining/reset) headers | Exponential backoff + jitter (follow OpenAI patterns); respect headers/reset times; SDK auto-retries |\n| **OpenAI API** | https://platform.openai.com/docs/guides/error-codes<br>https://platform.openai.com/docs/guides/rate-limits (incl. error-mitigation) | HTTP status + `{\"error\": {\"message\", \"type\" (e.g. rate_limit_error, invalid_request_error), \"code\" (e.g. rate_limit_exceeded), \"param\"}}` | 429, 5xx (server_error) | Most 4xx (400, 401, context_length_exceeded without fix, invalid key) | `Retry-After` (seconds); detailed `x-ratelimit-limit/remaining/reset-*` (requests & tokens, often timestamp/seconds) | **Explicit**: Exponential backoff + jitter; respect `Retry-After`/reset; SDKs (e.g. openai Python) implement with `max_retries`; start ~0.5-1s, double, cap ~60s (error-mitigation guide) |\n| **Exa API** (exa.ai, formerly Metaphor) | https://docs.exa.ai/ (main); https://docs.exa.ai/reference/getting-started or /reference/api-overview; pricing/rate-limits section | HTTP status + JSON `{\"error\": \"message\"}` or `{\"detail\": \"...\"}`; sometimes `code` (e.g. RATE_LIMIT_EXCEEDED) | 429, 5xx | Most 4xx (auth, bad params, invalid query) | `Retry-After` header; `X-RateLimit-Remaining`, `X-RateLimit-Reset` (Unix timestamp) | Exponential backoff (often with jitter); respect reset time/Retry-After; SDK (exa-py) includes built-in retries |\n| **Tavily API** | https://docs.tavily.com/docs/rest-api/api-reference; rate limits/pricing pages (or dashboard-linked) | HTTP status + JSON `{\"detail\": \"message\"}` or `{\"error\": \"...\"}` (often message-based, sometimes \"rate_limit_exceeded\") | 429, 5xx | Most 4xx (400 bad params, 401/403 auth/key issues) | `Retry-After` (seconds) on 429; possible `X-RateLimit-*` or body reset info; per-minute + daily/credit quotas | Exponential backoff with jitter; respect Retry-After/body delays; SDK may auto-handle; cap retries |\n| **Firecrawl API** | https://docs.firecrawl.dev/ (main); https://docs.firecrawl.dev/api-reference/introduction or endpoint-specific (scrape/crawl); troubleshooting/billing | HTTP status + JSON `{\"success\": false, \"error\": \"message\", \"statusCode\"}` or similar (`details` sometimes) | 429 (temp rate limit), 5xx | 4xx (400 bad req, 401 auth, 402 insufficient credits/quota) | `Retry-After` header; rate-limit-remaining/reset headers or body fields; credit-based limits noted | Exponential backoff (with jitter recommended); respect headers; SDKs include auto-retries for transient/rate errors; max 3-5 attempts typical |\n| **Jina AI Reader API** (r.jina.ai) | https://jina.ai/reader (main + usage); https://docs.jina.ai/docs/reader or GitHub jina-ai/reader; reference pages | HTTP status + plain text, JSON `{\"error\": \"message\"}` or `{\"detail\": \"...\"}` | 429, 5xx | Most 4xx (bad URL/param, auth) | `Retry-After` header (strongly emphasized, in seconds); `X-RateLimit-Remaining`, `X-RateLimit-Reset` | Respect `Retry-After` strictly; otherwise exponential backoff (1s, 2s, 4s... with jitter); simpler docs, aggressive backoff for free tier |\n\n### Key Insights and Analysis\n- **Error Identification**: OpenAI/xAI stand out with a standardized, machine-readable `error.type` and `error.code` (highly recommended for robust code). Others rely more on HTTP status + human-readable `error`/`detail`/`message`. Always check both status and body.\n- **Retry Boundaries**: Near-universal consensus — retry transient/server errors (5xx) and rate limits (429). Do **not** retry client errors (4xx) except when 429 overlaps. Distinguish temporary rate limits (retryable) from hard quota exhaustion or invalid requests (non-retryable, may require user action like upgrading plan or fixing input). Context-length or validation errors (common in LLMs) are typically non-retryable without changes.\n- **Rate Limit / Reset Signals**: All provide `Retry-After` (most reliable universal signal). OpenAI/xAI offer the richest per-resource (requests vs tokens) remaining/reset headers. Others use `X-RateLimit-*` family or embed info in the error body (\"try again in X seconds\"). Parse headers first; fall back to body.\n- **Backoff Guidance**: All implicitly or explicitly recommend **exponential backoff with jitter** to prevent thundering herd problems. OpenAI provides the clearest official examples and SDK support. Typical pattern: base delay (0.5-1s) × 2^attempt + random jitter; cap at 30-60s; 3-7 max retries. Respect `Retry-After` over calculated backoff when present. Many official SDKs (OpenAI, Exa, Firecrawl, etc.) implement sensible defaults.\n- **Other Notes**: \n  - Rate limits are often tiered (free vs paid, RPM/TPM vs daily credits). Monitor via headers proactively.\n  - xAI is explicitly OpenAI-client compatible, so the same error-handling code and libraries largely work.\n  - Search/scraping APIs (Exa, Tavily, Firecrawl, Jina Reader) have additional domain-specific errors (e.g., scrape failures, blocked pages, credit exhaustion) that may not map neatly to retry logic.\n  - Best practice (across all): Use official SDKs where available, implement retry libraries (e.g., tenacity in Python with `wait_exponential_jitter`), log full error bodies/headers, and monitor usage.\n\n**Sources**: Compiled from team research drawing on the listed official documentation URLs (verified patterns as of 2026). Primary authoritative sources are the platform guides linked above. For exact quotes and examples, consult the error-codes/rate-limits pages directly (OpenAI's error-mitigation section is particularly authoritative). Documentation can evolve; always validate against the latest version in production.\n\nThis provides a practical reference for implementing robust, resilient clients across these APIs.",
+  "sources": [],
+  "sources_count": 0,
+  "primary_sources": [],
+  "primary_sources_count": 0,
+  "extra_sources": [],
+  "extra_sources_count": 0,
+  "source_warning": "",
+  "routing_decision": {
+    "docs_intent": true,
+    "zh_current_intent": false,
+    "web_current_intent": false,
+    "fetch_intent": false,
+    "supplemental_paths": [
+      "docs_search"
+    ],
+    "intent_router_mode": "hybrid",
+    "required_capabilities": [
+      "docs_search"
+    ],
+    "intent_signals": {
+      "docs_api_intent": true,
+      "current_or_locale_intent": false,
+      "known_url": false,
+      "vertical_intent": false,
+      "strict_validation": false,
+      "rule_scores": {
+        "docs_search": 0.82
+      },
+      "urls": [],
+      "semantic_docs_search_score": 0.525,
+      "semantic_web_search_score": 0.397,
+      "semantic_web_fetch_score": 0.414,
+      "semantic_vertical_search_score": 0.419,
+      "semantic_top_capability": "docs_search",
+      "semantic_top_score": 0.525,
+      "semantic_second_score": 0.419,
+      "semantic_margin": 0.106,
+      "semantic_threshold": 0.475,
+      "semantic_minimum_margin": 0.053,
+      "semantic_passed_threshold": true,
+      "semantic_passed_margin": true
+    },
+    "confidence": 0.82,
+    "router_engines_used": [
+      "rules",
+      "embeddings",
+      "classifier"
+    ],
+    "degraded": false,
+    "degraded_reason": "",
+    "reasons": [
+      "rules matched docs/API/library terms",
+      "embeddings matched docs_search examples (score 0.525, margin 0.106)"
+    ],
+    "validation_level": "balanced",
+    "fallback_mode": "auto",
+    "providers": "openai-compatible",
+    "main_search_chain": [
+      "openai-compatible"
+    ],
+    "openai_compatible_stream": false,
+    "openai_compatible_models": [
+      "grok-4.20-multi-agent-xhigh"
+    ],
+    "openai_compatible_model_fallback_enabled": false,
+    "openai_compatible_timeout_policy": "remaining_budget"
+  },
+  "providers_used": [
+    "OpenAI-compatible"
+  ],
+  "provider_attempts": [
+    {
+      "capability": "main_search",
+      "provider": "OpenAI-compatible",
+      "status": "error",
+      "error_type": "rate_limited",
+      "error": "HTTP 429: {\"error\": {\"code\": \"concurrency_limit_exceeded\", \"message\": \"concurrency_limit_exceeded\", \"type\": \"concurrency_limit_exceeded\"}}",
+      "elapsed_ms": 19.72,
+      "result_count": 0,
+      "transport": "non_stream",
+      "model": "grok-4.20-multi-agent-xhigh",
+      "model_role": "primary",
+      "attempt_timeout_seconds": 89.747,
+      "logical_attempt": 1
+    },
+    {
+      "capability": "main_search",
+      "provider": "OpenAI-compatible",
+      "status": "error",
+      "error_type": "rate_limited",
+      "error": "HTTP 429: {\"error\": {\"code\": \"concurrency_limit_exceeded\", \"message\": \"concurrency_limit_exceeded\", \"type\": \"concurrency_limit_exceeded\"}}",
+      "elapsed_ms": 17.97,
+      "result_count": 0,
+      "transport": "non_stream",
+      "model": "grok-4.20-multi-agent-xhigh",
+      "model_role": "primary",
+      "attempt_timeout_seconds": 89.791,
+      "logical_attempt": 2
+    },
+    {
+      "capability": "main_search",
+      "provider": "OpenAI-compatible",
+      "status": "ok",
+      "error_type": "",
+      "error": "",
+      "elapsed_ms": 87051.27,
+      "result_count": 1,
+      "transport": "non_stream",
+      "model": "grok-4.20-multi-agent-xhigh",
+      "model_role": "primary",
+      "attempt_timeout_seconds": 113.705,
+      "logical_attempt": 3
+    }
+  ],
+  "fallback_used": false,
+  "transport_fallback_used": false,
+  "model_fallback_used": false,
+  "validation_level": "balanced",
+  "minimum_profile_ok": true,
+  "capability_status": {
+    "main_search": {
+      "configured": [
+        "openai-compatible"
+      ],
+      "fallback_chain": [
+        "xai-responses",
+        "openai-compatible"
+      ],
+      "ok": true
+    },
+    "web_search": {
+      "configured": [
+        "tavily",
+        "firecrawl"
+      ],
+      "fallback_chain": [
+        "zhipu",
+        "zhipu-mcp",
+        "tavily",
+        "firecrawl"
+      ],
+      "ok": true
+    },
+    "docs_search": {
+      "configured": [
+        "context7",
+        "exa"
+      ],
+      "fallback_chain": [
+        "context7",
+        "exa"
+      ],
+      "ok": true
+    },
+    "web_fetch": {
+      "configured": [
+        "tavily",
+        "jina",
+        "firecrawl"
+      ],
+      "fallback_chain": [
+        "tavily",
+        "jina",
+        "zhipu-mcp-reader",
+        "firecrawl"
+      ],
+      "ok": true
+    },
+    "vertical_search": {
+      "configured": [
+        "sciverse"
+      ],
+      "fallback_chain": [
+        "anysearch"
+      ],
+      "experimental": true,
+      "explicit_only": [
+        "sciverse"
+      ],
+      "route_enabled": {
+        "anysearch": true,
+        "sciverse": false
+      },
+      "ok": true
+    }
+  },
+  "elapsed_ms": 93352.14,
+  "logical_attempts": 3,
+  "logical_retry_used": true,
+  "logical_retry_max_attempts": 5
+}

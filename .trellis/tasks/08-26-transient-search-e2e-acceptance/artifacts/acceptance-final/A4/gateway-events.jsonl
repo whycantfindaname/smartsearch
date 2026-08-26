@@ -1,0 +1,1 @@
+{"case_id": "A4", "channel": "docs_search", "duration_ms": 0.295, "error_class": "provider_error", "http_status": 402, "invocation_id": "inv-0001-53ea86ec", "matched_ordinal": 1, "method": "POST", "monotonic_ns": 289841078262250, "outcome": "injected", "provider": "exa", "request_ordinal": 1, "schema": "transient-search-gateway-event.v1", "seq": 1}

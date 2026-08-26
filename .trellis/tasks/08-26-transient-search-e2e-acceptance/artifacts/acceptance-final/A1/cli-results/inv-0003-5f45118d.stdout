@@ -1,0 +1,11 @@
+usage: smart-search fetch [-h] [--format {json,markdown,content}]
+                          [--output OUTPUT]
+                          url
+
+positional arguments:
+  url
+
+options:
+  -h, --help            show this help message and exit
+  --format {json,markdown,content}
+  --output OUTPUT       Write rendered output to a file.

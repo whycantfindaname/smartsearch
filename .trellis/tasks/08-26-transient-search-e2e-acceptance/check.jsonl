@@ -1,0 +1,4 @@
+{"file":".trellis/tasks/08-26-transient-search-e2e-acceptance/research/acceptance-basis.md","reason":"Check source runtime identity, immutable active Skill state, branch ownership, and conditional synchronization decisions against the verified baseline."}
+{"file":".trellis/tasks/08-26-transient-search-e2e-acceptance/research/case-matrix.md","reason":"Check every verdict against the assigned fault evidence, recovery budget, research usefulness, and cross-case invalidation rules."}
+{"file":".trellis/tasks/08-26-transient-search-e2e-acceptance/research/prompt-contract.md","reason":"Audit subagent prompts and reports for Language System compliance, direct-source evidence, and absence of hidden test information or credentials."}
+{"file":".trellis/tasks/08-26-transient-search-e2e-acceptance/research/provider-contract-extract.md","reason":"Verify the complete focused provider capability, output, diagnostics, security, and Skill-parity contract without truncated context."}

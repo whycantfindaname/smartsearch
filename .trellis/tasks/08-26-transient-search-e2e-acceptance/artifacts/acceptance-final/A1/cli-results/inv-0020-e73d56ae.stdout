@@ -1,0 +1,39 @@
+{
+  "ok": false,
+  "url": "https://r.jina.ai/docs",
+  "provider": "",
+  "content": "",
+  "error_type": "parameter_error",
+  "error": "HTTP 422: {\"data\":null,\"cause\":{\"code\":6},\"code\":422,\"name\":\"AssertionFailureError\",\"status\":42206,\"message\":\"Request failed: Could not resolve hostname\",\"readableMessage\":\"AssertionFailureError: Request failed: Could not resolve hostname\"}",
+  "provider_attempts": [
+    {
+      "capability": "web_fetch",
+      "provider": "tavily",
+      "status": "empty",
+      "error_type": "",
+      "error": "",
+      "elapsed_ms": 978.04,
+      "result_count": 0
+    },
+    {
+      "capability": "web_fetch",
+      "provider": "jina",
+      "status": "error",
+      "error_type": "parameter_error",
+      "error": "HTTP 422: {\"data\":null,\"cause\":{\"code\":6},\"code\":422,\"name\":\"AssertionFailureError\",\"status\":42206,\"message\":\"Request failed: Could not resolve hostname\",\"readableMessage\":\"AssertionFailureError: Request failed: Could not resolve hostname\"}",
+      "elapsed_ms": 427.27,
+      "result_count": 0
+    },
+    {
+      "capability": "web_fetch",
+      "provider": "firecrawl",
+      "status": "empty",
+      "error_type": "",
+      "error": "",
+      "elapsed_ms": 0.28,
+      "result_count": 0
+    }
+  ],
+  "fallback_used": true,
+  "elapsed_ms": 1405.95
+}

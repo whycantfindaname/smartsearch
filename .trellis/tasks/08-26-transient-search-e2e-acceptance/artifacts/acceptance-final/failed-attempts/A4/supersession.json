@@ -1,0 +1,12 @@
+{
+  "case_id": "A4",
+  "failed_source_commit": "7a58705a2e63dfa7c1fbd21f139efa1715597eef",
+  "failed_verdict": "FAIL",
+  "failure_evidence": [
+    "A4 reached Exa more than once after the non-retryable 402"
+  ],
+  "schema": "transient-search-failed-attempt-supersession.v1",
+  "superseded_by_case": "A4",
+  "superseded_by_source_commit": "620149f8665ebd11f4cb404bac480b26e673f9da",
+  "superseded_by_verdict": "PASS"
+}

@@ -1,0 +1,31 @@
+{
+  "cases": {
+    "A4": {
+      "gateway_health_ok": true,
+      "gateway_process_alive": true,
+      "ok": true,
+      "prompt_ok": true,
+      "prompt_violations": [],
+      "required_unaffected_capability_present": true
+    },
+    "A5": {
+      "gateway_health_ok": true,
+      "gateway_process_alive": true,
+      "ok": true,
+      "prompt_ok": true,
+      "prompt_violations": [],
+      "required_unaffected_capability_present": true
+    }
+  },
+  "configured_capabilities": {
+    "academic_fallback_for_A4": true,
+    "docs_fallback_for_A3": true,
+    "main_search": true,
+    "non_tavily_fetch_fallback_for_A5": true
+  },
+  "doctor_calls": 0,
+  "ok": true,
+  "schema": "transient-search-preflight.v1",
+  "source_commit": "620149f8665ebd11f4cb404bac480b26e673f9da",
+  "source_runtime_matches_run": true
+}

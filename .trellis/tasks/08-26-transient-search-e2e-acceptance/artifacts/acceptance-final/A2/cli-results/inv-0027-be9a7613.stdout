@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "url": "https://arxiv.org/abs/2608.02059v1",
+  "provider": "tavily",
+  "content": "![archive](/static/base/1.0.1/images/arxiv-logo-primary-light.svg)\n\n# Computer Science > Computer Vision and Pattern Recognition\n\n# Title:MIEScore: Human-Aligned Evaluation for Multi-Source Image Editing\n\n|  |  |\n| --- | --- |\n| Subjects: | Computer Vision and Pattern Recognition (cs.CV); Multimedia (cs.MM) |\n| Cite as: | [arXiv:2608.02059](https://arxiv.org/abs/2608.02059) [cs.CV] |\n|  | (or  [arXiv:2608.02059v1](https://arxiv.org/abs/2608.02059v1) [cs.CV] for this version) |\n|  | <https://doi.org/10.48550/arXiv.2608.02059> Focus to learn more  arXiv-issued DOI via DataCite |\n\n## Submission history\n\n## Access Paper:\n\n### Current browse context:\n\n### References & Citations\n\n## BibTeX formatted citation\n\n### Bookmark\n\n![BibSonomy](/static/browse/0.3.4/images/icons/social/bibsonomy.png)\n![Reddit](/static/browse/0.3.4/images/icons/social/reddit.png)\n\n# Bibliographic and Citation Tools\n\n# Code, Data and Media Associated with this Article\n\n# Demos\n\n# Recommenders and Search Tools\n\n# arXivLabs: experimental projects with community collaborators\n\narXivLabs is a framework that allows collaborators to develop and share new arXiv features directly on our website.\n\nBoth individuals and organizations that work with arXivLabs have embraced and accepted our values of openness, community, excellence, and user data privacy. arXiv is committed to these values and only works with partners that adhere to them.\n\nHave an idea for a project that will add value for arXiv's community? [**Learn more about arXivLabs**](https://info.arxiv.org/labs/index.html).\n\n![Simons Foundation](/static/base/1.0.1/images/funders/simons-foundation.png)\n![Simons Foundation International](/static/base/1.0.1/images/funders/simons-foundation-international.png)\n![Schmidt Sciences](/static/base/1.0.1/images/funders/schmidt-sciences.png)",
+  "provider_attempts": [
+    {
+      "capability": "web_fetch",
+      "provider": "tavily",
+      "status": "ok",
+      "error_type": "",
+      "error": "",
+      "elapsed_ms": 1193.86,
+      "result_count": 1
+    }
+  ],
+  "fallback_used": false,
+  "elapsed_ms": 1194.13
+}

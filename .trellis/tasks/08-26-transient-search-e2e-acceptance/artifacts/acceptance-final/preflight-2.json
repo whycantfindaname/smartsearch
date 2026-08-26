@@ -1,0 +1,47 @@
+{
+  "cases": {
+    "A1": {
+      "gateway_health_ok": true,
+      "gateway_process_alive": true,
+      "ok": true,
+      "prompt_ok": true,
+      "prompt_violations": [],
+      "required_unaffected_capability_present": true
+    },
+    "A2": {
+      "gateway_health_ok": true,
+      "gateway_process_alive": true,
+      "ok": true,
+      "prompt_ok": true,
+      "prompt_violations": [],
+      "required_unaffected_capability_present": true
+    },
+    "A4": {
+      "gateway_health_ok": true,
+      "gateway_process_alive": true,
+      "ok": true,
+      "prompt_ok": true,
+      "prompt_violations": [],
+      "required_unaffected_capability_present": true
+    },
+    "A5": {
+      "gateway_health_ok": true,
+      "gateway_process_alive": true,
+      "ok": true,
+      "prompt_ok": true,
+      "prompt_violations": [],
+      "required_unaffected_capability_present": true
+    }
+  },
+  "configured_capabilities": {
+    "academic_fallback_for_A4": true,
+    "docs_fallback_for_A3": true,
+    "main_search": true,
+    "non_tavily_fetch_fallback_for_A5": true
+  },
+  "doctor_calls": 0,
+  "ok": true,
+  "schema": "transient-search-preflight.v1",
+  "source_commit": "7a58705a2e63dfa7c1fbd21f139efa1715597eef",
+  "source_runtime_matches_run": true
+}

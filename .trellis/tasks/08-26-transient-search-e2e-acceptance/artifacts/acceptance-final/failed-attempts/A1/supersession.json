@@ -1,0 +1,13 @@
+{
+  "case_id": "A1",
+  "failed_source_commit": "812dd3ba6a373febd8331cf734c11949af527eb1",
+  "failed_verdict": "FAIL",
+  "failure_evidence": [
+    "A1 did not reach the forwarding attempt after recovery",
+    "A1 final search did not succeed"
+  ],
+  "schema": "transient-search-failed-attempt-supersession.v1",
+  "superseded_by_case": "A1",
+  "superseded_by_source_commit": "7a58705a2e63dfa7c1fbd21f139efa1715597eef",
+  "superseded_by_verdict": "PASS"
+}

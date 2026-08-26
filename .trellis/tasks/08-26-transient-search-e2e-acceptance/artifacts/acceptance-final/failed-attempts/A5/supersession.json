@@ -1,0 +1,15 @@
+{
+  "case_id": "A5",
+  "failed_source_commit": "7a58705a2e63dfa7c1fbd21f139efa1715597eef",
+  "failed_verdict": "FAIL",
+  "failure_evidence": [
+    "A5 did not obtain a successful non-Tavily fetch recovery",
+    "verified source count 0 is below 4",
+    "worker marked answer incomplete",
+    "worker status is not completed"
+  ],
+  "schema": "transient-search-failed-attempt-supersession.v1",
+  "superseded_by_case": "A5",
+  "superseded_by_source_commit": "620149f8665ebd11f4cb404bac480b26e673f9da",
+  "superseded_by_verdict": "PASS"
+}

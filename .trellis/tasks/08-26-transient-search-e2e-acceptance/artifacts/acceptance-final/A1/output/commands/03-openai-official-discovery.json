@@ -1,0 +1,73 @@
+{
+  "ok": true,
+  "query": "OpenAI API official documentation error codes HTTP status rate limit headers retry guidance",
+  "search_type": "neural",
+  "results": [
+    {
+      "id": "https://developers.openai.com/api/docs/guides/rate-limits",
+      "title": "Rate limits | OpenAI API",
+      "url": "https://developers.openai.com/api/docs/guides/rate-limits",
+      "publishedDate": null,
+      "author": "",
+      "score": 1
+    },
+    {
+      "id": "https://developers.openai.com/api/reference/overview/",
+      "title": "API Overview | OpenAI API Reference",
+      "url": "https://developers.openai.com/api/reference/overview/",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.8571428571428572
+    },
+    {
+      "id": "https://developers.openai.com/api/docs/guides/error-codes",
+      "title": "Error codes | OpenAI API",
+      "url": "https://developers.openai.com/api/docs/guides/error-codes",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.7142857142857143
+    },
+    {
+      "id": "https://developers.openai.com/api/docs/guides/advanced-usage",
+      "title": "Advanced usage | OpenAI API",
+      "url": "https://developers.openai.com/api/docs/guides/advanced-usage",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.5714285714285714
+    },
+    {
+      "id": "https://developers.openai.com/api/docs/guides/compaction",
+      "title": "Compaction | OpenAI API",
+      "url": "https://developers.openai.com/api/docs/guides/compaction",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.4285714285714286
+    },
+    {
+      "id": "https://developers.openai.com/api/docs",
+      "title": "OpenAI API Platform Documentation",
+      "url": "https://developers.openai.com/api/docs",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.2857142857142857
+    },
+    {
+      "id": "https://developers.openai.com/api/docs/guides/production-best-practices",
+      "title": "Production best practices | OpenAI API",
+      "url": "https://developers.openai.com/api/docs/guides/production-best-practices",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.1428571428571429
+    },
+    {
+      "id": "https://developers.openai.com/api/docs/concepts",
+      "title": "Key concepts | OpenAI API",
+      "url": "https://developers.openai.com/api/docs/concepts",
+      "publishedDate": null,
+      "author": "",
+      "score": 0
+    }
+  ],
+  "total": 8,
+  "elapsed_ms": 489.94
+}

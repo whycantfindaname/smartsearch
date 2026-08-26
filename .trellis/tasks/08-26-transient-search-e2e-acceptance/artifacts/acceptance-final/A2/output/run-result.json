@@ -1,0 +1,132 @@
+{
+  "status": "completed",
+  "answer_complete": true,
+  "observed_errors": [
+    {
+      "command": "broad search",
+      "error_type": "request_cancelled",
+      "detail": "HTTP 499; logical_attempts=1; fallback_used=false; safe_to_replay=false"
+    },
+    {
+      "command": "two attempted concurrent exa-search invocations",
+      "error_type": "local_concurrency_rejection",
+      "detail": "parallel Smart Search invocations are not permitted"
+    },
+    {
+      "command": "fresh search content validation",
+      "error_type": "unsupported_candidate",
+      "detail": "sources_count=0 and the claimed AGENT-IQA arXiv ID 2608.04567 was disproved by the official arXiv record"
+    }
+  ],
+  "recovery_actions": [
+    "Read the required error-recovery catalog after the HTTP 499 result",
+    "Waited at least 30 seconds and confirmed that no usable broad-search result arrived",
+    "Ran exactly one doctor probe with the required launcher; doctor returned ok=true",
+    "Issued one rewritten fresh search after the healthy probe",
+    "Switched all later Smart Search invocations to serial execution after the local concurrency rejection",
+    "Fetched official arXiv pages and Atom entries to validate candidates and reject the unsupported AGENT-IQA claim"
+  ],
+  "doctor_calls": 1,
+  "sources": [
+    {
+      "title": "Rethinking Clinical Relevance in Chest X-ray Machine Learning: How Evaluation References Define Performance",
+      "url": "https://arxiv.org/abs/2607.26333",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: id, title, published, summary; abstract page: title and cite-as"
+    },
+    {
+      "title": "SciFigQual-Bench: A Benchmark for Scientific Figure Quality Assessment with Full-Manuscript Context",
+      "url": "https://arxiv.org/abs/2607.27084",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: published and summary; abstract page: title, subjects, cite-as"
+    },
+    {
+      "title": "BlindPSNR: A No-Reference Fidelity Predictor for Low-Light Image Enhancement",
+      "url": "https://arxiv.org/abs/2607.27628",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: published and summary; abstract page: title and cite-as"
+    },
+    {
+      "title": "CBCT-IQ: A Publicly Available Annotated Cone-Beam CT Dataset for Image Quality Assessment and Benchmarking",
+      "url": "https://arxiv.org/abs/2607.29253",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: published and summary; abstract page: title, subjects, cite-as"
+    },
+    {
+      "title": "Ranking Image Fusion the Way Humans Do: A Learned Pairwise Preference Measure for Infrared-Visible Fusion Assessment",
+      "url": "https://arxiv.org/abs/2608.01301",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: updated, published, summary; abstract page: title and cite-as"
+    },
+    {
+      "title": "MIEScore: Human-Aligned Evaluation for Multi-Source Image Editing",
+      "url": "https://arxiv.org/abs/2608.02059",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: published and summary; abstract page: title and cite-as"
+    },
+    {
+      "title": "Estimating SSIM from MSE for DCT-Based Compressed Images via Modeling Local Error Statistics",
+      "url": "https://arxiv.org/abs/2608.02549",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: updated, published, summary; abstract page: journal reference and cite-as"
+    },
+    {
+      "title": "A Subjective Study on a New Sharpness Informed Class of Metrics",
+      "url": "https://arxiv.org/abs/2608.13989",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: published and summary; abstract page: title and cite-as"
+    },
+    {
+      "title": "MR-IQA-2: Faithful Image Quality Reflection via Fine-Grained Credit Assignment",
+      "url": "https://arxiv.org/abs/2608.18579",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: published and summary; abstract page: title, subjects, cite-as"
+    },
+    {
+      "title": "Toward Vision Language Model-based Assessment of Clinical Quality and Usability of LGE-MR Images for Cardiac Ablation Planning",
+      "url": "https://arxiv.org/abs/2608.21180",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: published and summary; abstract page: title, subjects, cite-as"
+    },
+    {
+      "title": "AGIDefect-4K: A Richly Annotated Dataset for AI-Generated Image Defect Detection, Localization and Explanation",
+      "url": "https://arxiv.org/abs/2608.20713",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry: published and summary; abstract page: title, comments, subjects, cite-as"
+    },
+    {
+      "title": "AgenticIQA and MUSE exclusion-date records",
+      "url": "https://export.arxiv.org/api/query?id_list=2606.03005,2509.26006",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entries: canonical id, published, updated, title, summary"
+    },
+    {
+      "title": "Tool-IQA and IQA-T1 exclusion-date records within the checked candidate set",
+      "url": "https://export.arxiv.org/api/query?id_list=2608.18579,2608.21180,2607.29253,2608.02549,2608.01301,2607.27084,2608.20713,2607.26333,2607.12375,2606.16082,2608.04567",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entries for 2607.12375 and 2606.16082: canonical id, published, title, summary"
+    },
+    {
+      "title": "STRIVE: Probing Reasoning Limits in Graded Plausibility Generation and Evaluation",
+      "url": "https://arxiv.org/abs/2608.04567",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "arXiv Atom entry and abstract page title; disproves the unsupported AGENT-IQA candidate"
+    }
+  ],
+  "native_web_used": false,
+  "security_incident": false
+}

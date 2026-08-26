@@ -1,0 +1,89 @@
+{
+  "status": "completed",
+  "answer_complete": true,
+  "observed_errors": [
+    {
+      "command_category": "fetch",
+      "target_category": "mac_mini_newsroom",
+      "error_type": "quality_error",
+      "final_standard_chain_status": "empty",
+      "fallback_used": true
+    },
+    {
+      "command_category": "fetch",
+      "target_category": "mac_mini_specs",
+      "error_type": "quality_error",
+      "final_standard_chain_status": "empty",
+      "fallback_used": true
+    },
+    {
+      "command_category": "fetch",
+      "target_category": "mac_studio_newsroom",
+      "error_type": "quality_error",
+      "final_standard_chain_status": "empty",
+      "fallback_used": true
+    },
+    {
+      "command_category": "fetch",
+      "target_category": "mac_studio_specs",
+      "error_type": "quality_error",
+      "final_standard_chain_status": "empty",
+      "fallback_used": true
+    }
+  ],
+  "recovery_actions": [
+    {
+      "target_category": "mac_mini_newsroom",
+      "action": "explicit_compatible_extract_after_standard_fetch_exhausted",
+      "result": "ok"
+    },
+    {
+      "target_category": "mac_mini_specs",
+      "action": "explicit_compatible_extract_after_standard_fetch_exhausted",
+      "result": "ok"
+    },
+    {
+      "target_category": "mac_studio_newsroom",
+      "action": "explicit_compatible_extract_after_standard_fetch_exhausted",
+      "result": "ok"
+    },
+    {
+      "target_category": "mac_studio_specs",
+      "action": "explicit_compatible_extract_after_standard_fetch_exhausted",
+      "result": "ok"
+    }
+  ],
+  "doctor_calls": 0,
+  "sources": [
+    {
+      "title": "Apple’s new Mac mini, featuring M6 and M5 Pro, delivers a massive leap in AI performance, supercharging the leading desktop for always-on agentic computing",
+      "url": "https://www.apple.com/newsroom/2026/08/apple-unveils-a-more-powerful-mac-mini-featuring-the-all-new-m6-and-m5-pro/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "page date; Mac mini with the All-New M6; Mac mini with M5 Pro; Best-in-Class Connectivity; Pricing and Availability"
+    },
+    {
+      "title": "Mac mini - Technical Specifications - Apple",
+      "url": "https://www.apple.com/mac-mini/specs/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Chip; Memory; Display Support; Connections and Expansion; Size and Weight"
+    },
+    {
+      "title": "Apple introduces new Mac Studio with M5 Max and M5 Ultra - Apple",
+      "url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "page date; Mac Studio with M5 Max; Mac Studio with M5 Ultra; Blazing-Fast Storage and Pro Connectivity; Pricing and Availability"
+    },
+    {
+      "title": "Mac Studio - Technical Specifications - Apple",
+      "url": "https://www.apple.com/mac-studio/specs/",
+      "source_type": "official_or_original",
+      "evidence_status": "verified",
+      "locator": "Chip; Memory; Display Support; Connections and Expansion; Size and Weight"
+    }
+  ],
+  "native_web_used": false,
+  "security_incident": false
+}

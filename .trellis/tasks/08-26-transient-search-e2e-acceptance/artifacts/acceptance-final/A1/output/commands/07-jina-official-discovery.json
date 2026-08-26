@@ -1,0 +1,73 @@
+{
+  "ok": true,
+  "query": "Jina AI Reader official API documentation rate limit headers errors",
+  "search_type": "neural",
+  "results": [
+    {
+      "id": "https://r.jina.ai/docs",
+      "title": "reader  (0.1.0)",
+      "url": "https://r.jina.ai/docs",
+      "publishedDate": null,
+      "author": "",
+      "score": 1
+    },
+    {
+      "id": "https://docs.jina.ai/concepts/client/transient-errors/",
+      "title": "Meta-Prompt | Jina AI Search Foundation API Guide",
+      "url": "https://docs.jina.ai/concepts/client/transient-errors/",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.8571428571428572
+    },
+    {
+      "id": "https://docs.jina.ai/api/jina.serve.executors/",
+      "title": "Meta-Prompt | Jina AI Search Foundation API Guide",
+      "url": "https://docs.jina.ai/api/jina.serve.executors/",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.7142857142857143
+    },
+    {
+      "id": "https://api.jina.ai/scalar",
+      "title": "Jina Search Foundation API",
+      "url": "https://api.jina.ai/scalar",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.5714285714285714
+    },
+    {
+      "id": "https://docs.jina.ai/chapters/proto/docs.html",
+      "title": "Meta-Prompt | Jina AI Search Foundation API Guide",
+      "url": "https://docs.jina.ai/chapters/proto/docs.html",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.4285714285714286
+    },
+    {
+      "id": "https://docs.jina.ai/v3.8.4/_modules/jina/clients/grpc/",
+      "title": "Meta-Prompt | Jina AI Search Foundation API Guide",
+      "url": "https://docs.jina.ai/v3.8.4/_modules/jina/clients/grpc/",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.2857142857142857
+    },
+    {
+      "id": "https://docs.jina.ai/fundamentals/flow/topologies/",
+      "title": "Meta-Prompt | Jina AI Search Foundation API Guide",
+      "url": "https://docs.jina.ai/fundamentals/flow/topologies/",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.1428571428571429
+    },
+    {
+      "id": "https://docs.jina.ai/concepts/serving/gateway/yaml-spec/",
+      "title": "Meta-Prompt | Jina AI Search Foundation API Guide",
+      "url": "https://docs.jina.ai/concepts/serving/gateway/yaml-spec/",
+      "publishedDate": null,
+      "author": "",
+      "score": 0
+    }
+  ],
+  "total": 8,
+  "elapsed_ms": 471.7
+}

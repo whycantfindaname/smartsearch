@@ -1,0 +1,30 @@
+{
+  "ok": false,
+  "url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
+  "provider": "",
+  "content": "",
+  "error_type": "quality_error",
+  "error": "low-quality challenge page detected: title: just a moment",
+  "provider_attempts": [
+    {
+      "capability": "web_fetch",
+      "provider": "jina",
+      "status": "error",
+      "error_type": "quality_error",
+      "error": "low-quality challenge page detected: title: just a moment",
+      "elapsed_ms": 33.96,
+      "result_count": 0
+    },
+    {
+      "capability": "web_fetch",
+      "provider": "firecrawl",
+      "status": "empty",
+      "error_type": "",
+      "error": "",
+      "elapsed_ms": 0.11,
+      "result_count": 0
+    }
+  ],
+  "fallback_used": true,
+  "elapsed_ms": 34.22
+}

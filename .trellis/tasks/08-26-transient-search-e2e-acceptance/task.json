@@ -1,0 +1,31 @@
+{
+  "id": "transient-search-e2e-acceptance",
+  "name": "transient-search-e2e-acceptance",
+  "title": "Validate transient Smart Search recovery end to end",
+  "description": "Run five real research subagents behind isolated deterministic provider faults to validate the active Smart Search Skill, recovery catalog, evidence behavior, and leakage boundaries without changing main.",
+  "status": "in_progress",
+  "dev_type": "backend",
+  "scope": "preview-owned Trellis acceptance harness and evidence; conditional Smart Search fixes on lwj_dev then preview; conditional governed Skill synchronization",
+  "package": null,
+  "priority": "P1",
+  "creator": "jasonliao",
+  "assignee": "jasonliao",
+  "createdAt": "2026-08-26",
+  "completedAt": null,
+  "branch": "preview/multi-source-agentic-research",
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    ".trellis/tasks/08-26-transient-search-e2e-acceptance",
+    "skills/smart-search-cli/SKILL.md",
+    "skills/smart-search-cli/references/error-recovery.md",
+    "src/smart_search/assets/skills/smart-search-cli"
+  ],
+  "notes": "Keep main read-only. Product or Skill fixes start on lwj_dev and merge into preview. Doctor budget is one total. No push, tag, release, CPA, or CLIProxyAPI changes.",
+  "meta": {}
+}

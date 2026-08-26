@@ -1,0 +1,73 @@
+{
+  "ok": true,
+  "query": "Firecrawl official API documentation error codes rate limits Retry-After",
+  "search_type": "neural",
+  "results": [
+    {
+      "id": "https://docs.firecrawl.dev/api-reference/errors",
+      "title": "",
+      "url": "https://docs.firecrawl.dev/api-reference/errors",
+      "publishedDate": null,
+      "author": "",
+      "score": 1
+    },
+    {
+      "id": "https://docs.firecrawl.dev/api-reference/introduction",
+      "title": "",
+      "url": "https://docs.firecrawl.dev/api-reference/introduction",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.8571428571428572
+    },
+    {
+      "id": "http://docs.firecrawl.dev/features/crawl",
+      "title": "",
+      "url": "http://docs.firecrawl.dev/features/crawl",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.7142857142857143
+    },
+    {
+      "id": "https://docs.firecrawl.dev/sdks/python",
+      "title": "",
+      "url": "https://docs.firecrawl.dev/sdks/python",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.5714285714285714
+    },
+    {
+      "id": "https://docs.firecrawl.dev/api-reference/endpoint/crawl-get",
+      "title": "",
+      "url": "https://docs.firecrawl.dev/api-reference/endpoint/crawl-get",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.4285714285714286
+    },
+    {
+      "id": "http://docs.firecrawl.dev/api-reference/endpoint/scrape",
+      "title": "",
+      "url": "http://docs.firecrawl.dev/api-reference/endpoint/scrape",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.2857142857142857
+    },
+    {
+      "id": "https://docs.firecrawl.dev/features/crawl?dub_id=5W9WUmP1QY8SNM9e",
+      "title": "",
+      "url": "https://docs.firecrawl.dev/features/crawl?dub_id=5W9WUmP1QY8SNM9e",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.1428571428571429
+    },
+    {
+      "id": "https://docs.firecrawl.dev/features/search?dub_id=5W9WUmP1QY8SNM9e",
+      "title": "",
+      "url": "https://docs.firecrawl.dev/features/search?dub_id=5W9WUmP1QY8SNM9e",
+      "publishedDate": null,
+      "author": "",
+      "score": 0
+    }
+  ],
+  "total": 8,
+  "elapsed_ms": 465.19
+}

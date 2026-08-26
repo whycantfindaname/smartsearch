@@ -1,0 +1,26 @@
+usage: smart-search exa-search [-h] [--num-results NUM_RESULTS]
+                               [--search-type {neural,keyword,auto}]
+                               [--include-text] [--include-highlights]
+                               [--start-published-date START_PUBLISHED_DATE]
+                               [--include-domains INCLUDE_DOMAINS [INCLUDE_DOMAINS ...]]
+                               [--exclude-domains EXCLUDE_DOMAINS [EXCLUDE_DOMAINS ...]]
+                               [--category CATEGORY]
+                               [--format {json,markdown,content}]
+                               [--output OUTPUT]
+                               query
+
+positional arguments:
+  query
+
+options:
+  -h, --help            show this help message and exit
+  --num-results NUM_RESULTS
+  --search-type {neural,keyword,auto}
+  --include-text
+  --include-highlights
+  --start-published-date START_PUBLISHED_DATE
+  --include-domains INCLUDE_DOMAINS [INCLUDE_DOMAINS ...]
+  --exclude-domains EXCLUDE_DOMAINS [EXCLUDE_DOMAINS ...]
+  --category CATEGORY
+  --format {json,markdown,content}
+  --output OUTPUT       Write rendered output to a file.

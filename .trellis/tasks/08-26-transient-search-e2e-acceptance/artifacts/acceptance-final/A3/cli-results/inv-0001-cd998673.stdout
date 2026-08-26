@@ -1,0 +1,8 @@
+{
+  "ok": false,
+  "query": "OpenAI Agents SDK checkpointing state persistence retry failure handling human-in-the-loop observability",
+  "provider": "context7",
+  "error_type": "network_error",
+  "error": "HTTP 503: {\"error\": {\"type\": \"service_unavailable\"}}",
+  "elapsed_ms": 60.68
+}

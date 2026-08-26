@@ -1,0 +1,7 @@
+{
+  "ok": false,
+  "query": "Deep Research Agent source coverage evidence faithfulness citation correctness fault recovery paper benchmark open source 2025 2026",
+  "error_type": "provider_error",
+  "error": "HTTP 402: {\"error\": {\"message\": \"payment_required\", \"type\": \"payment_required\"}}",
+  "elapsed_ms": 39.67
+}

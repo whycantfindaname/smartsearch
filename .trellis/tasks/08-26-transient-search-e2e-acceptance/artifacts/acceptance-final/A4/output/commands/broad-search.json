@@ -1,0 +1,230 @@
+{
+  "ok": true,
+  "error_type": "",
+  "error": "",
+  "session_id": "ebcdc52e5cbf",
+  "query": "Find public web announcements from 2025-08-26 through 2026-08-26 about Deep Research Agent evaluation datasets and open-source systems, especially source coverage, evidence faithfulness, citation correctness, or fault recovery. Return public URLs and publication dates.",
+  "platform": "",
+  "model": "grok-4.20-multi-agent-xhigh",
+  "primary_api_mode": "chat-completions",
+  "content": "**No qualifying public web announcements were identified in the specified date range (2025-08-26 to 2026-08-26).**\n\nAfter broad internal collaboration across the full team and review of known AI research benchmarks, agent frameworks, and evaluation literature, no public URLs or dated announcements perfectly matching the query were located. This includes:\n\n- Dedicated **Deep Research Agent** (or equivalent) evaluation datasets.\n- Open-source systems explicitly addressing **source coverage**, **evidence faithfulness**, **citation correctness**, or **fault recovery** in that exact 12-month window.\n\n### Key Observations\n- **Related pre-2025 work** (for context, not matching the date range):\n  - Frameworks like **RAGAS** (faithfulness, answer relevance, citation metrics).\n  - **FACTSCORE** (factual precision and citation quality in generated text).\n  - Agent benchmarks such as **GAIA** (2023–2024), **WebArena**, **AgentBench**, and **SWE-bench** extensions, which test aspects of tool use, recovery, and grounding but predate the window.\n  - Systems like Stanford’s **STORM** (research report generation with citations) and early agentic RAG work from 2023–2024.\n\n- Concepts such as evidence faithfulness, citation correctness, source coverage, and fault recovery (self-correction or recovery from hallucination/tool failure) are active research areas in LLM agents and RAG, but specific new **public evaluation datasets or open-source Deep Research Agent systems** announced in the exact period were not recalled by any team member and could not be retrieved.\n\n- **Search limitations**: The team has only internal communication tools (`chatroom_send`, `wait`). No web search, arXiv scraping, GitHub release lookup, or blog indexing tools were available. All responses are based on pre-2025 trained knowledge. No one hallucinated plausible future URLs or dates.\n\n### Recommendations for Further Research (if tools were available)\nTarget these sources with the suggested keywords:\n- arXiv (search `Deep Research Agent` OR `research agent benchmark` OR `agentic RAG evaluation` + faithfulness/citation/fault after:2025).\n- Company blogs: OpenAI, Anthropic, Google DeepMind, xAI, Perplexity, Hugging Face.\n- GitHub releases for repos containing “DeepResearch”, “ResearchAgent-Eval”, “AgentFaithfulness”, or similar.\n- Conferences (NeurIPS 2025, ICLR 2026, ACL 2026 proceedings).\n\nIf you have access to web search, browsing, or specific known projects from that period, provide additional details or links and the team can help analyze them for relevance to source coverage, evidence faithfulness, citation correctness, and fault recovery.\n\n**Confidence**:  (high confidence that no easily recallable matching public announcements exist in our knowledge; lower because real-time 2025–2026 web data was inaccessible).",
+  "sources": [
+    {
+      "url": "https://arxiv.org/html/2508.10152v1",
+      "provider": "firecrawl",
+      "title": "Improving and Evaluating Open Deep Research Agents",
+      "description": "# Improving and Evaluating Open Deep Research Agents\n## 2  Related Work\nDeep Research Agents.\n\nExisting Open Deep Research Agents.\n\n## References\n2025. \n\n2025. \n\n2025. \n\n2024. \n\n2025. \n\n2025. \n\n2025. \n\n2025."
+    },
+    {
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "provider": "tavily",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "description": "Results reveal several notable patterns across open-source DRAs. All\nthree agents exhibit critically low Citation Integrity scores, exposing\na systemic weakness in citation grounding, though the failure modes\ndiffer. Smolagents Open DR and Tongyi Deep Research achieve near-zero CI\n(4.78 and 1.03 in aggregate, respectively) primarily because they rarely ground claims\nto specific sources, reflecting negligible claim attribution rates.\nLangChain Open DR attains higher CI (15.92) thanks to\nsubstantially better attribution practices, yet is undermined by low\ncitation faithfulness: attributed sources frequently fail to support the\nclaims they are attached to (see Figures 8 and 9 for a\ndetailed breakdown). Beyond citation behavior, Smolagents Open DR [...] dominates in both source quality and synthesis, leading aggregate scores\nfor Factuality (58.15), Writing Quality (63.97), Key-Information\nCoverage (75.95), and Reasoning Quality (69.16), achieving strong\ncontent quality despite its near-absent citation discipline. Tongyi Deep\nResearch ranks second on Factuality (55.09) but trails on adaptive\nmetrics (aggregate RQ of 45.48), while LangChain Open DR records the\nlowest Factuality (44.64) yet outperforms Tongyi on reasoning (RQ of\n57.28). Overall, these results suggest that open-source DRAs can produce\ninformative and well-written reports, but remain fundamentally limited\nby poor citation grounding, a critical gap for trustworthy research\nagents. [...] attribute claims at all (low CA, ≈\\approx 5–15), though when they do,\nfaithfulness is moderately higher (CF ≈\\approx 35–55). Neither\nstrategy yields reliable citation behavior, underscoring that\nopen-source DRAs have yet to bridge the gap between source retrieval and\nfaithful evidence grounding."
+    },
+    {
+      "url": "https://arxiv.org/html/2602.18940",
+      "provider": "tavily",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "description": "Results reveal several notable patterns across open-source DRAs. All\nthree agents exhibit critically low Citation Integrity scores, exposing\na systemic weakness in citation grounding, though the failure modes\ndiffer. Smolagents Open DR and Tongyi Deep Research achieve near-zero CI\n(4.78 and 1.03 in aggregate, respectively) primarily because they rarely ground claims\nto specific sources, reflecting negligible claim attribution rates.\nLangChain Open DR attains higher CI (15.92) thanks to\nsubstantially better attribution practices, yet is undermined by low\ncitation faithfulness: attributed sources frequently fail to support the\nclaims they are attached to (see Figures 8 and 9 for a\ndetailed breakdown). Beyond citation behavior, Smolagents Open DR [...] dominates in both source quality and synthesis, leading aggregate scores\nfor Factuality (58.15), Writing Quality (63.97), Key-Information\nCoverage (75.95), and Reasoning Quality (69.16), achieving strong\ncontent quality despite its near-absent citation discipline. Tongyi Deep\nResearch ranks second on Factuality (55.09) but trails on adaptive\nmetrics (aggregate RQ of 45.48), while LangChain Open DR records the\nlowest Factuality (44.64) yet outperforms Tongyi on reasoning (RQ of\n57.28). Overall, these results suggest that open-source DRAs can produce\ninformative and well-written reports, but remain fundamentally limited\nby poor citation grounding, a critical gap for trustworthy research\nagents."
+    }
+  ],
+  "sources_count": 3,
+  "primary_sources": [],
+  "primary_sources_count": 0,
+  "extra_sources": [
+    {
+      "url": "https://arxiv.org/html/2508.10152v1",
+      "provider": "firecrawl",
+      "title": "Improving and Evaluating Open Deep Research Agents",
+      "description": "# Improving and Evaluating Open Deep Research Agents\n## 2  Related Work\nDeep Research Agents.\n\nExisting Open Deep Research Agents.\n\n## References\n2025. \n\n2025. \n\n2025. \n\n2024. \n\n2025. \n\n2025. \n\n2025. \n\n2025."
+    },
+    {
+      "url": "https://arxiv.org/html/2602.18940v1",
+      "provider": "tavily",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "description": "Results reveal several notable patterns across open-source DRAs. All\nthree agents exhibit critically low Citation Integrity scores, exposing\na systemic weakness in citation grounding, though the failure modes\ndiffer. Smolagents Open DR and Tongyi Deep Research achieve near-zero CI\n(4.78 and 1.03 in aggregate, respectively) primarily because they rarely ground claims\nto specific sources, reflecting negligible claim attribution rates.\nLangChain Open DR attains higher CI (15.92) thanks to\nsubstantially better attribution practices, yet is undermined by low\ncitation faithfulness: attributed sources frequently fail to support the\nclaims they are attached to (see Figures 8 and 9 for a\ndetailed breakdown). Beyond citation behavior, Smolagents Open DR [...] dominates in both source quality and synthesis, leading aggregate scores\nfor Factuality (58.15), Writing Quality (63.97), Key-Information\nCoverage (75.95), and Reasoning Quality (69.16), achieving strong\ncontent quality despite its near-absent citation discipline. Tongyi Deep\nResearch ranks second on Factuality (55.09) but trails on adaptive\nmetrics (aggregate RQ of 45.48), while LangChain Open DR records the\nlowest Factuality (44.64) yet outperforms Tongyi on reasoning (RQ of\n57.28). Overall, these results suggest that open-source DRAs can produce\ninformative and well-written reports, but remain fundamentally limited\nby poor citation grounding, a critical gap for trustworthy research\nagents. [...] attribute claims at all (low CA, ≈\\approx 5–15), though when they do,\nfaithfulness is moderately higher (CF ≈\\approx 35–55). Neither\nstrategy yields reliable citation behavior, underscoring that\nopen-source DRAs have yet to bridge the gap between source retrieval and\nfaithful evidence grounding."
+    },
+    {
+      "url": "https://arxiv.org/html/2602.18940",
+      "provider": "tavily",
+      "title": "DREAM: Deep Research Evaluation with Agentic Metrics",
+      "description": "Results reveal several notable patterns across open-source DRAs. All\nthree agents exhibit critically low Citation Integrity scores, exposing\na systemic weakness in citation grounding, though the failure modes\ndiffer. Smolagents Open DR and Tongyi Deep Research achieve near-zero CI\n(4.78 and 1.03 in aggregate, respectively) primarily because they rarely ground claims\nto specific sources, reflecting negligible claim attribution rates.\nLangChain Open DR attains higher CI (15.92) thanks to\nsubstantially better attribution practices, yet is undermined by low\ncitation faithfulness: attributed sources frequently fail to support the\nclaims they are attached to (see Figures 8 and 9 for a\ndetailed breakdown). Beyond citation behavior, Smolagents Open DR [...] dominates in both source quality and synthesis, leading aggregate scores\nfor Factuality (58.15), Writing Quality (63.97), Key-Information\nCoverage (75.95), and Reasoning Quality (69.16), achieving strong\ncontent quality despite its near-absent citation discipline. Tongyi Deep\nResearch ranks second on Factuality (55.09) but trails on adaptive\nmetrics (aggregate RQ of 45.48), while LangChain Open DR records the\nlowest Factuality (44.64) yet outperforms Tongyi on reasoning (RQ of\n57.28). Overall, these results suggest that open-source DRAs can produce\ninformative and well-written reports, but remain fundamentally limited\nby poor citation grounding, a critical gap for trustworthy research\nagents."
+    }
+  ],
+  "extra_sources_count": 3,
+  "source_warning": "extra_sources are retrieved in parallel and are not automatically used to verify generated content; use fetch on key URLs for claim-level evidence.",
+  "routing_decision": {
+    "docs_intent": false,
+    "zh_current_intent": false,
+    "web_current_intent": false,
+    "fetch_intent": false,
+    "supplemental_paths": [],
+    "intent_router_mode": "hybrid",
+    "required_capabilities": [],
+    "intent_signals": {
+      "docs_api_intent": false,
+      "current_or_locale_intent": false,
+      "known_url": false,
+      "vertical_intent": false,
+      "strict_validation": false,
+      "rule_scores": {},
+      "urls": [],
+      "semantic_docs_search_score": 0.404,
+      "semantic_web_search_score": 0.437,
+      "semantic_web_fetch_score": 0.37,
+      "semantic_vertical_search_score": 0.427,
+      "semantic_top_capability": "web_search",
+      "semantic_top_score": 0.437,
+      "semantic_second_score": 0.427,
+      "semantic_margin": 0.01,
+      "semantic_threshold": 0.475,
+      "semantic_minimum_margin": 0.053,
+      "semantic_passed_threshold": false,
+      "semantic_passed_margin": false
+    },
+    "confidence": 0.35,
+    "router_engines_used": [
+      "rules",
+      "embeddings",
+      "classifier"
+    ],
+    "degraded": false,
+    "degraded_reason": "",
+    "reasons": [
+      "rules found no supplemental capability need"
+    ],
+    "validation_level": "balanced",
+    "fallback_mode": "auto",
+    "providers": "auto",
+    "main_search_chain": [
+      "openai-compatible"
+    ],
+    "openai_compatible_stream": true,
+    "openai_compatible_models": [
+      "grok-4.20-multi-agent-xhigh"
+    ],
+    "openai_compatible_model_fallback_enabled": false,
+    "openai_compatible_timeout_policy": "remaining_budget"
+  },
+  "providers_used": [
+    "OpenAI-compatible",
+    "tavily",
+    "firecrawl"
+  ],
+  "provider_attempts": [
+    {
+      "capability": "main_search",
+      "provider": "OpenAI-compatible",
+      "status": "ok",
+      "error_type": "",
+      "error": "",
+      "elapsed_ms": 31608.65,
+      "result_count": 1,
+      "transport": "stream",
+      "model": "grok-4.20-multi-agent-xhigh",
+      "breaker_state": {
+        "state": "closed",
+        "consecutive_failures": 0
+      },
+      "model_role": "primary",
+      "attempt_timeout_seconds": 118.714,
+      "logical_attempt": 1
+    },
+    {
+      "capability": "web_search",
+      "provider": "tavily",
+      "status": "ok",
+      "error_type": "",
+      "error": "",
+      "elapsed_ms": 6545.92,
+      "result_count": 2,
+      "logical_attempt": 1
+    },
+    {
+      "capability": "web_search",
+      "provider": "firecrawl",
+      "status": "ok",
+      "error_type": "",
+      "error": "",
+      "elapsed_ms": 6545.92,
+      "result_count": 1,
+      "logical_attempt": 1
+    }
+  ],
+  "fallback_used": true,
+  "transport_fallback_used": false,
+  "model_fallback_used": false,
+  "validation_level": "balanced",
+  "minimum_profile_ok": true,
+  "capability_status": {
+    "main_search": {
+      "configured": [
+        "openai-compatible"
+      ],
+      "fallback_chain": [
+        "xai-responses",
+        "openai-compatible"
+      ],
+      "ok": true
+    },
+    "web_search": {
+      "configured": [
+        "tavily",
+        "firecrawl"
+      ],
+      "fallback_chain": [
+        "zhipu",
+        "zhipu-mcp",
+        "tavily",
+        "firecrawl"
+      ],
+      "ok": true
+    },
+    "docs_search": {
+      "configured": [
+        "context7",
+        "exa"
+      ],
+      "fallback_chain": [
+        "context7",
+        "exa"
+      ],
+      "ok": true
+    },
+    "web_fetch": {
+      "configured": [
+        "tavily",
+        "jina",
+        "firecrawl"
+      ],
+      "fallback_chain": [
+        "tavily",
+        "jina",
+        "zhipu-mcp-reader",
+        "firecrawl"
+      ],
+      "ok": true
+    },
+    "vertical_search": {
+      "configured": [
+        "sciverse"
+      ],
+      "fallback_chain": [
+        "anysearch"
+      ],
+      "experimental": true,
+      "explicit_only": [
+        "sciverse"
+      ],
+      "route_enabled": {
+        "anysearch": true,
+        "sciverse": false
+      },
+      "ok": true
+    }
+  },
+  "elapsed_ms": 39441.71,
+  "logical_attempts": 1,
+  "logical_retry_used": false,
+  "logical_retry_max_attempts": 5
+}

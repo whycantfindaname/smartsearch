@@ -1,0 +1,177 @@
+{
+  "ok": true,
+  "error_type": "",
+  "error": "",
+  "session_id": "a5fcaff938e7",
+  "query": "Find Deep Research Agent papers, benchmarks, or open-source implementations first released from 2025-08-26 through 2026-08-26 that explicitly evaluate source coverage, evidence faithfulness, citation correctness, or fault recovery. Return candidate titles, first-publication dates, and direct original paper/project/repository URLs. Prioritize primary sources.",
+  "platform": "",
+  "model": "grok-4.20-multi-agent-xhigh",
+  "primary_api_mode": "chat-completions",
+  "content": "**No qualifying candidates identified.**\n\nAfter collaborating with the full team (Harper, Benjamin, Lucas, Olivia, James, Charlotte, Henry, Mia, William, Sebastian, Jack, Owen, Luna, Elizabeth, Noah), no papers, benchmarks, or open-source implementations were recalled that simultaneously meet **all** these criteria:\n\n- First released (paper preprint, benchmark launch, or repo initial commit/tag) between 2025-08-26 and 2026-08-26.\n- Explicitly framed as (or centrally focused on) “Deep Research Agent” systems (autonomous, multi-step, web-enabled research/synthesis agents that perform thorough literature/web investigation, synthesis, and reporting).\n- Explicitly evaluate at least one of: source coverage (breadth/diversity of sources or viewpoints), evidence faithfulness (output grounded in retrieved evidence without hallucination), citation correctness (accurate, relevant, properly formatted citations), or fault recovery (detecting/correcting errors, tool failures, or reasoning dead-ends in the research process).\n- Primary sources only (arXiv preprint, official project page, GitHub repo with clear first-release date, conference paper, etc.).\n\n### Analysis and Context\nOur collective training data and knowledge cutoffs predate or only marginally overlap the narrow one-year window. Related earlier concepts exist but fall outside the date range or evaluation focus:\n\n- **Faithfulness & citation metrics** — RAGAS, ARES, FACTSCORE, Self-RAG, and various “LLM Citation” or “CiteCheck” works (primarily 2023–early 2025).\n- **Agent recovery & robustness** — GAIA, WebArena, ToolBench, and CRAG-style corrective retrieval (mostly 2023–2024).\n- **Research-agent prototypes** — Early LangGraph/CrewAI/AutoGen research workflows and prototypes from 2024–early 2025, but none recalled with the exact combination of “deep research” framing plus the listed explicit metrics in the target window.\n\nNo team member could surface primary-source titles, exact publication/release dates, or direct URLs matching the query. Terms such as “Deep Research Agent benchmark faithfulness,” “source coverage research agent 2026,” “citation correctness deep research agent,” or “fault recovery agentic research” did not yield matching recalled works from the precise period.\n\nIf real-time web/arXiv/GitHub search tools were available, we would broaden to 5+ keyword clusters (agentic RAG evals, verifiable research agents, multi-agent synthesis benchmarks, citation-augmented research systems, self-correcting research agents) then narrow to the top 2–3 most relevant 2025–2026 releases. Absent that capability, the only defensible answer is that **no qualifying primary sources were identified within the specified constraints**.\n\nIf you have additional context, a specific project name, or can provide search access, we can refine further. Otherwise, this represents the exhaustive team consensus as of 2026-08-26.",
+  "sources": [],
+  "sources_count": 0,
+  "primary_sources": [],
+  "primary_sources_count": 0,
+  "extra_sources": [],
+  "extra_sources_count": 0,
+  "source_warning": "",
+  "routing_decision": {
+    "docs_intent": false,
+    "zh_current_intent": false,
+    "web_current_intent": false,
+    "fetch_intent": false,
+    "supplemental_paths": [
+      "vertical_search"
+    ],
+    "intent_router_mode": "hybrid",
+    "required_capabilities": [
+      "vertical_search"
+    ],
+    "intent_signals": {
+      "docs_api_intent": false,
+      "current_or_locale_intent": false,
+      "known_url": false,
+      "vertical_intent": true,
+      "strict_validation": false,
+      "rule_scores": {
+        "vertical_search": 0.72
+      },
+      "urls": [],
+      "semantic_docs_search_score": 0.513,
+      "semantic_web_search_score": 0.49,
+      "semantic_web_fetch_score": 0.496,
+      "semantic_vertical_search_score": 0.606,
+      "semantic_top_capability": "vertical_search",
+      "semantic_top_score": 0.606,
+      "semantic_second_score": 0.513,
+      "semantic_margin": 0.093,
+      "semantic_threshold": 0.475,
+      "semantic_minimum_margin": 0.053,
+      "semantic_passed_threshold": true,
+      "semantic_passed_margin": true
+    },
+    "confidence": 0.72,
+    "router_engines_used": [
+      "rules",
+      "embeddings",
+      "classifier"
+    ],
+    "degraded": false,
+    "degraded_reason": "",
+    "reasons": [
+      "rules matched vertical-domain terms",
+      "embeddings matched vertical_search examples (score 0.606, margin 0.093)"
+    ],
+    "validation_level": "balanced",
+    "fallback_mode": "auto",
+    "providers": "auto",
+    "main_search_chain": [
+      "openai-compatible"
+    ],
+    "openai_compatible_stream": true,
+    "openai_compatible_models": [
+      "grok-4.20-multi-agent-xhigh"
+    ],
+    "openai_compatible_model_fallback_enabled": false,
+    "openai_compatible_timeout_policy": "remaining_budget"
+  },
+  "providers_used": [
+    "OpenAI-compatible"
+  ],
+  "provider_attempts": [
+    {
+      "capability": "main_search",
+      "provider": "OpenAI-compatible",
+      "status": "ok",
+      "error_type": "",
+      "error": "",
+      "elapsed_ms": 63564.41,
+      "result_count": 1,
+      "transport": "stream",
+      "model": "grok-4.20-multi-agent-xhigh",
+      "breaker_state": {
+        "state": "closed",
+        "consecutive_failures": 0
+      },
+      "model_role": "primary",
+      "attempt_timeout_seconds": 114.815,
+      "logical_attempt": 1
+    }
+  ],
+  "fallback_used": false,
+  "transport_fallback_used": false,
+  "model_fallback_used": false,
+  "validation_level": "balanced",
+  "minimum_profile_ok": true,
+  "capability_status": {
+    "main_search": {
+      "configured": [
+        "openai-compatible"
+      ],
+      "fallback_chain": [
+        "xai-responses",
+        "openai-compatible"
+      ],
+      "ok": true
+    },
+    "web_search": {
+      "configured": [
+        "tavily",
+        "firecrawl"
+      ],
+      "fallback_chain": [
+        "zhipu",
+        "zhipu-mcp",
+        "tavily",
+        "firecrawl"
+      ],
+      "ok": true
+    },
+    "docs_search": {
+      "configured": [
+        "context7",
+        "exa"
+      ],
+      "fallback_chain": [
+        "context7",
+        "exa"
+      ],
+      "ok": true
+    },
+    "web_fetch": {
+      "configured": [
+        "tavily",
+        "jina",
+        "firecrawl"
+      ],
+      "fallback_chain": [
+        "tavily",
+        "jina",
+        "zhipu-mcp-reader",
+        "firecrawl"
+      ],
+      "ok": true
+    },
+    "vertical_search": {
+      "configured": [
+        "sciverse"
+      ],
+      "fallback_chain": [
+        "anysearch"
+      ],
+      "experimental": true,
+      "explicit_only": [
+        "sciverse"
+      ],
+      "route_enabled": {
+        "anysearch": true,
+        "sciverse": false
+      },
+      "ok": true
+    }
+  },
+  "elapsed_ms": 68756.11,
+  "logical_attempts": 1,
+  "logical_retry_used": false,
+  "logical_retry_max_attempts": 5
+}

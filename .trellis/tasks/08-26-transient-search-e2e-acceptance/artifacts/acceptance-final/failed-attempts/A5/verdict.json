@@ -1,0 +1,45 @@
+{
+  "case_id": "A5",
+  "checks": [
+    "Jina challenge quality gate with Tavily disabled and a distinct fetch-provider recovery"
+  ],
+  "event_locators": [
+    "gateway-events.jsonl:1",
+    "gateway-events.jsonl:2",
+    "gateway-events.jsonl:3",
+    "gateway-events.jsonl:4",
+    "gateway-events.jsonl:5",
+    "gateway-events.jsonl:6"
+  ],
+  "harness_violations": [],
+  "invocation_locators": [
+    "invocations.jsonl:1",
+    "invocations.jsonl:2",
+    "invocations.jsonl:3",
+    "invocations.jsonl:4",
+    "invocations.jsonl:5",
+    "invocations.jsonl:6",
+    "invocations.jsonl:7",
+    "invocations.jsonl:8",
+    "invocations.jsonl:9"
+  ],
+  "missing_result_fields": [],
+  "observed": {
+    "doctor_calls": 0,
+    "forwarded": 0,
+    "gateway_events": 6,
+    "injected": 6,
+    "invocations": 9,
+    "suppressed": 0,
+    "verified_sources": 0
+  },
+  "schema": "transient-search-verdict.v1",
+  "source_commit": "7a58705a2e63dfa7c1fbd21f139efa1715597eef",
+  "verdict": "FAIL",
+  "violations": [
+    "A5 did not obtain a successful non-Tavily fetch recovery",
+    "verified source count 0 is below 4",
+    "worker marked answer incomplete",
+    "worker status is not completed"
+  ]
+}

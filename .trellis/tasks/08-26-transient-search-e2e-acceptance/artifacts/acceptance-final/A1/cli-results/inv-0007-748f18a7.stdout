@@ -1,0 +1,73 @@
+{
+  "ok": true,
+  "query": "Tavily official API documentation HTTP error codes usage limits rate limiting",
+  "search_type": "neural",
+  "results": [
+    {
+      "id": "https://docs.tavily.com/documentation/rate-limits",
+      "title": "",
+      "url": "https://docs.tavily.com/documentation/rate-limits",
+      "publishedDate": null,
+      "author": "",
+      "score": 1
+    },
+    {
+      "id": "https://docs.tavily.com/sdk/python/reference",
+      "title": "",
+      "url": "https://docs.tavily.com/sdk/python/reference",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.8571428571428572
+    },
+    {
+      "id": "https://docs.tavily.com/documentation/api-reference/endpoint/search",
+      "title": "",
+      "url": "https://docs.tavily.com/documentation/api-reference/endpoint/search",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.7142857142857143
+    },
+    {
+      "id": "https://docs.tavily.com/documentation/api-reference/endpoint/extract",
+      "title": "",
+      "url": "https://docs.tavily.com/documentation/api-reference/endpoint/extract",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.5714285714285714
+    },
+    {
+      "id": "https://docs.tavily.com/documentation/api-reference/endpoint/map",
+      "title": "",
+      "url": "https://docs.tavily.com/documentation/api-reference/endpoint/map",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.4285714285714286
+    },
+    {
+      "id": "https://help.tavily.com/articles/8645538886-understanding-http-errors",
+      "title": "Errors Code",
+      "url": "https://help.tavily.com/articles/8645538886-understanding-http-errors",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.2857142857142857
+    },
+    {
+      "id": "https://docs.tavily.com/sdk/javascript/reference",
+      "title": "",
+      "url": "https://docs.tavily.com/sdk/javascript/reference",
+      "publishedDate": null,
+      "author": "",
+      "score": 0.1428571428571429
+    },
+    {
+      "id": "https://docs.tavily.com/documentation/api-reference/introduction",
+      "title": "",
+      "url": "https://docs.tavily.com/documentation/api-reference/introduction",
+      "publishedDate": null,
+      "author": "",
+      "score": 0
+    }
+  ],
+  "total": 8,
+  "elapsed_ms": 533.62
+}
