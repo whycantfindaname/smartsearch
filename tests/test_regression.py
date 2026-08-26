@@ -379,6 +379,10 @@ def test_agentic_research_skill_uses_confirmed_architecture_and_terms():
         "does not require a Mistral API key or credits",
         "does not use Vespa or Docker",
         "final citation -> ClaimRecord -> EvidenceItem",
+        "[cite:<citation_id>]",
+        "reference_register.json",
+        "Workspace document index",
+        "CandidateCard-only",
         "smart-search research-run",
         "smart-search research-environment",
     ]

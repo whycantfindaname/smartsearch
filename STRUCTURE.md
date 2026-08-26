@@ -145,6 +145,11 @@ Agent 与脚本的机器接口。Skill 不得复制 Provider 网络逻辑或自�
 - Skill 只说明 AI tool 何时、如何调用 PATH 中的 `smart-search`，以及如何理解
   routing、fallback 和 evidence 字段。它不提供搜索访问、不保存 Provider key、不
   创建 Trellis/hooks/agents/commands，也不替代 CLI 的配置和错误分类。
+- Citation-backed final delivery 继续走既有 `research-run verify` 与 Workspace
+  materialization：`final_synthesis.md` 内的 References 是读者投影，
+  `evidence/reference_register.json` 是审计投影，`project_manifest.json` 的
+  entrypoints 只是 Workspace 文档索引；结构化 Dossier、Trace、Artifact、
+  EvidenceItem、ClaimRecord 与权威 `citation_verification.json` 的边界不变。
 - `setup --install-skills` 是首次安装兼容路径；CLI 升级后的日常同步使用
   `skills status`（只读比较）和 `skills update`（只覆盖受管 Skill 文件）。这些
   操作不能修改 Provider 配置或删除额外的用户文件。

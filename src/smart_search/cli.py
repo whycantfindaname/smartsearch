@@ -1071,6 +1071,8 @@ def _format_skills_markdown(data: dict[str, Any]) -> str:
 
 
 def _format_markdown(command: str, data: dict[str, Any]) -> str:
+    if command == "research-run" and data.get("rendered_report"):
+        return str(data["rendered_report"]).rstrip() + "\n"
     if command == "search":
         if not data.get("ok", False) and (data.get("error") or data.get("error_type")):
             lines = ["# Smart Search Search", ""]
@@ -1278,6 +1280,8 @@ def _plain_result_lines(data: dict[str, Any]) -> list[str]:
 
 
 def _format_content(command: str, data: dict[str, Any]) -> str:
+    if command == "research-run" and data.get("rendered_report"):
+        return str(data["rendered_report"]).rstrip() + "\n"
     if command in {"search", "fetch", "context7-docs", "research"}:
         content = data.get("content")
         if content:
@@ -2739,6 +2743,7 @@ async def _run_research_runtime(args: argparse.Namespace) -> int:
         operation = args.research_run_command
         workspace_dossier: research_runtime.ResearchDossier | None = None
         citation_verification: dict[str, Any] | None = None
+        reference_register: dict[str, Any] | None = None
         if operation == "create":
             snapshot = payload.get("capability_snapshot")
             observed_at = str(payload.get("capability_observed_at") or "")
@@ -2826,13 +2831,29 @@ async def _run_research_runtime(args: argparse.Namespace) -> int:
             citations = payload.get("citations", [])
             if not isinstance(citations, list):
                 raise ContractValidationError("citations must be a list")
+            draft_report = payload.get("draft_report")
             data = research_runtime.verify_final_citations(
                 dossier,
                 citations=citations,
                 artifact_root=artifact_root,
+                draft_report=draft_report,
             )
             workspace_dossier = dossier
-            citation_verification = data
+            citation_verification = {
+                key: data[key]
+                for key in (
+                    "ok",
+                    "citation_count",
+                    "backtrace",
+                    "locator_checks",
+                    "trace_ref",
+                    "artifact_index_ref",
+                )
+            }
+            supplied_register = data.get("reference_register")
+            reference_register = (
+                supplied_register if isinstance(supplied_register, dict) else None
+            )
         elif operation == "materialize":
             workspace_dossier = research_runtime.ResearchDossier.from_dict(
                 payload.get("dossier", payload)
@@ -2841,6 +2862,10 @@ async def _run_research_runtime(args: argparse.Namespace) -> int:
             if supplied_verification is not None and not isinstance(supplied_verification, dict):
                 raise ContractValidationError("citation_verification must be an object")
             citation_verification = supplied_verification
+            supplied_register = payload.get("reference_register")
+            if supplied_register is not None and not isinstance(supplied_register, dict):
+                raise ContractValidationError("reference_register must be an object")
+            reference_register = supplied_register
             data = {"ok": True, "run_id": workspace_dossier.run.run_id}
         else:
             raise ContractValidationError(f"unknown research-run operation: {operation}")
@@ -2852,7 +2877,16 @@ async def _run_research_runtime(args: argparse.Namespace) -> int:
         if workspace_path:
             if workspace_dossier is None:
                 raise ContractValidationError("research operation did not return a dossier to materialize")
-            final_synthesis = payload.get("final_synthesis") if operation in {"verify", "materialize"} else None
+            final_synthesis = None
+            if operation == "verify":
+                rendered_report = data.get("rendered_report")
+                final_synthesis = (
+                    rendered_report
+                    if isinstance(rendered_report, str)
+                    else payload.get("final_synthesis")
+                )
+            elif operation == "materialize":
+                final_synthesis = payload.get("final_synthesis")
             manifest = ResearchWorkspace(
                 workspace_path,
                 artifact_root=artifact_root,
@@ -2861,6 +2895,7 @@ async def _run_research_runtime(args: argparse.Namespace) -> int:
                 checkpoint_labels=checkpoint_labels,
                 final_synthesis=final_synthesis,
                 citation_verification=citation_verification,
+                reference_register=reference_register,
             )
             data["workspace"] = {
                 "root": str(Path(workspace_path).expanduser().resolve()),

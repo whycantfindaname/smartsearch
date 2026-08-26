@@ -45,6 +45,11 @@ def _stage_g_workspace(root: Path) -> Path:
             "project_name": "Stage G architecture review",
             "status": "complete",
             "public_trace_path": "checkpoints/public_trace.jsonl",
+            "entrypoints": {
+                "final_synthesis": "final_synthesis.md",
+                "citation_verification": "evidence/citation_verification.json",
+                "reference_register": "evidence/reference_register.json",
+            },
         },
     )
     (root / "main_log.md").write_text(
@@ -53,7 +58,11 @@ def _stage_g_workspace(root: Path) -> Path:
     )
     (root / "initial_context.md").write_text("# Initial context\n", encoding="utf-8")
     (root / "domain_methodology.md").write_text("# Method\n", encoding="utf-8")
-    (root / "final_synthesis.md").write_text("# Final synthesis\n\nEvidence-backed result.\n", encoding="utf-8")
+    (root / "final_synthesis.md").write_text(
+        "# Final synthesis\n\nEvidence-backed result [1].\n\n"
+        "## References\n\n1. https://evidence.test/0.\n",
+        encoding="utf-8",
+    )
 
     roles = [
         "search_scout",
@@ -167,6 +176,15 @@ def _stage_g_workspace(root: Path) -> Path:
         root / "evidence" / "citation_verification.json",
         {"ok": True, "backtrace": {f"citation-{index}": {"evidence_id": f"evidence-{index}"} for index in range(16)}},
     )
+    _write_json(
+        root / "evidence" / "reference_register.json",
+        {
+            "schema_version": "1",
+            "run_id": "run-stage-g",
+            "reference_count": 1,
+            "references": [{"number": 1, "citation_ids": ["citation-0"]}],
+        },
+    )
     _write_jsonl(
         root / "checkpoints" / "public_trace.jsonl",
         [
@@ -198,6 +216,9 @@ def test_stage_g_like_workspace_aggregates_exact_counts_and_isolates_failures(tm
         "mode": "deep",
         "status": "complete",
         "has_final_report": True,
+        "has_report_references": True,
+        "has_reference_register": True,
+        "has_document_index": True,
         "updated_at": "",
     }
     assert summary["counts"] == {
@@ -210,6 +231,7 @@ def test_stage_g_like_workspace_aggregates_exact_counts_and_isolates_failures(tm
         "evidence": 16,
         "claims": 2,
         "citations": 16,
+        "references": 1,
     }
     assert [node["label"] for node in summary["pipeline"]] == [
         "Root Plan",
@@ -217,12 +239,25 @@ def test_stage_g_like_workspace_aggregates_exact_counts_and_isolates_failures(tm
         "Source Curation",
         "Evidence Mining",
         "Claims / Citations",
-        "Final Synthesis",
+        "Final Report / References",
     ]
     assert {failure["provider"] for failure in summary["failures"]} == {"firecrawl", "jina", "tavily"}
     assert summary["pipeline"][1]["status"] == "degraded"
     assert summary["pipeline"][-1]["status"] == "complete"
     assert summary["evidence"][0]["locator"] == "chars 0–8"
+    assert summary["projections"] == {
+        "report_references": {"present": True, "kind": "reader_projection"},
+        "reference_register": {
+            "present": True,
+            "count": 1,
+            "kind": "audit_projection",
+        },
+        "document_index": {
+            "present": True,
+            "count": 3,
+            "kind": "workspace_navigation",
+        },
+    }
 
 
 def test_task_projection_uses_state_role_and_original_task_identity(tmp_path):
@@ -379,8 +414,10 @@ def test_page_has_required_pipeline_landmarks_and_accessibility_contract():
         "Research inspection desk",
         "Module detail",
         "Public activity",
-        "Evidence register",
-        "Final report",
+        "Evidence items",
+        "Final report with References",
+        "audit reference register",
+        "Workspace document index",
         "Hidden reasoning is never displayed",
         "prefers-reduced-motion: reduce",
     ):

@@ -276,6 +276,15 @@ Dossier、append-only Trace、Artifact Registry、EvidenceItem 和 Claim 记录�
 尝试。AnySearch 和 MinerU 继续作为外部 Skill 使用，凭据不复制到 Smart Search
 配置中。
 
+生成带引用的最终报告时，Root 在 `draft_report` 中写入精确的
+`[cite:<citation_id>]` 标记，并把它与既有 `citations` 映射一起交给
+`research-run verify`。加上 `--workspace` 后，同一次调用会验证完整的
+Claim/Evidence/artifact/Trace 链和 locator，按首次出现顺序渲染编号引用与唯一的
+References 章节，并保存三种边界明确的投影：面向读者的 `final_synthesis.md`、
+用于权威反向验证的 `evidence/citation_verification.json`，以及用于审计映射的派生
+`evidence/reference_register.json`。Manifest entrypoints 只是 Workspace 文档索引。
+`quick`、`standard` 和 `deep` Research Workspace 使用同一套契约。
+
 文档 Sidecar 必须由明确指定的 Python 3.12 解释器创建独立虚拟环境，默认位置是
 `$SMART_SEARCH_CONFIG_DIR/research-sidecar`。只有健康检查通过后，Smart Search
 才保存 `SMART_SEARCH_SIDECAR_PYTHON`；依赖不会安装到用户提供的解释器本身。

@@ -217,6 +217,240 @@ def test_research_run_materialize_projects_workspace(monkeypatch, tmp_path, caps
     assert captured["citation_verification"]["ok"] is True
 
 
+def test_research_run_verify_renders_and_materializes_one_atomic_result(
+    monkeypatch, tmp_path, capsys
+):
+    captured = {}
+
+    class FakeRun:
+        run_id = "run-cli-verify"
+
+    class FakeDossier:
+        run = FakeRun()
+
+    rendered = "# Final\n\nFinding [1].\n\n## References\n\n1. https://example.test/source.\n"
+    register = {
+        "schema_version": "1",
+        "run_id": "run-cli-verify",
+        "reference_count": 1,
+        "references": [{"number": 1}],
+    }
+
+    def fake_verify(dossier, *, citations, artifact_root, draft_report=None):
+        captured["citations"] = citations
+        captured["draft_report"] = draft_report
+        return {
+            "ok": True,
+            "citation_count": 1,
+            "backtrace": {"citation-1": {"evidence_id": "evidence-1"}},
+            "locator_checks": {"evidence-1": {"locator_type": "character_range"}},
+            "trace_ref": "trace.jsonl",
+            "artifact_index_ref": "artifacts.jsonl",
+            "rendered_report": rendered,
+            "reference_register": register,
+        }
+
+    class FakeWorkspace:
+        def __init__(self, root, *, artifact_root=None):
+            captured["workspace_root"] = str(root)
+
+        def materialize(self, dossier, **kwargs):
+            captured.update(kwargs)
+            return {"run_id": dossier.run.run_id, "entrypoints": {}}
+
+    monkeypatch.setattr(
+        cli.research_runtime.ResearchDossier,
+        "from_dict",
+        staticmethod(lambda value: FakeDossier()),
+    )
+    monkeypatch.setattr(cli.research_runtime, "verify_final_citations", fake_verify)
+    monkeypatch.setattr(cli, "ResearchWorkspace", FakeWorkspace)
+    payload = {
+        "dossier": {},
+        "citations": [
+            {
+                "citation_id": "citation-1",
+                "claim_record_id": "record-1",
+                "evidence_id": "evidence-1",
+            }
+        ],
+        "draft_report": "# Final\n\nFinding [cite:citation-1].",
+    }
+
+    code = cli.main(
+        [
+            "research-run",
+            "verify",
+            "--input",
+            json.dumps(payload),
+            "--artifact-root",
+            str(tmp_path / "artifacts"),
+            "--workspace",
+            str(tmp_path / "workspace"),
+            "--format",
+            "json",
+        ]
+    )
+    data = json.loads(capsys.readouterr().out)
+
+    assert code == cli.EXIT_OK
+    assert data["rendered_report"] == rendered
+    assert data["reference_register"] == register
+    assert captured["draft_report"] == payload["draft_report"]
+    assert captured["final_synthesis"] == rendered
+    assert captured["reference_register"] == register
+    assert "rendered_report" not in captured["citation_verification"]
+    assert "reference_register" not in captured["citation_verification"]
+
+
+def test_research_run_verify_markdown_outputs_rendered_report(monkeypatch, tmp_path, capsys):
+    class FakeDossier:
+        pass
+
+    rendered = "# Final\n\nFinding [1].\n\n## References\n\n1. https://example.test/.\n"
+    monkeypatch.setattr(
+        cli.research_runtime.ResearchDossier,
+        "from_dict",
+        staticmethod(lambda value: FakeDossier()),
+    )
+    monkeypatch.setattr(
+        cli.research_runtime,
+        "verify_final_citations",
+        lambda dossier, **kwargs: {
+            "ok": True,
+            "citation_count": 1,
+            "backtrace": {},
+            "locator_checks": {},
+            "trace_ref": "trace.jsonl",
+            "artifact_index_ref": "artifacts.jsonl",
+            "rendered_report": rendered,
+            "reference_register": {"references": []},
+        },
+    )
+
+    code = cli.main(
+        [
+            "research-run",
+            "verify",
+            "--input",
+            json.dumps({"dossier": {}, "citations": [], "draft_report": "draft"}),
+            "--artifact-root",
+            str(tmp_path),
+            "--format",
+            "markdown",
+        ]
+    )
+
+    assert code == cli.EXIT_OK
+    assert capsys.readouterr().out == rendered
+
+
+def test_research_run_verify_preserves_legacy_raw_final_synthesis(
+    monkeypatch, tmp_path, capsys
+):
+    captured = {}
+
+    class FakeRun:
+        run_id = "run-cli-legacy"
+
+    class FakeDossier:
+        run = FakeRun()
+
+    def fake_verify(dossier, *, citations, artifact_root, draft_report=None):
+        captured["draft_report"] = draft_report
+        return {
+            "ok": True,
+            "citation_count": 0,
+            "backtrace": {},
+            "locator_checks": {},
+            "trace_ref": "trace.jsonl",
+            "artifact_index_ref": "artifacts.jsonl",
+        }
+
+    class FakeWorkspace:
+        def __init__(self, root, *, artifact_root=None):
+            pass
+
+        def materialize(self, dossier, **kwargs):
+            captured.update(kwargs)
+            return {"run_id": dossier.run.run_id}
+
+    monkeypatch.setattr(
+        cli.research_runtime.ResearchDossier,
+        "from_dict",
+        staticmethod(lambda value: FakeDossier()),
+    )
+    monkeypatch.setattr(cli.research_runtime, "verify_final_citations", fake_verify)
+    monkeypatch.setattr(cli, "ResearchWorkspace", FakeWorkspace)
+
+    code = cli.main(
+        [
+            "research-run",
+            "verify",
+            "--input",
+            json.dumps(
+                {
+                    "dossier": {},
+                    "citations": [],
+                    "final_synthesis": "# Legacy raw report\n",
+                }
+            ),
+            "--artifact-root",
+            str(tmp_path / "artifacts"),
+            "--workspace",
+            str(tmp_path / "workspace"),
+            "--format",
+            "json",
+        ]
+    )
+
+    assert code == cli.EXIT_OK
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+    assert captured["draft_report"] is None
+    assert captured["final_synthesis"] == "# Legacy raw report\n"
+    assert captured["reference_register"] is None
+
+
+def test_research_run_failed_verify_does_not_materialize_workspace(
+    monkeypatch, tmp_path, capsys
+):
+    monkeypatch.setattr(
+        cli.research_runtime.ResearchDossier,
+        "from_dict",
+        staticmethod(lambda value: object()),
+    )
+
+    def fail_verify(*args, **kwargs):
+        raise cli.ContractValidationError("citation-unknown has no supplied mapping")
+
+    class UnexpectedWorkspace:
+        def __init__(self, *args, **kwargs):
+            raise AssertionError("workspace must not be opened after failed verification")
+
+    monkeypatch.setattr(cli.research_runtime, "verify_final_citations", fail_verify)
+    monkeypatch.setattr(cli, "ResearchWorkspace", UnexpectedWorkspace)
+
+    code = cli.main(
+        [
+            "research-run",
+            "verify",
+            "--input",
+            json.dumps({"dossier": {}, "citations": [], "draft_report": "bad"}),
+            "--artifact-root",
+            str(tmp_path / "artifacts"),
+            "--workspace",
+            str(tmp_path / "workspace"),
+            "--format",
+            "json",
+        ]
+    )
+    data = json.loads(capsys.readouterr().out)
+
+    assert code == cli.EXIT_PARAMETER_ERROR
+    assert data["error_type"] == "parameter_error"
+    assert not (tmp_path / "workspace").exists()
+
+
 def test_research_run_checkpoint_requires_workspace(monkeypatch, tmp_path, capsys):
     class FakeDossier:
         def to_dict(self):

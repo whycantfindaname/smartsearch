@@ -40,8 +40,8 @@ Use `smart-search research-run` for deterministic dossier operations:
 - `document` runs allowed document operations over registered artifacts.
 - `claims` derives Root-directed `ClaimRecord` updates from validated evidence.
 - `decision` records Root's next decision or stop reason.
-- `verify` checks final citation mappings against the dossier and registered evidence.
-- `materialize` projects an existing dossier into a durable Research Workspace and may persist supplied `final_synthesis` and `citation_verification` outputs.
+- `verify` checks final citation mappings against the dossier and registered evidence. With an optional citation-marked `draft_report`, it also renders first-appearance citation numbers, one reader-facing References section, and a deterministic audit reference register. Existing callers that omit `draft_report`, including raw `final_synthesis` Workspace projection, remain compatible.
+- `materialize` projects an existing dossier into a durable Research Workspace and may persist supplied legacy `final_synthesis` and `citation_verification` outputs plus an additive, already-verified `reference_register`.
 
 Except for `capabilities`, each operation requires `--input` and `--artifact-root`; inspect `smart-search research-run <operation> --help` for the current public signature. Add `--workspace PATH` to persist the operation's returned dossier, and repeat `--checkpoint LABEL` when the caller needs immutable named snapshots. `materialize` requires `--workspace`. The artifact root contains run-local append-only artifacts and Trace and must not be treated as a global workflow database.
 
@@ -49,9 +49,11 @@ Except for `capabilities`, each operation requires `--input` and `--artifact-roo
 
 ## Research Workspace and visual inspection
 
-Research Workspace preserves the important public state of a run without replacing the runtime contracts. Its structured projections include the latest Dossier, immutable named checkpoints, task state, Evidence and Claim records, optional citation verification, and a metadata-only `public_trace.jsonl`. It also stores human-readable context, methodology, task notes, a public decision log, and optional `final_synthesis.md`.
+Research Workspace preserves the important public state of a run without replacing the runtime contracts. Its structured projections include the latest Dossier, immutable named checkpoints, task state, Evidence and Claim records, optional authoritative citation verification, an optional derived audit reference register, and a metadata-only `public_trace.jsonl`. It also stores human-readable context, methodology, task notes, a public decision log, and optional `final_synthesis.md` with reader-facing References.
 
-The structured Dossier, append-only Trace, Evidence, and Claim records remain authoritative. Markdown files are projections for reading and review; they must not be treated as a second workflow database or used to mutate structured state. `final_synthesis` is written only when the caller supplies it. `citation_verification` is the supplied result of final citation checking, not a status inferred from Markdown. `public_trace.jsonl` exposes only stable public identities and event metadata from Trace.
+The structured Dossier, append-only Trace, Artifact Registry, Evidence, and Claim records remain authoritative. `citation_verification.json` is the authoritative result of final reverse-trace and locator checking. `final_synthesis.md` and its numbered References are the reader projection; `reference_register.json` is the derived audit projection that retains citation, ClaimRecord, EvidenceItem, snapshot, and locator mappings; `project_manifest.json` entrypoints are only the Workspace document index. None is a second workflow database or may mutate structured state. `public_trace.jsonl` exposes only stable public identities and event metadata from Trace.
+
+For citation-backed final delivery, Root writes exact `[cite:<citation_id>]` markers and supplies the existing citation mapping to `research-run verify`. Repeated markers are valid. Smart Search numbers registered sources by first appearance, groups EvidenceItems by stable `source_id` rather than URL alone, validates every supplied mapping and displayed marker through the complete reverse trace and locator chain, and writes the three final projections only after validation succeeds. CandidateCards and URL-only discovery records cannot become formal report references.
 
 Do not persist hidden reasoning, chain-of-thought, API keys, private configuration, or unauthorized source bodies in any workspace file. Public logs should record observable decisions, inputs, outputs, gaps, and status transitions without reconstructing private reasoning.
 
