@@ -107,3 +107,28 @@ Implemented bounded recovery for safe concurrency replays and explicit cancellat
 ### Next Steps
 
 - No further action in this task; future documentation-only recovery rules belong in references/error-recovery.md.
+
+
+## Session 5: Complete transient Smart Search recovery acceptance
+
+**Date**: 2026-08-26
+**Task**: Complete transient Smart Search recovery acceptance
+**Branch**: `preview/multi-source-agentic-research`
+
+### Summary
+
+Implemented bounded concurrency recovery on lwj_dev, centralized provider-specific error guidance, merged into preview, synchronized and activated governed personal Skills, and passed five fault-injected real-research subagent cases with sanitized durable evidence.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `775eb8d` | (see git log) |
+| `a5c7b7d` | (see git log) |
+| `665a801` | (see git log) |
+| `419eea2` | (see git log) |
+| `e428683` | (see git log) |
+
+### Status
+
+[OK] **Completed**
