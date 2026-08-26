@@ -79,8 +79,16 @@ Intent router rules:
 
 Provider attempt errors:
 
-- Provider exceptions must be visible as `provider_attempts[].status="error"`, never silently converted to empty output. Use the stable taxonomy: HTTP `400`/`422` is `parameter_error`, `401`/`403` is `auth_error`, timeout is `timeout`, `429` is `rate_limited`, `5xx` or request failure is `network_error`, invalid response decoding is `parse_error`, and explicit upstream tool failures are `provider_error`.
+- Provider exceptions must be visible as `provider_attempts[].status="error"`, never silently converted to empty output. Use the stable taxonomy and replay rules in `references/error-recovery.md`; do not infer automatic replay from a broad error category.
 - A successfully decoded response with no normalized candidates or content is `status="empty"`, so same-capability fallback can continue without misreporting a provider failure.
+
+## Error Recovery Policy
+
+`references/error-recovery.md` is the single extensible catalog for `429`,
+`499`, `5xx`, timeout, network, and uncertain-submission handling. It defines
+the only safe logical replay markers, the structured `recovery` object, and the
+one-probe procedure. Add future documentation-only handling rules there
+instead of duplicating them in this routing reference or `SKILL.md`.
 
 Zhipu Web Search API:
 

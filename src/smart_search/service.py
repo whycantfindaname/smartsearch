@@ -2705,7 +2705,7 @@ async def search(
             except Exception as e:
                 error_result = _primary_search_exception_result(start, session_id, query, candidate_config["mode"], search_provider.get_provider_name(), e)
                 last_primary_error = error_result
-                if isinstance(e, (XAIRequestOutcomeUnknown, XAIRequestHardTimeout)):
+                if isinstance(e, (XAIRequestOutcomeUnknown, XAIRequestHardTimeout)) or error_result["error_type"] == "request_cancelled":
                     stop_main_fallback = True
                 transport_attempts = getattr(search_provider, "last_transport_attempts", [])
                 if _append_openai_transport_attempts(provider_attempts, search_provider, candidate_config, extra=attempt_extra):

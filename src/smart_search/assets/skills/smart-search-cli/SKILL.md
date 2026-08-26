@@ -18,7 +18,7 @@ Use the local `smart-search` command as the default execution layer for web rese
 
 ## Default Workflow
 
-1. Run `smart-search doctor --format json` when configuration or availability is uncertain.
+1. Run `smart-search doctor --format json` once when configuration or availability is uncertain. During a transient search incident, treat it as a single diagnostic probe; do not repeat it as a repair loop.
 2. If `doctor` reports missing configuration, use `smart-search setup` or `smart-search config set KEY VALUE` when the user provides keys. Do not ask users to edit global environment variables by default.
 3. If OpenAI-compatible `search` hangs or times out after `doctor` succeeds, run `smart-search diagnose openai-compatible --format markdown` and use its summary.
 4. For resilient xAI search, run `smart-search search "QUERY" --timeout 120 --max-try 5 --format json` and wait for the CLI to finish; do not implement another retry loop in the agent.
@@ -29,6 +29,10 @@ Use the local `smart-search` command as the default execution layer for web rese
 9. Preserve command lines and source URLs in your answer. Prefer citing fetched pages or `primary_sources`; treat `extra_sources` as follow-up candidates until fetched.
 10. When AnySearch can materially improve vertical, batch, or URL evidence, resolve it in this order: `skills/anysearch/SKILL.md` relative to this Skill, then a separately installed global `$anysearch` Skill. If neither is readable, record AnySearch as unavailable and continue with Smart Search.
 11. After resolving AnySearch, read its `SKILL.md` and let the model choose the supported operation and parameters. Do not hard-code an AnySearch subcommand sequence in Smart Search.
+
+## Transient Search Recovery
+
+Read `references/error-recovery.md` for the complete, extensible error-handling catalog. The default search budget is `--timeout 120 --max-try 5`; the catalog is the source of truth for replay safety, cooldowns, the one allowed doctor probe, and the next action. Do not copy individual error rules into this file.
 
 ## Routing
 
@@ -94,13 +98,15 @@ flowchart TD
     CR --> G{Root judges sufficiency}
     G -- replan --> T
     G -- stop --> F[Root final synthesis]
-    F --> V[Smart Search citation verification<br/>reverse trace to artifact and Trace]
+F --> V[Smart Search citation verification<br/>reverse trace to artifact and Trace]
 ```
+- `doctor` is a diagnostic probe, not a repair operation. If a recovery object recommends it, run `smart-search doctor --format json` at most once, then follow the catalog's next step instead of creating another agent-side retry loop.
 
 ## References
 
 - Current OPPO Linux search flow, Embedding trigger conditions, provider layout, and Mermaid diagram: `references/current-search-flow.md`
-- Command examples, evidence files, timeout retry policy, and guardrails: `references/command-patterns.md`
+- Command examples, evidence files, transient search recovery, and guardrails: `references/command-patterns.md`
+- Error taxonomy, replay matrix, structured recovery fields, and the one-probe workflow: `references/error-recovery.md`
 - Deep Research planner/executor workflow, plan fields, gap check, and smoke matrix: `references/deep-research-mode.md`
 - Root-led multi-source architecture, project-agent roles, caller-held dossier operations, Claim lifecycle, document mining, Trace, and reverse citation tracing: `references/agentic-research-architecture.md`
 - CLI entrypoints, command signatures, aliases, output fields, exit codes, and tool policy: `references/cli-core.md`

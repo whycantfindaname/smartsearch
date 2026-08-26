@@ -17,6 +17,7 @@ APPROVED_PROVIDER_ERROR_TYPES: Final[frozenset[str]] = frozenset(
         "auth_error",
         "timeout",
         "rate_limited",
+        "request_cancelled",
         "network_error",
         "parse_error",
         "provider_error",
@@ -98,6 +99,8 @@ def classify_provider_exception(
             error_type = "timeout"
         elif status == 429:
             error_type = "rate_limited"
+        elif status == 499:
+            error_type = "request_cancelled"
         elif 500 <= status <= 599:
             error_type = "network_error"
         else:

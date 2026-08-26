@@ -6,6 +6,7 @@ import inspect
 import json
 import os
 import random
+import re
 from importlib import metadata
 import subprocess
 import sys
@@ -190,17 +191,156 @@ def _positive_int(value: str) -> int:
     return parsed
 
 
-def _is_retryable_xai_504(data: dict[str, Any]) -> bool:
-    if data.get("ok") is not False:
-        return False
-    return any(
-        attempt.get("provider") == "xAI Responses"
-        and attempt.get("status") == "error"
-        and "HTTP 504" in str(attempt.get("error", ""))
-        and "upstream_server_error" in str(attempt.get("error", ""))
-        for attempt in data.get("provider_attempts", [])
-        if isinstance(attempt, dict)
+SEARCH_RECOVERY_COOLDOWN_SECONDS = 30
+SAFE_RETRY_XAI_UPSTREAM_ERROR = "xai_upstream_server_error"
+SAFE_RETRY_CONCURRENCY_LIMIT = "concurrency_limit_exceeded"
+
+
+def _provider_identity_matches(identity: str, keywords: tuple[str, ...]) -> bool:
+    normalized = identity.lower()
+    return any(keyword in normalized for keyword in keywords)
+
+
+def _has_exact_error_marker(error: str, marker: str) -> bool:
+    return bool(re.search(rf"(?<![A-Za-z0-9_]){re.escape(marker)}(?![A-Za-z0-9_])", error))
+
+
+def _logical_retry_reason_from_record(record: dict[str, Any], *, identity: str = "") -> str:
+    error = str(record.get("error") or "")
+    identity_values = [
+        identity,
+        *(
+        str(record.get(key) or "")
+        for key in ("provider", "primary_api_mode", "mode", "transport")
+        ),
+    ]
+    record_identity = " ".join(value for value in identity_values if value)
+    if not record_identity:
+        record_identity = re.split(r"\s+HTTP\s+\d{3}\b", error, maxsplit=1, flags=re.IGNORECASE)[0]
+    if (
+        re.search(r"\bHTTP\s+429\b", error, flags=re.IGNORECASE)
+        and _has_exact_error_marker(error, SAFE_RETRY_CONCURRENCY_LIMIT)
+        and _provider_identity_matches(record_identity, ("openai-compatible", "chat-completions"))
+    ):
+        return SAFE_RETRY_CONCURRENCY_LIMIT
+    if (
+        re.search(r"\bHTTP\s+504\b", error, flags=re.IGNORECASE)
+        and _has_exact_error_marker(error, "upstream_server_error")
+            and _provider_identity_matches(record_identity, ("xai", "grok"))
+    ):
+        return SAFE_RETRY_XAI_UPSTREAM_ERROR
+    return ""
+
+
+def _has_explicit_terminal_status(error: str) -> bool:
+    return bool(re.search(r"\bHTTP\s+(?:4\d{2}|5\d{2})\b", error, flags=re.IGNORECASE))
+
+
+def _contains_uncertain_submission(data: dict[str, Any]) -> bool:
+    uncertain_markers = (
+        "outcome unknown",
+        "may already be running",
+        "may have been submitted",
+        "terminal state",
+        "submission outcome",
     )
+    records = [data]
+    records.extend(item for item in data.get("provider_attempts") or [] if isinstance(item, dict))
+    for record in records:
+        if record.get("status") in {"unknown", "submitted", "running"}:
+            return True
+        if record.get("error_type") == "request_cancelled" or re.search(
+            r"\bHTTP\s+499\b", str(record.get("error") or ""), flags=re.IGNORECASE
+        ):
+            return True
+        text = " ".join(str(record.get(key) or "") for key in ("error", "message", "recommendation")).lower()
+        if any(marker in text for marker in uncertain_markers):
+            return True
+    return False
+
+
+def _logical_retry_reason(data: dict[str, Any]) -> str:
+    """Return a reason only when the final failure proves replay is safe."""
+    if not isinstance(data, dict) or data.get("ok") is not False:
+        return ""
+    if data.get("error_type") == "request_cancelled" or _contains_uncertain_submission(data):
+        return ""
+
+    top_level = {
+        "error": data.get("error", ""),
+        "error_type": data.get("error_type", ""),
+        "provider": data.get("provider", ""),
+        "primary_api_mode": data.get("primary_api_mode", ""),
+    }
+    top_reason = _logical_retry_reason_from_record(top_level)
+    if top_reason:
+        return top_reason
+    if _has_explicit_terminal_status(str(top_level["error"] or "")):
+        return ""
+
+    attempts = data.get("provider_attempts") or []
+    for attempt in reversed(attempts):
+        if not isinstance(attempt, dict) or attempt.get("status") != "error":
+            continue
+        reason = _logical_retry_reason_from_record(attempt)
+        if reason:
+            return reason
+        if _has_explicit_terminal_status(str(attempt.get("error") or "")):
+            return ""
+    return ""
+
+
+def _recovery_kind(data: dict[str, Any], retry_reason: str) -> str:
+    if data.get("error_type") == "request_cancelled":
+        return "request_cancelled"
+    if re.search(r"\bHTTP\s+499\b", str(data.get("error") or ""), flags=re.IGNORECASE) or "request_cancelled" in str(data.get("error") or ""):
+        return "request_cancelled"
+    for attempt in data.get("provider_attempts") or []:
+        if isinstance(attempt, dict) and (
+            attempt.get("error_type") == "request_cancelled"
+            or re.search(r"\bHTTP\s+499\b", str(attempt.get("error") or ""), flags=re.IGNORECASE)
+            or "request_cancelled" in str(attempt.get("error") or "")
+        ):
+            return "request_cancelled"
+    if retry_reason == SAFE_RETRY_CONCURRENCY_LIMIT:
+        return SAFE_RETRY_CONCURRENCY_LIMIT
+    return ""
+
+
+def _search_recovery(
+    data: dict[str, Any],
+    *,
+    retry_reason: str,
+    logical_attempts: int,
+    max_try: int,
+) -> dict[str, Any] | None:
+    kind = _recovery_kind(data, retry_reason)
+    if not kind:
+        return None
+    wait_seconds = SEARCH_RECOVERY_COOLDOWN_SECONDS
+    doctor_command = "smart-search doctor --format json"
+    if kind == "request_cancelled":
+        recommendation = (
+            "Automatic replay is unsafe because HTTP 499 does not prove whether the upstream accepted the request. "
+            f"Wait {wait_seconds} seconds, confirm that no usable result arrived, run one doctor probe, and make at most one fresh search only if it is still needed."
+        )
+        safe_to_replay = False
+    else:
+        recommendation = (
+            f"Wait {wait_seconds} seconds, run one doctor probe, and make at most one fresh search after the probe is healthy; "
+            "do not repeat doctor or add an agent-side retry loop."
+        )
+        safe_to_replay = True
+    return {
+        "kind": kind,
+        "transient": True,
+        "safe_to_replay": safe_to_replay,
+        "automatic_retry_exhausted": kind == SAFE_RETRY_CONCURRENCY_LIMIT and logical_attempts >= max_try,
+        "wait_seconds": wait_seconds,
+        "doctor_command": doctor_command,
+        "doctor_max_attempts": 1,
+        "recommendation": recommendation,
+    }
 
 
 def _search_timeout_result(query: str, timeout: float, search_kwargs: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -325,6 +465,25 @@ def _error_lines(data: dict[str, Any]) -> list[str]:
     parameter_errors = data.get("config_parameter_errors") or []
     for error in parameter_errors:
         lines.append(f"- Config: {error}")
+    return lines
+
+
+def _recovery_lines(data: dict[str, Any]) -> list[str]:
+    recovery = data.get("recovery")
+    if not isinstance(recovery, dict):
+        return []
+    lines = ["", "## Recovery"]
+    for key in ("kind", "safe_to_replay", "automatic_retry_exhausted", "wait_seconds", "doctor_command", "doctor_max_attempts"):
+        if key not in recovery:
+            continue
+        value = recovery[key]
+        if isinstance(value, bool):
+            value = "YES" if value else "NO"
+        if key == "doctor_command":
+            value = f"`{value}`"
+        lines.append(f"- `{key}`: {value}")
+    if recovery.get("recommendation"):
+        lines.append(f"- Recommendation: {recovery['recommendation']}")
     return lines
 
 
@@ -928,6 +1087,7 @@ def _format_markdown(command: str, data: dict[str, Any]) -> str:
             if data.get("diagnose_command"):
                 lines.extend(["", "## Next Command"])
                 lines.extend(_markdown_code_block(data.get("diagnose_command")))
+            lines.extend(_recovery_lines(data))
             lines.extend(_error_lines(data))
             return "\n".join(lines).strip() + "\n"
         lines = [data.get("content", "")]
@@ -1359,7 +1519,7 @@ def _exit_code(data: dict[str, Any]) -> int:
         return EXIT_CONFIG_ERROR
     if error_type == "parameter_error":
         return EXIT_PARAMETER_ERROR
-    if error_type in {"evidence_error", "network_error", "parse_error", "provider_error", "quality_error", "rate_limited", "timeout"}:
+    if error_type in {"evidence_error", "network_error", "parse_error", "provider_error", "quality_error", "rate_limited", "request_cancelled", "timeout"}:
         return EXIT_NETWORK_ERROR
     return EXIT_RUNTIME_ERROR
 
@@ -2934,7 +3094,10 @@ async def _run_async(args: argparse.Namespace) -> int:
             "auto" in configured_providers or "xai-responses" in configured_providers
         )
         provider_attempts: list[dict[str, Any]] = []
+        logical_attempts = 0
+        retry_reason = ""
         for logical_attempt in range(1, args.max_try + 1):
+            logical_attempts = logical_attempt
             try:
                 if xai_status_monitor_active:
                     data = await service.search(args.query, **search_kwargs)
@@ -2946,20 +3109,30 @@ async def _run_async(args: argparse.Namespace) -> int:
             except asyncio.TimeoutError:
                 data = _search_timeout_result(args.query, args.timeout, search_kwargs)
 
-            for attempt in data.get("provider_attempts", []):
+            for attempt in data.get("provider_attempts") or []:
                 if isinstance(attempt, dict):
                     provider_attempts.append({**attempt, "logical_attempt": logical_attempt})
 
-            retryable = _is_retryable_xai_504(data)
-            if not retryable or logical_attempt == args.max_try:
+            retry_reason = _logical_retry_reason(data)
+            if not retry_reason or logical_attempt == args.max_try:
                 break
             await asyncio.sleep(random.uniform(2.0, 5.0))
 
         data = dict(data)
         data["provider_attempts"] = provider_attempts
-        data["logical_attempts"] = logical_attempt
-        data["logical_retry_used"] = logical_attempt > 1
+        data["logical_attempts"] = logical_attempts
+        data["logical_retry_used"] = logical_attempts > 1
         data["logical_retry_max_attempts"] = args.max_try
+        recovery = _search_recovery(
+            data,
+            retry_reason=retry_reason,
+            logical_attempts=logical_attempts,
+            max_try=args.max_try,
+        )
+        if recovery:
+            data["recovery"] = recovery
+            data["recommendation"] = recovery["recommendation"]
+            data["doctor_command"] = recovery["doctor_command"]
         return _print_result("search", data, args.format, args.output)
     if args.command == "route":
         data = await service.route(args.query, validation=args.validation, mode=args.router_mode)
@@ -3385,7 +3558,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=_positive_int,
         default=5,
         metavar="ATTEMPTS",
-        help="Maximum logical attempts for explicit terminal xAI HTTP 504 failures (default: 5).",
+        help="Maximum logical attempts for xAI HTTP 504 upstream_server_error or OpenAI-compatible HTTP 429 concurrency_limit_exceeded only (default: 5).",
     )
     _add_format_args(search_parser)
 

@@ -21,6 +21,7 @@ def _http_error(status_code: int) -> httpx.HTTPStatusError:
         (408, "timeout"),
         (422, "parameter_error"),
         (429, "rate_limited"),
+        (499, "request_cancelled"),
         (500, "network_error"),
         (503, "network_error"),
     ],
