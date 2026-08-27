@@ -347,7 +347,8 @@ def test_agentic_research_skill_uses_confirmed_architecture_and_terms():
         for path in PUBLIC_SKILL_DIR.rglob("*")
         if path.is_file()
         and path.suffix in {".md", ".yaml", ".yml"}
-        and "skills/anysearch/" not in path.relative_to(PUBLIC_SKILL_DIR).as_posix()
+        and "bundled-skills/anysearch/"
+        not in path.relative_to(PUBLIC_SKILL_DIR).as_posix()
     }
     text = "\n".join(public_documents.values())
 
@@ -370,7 +371,7 @@ def test_agentic_research_skill_uses_confirmed_architecture_and_terms():
         "Source Curator",
         "Evidence Miner",
         "only Root can turn suggestions into new tasks",
-        "bundled snapshot first",
+        "bundled-skills/anysearch/SKILL.md",
         "installed global `$anysearch` Skill",
         "Root may read all candidates or create any number of Curator shards",
         "ClaimSpec -> EvidenceItem -> ClaimRecord",
@@ -511,7 +512,7 @@ def test_streaming_and_external_anysearch_contract_public_and_packaged_assets_ma
         "--stream",
         "--no-stream",
         "ANYSEARCH_API_KEY",
-        "skills/anysearch/SKILL.md",
+        "bundled-skills/anysearch/SKILL.md",
         "external Skill",
         "bundled snapshot",
         "global `$anysearch` Skill",
@@ -549,7 +550,7 @@ def test_streaming_and_external_anysearch_contract_public_and_packaged_assets_ma
     zh_required_markers = [
         "OPENAI_COMPATIBLE_STREAM",
         "ANYSEARCH_API_KEY",
-        "内置 AnySearch 快照",
+        "bundled-skills/anysearch/SKILL.md",
         "全局 `$anysearch` Skill",
         "SCIVERSE_API_TOKEN",
         "SCIVERSE_API_URL",
@@ -564,6 +565,32 @@ def test_streaming_and_external_anysearch_contract_public_and_packaged_assets_ma
     ]
     for marker in zh_required_markers:
         assert marker in readme_zh
+
+
+def test_anysearch_uses_bundled_skill_without_compatibility_commands():
+    forbidden_compatibility_commands = [
+        "anysearch-*",
+        "anysearch-domains",
+        "anysearch-search",
+        "anysearch-extract",
+        "anysearch-batch",
+    ]
+
+    for skill_root in (PUBLIC_SKILL_DIR, PACKAGED_SKILL_DIR):
+        bundled_skill = skill_root / "bundled-skills" / "anysearch" / "SKILL.md"
+        assert bundled_skill.is_file()
+
+        instruction_files = [skill_root / "SKILL.md"]
+        instruction_files.extend(sorted((skill_root / "references").glob("*.md")))
+        instruction_files.extend(sorted((skill_root / "agents").glob("*.yaml")))
+        instruction_text = "\n".join(
+            path.read_text(encoding="utf-8") for path in instruction_files
+        )
+
+        assert "bundled-skills/anysearch/SKILL.md" in instruction_text
+        assert "do not wait for, emit, or ask the user to invoke `/anysearch`" in instruction_text
+        for command in forbidden_compatibility_commands:
+            assert command not in instruction_text
 
 
 def test_openai_compatible_fallback_is_fail_over_not_time_slice():

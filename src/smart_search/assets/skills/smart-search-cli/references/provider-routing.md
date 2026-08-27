@@ -52,7 +52,7 @@ Intent router rules:
 - `XAI_SOFT_TIMEOUT_SECONDS`, `XAI_STATUS_POLL_SECONDS`, and `XAI_HARD_TIMEOUT_SECONDS` default to `120`, `15`, and `7200` seconds.
 - Chat Completions mode must not send xAI `web_search` / `x_search` tools or legacy `search_parameters`; xAI Chat Completions Live Search is deprecated.
 - The standard minimum profile requires one configured provider in each of `main_search`, `docs_search`, and fetch capability. Missing required capabilities should be treated as a hard configuration failure.
-- AnySearch is reported as an optional delegated Skill for `vertical_search`; it is not a registered provider, does not join any CLI fallback chain, and is not required by the `standard` minimum profile.
+- AnySearch is reported as a bundled delegated Skill for `vertical_search`; it is not a registered provider, does not join any CLI fallback chain, and is not required by the `standard` minimum profile.
 - Sciverse is reported only as optional experimental explicit-only `vertical_search`; it is not `docs_search`, not part of default `search` / `research` fallback, and not required by the `standard` minimum profile.
 - Jina Reader is `web_fetch` only, not a general search provider. `JINA_API_KEY` is required before Jina satisfies the standard minimum profile; anonymous `r.jina.ai` is explicit/experimental fetch behavior.
 - Same-capability fallback is allowed; cross-capability fallback is not. Context7 is not used for unrelated broad web queries, and page extraction providers are not used as docs search providers.
@@ -69,7 +69,7 @@ Intent router rules:
 - `map` currently uses Tavily only.
 - `exa-search` and `exa-similar` use Exa only.
 - `context7-library` and `context7-docs` use Context7 only.
-- AnySearch runs outside the Smart Search CLI. Resolve the bundled `skills/anysearch/SKILL.md` first, then a separately installed global `$anysearch` Skill. The model chooses the operation and parameters described by the resolved Skill.
+- AnySearch runs outside the Smart Search CLI. A Smart Search retrieval workflow reads `bundled-skills/anysearch/SKILL.md` and invokes that Skill's CLI directly without waiting for a separate `/anysearch` invocation. Use a separately installed global `$anysearch` Skill only when the bundled Skill is missing or unreadable.
 - `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, and `sciverse-relations` use Sciverse only. They are explicit academic commands and must not be inserted into default provider fallback.
 - `zhipu-search` uses Zhipu only.
 - `zhipu-mcp-search`, `zhipu-mcp-reader`, and `zhipu-mcp-*` zread commands use Zhipu Coding Plan Remote MCP only.
@@ -110,11 +110,11 @@ Jina Reader:
 
 AnySearch:
 
-- AnySearch is an external Skill, not a registered provider. Resolve the bundled `skills/anysearch/SKILL.md` first, then a separately installed global `$anysearch` Skill.
+- AnySearch is an external bundled Skill, not a registered provider. Resolve `bundled-skills/anysearch/SKILL.md` first, then a separately installed global `$anysearch` Skill only as a missing-bundle fallback.
 - The bundled snapshot is an unchanged copy of `jason-liao-skills/main/skill-packages/anysearch`. `scripts/sync_anysearch_skill.py` refreshes both distributable Smart Search Skill trees from GitHub.
 - The official `anysearch-ai/anysearch-skill` repository is a fallback only when the preferred repository is reachable and the package is absent. A checkout, network, or authentication failure preserves the existing snapshot and must not silently switch sources.
-- Runtime resolution order is bundled snapshot, separately installed global Skill, then unavailable. Missing files, credentials, quota, network, or provider failures degrade to other Smart Search sources.
-- Read the resolved AnySearch `SKILL.md` before execution. Smart Search describes when delegation may help but does not prescribe a fixed AnySearch command, domain, or parameter sequence.
+- Runtime resolution order is bundled Skill, separately installed global Skill, then unavailable. Missing files, credentials, quota, network, or provider failures degrade to other Smart Search sources.
+- Read the bundled AnySearch `SKILL.md` within the Smart Search workflow before execution. Vertical, batch, and known-URL extraction intents must execute the matching bundled capability; vertical intent must follow the bundled Skill's `get_sub_domains`-first rule and required parameters. Do not ask the user for a separate slash invocation.
 - `ANYSEARCH_API_KEY` comes from the machine's private configuration. A local ignored `.env` may live in the embedded snapshot for this macOS Preview, but the key must never be committed or copied into tracked provenance.
 
 Sciverse:

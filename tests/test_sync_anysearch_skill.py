@@ -98,3 +98,17 @@ def test_sync_preserves_private_runtime_files_and_removes_stale_managed_files(tm
     assert (destination / ".env").read_text(encoding="utf-8") == "ANYSEARCH_API_KEY=private\n"
     assert (destination / "runtime.conf").read_text(encoding="utf-8") == "ANYSEARCH_COMMAND=python3\n"
     assert (destination / "SKILL.md").is_file()
+
+
+def test_destinations_use_bundled_skills_directory(tmp_path):
+    assert sync_anysearch_skill._destinations(tmp_path) == [
+        tmp_path / "skills" / "smart-search-cli" / "bundled-skills" / "anysearch",
+        tmp_path
+        / "src"
+        / "smart_search"
+        / "assets"
+        / "skills"
+        / "smart-search-cli"
+        / "bundled-skills"
+        / "anysearch",
+    ]

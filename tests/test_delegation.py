@@ -122,7 +122,10 @@ def test_anysearch_dispatch_is_bundled_first_and_has_no_concrete_command():
 
     assert DelegateRequest.from_dict(dispatch["delegate_request"]).target == "anysearch"
     assert dispatch["skill_resolution"] == [
-        {"kind": "bundled_snapshot", "path": "skills/anysearch/SKILL.md"},
+        {
+            "kind": "bundled_snapshot",
+            "path": "bundled-skills/anysearch/SKILL.md",
+        },
         {"kind": "global_fallback", "skill": "anysearch"},
     ]
     assert "command" not in dispatch

@@ -77,7 +77,7 @@ Evidence Miner receives an `EvidenceMiningTask` bound to one registered artifact
 
 ## AnySearch and external delegate boundaries
 
-AnySearch remains an external Skill, never a Smart Search provider or fallback member. Resolve `../skills/anysearch/SKILL.md` from the bundled snapshot first; use an installed global `$anysearch` Skill only when the snapshot is missing or unusable. Read the resolved Skill and let the model select the operation. Do not edit or reinterpret the bundled snapshot as part of Smart Search architecture work.
+AnySearch remains an external bundled Skill, never a Smart Search provider or fallback member. Read `../bundled-skills/anysearch/SKILL.md` from the Smart Search workflow and invoke its CLI directly for matching vertical, batch, or known-URL extraction work; no separate `/anysearch` invocation is required. Use an installed global `$anysearch` Skill only when the bundle is missing or unusable. Follow the resolved Skill's operation and parameter contract. Do not edit or reinterpret the bundled snapshot as part of Smart Search architecture work.
 
 AnySearch returns through `DelegateResult`. Its payload preserves the original query and source items; normalized source items enter the same `DiscoveryCandidate` pipeline as other discovery. Missing credentials, quota, network, or Skill files produce an explicit gap while other routes continue.
 

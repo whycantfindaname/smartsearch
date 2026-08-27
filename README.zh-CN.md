@@ -152,7 +152,7 @@ Trellis、hooks、agents 或 commands。
 | `web_search` | 智谱 Web Search API -> 智谱 Coding Plan MCP `web_search_prime` -> Tavily -> Firecrawl |
 | `web_fetch` | Tavily -> 带 `JINA_API_KEY` 的 Jina Reader -> 智谱 Coding Plan MCP `webReader` -> Firecrawl |
 
-AnySearch 是外部 Skill，不是 Smart Search provider。Smart Search Skill 先解析其内置 AnySearch 快照，再回退到单独安装的全局 `$anysearch` Skill；两者都不可用时继续使用其他来源。AnySearch 和 Sciverse 都不是 `standard` 最低配置要求。Sciverse 也不是 `docs_search`，不会加入默认 `search` / `research` 路由。
+AnySearch 是 Smart Search 内置委派的外部 Skill，不是 Smart Search provider。每次 Smart Search 检索工作流会主动读取 `bundled-skills/anysearch/SKILL.md`，并在垂直检索、批量检索和已知 URL 抽取场景直接执行其 CLI；用户不需要另外输入 `/anysearch`。只有内置 Skill 缺失时才回退到单独安装的全局 `$anysearch` Skill；两者都不可用时继续使用其他来源。AnySearch 和 Sciverse 都不是 `standard` 最低配置要求。Sciverse 也不是 `docs_search`，不会加入默认 `search` / `research` 路由。
 
 Jina Reader 只属于 `web_fetch`，不是通用搜索 provider。只有配置 `JINA_API_KEY` 后，它才可以满足 `SMART_SEARCH_MINIMUM_PROFILE=standard`；匿名 `r.jina.ai` 只能当显式/实验抓取能力，不能让最低配置检查放松。
 
@@ -315,7 +315,7 @@ References 章节，并保存三种边界明确的投影：面向读者的 `fina
 | Tavily | 额外来源、URL fetch、站点 map | `TAVILY_API_URL`、`TAVILY_API_KEY`、`TAVILY_ENABLED` | [Tavily docs](https://docs.tavily.com/) | [Tavily app](https://app.tavily.com/home) |
 | Jina Reader | 已知 URL 正文抓取；满足 standard 最低配置必须有 key | `JINA_API_KEY`、`JINA_READER_API_URL`、`JINA_RESPOND_WITH`、`JINA_TIMEOUT_SECONDS` | [Jina Reader](https://jina.ai/reader/) | [Jina AI](https://jina.ai/) |
 | Firecrawl | fetch 兜底、补充网页来源 | `FIRECRAWL_API_URL`、`FIRECRAWL_API_KEY` | [Firecrawl docs](https://docs.firecrawl.dev/) | [Firecrawl API keys](https://www.firecrawl.dev/app/api-keys) |
-| AnySearch Skill | Agent 层通用、垂直、批量和 URL 抽取补充；内置快照优先，全局 Skill 回退 | AnySearch 私有运行时中的 `ANYSEARCH_API_KEY` | [AnySearch 文档](https://www.anysearch.com/docs) | [AnySearch API keys](https://www.anysearch.com/console/api-keys) |
+| AnySearch Skill | 通过 `bundled-skills/anysearch` 执行 Agent 层通用、垂直、批量和 URL 抽取；仅在内置 Skill 缺失时回退到全局 Skill | AnySearch 私有运行时中的 `ANYSEARCH_API_KEY` | [AnySearch 文档](https://www.anysearch.com/docs) | [AnySearch API keys](https://www.anysearch.com/console/api-keys) |
 | Sciverse | 显式实验学术检索、语义论文检索、正文片段和引用/参考文献关系，不是默认兜底 | `SCIVERSE_API_TOKEN`、`SCIVERSE_API_URL`、`SCIVERSE_TIMEOUT_SECONDS` | [Sciverse Agent Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) | Sciverse 控制台 / token 提供方 |
 
 意图路由配置：
@@ -360,7 +360,7 @@ smart-search route-calibrate --models "Qwen/Qwen3-Embedding-8B" --format markdow
 - `TAVILY_API_URL` 只影响 Tavily，不会代理智谱。Tavily Hikari / 号池用 `https://<host>/api/tavily`；setup 会把根域名或 `/mcp` 输入规范化成这个 REST base。
 - `TAVILY_ENABLED` 默认是 `true`。即使已有 key，设为 `false` 也会禁用 Tavily：它会从 web-search 和 fetch 路由中移除，直接 Tavily 调用和 `doctor` 都不会发 Tavily 请求，`map` 会本地返回配置错误。它不会启用 Firecrawl，也不会改变同 capability 兜底边界。
 - `FIRECRAWL_API_URL` 默认是 `https://api.firecrawl.dev/v2`。
-- AnySearch 不由 `smart-search setup` 或 `smart-search config` 配置。Agent 读取已解析的 AnySearch `SKILL.md`，并按该 Skill 当前接口执行。内置快照来自 `jason-liao-skills/main/skill-packages/anysearch`；仅当首选仓库可访问但缺少该包时，才使用官方仓库。
+- AnySearch 不由 `smart-search setup` 或 `smart-search config` 配置。Agent 在 Smart Search 工作流内主动读取 `bundled-skills/anysearch/SKILL.md` 并按其当前接口执行，不要求用户单独调用 `/anysearch`。内置快照来自 `jason-liao-skills/main/skill-packages/anysearch`；仅当首选仓库可访问但缺少该包时，才使用官方仓库。
 - Sciverse 默认走 `https://api.sciverse.space` 的 native HTTP/OpenAPI。必须配置 `SCIVERSE_API_TOKEN`；未配置时本地返回 `config_error` 且不发网络请求；已配置时发送 `Authorization: Bearer ...`。它保持 explicit-only：不是 `docs_search`，不满足 `standard`，不进入默认 `search` / `research` 兜底。
 - `doctor` 和 `route` 会报告 intent router 的配置状态、embedding 模型、threshold、margin、配置来源、超时和是否可降级，不会暴露 router API key。
 

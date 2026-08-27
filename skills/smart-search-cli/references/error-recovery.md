@@ -253,7 +253,7 @@ Jina is a known-URL fetch provider, not a general search provider.
 | No key under the standard profile | `not_configured`; anonymous Reader remains explicit/experimental only. | Configure `JINA_API_KEY` or use Tavily/Zhipu MCP reader/Firecrawl. |
 | `JINA_RESPOND_WITH` set without a key | `config_error` before network access. | Add the key or remove `JINA_RESPOND_WITH`. |
 | HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared error classification; Jina itself does not add a transport retry loop. A `429` can reflect RPM, token, per-key/IP, or concurrency limits. | Correct permanent errors. For `429`, wait for the applicable limit window or reduce concurrency; otherwise continue the fetch fallback chain. |
-| Empty body or a Cloudflare/JavaScript challenge marker | `quality_error`; content must not be cited. | Continue to the next configured fetch provider, normally Zhipu MCP reader or Firecrawl. If that standard chain ends in `empty` or `config_error`, and the task permits the experimental compatibility route, make one explicit `anysearch-extract URL --format json --output PATH` request for the known URL; it is a new provider route, not a retry of Jina. |
+| Empty body or a Cloudflare/JavaScript challenge marker | `quality_error`; content must not be cited. | Continue to the next configured fetch provider, normally Zhipu MCP reader or Firecrawl. If that standard chain ends in `empty` or `config_error`, read `../bundled-skills/anysearch/SKILL.md` and make one `extract` call through the bundled AnySearch CLI for the known URL; it is a new provider route, not a retry of Jina. |
 | Unexpected HTML or interstitial content without a recognized challenge marker | No stable Smart Search classification yet; it may surface as apparently successful content. | Treat it as unverified and do not cite it. Preserve a sanitized excerpt as a new signature, continue to the next fetch provider, and add a catalog rule only after the signature is reproducible. |
 | Timeout/network failure | `timeout`/`network_error`. | Use the next configured fetch provider. |
 
@@ -272,7 +272,7 @@ or challenge-prone pages.
 | HTTP `413` | `provider_error`; the request payload is too large. | Reduce batch size, schema, or input size before retrying. |
 | Response reports a tool error | `provider_error`. | Follow the sanitized provider message; do not treat it as empty success. |
 | Missing `data`, missing `web`, non-object search items, or non-text Markdown | `parse_error`. | Report schema drift and use another provider. |
-| Scrape succeeds but Markdown is empty | Firecrawl performs its bounded empty-content attempts with increasing `waitFor`; final state is `empty`. | Let those attempts finish. Use another configured standard fetch provider; if none remains and the task permits the experimental compatibility route, make one explicit `anysearch-extract` request for that known URL. Otherwise report empty content. |
+| Scrape succeeds but Markdown is empty | Firecrawl performs its bounded empty-content attempts with increasing `waitFor`; final state is `empty`. | Let those attempts finish. Use another configured standard fetch provider; if none remains, read `../bundled-skills/anysearch/SKILL.md` and make one `extract` call through its CLI for that known URL. Otherwise report empty content. |
 
 Firecrawl may include a more precise code inside a `408` or `5xx` response.
 Smart Search currently preserves that sanitized message while retaining the
@@ -307,29 +307,27 @@ Sciverse is explicit-only academic vertical search. It is not part of default
 | Invalid JSON or missing/wrong response fields | `parse_error`. | Preserve tool name and schema message; report provider contract drift. |
 | Empty result set | Successful explicit query with zero results. | Change filters/query; do not route it into ordinary web search automatically. |
 
-## AnySearch compatibility channel
+## AnySearch bundled Skill channel
 
-AnySearch remains a delegated external Skill and is not a generic Smart Search
-fallback. The governed agent workflow normally uses `$anysearch`. Some
-development builds retain explicit Smart Search compatibility commands, while
-the installed CLI may omit them; their presence does not authorize default
-routing through AnySearch. After a known-URL `fetch` has exhausted every
-configured standard provider, an Agent may make one explicit
-`anysearch-extract URL --format json --output PATH` request when the command is
-available and the task allows experimental routes. This is a provider switch,
-not an unchanged outer retry. Accept the content only when the command returns
-`ok: true` and the page passes the same evidence-quality checks.
+AnySearch remains an external Skill bundled inside Smart Search, not a Smart
+Search provider or CLI command family. A Smart Search retrieval workflow reads
+`../bundled-skills/anysearch/SKILL.md` and invokes that Skill's CLI directly;
+the user does not need to invoke `/anysearch`. Vertical, batch, and known-URL
+extraction intents use the matching bundled capability. After a known-URL
+`fetch` has exhausted every configured standard provider, make at most one
+`extract` call through the bundled AnySearch CLI. This is a provider switch,
+not an unchanged outer retry. Accept the content only when the AnySearch call
+succeeds and the page passes the same evidence-quality checks.
 
 | Observed signature | Built-in behavior | Required handling |
 | --- | --- | --- |
-| `anysearch-*` is rejected as an invalid CLI command | Local parser error before provider access; the installed CLI does not expose the compatibility adapter. | Use the official `$anysearch` Skill. Do not treat this as provider downtime. |
-| Invalid `--sub-domain-params`, malformed `--param`, or more than five batch queries | `parameter_error` before network access. | Correct local arguments; use `anysearch-domains` to inspect valid domains. |
-| HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared provider classification. | Correct permanent errors or wait before one fresh explicit call. Do not convert it into default web fallback. |
-| HTTP `402`, `404`, `409`, or another unlisted status | `provider_error`; no automatic retry. | Resolve billing, domain/tool availability, or resource state through the delegated AnySearch Skill. |
-| JSON-RPC `error` or tool `isError: true` | `provider_error`; result sources are empty and error URLs are not evidence. | Correct domain/tool arguments or follow the AnySearch Skill's provider-specific procedure. |
-| Invalid JSON | `parse_error`. | Preserve the sanitized response and report protocol drift. |
-| Timeout/network failure | `timeout`/`network_error`. | Use another explicitly approved vertical source or report the gap. |
-| Domain listing returns no usable enum | Empty/unavailable domain catalog, not a successful search. | Verify the endpoint and AnySearch Skill configuration; do not guess domain names. |
+| `../bundled-skills/anysearch/SKILL.md` is missing or unreadable | Local bundle failure before provider access. | Try a separately installed global `$anysearch` Skill. If neither is usable, record an AnySearch availability gap; do not treat it as provider downtime. |
+| Invalid operation arguments, malformed `--params`/`--sdp`, missing required vertical parameters, or an invalid batch payload | Local parameter failure before or during request validation. | Follow the bundled Skill's command contract. For vertical intent, run `get_sub_domains` first and include every required parameter it reports. |
+| HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | AnySearch request failure. | Follow the bundled Skill's current recovery guidance. Correct permanent errors or wait before one fresh explicit call; do not turn failure into an outer retry loop. |
+| HTTP `402`, `404`, `409`, or another unlisted status | Provider error; no automatic logical replay. | Resolve billing, endpoint, domain, or resource state through the bundled AnySearch Skill. |
+| Invalid JSON or response schema | Parse failure; returned URLs are not evidence. | Preserve a sanitized response and report protocol drift. |
+| Timeout/network failure | Transport failure. | Use another allowed source or report the gap. |
+| `get_sub_domains` returns no usable domain metadata | Empty or unavailable domain catalog, not a successful search. | Verify the AnySearch endpoint and private configuration; do not guess domain names or required parameters. |
 
 ## Research, routing, and evidence channel
 
