@@ -1,0 +1,5 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/tasks/08-27-anysearch-dual-key-config/research/anysearch-cross-runtime-contract.md", "reason": "Cross-runtime config and error-contract audit"}
+{"file": ".trellis/spec/backend/provider-capability-contract.md", "reason": "AnySearch external-skill and fail-closed capability boundary"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Single adapter and mirrored package consistency"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Config to adapter to HTTP authentication data flow"}
