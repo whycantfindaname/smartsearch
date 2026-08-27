@@ -43,14 +43,18 @@ def _repo_root() -> Path:
 
 def _destinations(repo_root: Path) -> list[Path]:
     return [
-        repo_root / "skills" / "smart-search-cli" / "skills" / "anysearch",
+        repo_root
+        / "skills"
+        / "smart-search-cli"
+        / "bundled-skills"
+        / "anysearch",
         repo_root
         / "src"
         / "smart_search"
         / "assets"
         / "skills"
         / "smart-search-cli"
-        / "skills"
+        / "bundled-skills"
         / "anysearch",
     ]
 

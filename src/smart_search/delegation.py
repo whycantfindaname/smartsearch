@@ -309,7 +309,10 @@ def create_anysearch_dispatch(
         "delegate_request": request,
         "input": {"query": query.strip()},
         "skill_resolution": [
-            {"kind": "bundled_snapshot", "path": "skills/anysearch/SKILL.md"},
+            {
+                "kind": "bundled_snapshot",
+                "path": "bundled-skills/anysearch/SKILL.md",
+            },
             {"kind": "global_fallback", "skill": "anysearch"},
         ],
     }

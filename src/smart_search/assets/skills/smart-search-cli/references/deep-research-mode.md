@@ -156,7 +156,7 @@ Prefer PowerShell-safe quoted commands in generated plans because Windows users 
 - `exa-search`: low-noise source discovery for official domains, papers, product pages, known domains, and trusted pages. Do not treat Exa as the universal second hop for every high-risk or verification task.
 - `exa-similar`: adjacent-source discovery when a known reliable URL is available.
 - `search --extra-sources N`: Tavily/Firecrawl horizontal candidate collection for breadth. Treat those candidates as discovery until fetched.
-- `$anysearch`: optional agent-level supplementation. Resolve the bundled `skills/anysearch/SKILL.md` first, then a separately installed global Skill. Read the resolved Skill and let the model choose its supported operation and parameters; do not insert AnySearch into a Smart Search provider fallback chain.
+- Bundled AnySearch: read `bundled-skills/anysearch/SKILL.md` within the Smart Search workflow and invoke its CLI directly for vertical, batch, or known-URL extraction work without requiring `/anysearch`. Use a separately installed global Skill only when the bundle is missing. Do not insert AnySearch into a Smart Search provider fallback chain.
 - `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, and `sciverse-relations`: explicit experimental academic commands. Use them directly when the task needs Sciverse academic fields, semantic paper hits, document chunks, or citation/reference relations; do not insert Sciverse into default Deep Research fallback.
 - `fetch`: page-content evidence. Key claims require fetched page text under `fetch_before_claim`.
 - `map`: site structure exploration before many fetches from one site; not claim evidence by itself.

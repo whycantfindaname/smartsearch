@@ -17,9 +17,9 @@ allowed capabilities.
 Use only capabilities explicitly allowed by Root. Content-reading tools accept
 registered artifact_id values only; do not pass arbitrary URLs, local paths,
 file:// references, or directories to Agent-facing artifact tools. If AnySearch
-is allowed, read the bundled snapshot first and use the global Skill only as the
-fallback; choose operations from the Skill contract rather than assuming a
-fixed command.
+is allowed, read `bundled-skills/anysearch/SKILL.md` inside the Smart Search
+Skill and invoke its CLI without requiring a separate slash command. Use the
+global Skill only when the bundle is missing and follow the resolved contract.
 
 Return one structured DelegateResult bound to the original run, task, step, and
 attempt. The payload may contain discovery candidates and usage observations;

@@ -176,9 +176,9 @@ Source Curator count, semantic replanning, or stopping policy.
   Source Curator, Evidence Miner, or MinerU. Only Root may turn child gaps or
   suggestions into new tasks through `add-search-tasks` or
   `add-evidence-tasks`.
-- AnySearch remains an external Skill. The bundled snapshot is resolved first,
-  the global Skill is fallback, and Smart Search never hard-codes which
-  AnySearch function the model must call.
+- AnySearch remains an external bundled Skill. Smart Search retrieval workflows
+  read `bundled-skills/anysearch/SKILL.md` and invoke its CLI without requiring
+  a separate slash command. The global Skill is a missing-bundle fallback.
 - MinerU remains an external Skill. Successful/partial Markdown may be imported
   only when `source_artifact_id` belongs to the original DelegateRequest. The
   kernel registers a bounded immutable derived snapshot; `document` rejects
@@ -520,11 +520,13 @@ AnySearch boundary:
 
 - AnySearch is an external Skill delegated by the agent, not a Smart Search
   provider or CLI command family, and not a registered provider.
-- Resolve `skills/anysearch/SKILL.md` inside the installed Smart Search Skill
-  first, then a separately installed global `$anysearch` Skill. If neither is
-  usable, continue with other Smart Search sources.
-- Read the resolved Skill before calling it. Smart Search may describe the
-  evidence gap but must not hard-code the AnySearch operation or parameters.
+- Read `bundled-skills/anysearch/SKILL.md` inside the installed Smart Search
+  Skill before selecting an AnySearch operation. Do not require the user to
+  invoke `/anysearch`. Use a separately installed global `$anysearch` Skill only
+  if the bundle is missing; if neither is usable, continue with other sources.
+- Vertical, batch, and known-URL extraction intents execute the matching
+  bundled capability. Vertical intent follows the bundled Skill's
+  `get_sub_domains`-first rule and includes every required parameter it reports.
 - The bundled snapshot is sourced from
   `jason-liao-skills/main/skill-packages/anysearch`; official AnySearch is used
   only when the preferred repository is reachable and that package is absent.

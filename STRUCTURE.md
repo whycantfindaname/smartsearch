@@ -168,7 +168,7 @@ Agent 与脚本的机器接口。Skill 不得复制 Provider 网络逻辑或自�
 | `docs_search` | `context7` -> `exa` | `context7-library/docs` 用于库、API 和框架文档；Exa 用于官方域名、论文、产品页和低噪声发现，不是普通新闻 fallback。 |
 | `web_search` | `zhipu` -> `zhipu-mcp` -> `tavily` -> `firecrawl` | 中文、国内、当前或补充来源发现；Zhipu REST Web Search 与 Coding Plan Remote MCP 是两层独立适配。 |
 | `web_fetch` | `tavily` -> `jina` -> `zhipu-mcp-reader` -> `firecrawl` | `fetch` 和已知 URL 的证据正文；Jina 是 fetch-only，只有配置 key 才满足 standard minimum profile。 |
-| `vertical_search` | `anysearch`；Sciverse 在 capability status 中为 experimental 且 `route_enabled=false` | AnySearch 仅用于 `anysearch-*`；Sciverse 仅用于显式 `sciverse-*` 学术命令，不能加入默认 `search`/`research` 或 `docs_search`。 |
+| `vertical_search` | bundled AnySearch Skill；Sciverse 在 capability status 中为 experimental 且 `route_enabled=false` | Agent 从 `bundled-skills/anysearch/SKILL.md` 读取并执行 AnySearch；它不是 Smart Search CLI 命令族。Sciverse 仅用于显式 `sciverse-*` 学术命令，不能加入默认 `search`/`research` 或 `docs_search`。 |
 | `site_map` | `tavily` | `map` 只做站点结构发现，不成为其他 capability 的 fallback。 |
 | `synthesis` | evidence-only synthesis | research 最终综合只接收已经 fetch/read 的证据，不再次调用 web Provider，也不把未抓取的 discovery candidate 当作证明。 |
 

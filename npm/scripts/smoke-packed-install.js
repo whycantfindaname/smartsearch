@@ -88,9 +88,9 @@ function assertPackContents(files) {
     "src/smart_search/assets/sidecar/pyproject.toml",
     "src/smart_search/assets/sidecar/src/smart_search_sidecar/protocol.py",
     "THIRD_PARTY_NOTICES.md",
-    "skills/smart-search-cli/skills/anysearch/SKILL.md",
-    "skills/smart-search-cli/skills/anysearch-source.json",
-    "src/smart_search/assets/skills/smart-search-cli/skills/anysearch/SKILL.md"
+    "skills/smart-search-cli/bundled-skills/anysearch/SKILL.md",
+    "skills/smart-search-cli/bundled-skills/anysearch-source.json",
+    "src/smart_search/assets/skills/smart-search-cli/bundled-skills/anysearch/SKILL.md"
   ]) {
     assert.ok(files.some((file) => file.path === requiredPath), `tarball is missing ${requiredPath}`);
   }

@@ -2665,7 +2665,10 @@ def test_setup_non_interactive_installs_selected_skills_under_user_root_override
     assert data["skills"]["installed_count"] == 3
     assert (tmp_path / ".codex" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
     assert (tmp_path / ".claude" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
-    assert (tmp_path / ".cursor" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
+    cursor_skill = tmp_path / ".cursor" / "skills" / "smart-search-cli"
+    assert (cursor_skill / "SKILL.md").is_file()
+    assert (cursor_skill / "bundled-skills" / "anysearch" / "SKILL.md").is_file()
+    assert not (cursor_skill / "skills" / "anysearch").exists()
 
 
 def test_setup_non_interactive_installs_skill_under_home_by_default(monkeypatch, tmp_path, capsys):
