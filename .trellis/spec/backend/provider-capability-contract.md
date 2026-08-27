@@ -177,8 +177,10 @@ Source Curator count, semantic replanning, or stopping policy.
   suggestions into new tasks through `add-search-tasks` or
   `add-evidence-tasks`.
 - AnySearch remains an external bundled Skill. Smart Search retrieval workflows
-  read `bundled-skills/anysearch/SKILL.md` and invoke its CLI without requiring
-  a separate slash command. The global Skill is a missing-bundle fallback.
+  read `bundled-skills/anysearch/SKILL.md` and invoke its
+  `scripts/smart_search_anysearch.py` adapter without requiring a separate slash
+  command. The bundled adapter is the only active AnySearch entrypoint; a
+  missing bundle is recorded as an availability gap.
 - MinerU remains an external Skill. Successful/partial Markdown may be imported
   only when `source_artifact_id` belongs to the original DelegateRequest. The
   kernel registers a bounded immutable derived snapshot; `document` rejects
@@ -230,7 +232,7 @@ Capabilities:
 | `web_search` | `zhipu`, `zhipu-mcp`, `tavily`, `firecrawl` | General web-source reinforcement |
 | `docs_search` | `context7`, `exa` by intent | Documentation, SDK, API, library, and framework lookup |
 | `web_fetch` | `tavily`, `jina`, `zhipu-mcp-reader`, `firecrawl` | Known URL content extraction |
-| `vertical_search` | delegated `$anysearch` Skill; `sciverse` is explicit-only and route-disabled in v1 | Agent-level supplementation plus explicit structured academic search |
+| `vertical_search` | delegated bundled AnySearch adapter; `sciverse` is explicit-only and route-disabled in v1 | Agent-level supplementation plus explicit structured academic search |
 | `synthesis` | currently successful `main_search` provider | Final answer synthesis |
 
 Legacy-compatible `deep` / `research` orchestration:
@@ -521,18 +523,25 @@ AnySearch boundary:
 - AnySearch is an external Skill delegated by the agent, not a Smart Search
   provider or CLI command family, and not a registered provider.
 - Read `bundled-skills/anysearch/SKILL.md` inside the installed Smart Search
-  Skill before selecting an AnySearch operation. Do not require the user to
-  invoke `/anysearch`. Use a separately installed global `$anysearch` Skill only
-  if the bundle is missing; if neither is usable, continue with other sources.
+  Skill before selecting an AnySearch operation, then invoke its
+  `scripts/smart_search_anysearch.py` adapter. Do not require the user to invoke
+  `/anysearch`; if the bundle is missing, record an availability gap and continue
+  with other sources.
 - Vertical, batch, and known-URL extraction intents execute the matching
   bundled capability. Vertical intent follows the bundled Skill's
   `get_sub_domains`-first rule and includes every required parameter it reports.
 - The bundled snapshot is sourced from
   `jason-liao-skills/main/skill-packages/anysearch`; official AnySearch is used
   only when the preferred repository is reachable and that package is absent.
-- `ANYSEARCH_API_KEY` belongs to machine-private configuration. Local `.env`
-  and `runtime.conf` files are preserved across snapshot refresh and excluded
-  from Git.
+- `ANYSEARCH_API_KEY` and `ANYSEARCH_API_KEY_FALLBACK` belong to Smart Search's
+  machine-private `config.json`. The adapter does not read `.env` or process
+  credentials, does not use anonymous access, and sends a non-empty Bearer
+  header on every request. Local `.env`, `runtime.conf`, and the adapter overlay
+  are preserved across snapshot refresh and private config is never copied.
+- An explicit `--api_key` is a one-call single-key override. Otherwise a valid
+  primary response with HTTP `401`, `403`, or `429` permits at most one fallback
+  key attempt; timeout, connection, malformed/schema, `5xx`, local argument, and
+  schema errors do not switch keys.
 
 Sciverse boundary:
 
@@ -919,7 +928,7 @@ smart-search doctor --format json
 | `OPENAI_COMPATIBLE_STREAM` is missing | Treat as `false`; do not send `stream: true` |
 | `OPENAI_COMPATIBLE_STREAM` or `--stream` is true | Send `stream: true` only to OpenAI-compatible `search()` / `fetch()` and parse SSE deltas, ignoring `[DONE]` |
 | `--no-stream` is set | Force non-streaming OpenAI-compatible `search()` for that invocation even when config is true |
-| Bundled and global AnySearch Skills are both unavailable or unusable | Record delegated Skill unavailability and continue with remaining Smart Search routes |
+| Bundled AnySearch Skill or adapter is unavailable or unusable | Record delegated Skill unavailability and continue with remaining Smart Search routes |
 | Exa `--include-domains` / `--exclude-domains` receives comma-separated, whitespace-separated, or PowerShell-split values | Normalize to a flat domain list before sending `includeDomains` / `excludeDomains` to Exa |
 | Exa returns HTTP 400 or 422 | Return `error_type: "parameter_error"` and preserve the Exa response body excerpt for diagnosis |
 | Provider HTTP/network/timeout/schema error | Record `provider_attempts[].status="error"` and try next same-capability provider when fallback is `auto`; this is provider fallback, not logical replay |
@@ -1087,17 +1096,18 @@ When this contract changes, add or update tests that assert:
   stops on generic 429/499/5xx, timeout, network, and uncertain-submission
   results, and annotates aggregated provider attempts with their logical
   attempt number;
-- AnySearch does not appear in Smart Search config keys or provider fallback;
+- AnySearch does not appear as a provider in Smart Search capability config or
+  provider fallback; its adapter consumes two private config fields separately;
 - AnySearch capability status records delegated Skill metadata and does not
   change required minimum capabilities;
-- bundled-first resolution, global fallback, unavailable degradation, snapshot
-  provenance, and preservation of private local configuration are covered;
-- AnySearch config keys are listed, settable, masked where secret, and optional
-  for the `standard` minimum profile;
+- bundled-only resolution, unavailable degradation, snapshot provenance, and
+  preservation of private local configuration are covered;
+- AnySearch's dual private config fields are read-only adapter inputs, masked in
+  diagnostics, and optional for the `standard` minimum profile;
 - AnySearch capability status is `vertical_search`, `experimental=true`, and
   does not change required minimum capabilities;
 - AnySearch JSON-RPC success, `result.isError=true`, JSON-RPC error, HTTP
-  error, timeout, anonymous request, authenticated header, raw markdown parsing,
+  error, timeout, no-network/no-anonymous behavior, authenticated header, raw markdown parsing,
   structured evidence without URL, and batch limit are covered;
 - Sciverse config keys are listed, settable, masked where secret, and optional
   for the `standard` minimum profile;

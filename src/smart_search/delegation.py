@@ -7,11 +7,10 @@ without defining another set of public schemas.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, is_dataclass
-import re
 from typing import Any
-
 
 SCHEMA_VERSION = "1"
 ROOT_OWNER = "root"
@@ -293,7 +292,7 @@ def create_anysearch_dispatch(
     attempt_no: int = 1,
     created_by: str = ROOT_OWNER,
 ) -> dict[str, Any]:
-    """Prepare a harness launch using bundled AnySearch before global fallback."""
+    """Prepare a harness launch using the bundled AnySearch Skill."""
 
     if not isinstance(query, str) or not query.strip():
         raise DelegationValidationError("AnySearch input.query must be a non-empty string")
@@ -313,7 +312,6 @@ def create_anysearch_dispatch(
                 "kind": "bundled_snapshot",
                 "path": "bundled-skills/anysearch/SKILL.md",
             },
-            {"kind": "global_fallback", "skill": "anysearch"},
         ],
     }
 
@@ -335,7 +333,7 @@ def import_anysearch_result(
     if result["status"] == "unavailable":
         if not result["gaps"]:
             result["gaps"] = [
-                "bundled and global AnySearch Skills were unavailable; vertical search coverage is missing"
+                "bundled AnySearch Skill was unavailable; vertical search coverage is missing"
             ]
         result["payload"] = {"query": expected_query, "sources": []}
         return result

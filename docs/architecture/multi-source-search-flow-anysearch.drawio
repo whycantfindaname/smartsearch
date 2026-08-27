@@ -107,7 +107,7 @@
             <mxGeometry height="277" width="277" x="325" y="45" as="geometry" />
           </mxCell>
         </UserObject>
-        <UserObject label="解析 AnySearch Skill&#xa;内置快照优先 / 全局 Skill 回退&#xa;是否可调用？" mermaidId="n:SkillPlan" mermaidBaseStyle="rhombus;html=1;strokeWidth=2;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#1f2937;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="解析 AnySearch Skill&#xa;内置快照优先 / 全局 Skill 回退&#xa;是否可调用？" id="12">
+        <UserObject label="解析 AnySearch Skill&#xa;调用内置适配器&#xa;是否可调用？" mermaidId="n:SkillPlan" mermaidBaseStyle="rhombus;html=1;strokeWidth=2;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#1f2937;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="解析 AnySearch Skill&#xa;调用内置适配器&#xa;是否可调用？" id="12">
           <mxCell parent="10" style="rhombus;html=1;strokeWidth=2;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#1f2937;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
             <mxGeometry height="220" width="220" x="348" y="365" as="geometry" />
           </mxCell>
