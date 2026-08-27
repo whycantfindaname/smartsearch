@@ -8,7 +8,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 chcp 65001 | Out-Null
 
 # Identifies access mode + spec version to the backend (X-Anysearch-Client).
-# Keep the version aligned with SKILL.md `version`.
+# Keep the version aligned with CONTRACT.md `Upstream contract version`.
 $CLIENT_HEADER = "skill/3.0.1"
 $SCRIPT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Definition
 

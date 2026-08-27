@@ -46,7 +46,7 @@ Embedding is skipped for `rules` and `off` modes, the offline `deep` planner, di
 - Web discovery implementation order: `zhipu`, `zhipu-mcp`, `tavily`, then `firecrawl`, restricted to configured providers. The operating policy uses Tavily for normal web discovery and avoids direct `zhipu-search`; an internally selected `web_search` supplemental path still follows the configured implementation order.
 - Page extraction implementation order: `tavily`, `jina`, `zhipu-mcp-reader`, then `firecrawl`, restricted to configured providers.
 - `--extra-sources N`: Tavily and Firecrawl discovery run concurrently after the main answer, with the requested count split approximately 60/40 when both are configured.
-- AnySearch: every Smart Search retrieval workflow reads the bundled Skill at `bundled-skills/anysearch/SKILL.md` and invokes `scripts/smart_search_anysearch.py` when its vertical, batch, or known-URL extraction capabilities match. No separate `/anysearch` invocation is required. If the bundle is missing, record an availability gap and continue with other sources. Smart Search does not register AnySearch as an internal provider.
+- AnySearch: every Smart Search retrieval workflow reads the bundled capability at `bundled-skills/anysearch/CONTRACT.md` and invokes `scripts/smart_search_anysearch.py` when its vertical, batch, or known-URL extraction capabilities match. No separate `/anysearch` invocation is required. If the bundle is missing, record an availability gap and continue with other sources. Smart Search does not register AnySearch as an internal provider.
 
 ## End-to-End `search` Flow
 

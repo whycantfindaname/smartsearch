@@ -9,7 +9,7 @@ const https = require("https");
 process.stdout.setDefaultEncoding && process.stdout.setDefaultEncoding("utf-8");
 
 // Identifies access mode + spec version to the backend (X-Anysearch-Client).
-// Keep the version aligned with SKILL.md `version`.
+// Keep the version aligned with CONTRACT.md `Upstream contract version`.
 const CLIENT_HEADER = "skill/3.0.1";
 
 // BEGIN GENERATED:CONSTANTS

@@ -77,7 +77,7 @@ Evidence Miner receives an `EvidenceMiningTask` bound to one registered artifact
 
 ## AnySearch and external delegate boundaries
 
-AnySearch remains an external bundled Skill, never a Smart Search provider or fallback member. Read `../bundled-skills/anysearch/SKILL.md` from the Smart Search workflow and invoke its `scripts/smart_search_anysearch.py` adapter for matching vertical, batch, or known-URL extraction work; no separate `/anysearch` invocation is required. If the bundle is missing or unusable, record a gap and continue with other routes. Follow the bundled Skill's operation and parameter contract. The adapter is a Smart Search-owned overlay; do not modify the unchanged upstream runtime files as part of Smart Search architecture work.
+AnySearch remains an internally bundled capability, never a Smart Search provider or fallback member. Read `../bundled-skills/anysearch/CONTRACT.md` from the Smart Search workflow and invoke its `scripts/smart_search_anysearch.py` adapter for matching vertical, batch, or known-URL extraction work; no separate `/anysearch` invocation is required. If the bundle is missing or unusable, record a gap and continue with other routes. Follow the bundled capability's operation and parameter contract. The adapter is a Smart Search-owned overlay; do not modify the unchanged upstream runtime files as part of Smart Search architecture work.
 
 AnySearch returns through `DelegateResult`. Its payload preserves the original query and source items; normalized source items enter the same `DiscoveryCandidate` pipeline as other discovery. Missing credentials, quota, network, or Skill files produce an explicit gap while other routes continue.
 

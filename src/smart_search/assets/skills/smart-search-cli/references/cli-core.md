@@ -78,7 +78,7 @@ Nested aliases: `config path`/`cfg p`, `config list`/`cfg ls`/`cfg l`, `config s
 - Zhipu search output includes `ok`, `query`, `provider`, `search_engine`, `results`, `total`, and `elapsed_ms`.
 - Zhipu MCP command output includes `ok`, `provider`, `tool`, `elapsed_ms`, and either `content` for reader/file-like tools or `results` plus `total` for search-like tools.
 - Sciverse command output includes `ok`, `provider=sciverse`, `tool`, `elapsed_ms`, and command-specific fields such as `fields`, `results`, `hits`, `text`, `items`, `unique_id`, `doc_id`, and `relation_direction`.
-- AnySearch is not a Smart Search CLI command family. The agent resolves and reads the bundled AnySearch Skill, then invokes its Smart Search-owned adapter and follows that Skill's current interface.
+- AnySearch is not a Smart Search CLI command family. The agent resolves and reads the bundled AnySearch Skill, then invokes its Smart Search-owned adapter and follows that capability's current interface.
 - Context7 library output includes `ok`, `query`, `provider`, `results`, `total`, and `elapsed_ms`; Context7 docs output also includes `library_id`, `content`, and result metadata.
 - Map output includes `ok`, `base_url`, `results`, `response_time`, `url`, and `elapsed_ms`.
 - Deep planner output includes `ok`, `mode`, `query_mode`, `question`, `trigger_source`, `difficulty`, `intent_signals`, `decomposition`, `capability_plan`, `evidence_policy`, `preflight`, `steps`, `gap_check`, `final_answer_policy`, `usage_boundary`, `allowed_tools`, `evidence_dir`, and `elapsed_ms`.

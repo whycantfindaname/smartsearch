@@ -371,7 +371,7 @@ def test_agentic_research_skill_uses_confirmed_architecture_and_terms():
         "Source Curator",
         "Evidence Miner",
         "only Root can turn suggestions into new tasks",
-        "bundled-skills/anysearch/SKILL.md",
+        "bundled-skills/anysearch/CONTRACT.md",
         "scripts/smart_search_anysearch.py",
         "Root may read all candidates or create any number of Curator shards",
         "ClaimSpec -> EvidenceItem -> ClaimRecord",
@@ -498,7 +498,7 @@ def test_jina_and_zhipu_mcp_contract_public_and_packaged_assets_match():
         assert marker in readme_zh
 
 
-def test_streaming_and_external_anysearch_contract_public_and_packaged_assets_match():
+def test_streaming_and_internal_anysearch_contract_public_and_packaged_assets_match():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
     provider_contract = (ROOT / ".trellis/spec/backend/provider-capability-contract.md").read_text(encoding="utf-8")
@@ -512,8 +512,8 @@ def test_streaming_and_external_anysearch_contract_public_and_packaged_assets_ma
         "--stream",
         "--no-stream",
         "ANYSEARCH_API_KEY",
-        "bundled-skills/anysearch/SKILL.md",
-        "external Skill",
+        "bundled-skills/anysearch/CONTRACT.md",
+        "not a separately discoverable Skill",
         "bundled snapshot",
         "scripts/smart_search_anysearch.py",
         "SCIVERSE_API_TOKEN",
@@ -550,7 +550,7 @@ def test_streaming_and_external_anysearch_contract_public_and_packaged_assets_ma
     zh_required_markers = [
         "OPENAI_COMPATIBLE_STREAM",
         "ANYSEARCH_API_KEY",
-        "bundled-skills/anysearch/SKILL.md",
+        "bundled-skills/anysearch/CONTRACT.md",
         "Smart Search 私有配置",
         "SCIVERSE_API_TOKEN",
         "SCIVERSE_API_URL",
@@ -567,7 +567,7 @@ def test_streaming_and_external_anysearch_contract_public_and_packaged_assets_ma
         assert marker in readme_zh
 
 
-def test_anysearch_uses_bundled_skill_without_compatibility_commands():
+def test_anysearch_uses_internal_contract_without_separate_skill_discovery():
     forbidden_compatibility_commands = [
         "anysearch-*",
         "anysearch-domains",
@@ -577,8 +577,9 @@ def test_anysearch_uses_bundled_skill_without_compatibility_commands():
     ]
 
     for skill_root in (PUBLIC_SKILL_DIR, PACKAGED_SKILL_DIR):
-        bundled_skill = skill_root / "bundled-skills" / "anysearch" / "SKILL.md"
-        assert bundled_skill.is_file()
+        bundled_contract = skill_root / "bundled-skills" / "anysearch" / "CONTRACT.md"
+        assert bundled_contract.is_file()
+        assert list(skill_root.rglob("SKILL.md")) == [skill_root / "SKILL.md"]
 
         instruction_files = [skill_root / "SKILL.md"]
         instruction_files.extend(sorted((skill_root / "references").glob("*.md")))
@@ -587,7 +588,7 @@ def test_anysearch_uses_bundled_skill_without_compatibility_commands():
             path.read_text(encoding="utf-8") for path in instruction_files
         )
 
-        assert "bundled-skills/anysearch/SKILL.md" in instruction_text
+        assert "bundled-skills/anysearch/CONTRACT.md" in instruction_text
         assert "scripts/smart_search_anysearch.py" in instruction_text
         assert "$" + "anysearch" not in instruction_text
         assert "do not wait for, emit, or ask the user to invoke `/anysearch`" in instruction_text

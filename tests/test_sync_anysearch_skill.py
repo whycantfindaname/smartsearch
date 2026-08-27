@@ -86,7 +86,8 @@ def test_sync_preserves_private_runtime_files_and_removes_stale_managed_files(tm
     destination = tmp_path / "destination"
     _write_skill(source)
     destination.mkdir()
-    (destination / "SKILL.md").write_text("local Smart Search contract\n", encoding="utf-8")
+    (destination / "CONTRACT.md").write_text("local Smart Search contract\n", encoding="utf-8")
+    (destination / "SKILL.md").write_text("stale discoverable entrypoint\n", encoding="utf-8")
     (destination / ".env.example").write_text("local example\n", encoding="utf-8")
     (destination / "README.md").write_text("local README\n", encoding="utf-8")
     (destination / "runtime.conf.example").write_text("local runtime example\n", encoding="utf-8")
@@ -109,7 +110,8 @@ def test_sync_preserves_private_runtime_files_and_removes_stale_managed_files(tm
     assert (destination / "runtime.conf").read_text(encoding="utf-8") == "ANYSEARCH_COMMAND=python3\n"
     assert (destination / "config.json").read_text(encoding="utf-8") == '{"ANYSEARCH_API_KEY":"private"}\n'
     assert local_adapter.read_text(encoding="utf-8") == "local adapter\n"
-    assert (destination / "SKILL.md").read_text(encoding="utf-8") == "local Smart Search contract\n"
+    assert not (destination / "SKILL.md").exists()
+    assert (destination / "CONTRACT.md").read_text(encoding="utf-8") == "local Smart Search contract\n"
     assert (destination / ".env.example").read_text(encoding="utf-8") == "local example\n"
     assert (destination / "README.md").read_text(encoding="utf-8") == "local README\n"
     assert (destination / "runtime.conf.example").read_text(encoding="utf-8") == "local runtime example\n"

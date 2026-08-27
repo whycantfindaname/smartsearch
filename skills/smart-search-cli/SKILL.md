@@ -11,7 +11,7 @@ Use the local `smart-search` command as the default execution layer for web rese
 
 `smart-search-cli` is an instruction bundle for an AI tool. It explains when to call the local `smart-search` executable, which command fits the user's intent, how to preserve source evidence, and how to interpret provider status and fallback fields.
 
-- The Skill delegates ordinary search and research commands to the configured `smart-search` CLI. It also carries the AnySearch operation contract at `bundled-skills/anysearch`; agents load that bundled Skill from this workflow and invoke its Smart Search-owned adapter. AnySearch is not a Smart Search provider.
+- The Skill delegates ordinary search and research commands to the configured `smart-search` CLI. It also carries the AnySearch operation contract at `bundled-skills/anysearch`; agents load that bundled capability from this workflow and invoke its Smart Search-owned adapter. AnySearch is not a separately discoverable Skill or Smart Search provider.
 - The Skill is not an MCP server, does not store provider API keys, and does not create Trellis, hooks, agents, or commands.
 - `smart-search setup --install-skills ...` is the first-install path. After a CLI upgrade, use `skills status` for a read-only check and `skills update` to refresh only the managed Skill files.
 - Skill updates do not change provider configuration or API keys. Missing optional keys remain skipped rather than being treated as successful live checks.
@@ -25,9 +25,9 @@ Use the local `smart-search` command as the default execution layer for web rese
 5. Use `smart-search smoke --mock --format json` after CLI/provider architecture changes. Use `--live` only when real keys are available and the user expects live checks.
 6. Treat `TAVILY_ENABLED=false` as an intentional no-network boundary: do not work around it with direct Tavily or `map` calls. Check diagnostics and live smoke for disabled/skipped Tavily state; Firecrawl remains independently configured.
 7. Preserve command lines and source URLs in your answer. Prefer citing fetched pages or `primary_sources`; treat `extra_sources` as follow-up candidates until fetched.
-8. In every Smart Search retrieval workflow, read `bundled-skills/anysearch/SKILL.md` relative to this Skill before deciding how AnySearch applies. This is an internal bundled-Skill delegation: do not wait for, emit, or ask the user to invoke `/anysearch` separately.
-9. Execute the bundled AnySearch adapter whenever the task needs vertical search, parallel batch search, or known-URL extraction, and use it for general discovery when it materially improves coverage. Follow the bundled Skill's current command contract. For vertical intent, run its `get_sub_domains` operation before searching and include every required parameter it reports.
-10. If the bundled Skill or adapter is missing or unreadable, record AnySearch as unavailable and continue with the remaining Smart Search routes; do not resolve another AnySearch entrypoint.
+8. In every Smart Search retrieval workflow, read `bundled-skills/anysearch/CONTRACT.md` relative to this Skill before deciding how AnySearch applies. This is an internal capability contract, not another discoverable Skill: do not wait for, emit, or ask the user to invoke `/anysearch` separately.
+9. Execute the bundled AnySearch adapter whenever the task needs vertical search, parallel batch search, or known-URL extraction, and use it for general discovery when it materially improves coverage. Follow the bundled capability's current command contract. For vertical intent, run its `get_sub_domains` operation before searching and include every required parameter it reports.
+10. If the bundled capability or adapter is missing or unreadable, record AnySearch as unavailable and continue with the remaining Smart Search routes; do not resolve another AnySearch entrypoint.
 
 ## Error Handling
 
@@ -53,7 +53,7 @@ behavior, or the structured output contract must change.
 - `exa-search`: official domains, papers, product pages, trusted pages, date/domain-filtered low-noise discovery, and adjacent source discovery through `exa-similar`.
 - `fetch`: user-provided URLs or any claim that depends on page content.
 - `map`: documentation site or domain structure before fetching many pages from one site.
-- Bundled AnySearch: agent-level general or vertical search, parallel batch search, and URL extraction through `bundled-skills/anysearch/SKILL.md` and its `scripts/smart_search_anysearch.py` adapter. Load and invoke it from this workflow without requiring a separate slash command; it remains outside the Smart Search CLI provider registry.
+- Bundled AnySearch: agent-level general or vertical search, parallel batch search, and URL extraction through `bundled-skills/anysearch/CONTRACT.md` and its `scripts/smart_search_anysearch.py` adapter. Load and invoke it from this workflow without requiring a separate slash command; it remains outside the Smart Search CLI provider registry.
 - `sciverse-*`: explicit experimental academic search only. Use for catalog/search/semantic/read/relations; do not use Sciverse as `docs_search`, `standard`, or default `search` / `research` fallback.
 - `model current`: inspect explicit provider models only. Change models with `smart-search config set XAI_MODEL ...` or `smart-search config set OPENAI_COMPATIBLE_MODEL ...`.
 

@@ -88,12 +88,25 @@ function assertPackContents(files) {
     "src/smart_search/assets/sidecar/pyproject.toml",
     "src/smart_search/assets/sidecar/src/smart_search_sidecar/protocol.py",
     "THIRD_PARTY_NOTICES.md",
-    "skills/smart-search-cli/bundled-skills/anysearch/SKILL.md",
+    "skills/smart-search-cli/bundled-skills/anysearch/CONTRACT.md",
     "skills/smart-search-cli/bundled-skills/anysearch-source.json",
-    "src/smart_search/assets/skills/smart-search-cli/bundled-skills/anysearch/SKILL.md"
+    "src/smart_search/assets/skills/smart-search-cli/bundled-skills/anysearch/CONTRACT.md"
   ]) {
     assert.ok(files.some((file) => file.path === requiredPath), `tarball is missing ${requiredPath}`);
   }
+  const nestedSkillEntrypoints = files
+    .map((file) => file.path)
+    .filter(
+      (filePath) =>
+        filePath.includes("skills/smart-search-cli/") &&
+        filePath.endsWith("/SKILL.md") &&
+        !filePath.endsWith("skills/smart-search-cli/SKILL.md")
+    );
+  assert.deepEqual(
+    nestedSkillEntrypoints,
+    [],
+    "smart-search-cli tarball must not expose a nested discoverable Skill"
+  );
 }
 
 function normalizePackOutput(packOutput) {

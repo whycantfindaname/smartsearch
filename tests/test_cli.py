@@ -2667,7 +2667,8 @@ def test_setup_non_interactive_installs_selected_skills_under_user_root_override
     assert (tmp_path / ".claude" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
     cursor_skill = tmp_path / ".cursor" / "skills" / "smart-search-cli"
     assert (cursor_skill / "SKILL.md").is_file()
-    assert (cursor_skill / "bundled-skills" / "anysearch" / "SKILL.md").is_file()
+    assert (cursor_skill / "bundled-skills" / "anysearch" / "CONTRACT.md").is_file()
+    assert list(cursor_skill.rglob("SKILL.md")) == [cursor_skill / "SKILL.md"]
     assert not (cursor_skill / "skills" / "anysearch").exists()
 
 
@@ -2841,12 +2842,12 @@ def test_skill_installer_status_detects_stale_and_extra_files(tmp_path):
     assert extra["targets"][0]["hash_match"] is False
 
 
-def test_skill_installer_keeps_anysearch_nested_and_private_config_local(tmp_path):
+def test_skill_installer_keeps_anysearch_internal_and_private_config_local(tmp_path):
     source = tmp_path / "source"
     bundled_anysearch = source / "skills" / "anysearch"
     bundled_anysearch.mkdir(parents=True)
     (source / "SKILL.md").write_text("---\nname: smart-search-cli\n---\n", encoding="utf-8")
-    (bundled_anysearch / "SKILL.md").write_text("---\nname: anysearch\n---\n", encoding="utf-8")
+    (bundled_anysearch / "CONTRACT.md").write_text("# AnySearch internal contract\n", encoding="utf-8")
     (bundled_anysearch / ".env").write_text("ANYSEARCH_API_KEY=private\n", encoding="utf-8")
     (bundled_anysearch / "config.json").write_text('{"ANYSEARCH_API_KEY":"private"}\n', encoding="utf-8")
 
@@ -2859,7 +2860,8 @@ def test_skill_installer_keeps_anysearch_nested_and_private_config_local(tmp_pat
 
     installed = root / ".codex" / "skills" / "smart-search-cli"
     assert result["ok"] is True
-    assert (installed / "skills" / "anysearch" / "SKILL.md").is_file()
+    assert (installed / "skills" / "anysearch" / "CONTRACT.md").is_file()
+    assert list(installed.rglob("SKILL.md")) == [installed / "SKILL.md"]
     assert not (installed / "skills" / "anysearch" / ".env").exists()
     assert not (installed / "skills" / "anysearch" / "config.json").exists()
     assert not (root / ".codex" / "skills" / "anysearch").exists()

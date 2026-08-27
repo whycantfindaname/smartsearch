@@ -152,7 +152,7 @@ Trellis、hooks、agents 或 commands。
 | `web_search` | 智谱 Web Search API -> 智谱 Coding Plan MCP `web_search_prime` -> Tavily -> Firecrawl |
 | `web_fetch` | Tavily -> 带 `JINA_API_KEY` 的 Jina Reader -> 智谱 Coding Plan MCP `webReader` -> Firecrawl |
 
-AnySearch 是 Smart Search 内置委派的外部 Skill，不是 Smart Search provider。每次 Smart Search 检索工作流会主动读取 `bundled-skills/anysearch/SKILL.md`，并在垂直检索、批量检索和已知 URL 抽取场景通过 `scripts/smart_search_anysearch.py` 执行；用户不需要另外输入 `/anysearch`。内置 Skill 或适配器不可用时继续使用其他来源。AnySearch 和 Sciverse 都不是 `standard` 最低配置要求。Sciverse 也不是 `docs_search`，不会加入默认 `search` / `research` 路由。
+AnySearch 是 Smart Search 的内部能力，不再作为可单独发现的 Skill，也不是 Smart Search provider。每次 Smart Search 检索工作流会主动读取 `bundled-skills/anysearch/CONTRACT.md`，并在垂直检索、批量检索和已知 URL 抽取场景通过 `scripts/smart_search_anysearch.py` 执行；用户不需要另外输入 `/anysearch`。内部契约或适配器不可用时继续使用其他来源。AnySearch 和 Sciverse 都不是 `standard` 最低配置要求。Sciverse 也不是 `docs_search`，不会加入默认 `search` / `research` 路由。
 
 Jina Reader 只属于 `web_fetch`，不是通用搜索 provider。只有配置 `JINA_API_KEY` 后，它才可以满足 `SMART_SEARCH_MINIMUM_PROFILE=standard`；匿名 `r.jina.ai` 只能当显式/实验抓取能力，不能让最低配置检查放松。
 
@@ -360,7 +360,7 @@ smart-search route-calibrate --models "Qwen/Qwen3-Embedding-8B" --format markdow
 - `TAVILY_API_URL` 只影响 Tavily，不会代理智谱。Tavily Hikari / 号池用 `https://<host>/api/tavily`；setup 会把根域名或 `/mcp` 输入规范化成这个 REST base。
 - `TAVILY_ENABLED` 默认是 `true`。即使已有 key，设为 `false` 也会禁用 Tavily：它会从 web-search 和 fetch 路由中移除，直接 Tavily 调用和 `doctor` 都不会发 Tavily 请求，`map` 会本地返回配置错误。它不会启用 Firecrawl，也不会改变同 capability 兜底边界。
 - `FIRECRAWL_API_URL` 默认是 `https://api.firecrawl.dev/v2`。
-- AnySearch 不属于 provider 或 setup wizard 能力。Agent 在 Smart Search 工作流内主动读取 `bundled-skills/anysearch/SKILL.md` 并按其当前接口执行，不要求用户单独调用 `/anysearch`。内置适配器从 Smart Search 既有私有 `config.json` 读取两个密钥字段；setup 不打印或迁移密钥值。内置快照来自 `jason-liao-skills/main/skill-packages/anysearch`；仅当首选仓库可访问但缺少该包时，才使用官方仓库。
+- AnySearch 不属于 provider、setup wizard 能力或可单独发现的 Skill。Agent 在 Smart Search 工作流内主动读取 `bundled-skills/anysearch/CONTRACT.md` 并按其内部契约执行，不要求用户单独调用 `/anysearch`。内置适配器从 Smart Search 既有私有 `config.json` 读取两个密钥字段；setup 不打印或迁移密钥值。内置快照来自 `jason-liao-skills/main/skill-packages/anysearch`；仅当首选仓库可访问但缺少该包时，才使用官方仓库。
 - Sciverse 默认走 `https://api.sciverse.space` 的 native HTTP/OpenAPI。必须配置 `SCIVERSE_API_TOKEN`；未配置时本地返回 `config_error` 且不发网络请求；已配置时发送 `Authorization: Bearer ...`。它保持 explicit-only：不是 `docs_search`，不满足 `standard`，不进入默认 `search` / `research` 兜底。
 - `doctor` 和 `route` 会报告 intent router 的配置状态、embedding 模型、threshold、margin、配置来源、超时和是否可降级，不会暴露 router API key。
 
