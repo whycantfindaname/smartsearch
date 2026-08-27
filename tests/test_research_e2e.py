@@ -260,7 +260,7 @@ async def test_deep_research_gate_preserves_failures_and_reaches_locator_backtra
         result=_delegate_result(
             anysearch_request,
             status="unavailable",
-            gaps=["bundled and global AnySearch Skills unavailable"],
+            gaps=["bundled AnySearch Skill was unavailable"],
         ),
         artifact_root=tmp_path,
     )

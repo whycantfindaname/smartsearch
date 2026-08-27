@@ -253,7 +253,7 @@ Jina is a known-URL fetch provider, not a general search provider.
 | No key under the standard profile | `not_configured`; anonymous Reader remains explicit/experimental only. | Configure `JINA_API_KEY` or use Tavily/Zhipu MCP reader/Firecrawl. |
 | `JINA_RESPOND_WITH` set without a key | `config_error` before network access. | Add the key or remove `JINA_RESPOND_WITH`. |
 | HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | Shared error classification; Jina itself does not add a transport retry loop. A `429` can reflect RPM, token, per-key/IP, or concurrency limits. | Correct permanent errors. For `429`, wait for the applicable limit window or reduce concurrency; otherwise continue the fetch fallback chain. |
-| Empty body or a Cloudflare/JavaScript challenge marker | `quality_error`; content must not be cited. | Continue to the next configured fetch provider, normally Zhipu MCP reader or Firecrawl. If that standard chain ends in `empty` or `config_error`, read `../bundled-skills/anysearch/SKILL.md` and make one `extract` call through the bundled AnySearch CLI for the known URL; it is a new provider route, not a retry of Jina. |
+| Empty body or a Cloudflare/JavaScript challenge marker | `quality_error`; content must not be cited. | Continue to the next configured fetch provider, normally Zhipu MCP reader or Firecrawl. If that standard chain ends in `empty` or `config_error`, read `../bundled-skills/anysearch/SKILL.md` and make one `extract` call through the bundled AnySearch adapter for the known URL; it is a new provider route, not a retry of Jina. |
 | Unexpected HTML or interstitial content without a recognized challenge marker | No stable Smart Search classification yet; it may surface as apparently successful content. | Treat it as unverified and do not cite it. Preserve a sanitized excerpt as a new signature, continue to the next fetch provider, and add a catalog rule only after the signature is reproducible. |
 | Timeout/network failure | `timeout`/`network_error`. | Use the next configured fetch provider. |
 
@@ -272,7 +272,7 @@ or challenge-prone pages.
 | HTTP `413` | `provider_error`; the request payload is too large. | Reduce batch size, schema, or input size before retrying. |
 | Response reports a tool error | `provider_error`. | Follow the sanitized provider message; do not treat it as empty success. |
 | Missing `data`, missing `web`, non-object search items, or non-text Markdown | `parse_error`. | Report schema drift and use another provider. |
-| Scrape succeeds but Markdown is empty | Firecrawl performs its bounded empty-content attempts with increasing `waitFor`; final state is `empty`. | Let those attempts finish. Use another configured standard fetch provider; if none remains, read `../bundled-skills/anysearch/SKILL.md` and make one `extract` call through its CLI for that known URL. Otherwise report empty content. |
+| Scrape succeeds but Markdown is empty | Firecrawl performs its bounded empty-content attempts with increasing `waitFor`; final state is `empty`. | Let those attempts finish. Use another configured standard fetch provider; if none remains, read `../bundled-skills/anysearch/SKILL.md` and make one `extract` call through the bundled adapter for that known URL. Otherwise report empty content. |
 
 Firecrawl may include a more precise code inside a `408` or `5xx` response.
 Smart Search currently preserves that sanitized message while retaining the
@@ -311,22 +311,26 @@ Sciverse is explicit-only academic vertical search. It is not part of default
 
 AnySearch remains an external Skill bundled inside Smart Search, not a Smart
 Search provider or CLI command family. A Smart Search retrieval workflow reads
-`../bundled-skills/anysearch/SKILL.md` and invokes that Skill's CLI directly;
-the user does not need to invoke `/anysearch`. Vertical, batch, and known-URL
-extraction intents use the matching bundled capability. After a known-URL
-`fetch` has exhausted every configured standard provider, make at most one
-`extract` call through the bundled AnySearch CLI. This is a provider switch,
-not an unchanged outer retry. Accept the content only when the AnySearch call
-succeeds and the page passes the same evidence-quality checks.
+`../bundled-skills/anysearch/SKILL.md` and invokes its
+`scripts/smart_search_anysearch.py` adapter; the user does not need to invoke
+`/anysearch`. Vertical, batch, and known-URL extraction intents use the matching
+bundled capability. After a known-URL `fetch` has exhausted every configured
+standard provider, make at most one `extract` call through the bundled adapter.
+This is a provider switch, not an unchanged outer retry. Accept the content only
+when the AnySearch call succeeds and the page passes the same evidence-quality
+checks.
 
 | Observed signature | Built-in behavior | Required handling |
 | --- | --- | --- |
-| `../bundled-skills/anysearch/SKILL.md` is missing or unreadable | Local bundle failure before provider access. | Try a separately installed global `$anysearch` Skill. If neither is usable, record an AnySearch availability gap; do not treat it as provider downtime. |
+| `../bundled-skills/anysearch/SKILL.md` or its adapter is missing or unreadable | Local bundle failure before provider access. | Record an AnySearch availability gap and continue with other allowed sources; do not resolve another AnySearch entrypoint. |
 | Invalid operation arguments, malformed `--params`/`--sdp`, missing required vertical parameters, or an invalid batch payload | Local parameter failure before or during request validation. | Follow the bundled Skill's command contract. For vertical intent, run `get_sub_domains` first and include every required parameter it reports. |
-| HTTP `400`/`422`, `401`/`403`, `408`, `429`, or `5xx` | AnySearch request failure. | Follow the bundled Skill's current recovery guidance. Correct permanent errors or wait before one fresh explicit call; do not turn failure into an outer retry loop. |
+| Valid primary response with HTTP `401`, `403`, or `429` | Adapter authentication/permission/rate-limit failure. | Try the configured fallback key at most once for the same operation; never repeat the fallback. |
+| HTTP `400`/`422`, `408`, or `5xx` | AnySearch request failure. | Correct the request or wait for the service; the adapter does not switch keys or replay automatically. |
 | HTTP `402`, `404`, `409`, or another unlisted status | Provider error; no automatic logical replay. | Resolve billing, endpoint, domain, or resource state through the bundled AnySearch Skill. |
-| Invalid JSON or response schema | Parse failure; returned URLs are not evidence. | Preserve a sanitized response and report protocol drift. |
-| Timeout/network failure | Transport failure. | Use another allowed source or report the gap. |
+| Invalid JSON or response schema | Parse failure; returned URLs are not evidence. | Preserve a sanitized response and report protocol drift; do not switch keys. |
+| Timeout/network failure | Transport failure. | Use another allowed source or report the gap; do not switch keys. |
+| No valid Smart Search primary key, or an explicit local argument error | Local configuration/argument failure before network access. | Return a redacted error with zero AnySearch requests. Explicit `--api_key` is one-key-only and never reads the fallback slot. |
+| Response contains `auto_registered.api_key` or another credential-shaped field | Sensitive diagnostic data. | Drop it; never print or persist it. |
 | `get_sub_domains` returns no usable domain metadata | Empty or unavailable domain catalog, not a successful search. | Verify the AnySearch endpoint and private configuration; do not guess domain names or required parameters. |
 
 ## Research, routing, and evidence channel

@@ -7,9 +7,11 @@ from importlib import resources
 from pathlib import Path
 from typing import Any
 
-
 SKILL_NAME = "smart-search-cli"
-PRESERVED_LOCAL_FILES = {".env", "runtime.conf"}
+# Local runtime overrides stay at their destination. The Smart Search parent
+# config is never part of an installed Skill tree, even if a source checkout
+# accidentally contains a config.json beside the bundled files.
+PRESERVED_LOCAL_FILES = {".env", "runtime.conf", "config.json"}
 PACKAGE_ROOT_ENV = "SMART_SEARCH_PACKAGE_ROOT"
 
 

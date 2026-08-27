@@ -16,7 +16,7 @@ agentic-research Preview. Smart Search keeps one configuration entry point:
 | Search Toolkit Sidecar | `SMART_SEARCH_SIDECAR_PYTHON`, `SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS` | No | Smart Search config | `config list`, `doctor`, Sidecar health |
 | Document index identity | `SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE`, `SMART_SEARCH_DOCUMENT_EMBEDDING_DIMENSIONS`, `SMART_SEARCH_DOCUMENT_EMBEDDING_NORMALIZE`, `SMART_SEARCH_DOCUMENT_SPLITTER`, `SMART_SEARCH_DOCUMENT_CHUNK_SIZE` | No | Smart Search config | `config list`, `doctor`, Sidecar health |
 | Document Embedding endpoint/key/model | Reuses `INTENT_EMBEDDING_API_URL`, `INTENT_EMBEDDING_API_KEY`, and `INTENT_EMBEDDING_MODEL` by default; `openai-compatible` may explicitly reuse the existing OpenAI-compatible domain | Key: yes | Existing Smart Search config; no duplicated document-specific key | Masked `config list`, `doctor`, embedding attempt |
-| AnySearch | `ANYSEARCH_API_KEY` or the bundled snapshot's private `.env` | Yes | AnySearch Skill | Delegate result and provenance check |
+| AnySearch | `ANYSEARCH_API_KEY`, `ANYSEARCH_API_KEY_FALLBACK` in Smart Search private `config.json` | Yes | Bundled AnySearch adapter | Delegate result and provenance check |
 | MinerU | MinerU Skill configuration | Yes | MinerU Skill | Delegate result |
 
 There is one Jina credential. DeepSearch and Reranker reuse the existing

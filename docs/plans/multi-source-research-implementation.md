@@ -115,11 +115,11 @@ Root 可从以下 Smart Search 能力池动态选择基础能力；具体 Provid
 
 - AnySearch 始终是独立 Skill，不成为 Smart Search 内部 Provider 或内部实现。
 - Smart Search 仓库保留完整、原样的 AnySearch Skill 快照；首选来源为 `jason-liao-skills/main/skill-packages/anysearch`，该包不存在时才允许使用官方来源。
-- 仓库同步脚本只管理内置快照，不修改全局 Skill；全局 AnySearch 继续由 Skills 工作区管理。
-- 内置快照优先；快照缺失或损坏时才尝试全局 Skill。
+- 仓库同步脚本管理内置快照，并保留 Smart Search-owned adapter 与 runtime 覆盖；不复制私有配置。
+- 内置适配器是唯一 AnySearch 入口；快照或适配器缺失时记录 unavailable，研究继续使用其他能力。
 - Root 或 Root 委派的 Search Scout 阅读 Skill 后自行选择具体 AnySearch 功能，Smart Search 不硬编码子命令。
 - AnySearch 不可用时返回明确的委派结果和覆盖缺口，研究继续使用其他能力。
-- `ANYSEARCH_API_KEY` 可由内置快照的私有 `.env` 提供，但 Git、npm 包和 wheel 不得包含明文密钥。
+- `ANYSEARCH_API_KEY` 与 `ANYSEARCH_API_KEY_FALLBACK` 只由 bundled adapter 从 Smart Search 私有 `config.json` 读取；不读取 `.env`、进程环境或匿名访问，Git、npm 包和 wheel 不得包含明文密钥。
 - AnySearch 最小 JSON 是 `DelegateResult.payload`，其中保留原始 `query`；每条来源至少包含 `title`、`url`、`content`，可选包含 `published_at`。结果经公共归一化管线进入候选集合。
 
 ### 2.6 三种项目 Subagent
@@ -318,7 +318,7 @@ Python 3.12 Sidecar 直接复用 Apache-2.0 许可的 `mistralai-search-toolkit`
 - Firecrawl、Jina、Exa、Tavily 的 Research 能力优先复用现有 Provider Key 和 endpoint；只有官方 API 契约确实要求不同参数时才新增配置键，不复制同一凭据。
 - Search Toolkit Sidecar、Document Embedding 和本地索引只新增运行所需的最小非敏感配置；需要密钥的 Embedder 复用现有 OpenAI-compatible 配置或显式引用已有配置，不另存一份密钥。
 - MinerU 若继续通过独立 Skill 调用，其 Key 和套餐配置仍由 MinerU Skill 管理；Smart Search 只记录能力状态和委派结果。只有后续改为仓库内直接调用时，才把对应键纳入 Smart Search 配置入口。
-- AnySearch 继续使用内置快照中的私有 `.env` 或进程级 `ANYSEARCH_API_KEY`；同步和安装保留本地 `.env`、`runtime.conf`，Git、npm 包和 wheel 只包含示例文件。
+- AnySearch bundled adapter 只使用 Smart Search 私有双密钥 `config.json`；同步和安装保留本地 `.env`、`runtime.conf` 与 adapter，Git、npm 包和 wheel 只包含示例文件，不复制私有配置。
 - 新增或调整的配置必须同步到 CLI setup/config、`doctor` 的 masked 输出、两份 Skill 配置文档、打包清单和配置测试；不得只依赖开发机 shell profile 或未记录的 wrapper 注入。
 - 使用独立 `SMART_SEARCH_CONFIG_DIR` 建立 Preview 配置并运行 `config path`、`config list`、`doctor`、组件健康检查和最小 live probe。不得覆盖当前 macOS 激活版本使用的 `~/.config/smart-search/config.json`。
 - 对 Git tracked files、npm 包、wheel、Trace 和日志执行密钥泄漏检查；任何真实 Key、token、私有 endpoint 或未授权正文都不能进入版本控制和发布产物。

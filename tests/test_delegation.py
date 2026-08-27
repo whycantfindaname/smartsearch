@@ -117,7 +117,7 @@ def test_delegate_request_rejects_unregistered_url_or_path_artifacts():
         )
 
 
-def test_anysearch_dispatch_is_bundled_first_and_has_no_concrete_command():
+def test_anysearch_dispatch_is_bundled_only_and_has_no_concrete_command():
     dispatch = _anysearch_dispatch()
 
     assert DelegateRequest.from_dict(dispatch["delegate_request"]).target == "anysearch"
@@ -125,8 +125,7 @@ def test_anysearch_dispatch_is_bundled_first_and_has_no_concrete_command():
         {
             "kind": "bundled_snapshot",
             "path": "bundled-skills/anysearch/SKILL.md",
-        },
-        {"kind": "global_fallback", "skill": "anysearch"},
+        }
     ]
     assert "command" not in dispatch
     assert "command" not in dispatch["delegate_request"]

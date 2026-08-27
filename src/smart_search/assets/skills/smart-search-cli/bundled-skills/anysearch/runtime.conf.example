@@ -1,4 +1,4 @@
-# AnySearch Runtime Configuration
-# Auto-generated during installation. Do not edit manually unless necessary.
-Runtime: <detected_runtime>
-Command: <detected_command>
+# Smart Search-owned runtime command for the bundled adapter.
+# Do not put credentials or private paths in this tracked example.
+Runtime: Python
+Command: python3 <skill_dir>/scripts/smart_search_anysearch.py

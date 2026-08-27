@@ -22,8 +22,11 @@ function readTree(root) {
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
       const entryPath = path.join(current, entry.name);
       if (entry.isDirectory()) {
+        if (entry.name === "__pycache__") {
+          continue;
+        }
         pending.push(entryPath);
-      } else if (entry.isFile()) {
+      } else if (entry.isFile() && !entry.name.endsWith(".pyc")) {
         files.set(path.relative(root, entryPath).split(path.sep).join("/"), fs.readFileSync(entryPath));
       }
     }

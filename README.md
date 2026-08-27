@@ -145,7 +145,7 @@ provider keys or create Trellis/hooks/agents/commands.
 | `docs_search` | `context7-library`, `context7-docs`, `exa-search` | Context7, Exa | Official docs, SDKs, APIs, framework/library evidence |
 | `web_search` | `zhipu-search`, `zhipu-mcp-search`, intent-routed reinforcement inside `search` | Zhipu Web Search API, Zhipu Coding Plan MCP, Tavily, Firecrawl | Chinese, domestic, current, domain-filtered, or supplementary web discovery |
 | `web_fetch` | `fetch`, `zhipu-mcp-reader` | Tavily, Jina Reader, Zhipu Coding Plan MCP Reader, Firecrawl | Exact URL content extraction for evidence |
-| `vertical_search` | delegated `$anysearch` Skill; `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, `sciverse-relations` | AnySearch Skill and Sciverse (experimental) | Agent-level supplemental retrieval plus explicit Sciverse academic search |
+| `vertical_search` | delegated bundled AnySearch adapter; `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, `sciverse-relations` | AnySearch Skill and Sciverse (experimental) | Agent-level supplemental retrieval plus explicit Sciverse academic search |
 | `site_map` | `map` | Tavily | Site/documentation structure discovery |
 | `deep_planner` | `deep` / `dr` | Local planner only | Offline plan generation; no provider call by default |
 | `research_executor` | `research` / `rs` | Registered providers by capability | Live staged research: plan, discover, fetch/read, gap check, evidence-only synthesis |
@@ -159,7 +159,7 @@ Fallback is same-capability only:
 | `web_search` | Zhipu Web Search API -> Zhipu Coding Plan MCP `web_search_prime` -> Tavily -> Firecrawl |
 | `web_fetch` | Tavily -> Jina Reader with `JINA_API_KEY` -> Zhipu Coding Plan MCP `webReader` -> Firecrawl |
 
-AnySearch is an external bundled Skill rather than a Smart Search provider and is not a registered provider. A Smart Search retrieval workflow reads `bundled-skills/anysearch/SKILL.md` and invokes its CLI directly for matching vertical, batch, and known-URL extraction work; the user does not need to invoke `/anysearch` separately. A separately installed global `$anysearch` Skill is used only when the bundle is missing. If neither is available, research continues with other sources. AnySearch and Sciverse are not required by the `standard` minimum profile. Sciverse is also not a `docs_search` provider and does not join default `search` or `research` routing.
+AnySearch is an external bundled Skill rather than a Smart Search provider and is not a registered provider. A Smart Search retrieval workflow reads `bundled-skills/anysearch/SKILL.md` and invokes its `scripts/smart_search_anysearch.py` adapter for matching vertical, batch, and known-URL extraction work; the user does not need to invoke `/anysearch` separately. If the bundle or adapter is unavailable, research continues with other sources. AnySearch and Sciverse are not required by the `standard` minimum profile. Sciverse is also not a `docs_search` provider and does not join default `search` or `research` routing.
 
 Jina Reader is a `web_fetch` provider only. `JINA_API_KEY` is required before Jina satisfies `SMART_SEARCH_MINIMUM_PROFILE=standard`; anonymous `r.jina.ai` behavior is treated as explicit/experimental fetch behavior and must not weaken fail-closed setup checks.
 
@@ -169,7 +169,7 @@ The CLI exposes observability fields such as `routing_decision`, `provider_attem
 
 `extra_sources` are discovery candidates. For high-risk claims, news, policy, finance, health, selection decisions, and serious reviews, fetch key pages first and cite fetched text rather than treating a broad search answer as proof.
 
-Routing rule of thumb: start with `search` for broad discovery and synthesis; use `research` when you want the CLI to execute the deeper evidence workflow; use Zhipu Web Search API for Chinese, domestic, policy, announcements, and current-news searches; use Zhipu Coding Plan MCP only when you explicitly want the Coding Plan quota route; use Context7 first for library/API/framework docs; use Exa for official domains, papers, product pages, trusted sites, and low-noise discovery; use Tavily/Firecrawl through `search --extra-sources` for horizontal candidates and through `fetch` for page evidence; use Jina for known-URL extraction; delegate to the bundled or global AnySearch Skill when its general, vertical, batch, or extraction capabilities can add evidence; use Sciverse only for explicit academic commands.
+Routing rule of thumb: start with `search` for broad discovery and synthesis; use `research` when you want the CLI to execute the deeper evidence workflow; use Zhipu Web Search API for Chinese, domestic, policy, announcements, and current-news searches; use Zhipu Coding Plan MCP only when you explicitly want the Coding Plan quota route; use Context7 first for library/API/framework docs; use Exa for official domains, papers, product pages, trusted sites, and low-noise discovery; use Tavily/Firecrawl through `search --extra-sources` for horizontal candidates and through `fetch` for page evidence; use Jina for known-URL extraction; delegate to the bundled AnySearch adapter when its general, vertical, batch, or extraction capabilities can add evidence; use Sciverse only for explicit academic commands.
 
 ## Deep Research
 
@@ -315,7 +315,7 @@ The default interactive setup wizard includes optional smart intent router promp
 | Tavily | Extra web sources, URL fetch, and site map | `TAVILY_API_URL`, `TAVILY_API_KEY`, `TAVILY_ENABLED` | [Tavily docs](https://docs.tavily.com/) | [Tavily app](https://app.tavily.com/home) |
 | Jina Reader | Known URL page extraction for `web_fetch`; key required for standard minimum profile | `JINA_API_KEY`, `JINA_READER_API_URL`, `JINA_RESPOND_WITH`, `JINA_TIMEOUT_SECONDS` | [Jina Reader](https://jina.ai/reader/) | [Jina AI](https://jina.ai/) |
 | Firecrawl | Fetch fallback and supplementary web sources | `FIRECRAWL_API_URL`, `FIRECRAWL_API_KEY` | [Firecrawl docs](https://docs.firecrawl.dev/) | [Firecrawl API keys](https://www.firecrawl.dev/app/api-keys) |
-| AnySearch Skill | Agent-level general, vertical, batch, and URL extraction through `bundled-skills/anysearch`; global Skill only as a missing-bundle fallback | private `ANYSEARCH_API_KEY` in the AnySearch runtime | [AnySearch docs](https://www.anysearch.com/docs) | [AnySearch API keys](https://www.anysearch.com/console/api-keys) |
+| AnySearch Skill | Agent-level general, vertical, batch, and URL extraction through the bundled adapter at `bundled-skills/anysearch/scripts/smart_search_anysearch.py` | `ANYSEARCH_API_KEY`, `ANYSEARCH_API_KEY_FALLBACK` in Smart Search private config | [AnySearch docs](https://www.anysearch.com/docs) | [AnySearch API keys](https://www.anysearch.com/console/api-keys) |
 | Sciverse | Explicit experimental academic search, semantic paper retrieval, document chunks, and citation/reference relations; not a default fallback | `SCIVERSE_API_TOKEN`, `SCIVERSE_API_URL`, `SCIVERSE_TIMEOUT_SECONDS` | [Sciverse Agent Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) | Sciverse dashboard / token provider |
 
 Intent router configuration:
@@ -360,7 +360,7 @@ Important boundaries:
 - `TAVILY_API_URL` affects Tavily only. It does not proxy Zhipu. For Tavily Hikari / pooled endpoints, use `https://<host>/api/tavily`; setup normalizes root-host or `/mcp` inputs to that REST base.
 - `TAVILY_ENABLED` defaults to `true`. Set it to `false` to disable Tavily even when a key is present: Tavily is removed from web-search and fetch routing, direct Tavily calls and `doctor` make no Tavily request, and `map` returns a local configuration error. This does not enable Firecrawl or change same-capability fallback boundaries.
 - `FIRECRAWL_API_URL` defaults to `https://api.firecrawl.dev/v2`.
-- AnySearch is not configured by `smart-search setup` or `smart-search config`. The agent reads `bundled-skills/anysearch/SKILL.md` inside the Smart Search workflow and follows that Skill's current runtime contract without requiring a separate slash invocation. The bundled snapshot is refreshed from `jason-liao-skills/main/skill-packages/anysearch`; the official repository is used only when the preferred repository is reachable and that package is absent.
+- AnySearch is not a provider or setup-wizard capability. The agent reads `bundled-skills/anysearch/SKILL.md` inside the Smart Search workflow and follows that Skill's current runtime contract without requiring a separate slash invocation. The bundled adapter reads its two key fields from Smart Search's existing private `config.json`; setup does not print or migrate their values. The bundled snapshot is refreshed from `jason-liao-skills/main/skill-packages/anysearch`; the official repository is used only when the preferred repository is reachable and that package is absent.
 - Sciverse uses native HTTP/OpenAPI at `https://api.sciverse.space` by default. It requires `SCIVERSE_API_TOKEN`, returns `config_error` without a network request when the token is absent, sends `Authorization: Bearer ...` when configured, and remains explicit-only: not `docs_search`, not `standard`, and not default `search` / `research` fallback.
 - `doctor` and `route` report intent router status, embedding model, threshold, margin, their config source, timeout, and degradation behavior. They do not expose router API keys.
 
@@ -404,7 +404,7 @@ Minimum profile defaults to `standard`, requiring at least:
 
 Missing required capabilities fail closed with a configuration error. Use `SMART_SEARCH_MINIMUM_PROFILE=off` only for local experiments.
 
-AnySearch is optional and does not satisfy or change the `standard` minimum profile. For the macOS Preview, a private ignored `.env` may be stored inside the bundled snapshot. Snapshot updates preserve `.env` and `runtime.conf`, and neither file is committed.
+AnySearch is optional and does not satisfy or change the `standard` minimum profile. The bundled adapter reads its ordered dual keys from Smart Search's private `config.json`; an ignored `.env` may remain as an upstream snapshot artifact but is not a credential source. Snapshot updates preserve `.env`, `runtime.conf`, and the adapter, and none of these local files or private config is committed.
 
 Experimental Sciverse configuration is also optional and does not satisfy or change the `standard` minimum profile:
 
@@ -607,7 +607,7 @@ npm pack --dry-run
 This stable release contains the provider reliability and packaging hardening work validated through source, live-provider, and packed-install release gates.
 
 - Context7 automatic documentation selection now requires query-subject overlap with the candidate title or id; same-capability Exa fallback handles empty or low-confidence results.
-- AnySearch moved out of the Smart Search provider layer and is delegated through the bundled or global AnySearch Skill.
+- AnySearch moved out of the Smart Search provider layer and is delegated through the bundled AnySearch adapter.
 - Provider failures use a consistent error taxonomy, and `TAVILY_ENABLED=false` prevents accidental Tavily routing or network requests.
 - Mock and live smoke reports distinguish healthy, degraded, failed, and skipped checks.
 - Release safety includes a read-only CI matrix, public/package Skill parity, and a fresh temporary-prefix tarball install smoke.

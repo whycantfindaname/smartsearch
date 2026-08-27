@@ -1,5 +1,5 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
 import yaml
 
@@ -372,7 +372,7 @@ def test_agentic_research_skill_uses_confirmed_architecture_and_terms():
         "Evidence Miner",
         "only Root can turn suggestions into new tasks",
         "bundled-skills/anysearch/SKILL.md",
-        "installed global `$anysearch` Skill",
+        "scripts/smart_search_anysearch.py",
         "Root may read all candidates or create any number of Curator shards",
         "ClaimSpec -> EvidenceItem -> ClaimRecord",
         "run-local and append-only",
@@ -515,7 +515,7 @@ def test_streaming_and_external_anysearch_contract_public_and_packaged_assets_ma
         "bundled-skills/anysearch/SKILL.md",
         "external Skill",
         "bundled snapshot",
-        "global `$anysearch` Skill",
+        "scripts/smart_search_anysearch.py",
         "SCIVERSE_API_TOKEN",
         "SCIVERSE_API_URL",
         "SCIVERSE_TIMEOUT_SECONDS",
@@ -551,7 +551,7 @@ def test_streaming_and_external_anysearch_contract_public_and_packaged_assets_ma
         "OPENAI_COMPATIBLE_STREAM",
         "ANYSEARCH_API_KEY",
         "bundled-skills/anysearch/SKILL.md",
-        "全局 `$anysearch` Skill",
+        "Smart Search 私有配置",
         "SCIVERSE_API_TOKEN",
         "SCIVERSE_API_URL",
         "SCIVERSE_TIMEOUT_SECONDS",
@@ -588,6 +588,8 @@ def test_anysearch_uses_bundled_skill_without_compatibility_commands():
         )
 
         assert "bundled-skills/anysearch/SKILL.md" in instruction_text
+        assert "scripts/smart_search_anysearch.py" in instruction_text
+        assert "$" + "anysearch" not in instruction_text
         assert "do not wait for, emit, or ask the user to invoke `/anysearch`" in instruction_text
         for command in forbidden_compatibility_commands:
             assert command not in instruction_text

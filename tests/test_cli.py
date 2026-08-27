@@ -2848,6 +2848,7 @@ def test_skill_installer_keeps_anysearch_nested_and_private_config_local(tmp_pat
     (source / "SKILL.md").write_text("---\nname: smart-search-cli\n---\n", encoding="utf-8")
     (bundled_anysearch / "SKILL.md").write_text("---\nname: anysearch\n---\n", encoding="utf-8")
     (bundled_anysearch / ".env").write_text("ANYSEARCH_API_KEY=private\n", encoding="utf-8")
+    (bundled_anysearch / "config.json").write_text('{"ANYSEARCH_API_KEY":"private"}\n', encoding="utf-8")
 
     root = tmp_path / "project"
     result = skill_installer.install_skill_targets(
@@ -2860,6 +2861,7 @@ def test_skill_installer_keeps_anysearch_nested_and_private_config_local(tmp_pat
     assert result["ok"] is True
     assert (installed / "skills" / "anysearch" / "SKILL.md").is_file()
     assert not (installed / "skills" / "anysearch" / ".env").exists()
+    assert not (installed / "skills" / "anysearch" / "config.json").exists()
     assert not (root / ".codex" / "skills" / "anysearch").exists()
 
 

@@ -709,8 +709,8 @@
         anysearch: {
           path: '能力池 / External Skill', status: 'baseline', statusText: '已有基线', title: 'AnySearch Skill 委派', summary: 'AnySearch 保持完整外部 Skill。Smart Search 说明何时适合调用和它能做什么，具体子功能由模型自己选择。',
           principle: '不在 Smart Search 内重复实现 AnySearch，也不硬编码模型必须调用哪个子命令。',
-          implementation: ['仓库内置 jason-liao-skills/main/skill-packages/anysearch 的原样快照。', '内置快照优先；缺失或损坏时尝试全局 AnySearch Skill。', 'Agent 返回最小 JSON：query 以及 title/url/content/published_at。', '结果进入公共合并入口，不直接拼接最终答案。'],
-          inputs: ['SearchTask', 'ANYSEARCH_API_KEY', 'AnySearch Skill'], outputs: ['DiscoveryCandidate[]', 'extracted content'], constraints: ['快照同步脚本只管理仓库副本，不修改全局 Skill。', 'Skill 不存在时记录 unavailable 并继续。', '私有 .env 不进入 Git、npm 或 wheel。'],
+          implementation: ['仓库内置 jason-liao-skills/main/skill-packages/anysearch 的受管快照和 Smart Search-owned adapter。', '内置适配器是唯一入口；缺失或损坏时记录 unavailable 并继续其他能力。', 'Agent 返回最小 JSON：query 以及 title/url/content/published_at。', '结果进入公共合并入口，不直接拼接最终答案。'],
+          inputs: ['SearchTask', 'ANYSEARCH_API_KEY', 'ANYSEARCH_API_KEY_FALLBACK', 'AnySearch Skill'], outputs: ['DiscoveryCandidate[]', 'extracted content'], constraints: ['快照同步脚本保留 adapter/runtime 覆盖，不复制私有配置。', 'Skill 不存在时记录 unavailable 并继续。', '私有 .env 不进入 Git、npm 或 wheel。'],
           phase: ['已有 + D', '已有委派基线，待接合并入口', '快照和路由元数据已存在；结构化回传仍待实现。'], related: ['capabilities', 'candidates', 'normalize']
         },
         'provider-research-agents': {
@@ -839,7 +839,7 @@
         'environment-config': {
           path: '实施收尾 / 仓库配置', status: 'implemented', statusText: '已验收', title: '仓库环境与运行配置', summary: '配置所有权、setup/config/doctor、隔离 Preview、组件健康检查、打包和密钥泄漏验收均已完成；当前激活配置未被覆盖。',
           principle: '配置复杂性由仓库承担，但密钥只保存在其唯一所有者的私密配置域；Preview 验证不能覆盖当前激活环境。',
-          implementation: ['以 src/smart_search/config.py、smart-search setup/config 和 doctor 为 Smart Search 主配置入口。', 'Firecrawl、Jina、Exa、Tavily Research 优先复用现有 Provider Key 与 endpoint；只有官方契约要求时才新增键。', 'Sidecar、Document Embedding 和本地索引只增加必要的非敏感配置；Embedding Key 复用已有 OpenAI-compatible 配置。', 'AnySearch 继续读取内置快照的私有 .env 或进程环境；MinerU 继续由独立 Skill 管理 Key，除非调用边界另行改变。', '同步更新 setup/config、masked doctor、Skill 配置文档、打包清单和测试。', '使用独立 SMART_SEARCH_CONFIG_DIR 建立 Preview 配置，执行 config path/list、doctor、健康检查和最小 live probe。', '检查 Git、npm 包、wheel、Trace 与日志，确保没有真实密钥、私有 endpoint 或未授权正文。'],
+          implementation: ['以 src/smart_search/config.py、smart-search setup/config 和 doctor 为 Smart Search 主配置入口。', 'Firecrawl、Jina、Exa、Tavily Research 优先复用现有 Provider Key 与 endpoint；只有官方契约要求时才新增键。', 'Sidecar、Document Embedding 和本地索引只增加必要的非敏感配置；Embedding Key 复用已有 OpenAI-compatible 配置。', 'AnySearch bundled adapter 只读取 Smart Search 私有双密钥 config.json，不读取快照 .env 或进程环境；MinerU 继续由独立 Skill 管理 Key，除非调用边界另行改变。', '同步更新 setup/config、masked doctor、Skill 配置文档、打包清单和测试。', '使用独立 SMART_SEARCH_CONFIG_DIR 建立 Preview 配置，执行 config path/list、doctor、健康检查和最小 live probe。', '检查 Git、npm 包、wheel、Trace 与日志，确保没有真实密钥、私有 endpoint 或未授权正文。'],
           inputs: ['implemented capabilities', 'existing config contract', 'local private provider credentials'], outputs: ['configuration ownership matrix', 'updated setup/config/doctor', 'isolated Preview config', 'verification record'], constraints: ['不新增根目录 .env 作为第二配置入口。', '不复制同一密钥。', '不修改 Infra 或全局 Agent 配置。', '不覆盖当前 macOS 激活配置。', '正式应用配置必须另获用户批准。'],
           phase: ['A–F 后 / E2E 前', '配置与发布准备', '代码能力稳定后统一配置面，再进入工程 E2E 与 Stage G。'], related: ['capabilities', 'agentic-docs', 'roadmap', 'benchmark']
         },

@@ -19,14 +19,25 @@ import sys
 import tempfile
 from pathlib import Path
 
-
 PREFERRED_REPOSITORY = "https://github.com/whycantfindaname/jason-liao-skills.git"
 PREFERRED_REF = "main"
 PREFERRED_SKILL_PATH = Path("skill-packages/anysearch")
 OFFICIAL_REPOSITORY = "https://github.com/anysearch-ai/anysearch-skill.git"
 OFFICIAL_REF = "v3.1.0"
 
-PRESERVED_NAMES = {".env", "runtime.conf"}
+# These files are machine-local or Smart Search-owned. They are deliberately
+# absent from the upstream file set so a snapshot refresh cannot overwrite or
+# delete them. ``config.json`` is the parent Smart Search config and must never
+# be copied into an embedded AnySearch Skill.
+PRESERVED_NAMES = {".env", "runtime.conf", "config.json"}
+PRESERVED_RELATIVE_NAMES = {"scripts/smart_search_anysearch.py"}
+SMART_SEARCH_OVERLAY_RELATIVE_NAMES = {
+    ".env.example",
+    "README.md",
+    "SKILL.md",
+    "runtime.conf.example",
+    "scripts/smart_search_anysearch.py",
+}
 IGNORED_NAMES = {".DS_Store", "__pycache__"}
 IGNORED_PARTS = {".git"}
 REQUIRED_FILES = {"SKILL.md", "LICENSE", "NOTICE"}
@@ -121,7 +132,11 @@ def _included_files(root: Path) -> dict[str, Path]:
         rel = path.relative_to(root)
         if any(part in IGNORED_PARTS or part in IGNORED_NAMES for part in rel.parts):
             continue
-        if rel.name in PRESERVED_NAMES or rel.suffix == ".pyc":
+        if (
+            rel.name in PRESERVED_NAMES
+            or rel.as_posix() in PRESERVED_RELATIVE_NAMES
+            or rel.suffix == ".pyc"
+        ):
             continue
         files[rel.as_posix()] = path
     return files
@@ -198,6 +213,10 @@ def _resolve_source(temp_root: Path) -> tuple[Path, dict[str, object]]:
 def _different(source: Path, destination: Path) -> list[str]:
     source_files = _included_files(source)
     destination_files = _included_files(destination) if destination.is_dir() else {}
+    for rel in SMART_SEARCH_OVERLAY_RELATIVE_NAMES:
+        if rel in destination_files:
+            source_files.pop(rel, None)
+            destination_files.pop(rel, None)
     changed = set(source_files) ^ set(destination_files)
     for rel in set(source_files) & set(destination_files):
         if source_files[rel].read_bytes() != destination_files[rel].read_bytes():
@@ -209,15 +228,27 @@ def _sync(source: Path, destination: Path) -> list[str]:
     changed = _different(source, destination)
     source_files = _included_files(source)
     destination_files = _included_files(destination) if destination.is_dir() else {}
+    overlays = {
+        rel: (destination / rel).read_bytes()
+        for rel in SMART_SEARCH_OVERLAY_RELATIVE_NAMES
+        if (destination / rel).is_file()
+    }
 
     destination.mkdir(parents=True, exist_ok=True)
     for rel in sorted(set(destination_files) - set(source_files)):
+        if rel in SMART_SEARCH_OVERLAY_RELATIVE_NAMES:
+            continue
         destination_files[rel].unlink()
     for rel, source_path in source_files.items():
         target = destination / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         if not target.is_file() or source_path.read_bytes() != target.read_bytes():
             shutil.copy2(source_path, target)
+    for rel, content in overlays.items():
+        target = destination / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if not target.is_file() or target.read_bytes() != content:
+            target.write_bytes(content)
 
     for directory in sorted(
         (path for path in destination.rglob("*") if path.is_dir()),
