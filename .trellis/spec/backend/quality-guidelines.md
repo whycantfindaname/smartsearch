@@ -1,51 +1,64 @@
 # Quality Guidelines
 
-> Code quality standards for backend development.
+> Testing and review conventions that are specific to this repo. Generic advice lives elsewhere; everything here is enforced or was learned the hard way.
 
 ---
 
-## Overview
+## Running the Suite
 
-<!--
-Document your project's quality standards here.
+```bash
+python -m pytest tests/ -q          # ~20s, no network
+```
 
-Questions to answer:
-- What patterns are forbidden?
-- What linting rules do you enforce?
-- What are your testing requirements?
-- What code review standards apply?
--->
+- `tests/test_release_workflow.py` shells out to **node**; in nvm shells export
+  the bin dir first: `export PATH="$PATH:$(ls -d ~/.nvm/versions/node/*/bin | tail -1)"`.
+  Without it, 5 release-workflow tests fail with `FileNotFoundError: 'node'` —
+  an environment problem, not a code problem.
+- The repo venv is uv-managed (no pip); build wheels with `uv build --wheel`.
 
-(To be filled by the team)
+## Isolation Contract (tests/conftest.py)
 
----
+The autouse fixture `isolate_smart_search_config` points `Config._config_file`
+at a tmp path, deletes every `_CONFIG_KEYS` env var, and sets
+`SMART_SEARCH_MINIMUM_PROFILE=off`. Tests therefore must **not** set config via
+environment for values they want persisted — use `config.set_config_value(...)`.
 
-## Forbidden Patterns
+## Test Fakes Must Mirror Real Signatures
 
-<!-- Patterns that should never be used and why -->
+Fakes that replace `httpx.AsyncClient` (e.g. `FakeZhipuMCPClient`) are injected
+via `monkeypatch.setattr` and receive the **real constructor kwargs**. When you
+add a kwarg to any `httpx.AsyncClient(...)` call site, grep the fakes and add
+the parameter there too:
 
-(To be filled by the team)
+```bash
+grep -rn "def __init__(self, timeout" tests/
+```
 
----
+2026-08-28 lesson: adding `verify=` at call sites without updating 15 fakes
+produced 50 failures whose only symptom was *empty call-recording lists* — the
+`TypeError` was swallowed by the provider error handling. See
+[error-handling.md](./error-handling.md).
 
-## Required Patterns
+## Gates Before Reporting Done
 
-<!-- Patterns that must always be used -->
+| Gate | Command |
+| --- | --- |
+| Full suite | `python -m pytest tests/ -q` |
+| Skill mirror parity | `npm run check:skill-parity` |
+| Tarball content | `npm run pack:dry` (and `npm run smoke:tarball` for release) |
+| Regression contracts | included in the suite (`tests/test_regression.py`) |
 
-(To be filled by the team)
+See [packaging-contract.md](./packaging-contract.md) for what each packaging
+gate actually protects.
 
----
+## Conventions
 
-## Testing Requirements
-
-<!-- What level of testing is expected -->
-
-(To be filled by the team)
-
----
-
-## Code Review Checklist
-
-<!-- What reviewers should check -->
-
-(To be filled by the team)
+- `subprocess`/`Popen` with `text=True` must pin `encoding="utf-8"` — Windows
+  ANSI codepages otherwise corrupt non-ASCII payloads (this project's payloads
+  are frequently Chinese). See `document_sidecar.py`, `cli.py`.
+- Blocking IO (subprocess stdio, file IO beyond trivial) must not be awaited
+  directly inside `async def` paths — wrap with `asyncio.to_thread`.
+- POSIX-only assertions (e.g. file mode `0o600`) need
+  `@pytest.mark.skipif(os.name == "nt", ...)`; CI runs Windows.
+- Lint: `ruff` with the repo default ruleset; changed files must not add new
+  findings versus `HEAD` (the existing codebase has a baseline).
