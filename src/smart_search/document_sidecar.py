@@ -6,6 +6,7 @@ document selection and EvidenceItem authoring remain Root/Evidence Miner work.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import subprocess
@@ -48,6 +49,7 @@ async def resolve_embedding_dimension(
     embedding: Mapping[str, Any],
     *,
     timeout_seconds: float,
+    ssl_verify: bool = True,
 ) -> int:
     """Resolve auto dimensions once before index identity is fixed.
 
@@ -70,7 +72,7 @@ async def resolve_embedding_dimension(
         return 1
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     try:
-        async with httpx.AsyncClient(timeout=timeout_seconds) as client:
+        async with httpx.AsyncClient(timeout=timeout_seconds, verify=ssl_verify) as client:
             response = await client.post(
                 _embedding_endpoint(api_url),
                 headers=headers,
@@ -153,6 +155,7 @@ class DocumentSidecarSession:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                encoding="utf-8",
                 bufsize=1,
                 env=environment,
             )
@@ -308,7 +311,9 @@ async def run_document_operations(
     else:
         try:
             dimension = await resolve_embedding_dimension(
-                embedding, timeout_seconds=config.sidecar_timeout
+                embedding,
+                timeout_seconds=config.sidecar_timeout,
+                ssl_verify=config.ssl_verify_enabled,
             )
         except SidecarBridgeError as exc:
             # Dimension discovery is an optional vector preflight. A failed
@@ -333,7 +338,8 @@ async def run_document_operations(
         embedding_dimension=dimension,
         embedding_enabled=embedding_enabled,
     ) as session:
-        health = session.request({"op": "health"})
+        # session.request 是阻塞 stdio IO；放线程池执行，避免冻结事件循环。
+        health = await asyncio.to_thread(session.request, {"op": "health"})
         for artifact in artifacts:
             ingest_request: dict[str, Any] = {
                 "op": "ingest",
@@ -343,10 +349,10 @@ async def run_document_operations(
             mineru = (mineru_results or {}).get(artifact.artifact_id)
             if mineru is not None:
                 ingest_request["mineru_delegate_result"] = dict(mineru)
-            ingest_result = session.request(ingest_request)
+            ingest_result = await asyncio.to_thread(session.request, ingest_request)
             attempts.extend(ingest_result.get("component_attempts") or [])
         for operation in operations:
-            result = session.request(operation)
+            result = await asyncio.to_thread(session.request, operation)
             attempts.extend(result.get("component_attempts") or [])
             results.append({"request": dict(operation), "result": result})
     return {

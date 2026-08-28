@@ -2986,6 +2986,7 @@ def _sidecar_health(python: str, *, timeout_seconds: float = 30.0) -> dict[str, 
                 input='{"id":"doctor-1","op":"health"}\n',
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 timeout=max(1.0, min(float(timeout_seconds), 30.0)),
                 check=False,
             )
@@ -3047,6 +3048,7 @@ def _run_research_environment(args: argparse.Namespace) -> int:
             [args.python, "-c", "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=15,
             check=False,
         )
@@ -3074,7 +3076,7 @@ def _run_research_environment(args: argparse.Namespace) -> int:
     )
     for command in commands:
         try:
-            completed = subprocess.run(command, capture_output=True, text=True, timeout=args.install_timeout, check=False)
+            completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=args.install_timeout, check=False)
         except (OSError, subprocess.TimeoutExpired) as exc:
             data = {
                 "ok": False,
