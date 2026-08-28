@@ -283,6 +283,32 @@
           "checked_at": "2026-08-28"
         }
       ]
+    },
+    {
+      "concept_id": "root-agent",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "Agentic Research 流程中唯一的语义规划者与综合者，由调用方 Agent 承担：解释完整对话与用户约束，创建并修订研究计划（ResearchFrame、ClaimSpec），决定任务分解、重规划、停止时机以及 Search Scout、Source Curator、Evidence Miner 的数量与分片方式，并综合跨来源结论。",
+      "scope_note": "只有 Root Agent 能创建 SearchTask、EvidenceMiningTask 和 DelegateRequest；子角色 DelegateResult 中的建议只是 advisory 数据，只有 Root 能把它们变成新任务。Root Agent 不是确定性内核——契约校验、能力执行、结果归一化、Artifact 登记、Trace 追加和引用验证由 Smart Search 本体完成；它也不等同于 Smart Search CLI 本身。",
+      "labels": {
+        "en": {
+          "preferred": "Root Agent",
+          "alternatives": [
+            "Root"
+          ],
+          "deprecated": []
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "Root Agent",
+          "search_query": "Root Agent Smart Search semantic planner synthesizer",
+          "source_url": "project:skills/smart-search-cli/references/agentic-research-architecture.md#semantic-ownership",
+          "observed_usage": "The architecture reference names Root Agent the sole semantic planner and synthesizer, reserves task creation to Root, and assigns deterministic validation and execution to the Smart Search kernel.",
+          "checked_at": "2026-08-29"
+        }
+      ]
     }
   ]
 }
