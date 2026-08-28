@@ -5,6 +5,7 @@ from typing import Any
 
 import httpx
 
+from ..config import config
 from ..provider_errors import classify_provider_exception, sanitize_provider_error_message
 
 _MCP_PROTOCOL_VERSION = "2024-11-05"
@@ -190,7 +191,7 @@ class ZhipuMCPProvider:
 
         try:
             timeout = httpx.Timeout(connect=6.0, read=self.timeout, write=10.0, pool=None)
-            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, verify=config.ssl_verify_enabled) as client:
                 session_id = await self._ensure_session(client)
                 payload = {
                     "jsonrpc": "2.0",

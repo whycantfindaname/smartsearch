@@ -2045,7 +2045,7 @@ def _main_search_providers(provider_configs: list[dict[str, Any]], fallback: str
 
 async def fetch_available_models(api_url: str, api_key: str) -> list[str]:
     models_url = f"{api_url.rstrip('/')}/models"
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=10.0, verify=config.ssl_verify_enabled) as client:
         response = await client.get(
             models_url,
             headers={
@@ -2317,7 +2317,7 @@ async def call_tavily_extract(url: str) -> str | None:
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     body = {"urls": [url], "format": "markdown"}
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=60.0, verify=config.ssl_verify_enabled) as client:
             response = await client.post(endpoint, headers=headers, json=body)
             response.raise_for_status()
             data = _provider_response_object(response.json(), "Tavily")
@@ -2354,7 +2354,7 @@ async def call_tavily_search(query: str, max_results: int = 6) -> list[dict] | N
         "include_answer": False,
     }
     try:
-        async with httpx.AsyncClient(timeout=90.0) as client:
+        async with httpx.AsyncClient(timeout=90.0, verify=config.ssl_verify_enabled) as client:
             response = await client.post(endpoint, headers=headers, json=body)
             response.raise_for_status()
             data = _provider_response_object(response.json(), "Tavily")
@@ -2389,7 +2389,7 @@ async def call_firecrawl_search(query: str, limit: int = 14) -> list[dict] | Non
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     body = {"query": query, "limit": limit}
     try:
-        async with httpx.AsyncClient(timeout=90.0) as client:
+        async with httpx.AsyncClient(timeout=90.0, verify=config.ssl_verify_enabled) as client:
             response = await client.post(endpoint, headers=headers, json=body)
             response.raise_for_status()
             data = _provider_response_object(response.json(), "Firecrawl")
@@ -2432,7 +2432,7 @@ async def call_firecrawl_scrape(url: str, ctx=None) -> str | None:
             "waitFor": (attempt + 1) * 1500,
         }
         try:
-            async with httpx.AsyncClient(timeout=90.0) as client:
+            async with httpx.AsyncClient(timeout=90.0, verify=config.ssl_verify_enabled) as client:
                 response = await client.post(endpoint, headers=headers, json=body)
                 response.raise_for_status()
                 data = _provider_response_object(response.json(), "Firecrawl")
@@ -2492,7 +2492,7 @@ async def call_tavily_map(
     if instructions:
         body["instructions"] = instructions
     try:
-        async with httpx.AsyncClient(timeout=float(timeout + 10)) as client:
+        async with httpx.AsyncClient(timeout=float(timeout + 10), verify=config.ssl_verify_enabled) as client:
             response = await client.post(endpoint, headers=headers, json=body)
             response.raise_for_status()
             data = _provider_response_object(response.json(), "Tavily")
@@ -3755,7 +3755,7 @@ async def context7_docs(library_id: str, query: str) -> dict[str, Any]:
 async def _test_primary_chat_completion(api_url: str, api_key: str, model: str) -> dict[str, Any]:
     chat_url = f"{api_url.rstrip('/')}/chat/completions"
     start = time.time()
-    async with httpx.AsyncClient(timeout=20.0) as client:
+    async with httpx.AsyncClient(timeout=20.0, verify=config.ssl_verify_enabled) as client:
         response = await client.post(
             chat_url,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json", "Accept": "application/json, text/event-stream"},
@@ -4096,7 +4096,7 @@ async def _test_primary_connection(api_url: str, api_key: str, model: str) -> di
     models_url = f"{api_url.rstrip('/')}/models"
     start = time.time()
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0, verify=config.ssl_verify_enabled) as client:
             response = await client.get(
                 models_url,
                 headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
@@ -4159,7 +4159,7 @@ async def _test_primary_connection(api_url: str, api_key: str, model: str) -> di
 async def _test_primary_responses(api_url: str, api_key: str, model: str) -> dict[str, Any]:
     responses_url = f"{api_url.rstrip('/')}/responses"
     start = time.time()
-    async with httpx.AsyncClient(timeout=20.0) as client:
+    async with httpx.AsyncClient(timeout=20.0, verify=config.ssl_verify_enabled) as client:
         response = await client.post(
             responses_url,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
@@ -4207,7 +4207,7 @@ async def _test_exa_connection() -> dict[str, Any]:
     if not exa_key:
         return {"status": "not_configured", "message": "EXA_API_KEY 未设置，Exa 搜索功能不可用"}
     start = time.time()
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=10.0, verify=config.ssl_verify_enabled) as client:
         resp = await client.post(
             f"{config.exa_base_url.rstrip('/')}/search",
             headers={"x-api-key": exa_key, "content-type": "application/json"},
@@ -4273,7 +4273,7 @@ async def _test_firecrawl_connection() -> dict[str, Any]:
         }
     start = time.time()
     endpoint = f"{config.firecrawl_api_url.rstrip('/')}/team/credit-usage"
-    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True, verify=config.ssl_verify_enabled) as client:
         response = await client.get(
             endpoint,
             headers={"Authorization": f"Bearer {api_key}"},

@@ -11,7 +11,7 @@ class FakeJinaClient:
     response: httpx.Response | None = None
     exception: Exception | None = None
 
-    def __init__(self, timeout, follow_redirects=True):
+    def __init__(self, timeout, follow_redirects=True, verify=None):
         self.timeout = timeout
         self.follow_redirects = follow_redirects
 

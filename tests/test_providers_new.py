@@ -11,7 +11,7 @@ from smart_search.providers.zhipu import ZhipuWebSearchProvider
 @pytest.mark.asyncio
 async def test_zhipu_provider_normalizes_search_results(monkeypatch):
     class FakeAsyncClient:
-        def __init__(self, timeout, follow_redirects=True):
+        def __init__(self, timeout, follow_redirects=True, verify=None):
             self.timeout = timeout
             self.follow_redirects = follow_redirects
 
@@ -54,7 +54,7 @@ async def test_zhipu_provider_uses_configured_engine_and_call_override(monkeypat
     payloads = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout, follow_redirects=True):
+        def __init__(self, timeout, follow_redirects=True, verify=None):
             self.timeout = timeout
             self.follow_redirects = follow_redirects
 
@@ -89,7 +89,7 @@ async def test_zhipu_provider_reports_rate_limit_without_retry(monkeypatch):
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout, follow_redirects=True):
+        def __init__(self, timeout, follow_redirects=True, verify=None):
             self.timeout = timeout
             self.follow_redirects = follow_redirects
 
@@ -120,7 +120,7 @@ async def test_zhipu_provider_reports_rate_limit_without_retry(monkeypatch):
 @pytest.mark.asyncio
 async def test_context7_provider_normalizes_library_results(monkeypatch):
     class FakeAsyncClient:
-        def __init__(self, timeout, follow_redirects=True):
+        def __init__(self, timeout, follow_redirects=True, verify=None):
             self.timeout = timeout
             self.follow_redirects = follow_redirects
 
@@ -151,7 +151,7 @@ async def test_context7_provider_normalizes_library_results(monkeypatch):
 @pytest.mark.asyncio
 async def test_context7_provider_uses_shared_http_error_taxonomy(monkeypatch):
     class FakeAsyncClient:
-        def __init__(self, timeout, follow_redirects=True):
+        def __init__(self, timeout, follow_redirects=True, verify=None):
             self.timeout = timeout
             self.follow_redirects = follow_redirects
 
@@ -181,7 +181,7 @@ async def test_context7_provider_uses_shared_http_error_taxonomy(monkeypatch):
 @pytest.mark.asyncio
 async def test_exa_provider_reports_bad_request_as_parameter_error(monkeypatch):
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):

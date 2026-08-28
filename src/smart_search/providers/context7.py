@@ -125,7 +125,7 @@ class Context7Provider(BaseSearchProvider):
 
     async def _get_with_retry(self, endpoint: str) -> Any:
         timeout = httpx.Timeout(connect=6.0, read=self.timeout, write=10.0, pool=None)
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, verify=config.ssl_verify_enabled) as client:
             async for attempt in AsyncRetrying(
                 stop=stop_after_attempt(config.retry_max_attempts + 1),
                 wait=wait_random_exponential(multiplier=config.retry_multiplier, max=config.retry_max_wait),

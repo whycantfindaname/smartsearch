@@ -2089,7 +2089,7 @@ async def test_tavily_custom_base_is_used_for_search_extract_and_map(monkeypatch
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
@@ -2134,7 +2134,7 @@ async def test_firecrawl_custom_base_is_used_for_search_and_scrape(monkeypatch):
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
@@ -2500,7 +2500,7 @@ async def test_primary_connection_checks_chat_even_when_models_endpoint_fails(mo
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
@@ -2541,7 +2541,7 @@ async def test_primary_connection_keeps_chat_ok_when_models_probe_errors(monkeyp
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
@@ -2580,7 +2580,7 @@ async def test_doctor_uses_responses_endpoint_for_explicit_xai_config(monkeypatc
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
@@ -2616,7 +2616,7 @@ async def test_doctor_uses_chat_completions_for_only_openai_compatible_config(mo
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
