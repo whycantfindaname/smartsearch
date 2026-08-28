@@ -258,10 +258,11 @@ smart-search research-environment doctor --format json
 smart-search research-view /path/to/research-workspace --port 8080
 ```
 
-`research-run` also exposes `create`, `execute`, `import`, task-addition,
-document-mining, claim, decision, citation-verification, and `materialize`
-operations. These commands exchange structured JSON dossiers with the calling
-Agent; they are not a replacement for the user-facing `research` command.
+`research-run` also exposes `create`, `execute`, `import`, `add-search-tasks`,
+`add-evidence-tasks`, `document`, `claims`, `decision`, `verify`, and
+`materialize` operations. These commands exchange structured JSON dossiers with
+the calling Agent; they are not a replacement for the user-facing `research`
+command.
 
 The dossier, append-only Trace, Artifact Registry, EvidenceItem, and Claim
 records are authoritative. Markdown files and the visualizer are readable
@@ -474,6 +475,7 @@ Provider timeouts:
 | `setup` | `init` | Interactive or scripted setup |
 | `config` | `cfg` | Local config read/write |
 | `model` | `mdl` | Show explicit provider model settings; use `config set XAI_MODEL` or `OPENAI_COMPATIBLE_MODEL` to change them |
+| `skills` | `skill` | Inspect or update installed smart-search-cli skills (`status` / `update` with `--targets codex,claude,cursor,hermes`) |
 | `smoke` | `sm` | Provider routing smoke tests |
 | `regression` | `reg` | Offline regression checks |
 

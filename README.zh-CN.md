@@ -266,9 +266,10 @@ smart-search research-environment doctor --format json
 smart-search research-view /path/to/research-workspace --port 8080
 ```
 
-`research-run` 还提供 `create`、`execute`、`import`、添加任务、文档挖掘、
-Claim 处理、Root 决策、引用验证和 `materialize` 等操作。这些命令通过结构化
-JSON dossier 与调用它的 Agent 交换状态，不替代面向用户的 `research` 命令。
+`research-run` 还提供 `create`、`execute`、`import`、`add-search-tasks`、
+`add-evidence-tasks`、`document`、`claims`、`decision`、`verify` 和
+`materialize` 等操作。这些命令通过结构化 JSON dossier 与调用它的 Agent 交换
+状态，不替代面向用户的 `research` 命令。
 
 Dossier、append-only Trace、Artifact Registry、EvidenceItem 和 Claim 记录是
 权威数据；Markdown 与可视化页面只是便于阅读的投影，不保存隐藏推理。只有能力
@@ -517,6 +518,7 @@ xAI 的 hard deadline 覆盖连接尝试、重试等待、响应等待和状态�
 | `setup` | `init` | 配置向导 |
 | `config` | `cfg` | 本机配置读写 |
 | `model` | `mdl` | 查看显式 provider 模型；修改请用 `config set XAI_MODEL` 或 `OPENAI_COMPATIBLE_MODEL` |
+| `skills` | `skill` | 检查或更新已安装的 smart-search-cli skills（`status` / `update`，配合 `--targets codex,claude,cursor,hermes`） |
 | `smoke` | `sm` | provider 路由冒烟测试 |
 | `regression` | `reg` | 离线回归测试 |
 
