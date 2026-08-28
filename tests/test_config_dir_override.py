@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -256,3 +257,39 @@ def test_invalid_document_sidecar_config_is_reported(monkeypatch, tmp_path, key,
 
     assert info["config_parameter_errors"]
     assert info["config_status"].startswith("config_error:")
+
+
+def test_log_level_config_set_rejects_invalid_values(monkeypatch, tmp_path):
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path / "config"))
+    config = _fresh_config_file(monkeypatch)
+
+    with pytest.raises(ValueError, match="SMART_SEARCH_LOG_LEVEL"):
+        config.set_config_value("SMART_SEARCH_LOG_LEVEL", "verbose")
+
+    config.set_config_value("SMART_SEARCH_LOG_LEVEL", "warning")
+    assert config.log_level == "WARNING"
+    with pytest.raises(ValueError, match="SMART_SEARCH_LOG_LEVEL"):
+        config.set_config_value("SMART_SEARCH_LOG_LEVEL", "loud")
+
+
+def test_log_level_property_falls_back_when_config_file_is_hand_edited(monkeypatch, tmp_path):
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path / "config"))
+    config = _fresh_config_file(monkeypatch)
+    config.set_config_value("SMART_SEARCH_LOG_LEVEL", "DEBUG")
+    config_file = config.config_file
+    config_file.write_text('{"SMART_SEARCH_LOG_LEVEL": "VERBOSE"}', encoding="utf-8")
+
+    assert config.log_level == "INFO"
+    config_file.write_text('{"SMART_SEARCH_LOG_LEVEL": "ERROR"}', encoding="utf-8")
+    assert config.log_level == "ERROR"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX file permissions are not emulated on Windows")
+def test_saved_config_file_is_owner_only(monkeypatch, tmp_path):
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path / "config"))
+    config = _fresh_config_file(monkeypatch)
+
+    config.set_config_value("XAI_MODEL", "grok-4-fast")
+
+    mode = config.config_file.stat().st_mode & 0o777
+    assert mode == 0o600

@@ -33,6 +33,7 @@ class Config:
     _ALLOWED_INTENT_ROUTER_MODES = {"hybrid", "rules", "off"}
     _ALLOWED_DOCUMENT_EMBEDDING_SOURCES = {"intent", "openai-compatible", "off"}
     _ALLOWED_DOCUMENT_SPLITTERS = {"markdown", "character"}
+    _ALLOWED_LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "WARN", "ERROR", "CRITICAL", "FATAL", "NOTSET"}
     _CONFIG_KEYS = {
         "XAI_API_URL",
         "XAI_API_KEY",
@@ -203,7 +204,9 @@ class Config:
 
     def _save_config_file(self, config_data: dict) -> None:
         try:
-            with open(self.config_file, 'w', encoding='utf-8') as f:
+            # config.json 保存明文 API key；POSIX 上以 0600 创建，避免多用户机器可读。
+            fd = os.open(self.config_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
                 json.dump(config_data, f, ensure_ascii=False, indent=2)
         except (IOError, PermissionError, OSError) as e:
             hint = " (sandbox/CI 下可设 SMART_SEARCH_CONFIG_DIR 指向可写目录)" if isinstance(e, PermissionError) else ""
@@ -298,6 +301,10 @@ class Config:
                 raise ValueError(f"Invalid {key}: {raw}. Supported values: {allowed}")
         elif key == "SMART_SEARCH_DOCUMENT_CHUNK_SIZE":
             cls._validate_integer_input(key, raw, minimum=256, maximum=20000)
+        elif key == "SMART_SEARCH_LOG_LEVEL":
+            if raw.upper() not in cls._ALLOWED_LOG_LEVELS:
+                allowed = ", ".join(sorted(cls._ALLOWED_LOG_LEVELS))
+                raise ValueError(f"Invalid {key}: {raw}. Supported values: {allowed}")
         elif key == "SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS":
             try:
                 number = float(raw)
@@ -720,7 +727,9 @@ class Config:
 
     @property
     def log_level(self) -> str:
-        return (self._get_config_value("SMART_SEARCH_LOG_LEVEL", "INFO") or "INFO").upper()
+        raw = (self._get_config_value("SMART_SEARCH_LOG_LEVEL", "INFO") or "INFO").upper()
+        # 手改 config.json 可能写入非法值；这里兜底，避免 logger 导入期崩溃。
+        return raw if raw in self._ALLOWED_LOG_LEVELS else "INFO"
 
     @property
     def log_dir(self) -> Path:
