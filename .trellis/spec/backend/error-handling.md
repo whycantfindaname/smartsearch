@@ -1,6 +1,6 @@
 # Error Handling
 
-> How provider failures cross the service boundary. Authority: `src/smart_search/provider_errors.py`.
+> How provider failures cross the service call boundaries. Authority: `src/smart_search/provider_errors.py` ("Stable provider failure classification shared by service call boundaries").
 
 ---
 
@@ -14,13 +14,13 @@ rendered, returned, or written to disk.
 
 ## The Public Taxonomy (frozen)
 
-`APPROVED_PROVIDER_ERROR_TYPES` (`provider_errors.py:14`) — exactly these nine:
+`APPROVED_PROVIDER_ERROR_TYPES` (`provider_errors.py`) — exactly these nine:
 
 `parameter_error`, `auth_error`, `timeout`, `rate_limited`, `request_cancelled`,
 `network_error`, `parse_error`, `provider_error`, `runtime_error`
 
-`ProviderCallError` downgrades any unknown `error_type` to `runtime_error`
-(`provider_errors.py:62-63`). Never invent new types in call sites.
+`ProviderCallError` downgrades any unknown `error_type` to `runtime_error`.
+Never invent new types in call sites.
 
 ## Signatures
 
@@ -31,7 +31,7 @@ sanitize_provider_error_message(value, *, additional_secrets=(), limit=300) -> s
 ProviderCallError(error_type, error, *, additional_secrets=())
 ```
 
-## HTTP status → error_type mapping (provider_errors.py:91-107)
+## HTTP status → error_type mapping
 
 | Status | error_type |
 | --- | --- |
@@ -74,15 +74,15 @@ error_type, error = classify_provider_exception(exc, additional_secrets=(api_key
 output["error_type"], output["error"] = error_type, error
 ```
 
-## Validation & Error Matrix (call-boundary level)
+## Validation Matrix (service call boundary)
 
 - unclassified `error_type` → silently becomes `runtime_error`
 - missing `additional_secrets` for a keyed provider → review blocker (secret may reach output)
-- empty/None exception message → falls back to class name, never empty string
+- empty/None exception message → falls back to the class name, never an empty string
 
-## Tests Required
+## Tests
 
 `tests/test_provider_errors.py` asserts the taxonomy mapping and redaction. When
 touching a provider, keep its error payload shape
-`{"provider", "error_type", "error", "elapsed_ms"}` — `tests/test_regression.py`
-pins the public shapes.
+`{"provider", "error_type", "error", "elapsed_ms"}` consistent with the existing
+provider modules.

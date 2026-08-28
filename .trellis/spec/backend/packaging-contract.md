@@ -1,6 +1,6 @@
 # Packaging & Distribution Contract
 
-> The project ships through three surfaces that must stay in sync. Each has an executable guard — this file says what the guards protect and what to update when.
+> This contract applies when adding or moving files under `src/smart_search/assets/`, changing `package.json` `files` or `[tool.setuptools.package-data]`, bumping versions, or refreshing the bundled AnySearch Skill snapshot. The project ships through three surfaces that must stay in sync; each has an executable guard.
 
 ---
 
@@ -10,34 +10,38 @@
 | --- | --- | --- |
 | npm tarball | `package.json` → `files` | npm users (`postinstall.js` bootstraps a venv and pip-installs the source tree) |
 | wheel | `pyproject.toml` → `[tool.setuptools.package-data]` (+ discovered package modules) | `pip install .` and the npm postinstall venv |
-| installed skill tree | `skill_installer.py` (`_load_skill_files`, prefers `importlib.resources`) | `smart-search skills update --targets ...` → `~/.codex/skills`, `~/.claude/skills`, ... |
+| installed skill files | `skill_installer.py` (`_load_skill_files`, prefers `importlib.resources`), managed via `smart-search skills update --targets ...` | the user's AI tool skill directories (`~/.codex/skills`, `~/.claude/skills`, ...) |
 
 Key consequence: **the wheel path feeds npm users too.** A file missing from
-package-data is missing from the installed skill tree even though `git` and the
-npm tarball both have it.
+package-data is missing from the installed skill files even though `git` and
+the npm tarball both have it.
 
 ## Contract 1: Every bundled asset must be wheel-reachable
 
 Every file under `src/smart_search/assets/` must either (a) match a
-package-data glob, (b) be a package module (parent chain of `__init__.py`
-files), or (c) be a machine-local name that must never ship: `.env`,
-`config.json`.
+package-data glob, (b) be a package module (a parent chain of `__init__.py`
+files), or (c) be a machine-local name that must never ship (see Contract 2's
+exclusion set).
 
 Guard: `tests/test_package_data.py` fails with the exact uncovered paths.
 
-2026-08-28 incident: `bundled-skills/anysearch/CONTRACT.md` existed on disk and
-in the tarball but had no package-data pattern → every pip-installed copy of
-the skill was broken. When adding any bundled file, add the matching
-package-data line in the same change.
+Known failure that motivates this contract: `bundled-skills/anysearch/CONTRACT.md`
+existed on disk and in the tarball but had no package-data pattern → every
+pip-installed copy of the bundled skill was broken. When adding any bundled
+file, add the matching package-data line in the same change.
 
 ## Contract 2: Public skill tree must byte-match the packaged mirror
 
 `skills/smart-search-cli/` ↔ `src/smart_search/assets/skills/smart-search-cli/`,
-byte-identical, excluding `__pycache__`, `*.pyc`, `config.json`, `.env`.
+byte-identical, excluding `__pycache__`, `*.pyc`, and the machine-local names
+`config.json`, `.env` (stripped from the tarball by `package.json` exclusions;
+`runtime.conf` is additionally preserved by the sync script and never copied
+into the bundled skill).
 
-Guard: `npm run check:skill-parity`. Refresh the snapshot only via
-`scripts/sync_anysearch_skill.py` (it preserves machine-local names and the
-Smart Search adapter overlay — see its `PRESERVED_NAMES` / overlay lists).
+Guard: `npm run check:skill-parity`. Refresh the bundled AnySearch Skill
+snapshot only via `scripts/sync_anysearch_skill.py` (it preserves
+machine-local names and the Smart Search adapter overlay — see its
+`PRESERVED_NAMES` and overlay lists).
 
 ## Contract 3: Tarball content is pinned
 
@@ -60,7 +64,7 @@ without the smoke check (or vice versa) is a silent drift.
 
 ```text
 Wrong: add assets/skills/.../bundled-skills/anysearch/NEW.md
-       → git add, commit, ship. Wheel drops it silently.
+       → git add, commit, ship. The wheel drops it silently.
 
 Correct: add the file, add "assets/.../NEW.md" to package-data,
          run tests/test_package_data.py + npm run check:skill-parity.

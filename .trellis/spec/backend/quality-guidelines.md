@@ -1,6 +1,6 @@
 # Quality Guidelines
 
-> Testing and review conventions that are specific to this repo. Generic advice lives elsewhere; everything here is enforced or was learned the hard way.
+> Testing and review conventions specific to this repo. Everything here is enforced by a gate or was learned from a real failure.
 
 ---
 
@@ -14,29 +14,33 @@ python -m pytest tests/ -q          # ~20s, no network
   the bin dir first: `export PATH="$PATH:$(ls -d ~/.nvm/versions/node/*/bin | tail -1)"`.
   Without it, 5 release-workflow tests fail with `FileNotFoundError: 'node'` —
   an environment problem, not a code problem.
-- The repo venv is uv-managed (no pip); build wheels with `uv build --wheel`.
+- Environment fact: the repo venv is uv-managed and has no pip; build wheels
+  with `uv build --wheel`.
 
 ## Isolation Contract (tests/conftest.py)
 
 The autouse fixture `isolate_smart_search_config` points `Config._config_file`
 at a tmp path, deletes every `_CONFIG_KEYS` env var, and sets
-`SMART_SEARCH_MINIMUM_PROFILE=off`. Tests therefore must **not** set config via
-environment for values they want persisted — use `config.set_config_value(...)`.
+`SMART_SEARCH_MINIMUM_PROFILE=off`. Consequences:
+
+- environment config never leaks between tests — each test states explicitly
+  what it needs (`monkeypatch.setenv(...)` or `config.set_config_value(...)`);
+- a value "persisted" by one test is invisible to the next unless re-set.
 
 ## Test Fakes Must Mirror Real Signatures
 
 Fakes that replace `httpx.AsyncClient` (e.g. `FakeZhipuMCPClient`) are injected
 via `monkeypatch.setattr` and receive the **real constructor kwargs**. When you
-add a kwarg to any `httpx.AsyncClient(...)` call site, grep the fakes and add
-the parameter there too:
+add a kwarg to any `httpx.AsyncClient(...)` call site, update the fakes in the
+same change:
 
 ```bash
 grep -rn "def __init__(self, timeout" tests/
 ```
 
-2026-08-28 lesson: adding `verify=` at call sites without updating 15 fakes
-produced 50 failures whose only symptom was *empty call-recording lists* — the
-`TypeError` was swallowed by the provider error handling. See
+Known failure mode: adding a kwarg at call sites without updating the fakes
+produced 50 failures whose only visible symptom was *empty call-recording
+lists* — the `TypeError` was swallowed by provider error handling. See
 [error-handling.md](./error-handling.md).
 
 ## Gates Before Reporting Done
@@ -56,7 +60,7 @@ gate actually protects.
 - `subprocess`/`Popen` with `text=True` must pin `encoding="utf-8"` — Windows
   ANSI codepages otherwise corrupt non-ASCII payloads (this project's payloads
   are frequently Chinese). See `document_sidecar.py`, `cli.py`.
-- Blocking IO (subprocess stdio, file IO beyond trivial) must not be awaited
+- Blocking IO (subprocess stdio, non-trivial file IO) must not be awaited
   directly inside `async def` paths — wrap with `asyncio.to_thread`.
 - POSIX-only assertions (e.g. file mode `0o600`) need
   `@pytest.mark.skipif(os.name == "nt", ...)`; CI runs Windows.
