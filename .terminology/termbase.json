@@ -250,6 +250,39 @@
           "checked_at": "2026-08-25"
         }
       ]
+    },
+    {
+      "concept_id": "bundled-anysearch-snapshot",
+      "domain": "smart-search-agentic-research",
+      "status": "accepted",
+      "definition": "随 Smart Search 包一起分发的 AnySearch Skill 快照，位于 skills/smart-search-cli/bundled-skills/anysearch/ 并字节一致地镜像到 src/smart_search/assets/skills/smart-search-cli/，由 Smart Search 检索工作流按其内部契约（CONTRACT.md）调用，不单独暴露给用户。",
+      "scope_note": "bundled AnySearch snapshot 不是 provider、不是可单独发现的 Skill，也不是 public smart-search-cli Skill 本身；只能通过 scripts/sync_anysearch_skill.py 刷新，machine-local 文件（.env、runtime.conf、config.json）永不进入快照。分发面覆盖 npm tarball、wheel 和 installed skill files，分别由 npm run smoke:tarball、tests/test_package_data.py 和 npm run check:skill-parity 守护。",
+      "labels": {
+        "en": {
+          "preferred": "bundled AnySearch Skill snapshot",
+          "alternatives": [
+            "bundled skill",
+            "AnySearch snapshot"
+          ],
+          "deprecated": [
+            {
+              "term": "bundled SKILL.md entrypoint",
+              "replacement": "CONTRACT.md",
+              "reason": "The nested SKILL.md was removed in c605f18; agents must read bundled-skills/anysearch/CONTRACT.md as the internal contract entry."
+            }
+          ]
+        }
+      },
+      "evidence": [
+        {
+          "language": "en",
+          "term": "bundled AnySearch Skill snapshot",
+          "search_query": "bundled AnySearch skill snapshot Smart Search",
+          "source_url": "project:README.md#current-architecture",
+          "observed_usage": "The README defines AnySearch as an internal capability whose bundled snapshot is refreshed from jason-liao-skills and read through bundled-skills/anysearch/CONTRACT.md.",
+          "checked_at": "2026-08-28"
+        }
+      ]
     }
   ]
 }
