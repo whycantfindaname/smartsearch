@@ -154,3 +154,24 @@ Implemented and verified deterministic citation markers, numbered References, au
 ### Status
 
 [OK] **Completed**
+
+
+## Session 7: Repo review fixes, spec reshape, termbase
+
+**Date**: 2026-08-29
+**Task**: Repo review fixes, spec reshape, termbase
+**Branch**: `preview/multi-source-agentic-research`
+
+### Summary
+
+Full repo review (626 tests green) found 2 P1 + 7 P2 issues; fixed all in 7 commits (wheel package-data CONTRACT.md guard, log-level validation + 0600 config, SSL_VERIFY across all httpx clients, sidecar UTF-8 + async offload, Tavily dedup, parity exclusions, docs sync). Reshaped .trellis/spec: deleted frontend layer and stale templates, wrote error-handling/logging/quality/packaging specs from verified code facts. Added bundled-anysearch-snapshot and root-agent concepts to project termbase. All local, not pushed.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0e26c25` | (see git log) |
+
+### Status
+
+[OK] **Completed**
