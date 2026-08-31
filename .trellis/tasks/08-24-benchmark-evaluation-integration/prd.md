@@ -110,5 +110,10 @@ Smart Search Provider，评测 quick、standard、deep 三种产品模式，并�
    的矩阵中运行，用于判断 Harness 稳定性；完整 Benchmark 是否扩展到全部
    Harness 由 Pilot 结果决定。
 
+2026-08-31 用户已确认：首轮 Pilot 采用 BrowseComp 小样本（约 20 题）+
+LiveResearchBench 子集（约 5 题），Judge 使用本地 Qwen，结果标记
+benchmark-derived internal。Case IDs、Provider 快照与执行上限尚未冻结；
+实施启动（task.py start）仍待用户另行批准。
+
 在用户确认 Pilot Case、Provider 可用范围和 Judge 选择前，任务保持 planning，
 不得启动 task.py start 或正式评测。

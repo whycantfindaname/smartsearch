@@ -129,8 +129,22 @@ function main() {
   const callerCwd = path.join(tempRoot, "caller");
   const homeDir = path.join(tempRoot, "home");
   fs.mkdirSync(tarballDir);
+  fs.mkdirSync(installPrefix);
   fs.mkdirSync(callerCwd);
   fs.mkdirSync(homeDir);
+
+  const isolatedEnv = {
+    ...process.env,
+    HOME: homeDir,
+    USERPROFILE: homeDir,
+    INIT_CWD: callerCwd
+  };
+  for (const key of Object.keys(isolatedEnv)) {
+    const normalizedKey = key.toLowerCase();
+    if (normalizedKey === "npm_config_allow_scripts" || normalizedKey === "npm_config_userconfig") {
+      delete isolatedEnv[key];
+    }
+  }
 
   const packed = normalizePackOutput(
     JSON.parse(runNpm(["pack", "--json", "--pack-destination", tarballDir], { capture: true }))
@@ -139,11 +153,23 @@ function main() {
 
   const tarballPath = path.join(tarballDir, packed.filename);
   assert.ok(fs.existsSync(tarballPath), `npm pack did not create ${tarballPath}`);
-  runNpm(["install", "--no-audit", "--no-fund", "--prefix", installPrefix, tarballPath]);
+  fs.writeFileSync(
+    path.join(installPrefix, "package.json"),
+    `${JSON.stringify({ private: true, allowScripts: { [`file:${tarballPath}`]: true } }, null, 2)}\n`,
+    "utf8"
+  );
+  runNpm(["install", "--no-audit", "--no-fund", "--prefix", installPrefix, tarballPath], {
+    env: isolatedEnv
+  });
 
   const installedRoot = path.join(installPrefix, "node_modules", "@konbakuyomu", "smart-search");
   const wrapperPath = path.join(installedRoot, "npm", "bin", "smart-search.js");
   assert.ok(fs.existsSync(wrapperPath), "packed install is missing the smart-search wrapper");
+  const installedPython =
+    process.platform === "win32"
+      ? path.join(installedRoot, ".smart-search-python", "Scripts", "python.exe")
+      : path.join(installedRoot, ".smart-search-python", "bin", "python");
+  assert.ok(fs.existsSync(installedPython), "packed install did not run the approved postinstall script");
   assert.ok(
     fs.existsSync(path.join(installedRoot, "src", "smart_search", "assets", "sidecar", "pyproject.toml")),
     "packed install is missing the Python 3.12 sidecar source"
@@ -153,12 +179,6 @@ function main() {
     "packed install is missing the Research Workspace visualizer"
   );
 
-  const isolatedEnv = {
-    ...process.env,
-    HOME: homeDir,
-    USERPROFILE: homeDir,
-    INIT_CWD: callerCwd
-  };
   const version = run(process.execPath, [wrapperPath, "--version"], {
     cwd: callerCwd,
     env: isolatedEnv,
