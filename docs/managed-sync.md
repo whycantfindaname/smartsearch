@@ -79,8 +79,10 @@ macOS 依次回读 governed package → immutable cache → `~/.codex/skills/sma
 agent-infra sync verify smartsearch
 ```
 
-一次验收最多一次 doctor/恢复探针。失败保留真实 error code 与 pending live 状态，
-不重复探针。密钥、账户内容不得进入输出或 receipt。
+一次验收最多一次 doctor/恢复探针；doctor 通过后还要运行一个固定、无敏感内容的真实
+搜索用例。只有该搜索成功才报告 `live`；doctor 通过但搜索失败只报告 `activated`
+（diagnostic ready）。失败保留真实 error code 与 pending live 状态，不重复探针。
+密钥、账户内容不得进入输出或 receipt。
 
 ## Rollback 提示
 

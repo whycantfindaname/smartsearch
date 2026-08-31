@@ -90,14 +90,23 @@ def inspect() -> dict:
     }
 
 
-def verify_live() -> dict:
-    """Gate-aware live probe: config presence first, then one doctor run.
+SEARCH_QUERY = "RFC 9110 HTTP Semantics"
 
-    The probe uses the npm bin wrapper (node npm/bin/smart-search.js), which
+
+def verify_live() -> dict:
+    """Gate-aware live verification: config gate, one doctor probe, one real search.
+
+    Doctor success alone is diagnostic readiness, not live evidence.  A
+    ``live`` status requires the fixed, non-sensitive search case below to
+    succeed against the real provider path.  If doctor passes but the search
+    fails, the result is ``activated`` (diagnostic_ready), never ``live``.
+
+    Both probes use the npm bin wrapper (node npm/bin/smart-search.js), which
     owns the project Python runtime and repairs it when missing.  The raw
     ``python -m smart_search`` module is not installed system-wide, so it is
-    never invoked directly.  Doctor output is masked upstream, but it is
-    discarded here anyway: only the exit code enters the receipt.
+    never invoked directly.  Probe outputs are discarded: only exit codes and
+    the fixed query enter the receipt, so no provider response content or
+    secret value can leak.
     """
     config_path = Path.home() / ".config" / "smart-search" / "config.json"
     result = {
@@ -131,13 +140,43 @@ def verify_live() -> dict:
         if proc.returncode != 0:
             result["errors"].append("SS_VERIFY_PROVIDER_ERROR")
             result["status"] = "failed"
-        else:
-            result["status"] = "live"
+            return result
     except Exception as exc:  # noqa: BLE001 - surfaced as structured error
         result["probe"] = "doctor_once"
         result["errors"].append("SS_VERIFY_PROVIDER_ERROR")
         result["probe_error"] = type(exc).__name__
         result["status"] = "failed"
+        return result
+    # One fixed, non-sensitive real search case proves the live consumer path.
+    try:
+        search = subprocess.run(
+            [
+                "node", str(wrapper), "search", SEARCH_QUERY,
+                "--format", "json",
+                "--validation", "fast",
+                "--fallback", "off",
+                "--max-try", "1",
+                "--timeout", "90",
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+        result["probe"] = "doctor_once+search_once"
+        result["search_exit"] = search.returncode
+        result["search_query"] = SEARCH_QUERY
+        if search.returncode == 0:
+            result["status"] = "live"
+        else:
+            # Diagnostic path works, but live consumer evidence is missing.
+            result["errors"].append("SS_VERIFY_PROVIDER_ERROR")
+            result["status"] = "activated"
+    except Exception as exc:  # noqa: BLE001 - surfaced as structured error
+        result["probe"] = "doctor_once+search_once"
+        result["errors"].append("SS_VERIFY_PROVIDER_ERROR")
+        result["search_error"] = type(exc).__name__
+        result["status"] = "activated"
     return result
 
 

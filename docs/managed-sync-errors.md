@@ -58,7 +58,8 @@
 ## SS_VERIFY_PROVIDER_ERROR
 
 - 阶段：显式功能验收
-- 含义：真实请求失败（一次验收最多一次恢复探针后仍失败）。
+- 含义：真实请求失败（一次验收最多一次恢复探针后仍失败），或 doctor 通过但固定的
+  真实搜索用例失败（此时验收结果为 `activated`/diagnostic ready，不是 `live`）。
 - 处理：请求/恢复类错误转入
   `skills/smart-search-cli/references/error-recovery.md` 的对应条目；本目录不复制。
 - 停止条件：不循环重试。
