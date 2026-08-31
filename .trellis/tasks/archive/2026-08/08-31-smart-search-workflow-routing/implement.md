@@ -86,6 +86,50 @@
 - `task.py validate 08-31-smart-search-workflow-routing`: passed with only the
   expected context-injection size warning for the large provider contract.
 
-Phase 5 remains pending until the preview commit, isolated `lwj_dev`
-integration, personal Skills synchronization, macOS activation, and task
-closeout are complete.
+### Integration and governed activation
+
+- Preview implementation commit:
+  `55a38d4c211cce4bf1b9042622e0a6fb41437780`.
+- Isolated `lwj_dev` integration commit:
+  `70a425bea6c8316d4a73c0a731d5dbee541ed38f`. The integration retained the
+  three `lwj_dev`-specific Trellis Agent files and passed the full `639`
+  Python tests after installing the isolated sidecar dependencies.
+- Smart Search `main` stayed at
+  `ae02b4b02f79104460a4ebcfc2778f73911bda9d` throughout the task.
+- Personal Skills common package commit:
+  `2ff5310b2f44c045d878d8a5249efcbdcef6c50a` on `main`, sourced from
+  `preview/multi-source-agentic-research@55a38d4c`.
+- Profile-aware native commits:
+  `macos@5345599f297b247c4e2261ba163d14dcc8424423`,
+  `oppo_windows@f50937902faa99426c03142a144d5d6f572e2859`, and
+  `oppo_linux@fbc3087573bcce16f72894a56fa699724610c3c8`.
+  macOS and Windows merged without conflicts. Linux surfaced conflicts in
+  `SKILL.md` and `README.md`; the final `SKILL.md` uses the common router while
+  Linux profile/config/artifact adaptations remain only in its package README.
+- Personal-package `quick_validate.py` passed on main and all three native
+  packages. Package-aware merge tests passed (`8 tests`). The global personal
+  management validator's profile/catalog skill-set mismatch was reproduced
+  unchanged on the pre-update `5444eeec` baseline, so it remains an unrelated
+  repository warning rather than an in-scope failure.
+- The stale workspace manifest still selected archived `partner-skill` for
+  four managed targets. Removing only those generated activation entries made
+  `validate-global` and `preview-global` pass; `sync-global` then rebuilt the
+  governed targets. QMD was not refreshed because no inventory or notebook
+  content changed.
+- macOS immutable cache commit and governed source commit both equal
+  `5345599f297b247c4e2261ba163d14dcc8424423`. Source, cache, Codex, and Claude
+  `SKILL.md` SHA-256 are all
+  `cf2b6c4fcf478b87e176962a3e38b82115eaaddfc583950e55e7c3d7bdf8ea0e`;
+  their `research-workflow.md` SHA-256 values are all
+  `322f7ee564243bb997c4f81d92fbf5c11b8823fddeabc3cb7654cf195a898604`.
+- Post-activation `validate-global` and cached-Skill `quick_validate.py`
+  passed. `modes` JSON/Markdown, the focused planner contract (two
+  decomposition items, four steps, fetch retained), and obsolete `quick`
+  rejection with exit code 2 passed against the Preview source entrypoint.
+- One real Preview-source `search` completed in 16.4 seconds with `ok=true`,
+  non-empty content, and one source. No `doctor` probe was run during this
+  task.
+- No branch was pushed or tagged, and no package was published or released.
+
+Phase 5 is complete. Task archival and the Trellis session journal are the
+remaining closeout operations.
