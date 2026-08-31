@@ -19,3 +19,14 @@ If you're using Codex or another agent-capable tool, additional project-scoped h
 Managed by Trellis. Edits outside this block are preserved; edits inside may be overwritten by a future `trellis update`.
 
 <!-- TRELLIS:END -->
+
+## Managed Repository Context
+
+- Registry ID: `smartsearch` (Agent Infra companion manifest `manifests/companion-repositories.json`)
+- Managed branch: `lwj_dev` (upstream mirror baseline: `main`, origin = konbakuyomu/smartsearch; publication: fork = whycantfindaname/smartsearch, branch `lwj_dev`)
+- Repository convergence authority: Agent Infra registry and sync contract (fetch, classify, safe fast-forward)
+- Owner workflow: this project's managed-project contract; product/runtime authority stays with this repository's own source and docs
+- Workflow status: `full_workflow`
+- Read order: `AGENTS.md` -> `.agent-infra/managed-project.json` -> `docs/managed-sync.md` -> `docs/managed-sync-errors.md`
+- Update triggers: managed branch or remote change; build/release chain change; platform activation change; service/config/secret ownership change; new stable error class; a completed reusable major update flow
+- Provider/request recovery errors live in `skills/smart-search-cli/references/error-recovery.md`, not in the sync error catalog
