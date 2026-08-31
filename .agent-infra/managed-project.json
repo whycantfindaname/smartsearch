@@ -1,0 +1,86 @@
+{
+  "schema": "jason-agent-infra.managed-project-workflow.v1",
+  "project_id": "smartsearch",
+  "commands": {
+    "inspect": {
+      "argv": ["python3", "scripts/managed_sync.py", "inspect"],
+      "cwd": ".",
+      "timeout_seconds": 60,
+      "mutates": [],
+      "receipt_schema": "jason-smartsearch.managed-sync-inspection.v1"
+    },
+    "skill_parity": {
+      "argv": ["npm", "run", "--silent", "check:skill-parity"],
+      "cwd": ".",
+      "timeout_seconds": 180,
+      "mutates": [],
+      "receipt_schema": "jason-smartsearch.managed-sync-parity.v1"
+    },
+    "packed_smoke": {
+      "argv": ["npm", "run", "--silent", "smoke:tarball"],
+      "cwd": ".",
+      "timeout_seconds": 900,
+      "mutates": [],
+      "receipt_schema": "jason-smartsearch.managed-sync-packed-smoke.v1"
+    },
+    "verify_live": {
+      "argv": ["python3", "scripts/managed_sync.py", "verify-live"],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "mutates": [],
+      "receipt_schema": "jason-smartsearch.managed-sync-live-verify.v1"
+    }
+  },
+  "stages": [
+    {
+      "id": "project_workflow",
+      "stage": "project_workflow",
+      "command": "inspect",
+      "depends_on": [],
+      "allowed_mutations": [],
+      "failure_policy": "stop_project",
+      "verification_level": "source",
+      "error_catalog": ["SS_SYNC_DIRTY_UNSCOPED", "SS_SYNC_BRANCH_MISMATCH"]
+    },
+    {
+      "id": "project_workflow_parity",
+      "stage": "project_workflow",
+      "command": "skill_parity",
+      "depends_on": ["project_workflow"],
+      "allowed_mutations": [],
+      "failure_policy": "stop_project",
+      "verification_level": "source",
+      "error_catalog": ["SS_SYNC_SKILL_PARITY_DRIFT"]
+    },
+    {
+      "id": "project_workflow_smoke",
+      "stage": "project_workflow",
+      "command": "packed_smoke",
+      "depends_on": ["project_workflow_parity"],
+      "allowed_mutations": [],
+      "failure_policy": "stop_project",
+      "verification_level": "source",
+      "error_catalog": ["SS_SYNC_PACKED_SMOKE_FAILED"]
+    },
+    {
+      "id": "functional_verification",
+      "stage": "functional_verification",
+      "command": "verify_live",
+      "depends_on": ["project_workflow_smoke"],
+      "allowed_mutations": [],
+      "failure_policy": "stop_project",
+      "verification_level": "live",
+      "error_catalog": ["SS_VERIFY_EXTERNAL_GATE_MISSING", "SS_VERIFY_PROVIDER_ERROR"],
+      "external_dependencies": [
+        "machine-private ~/.config/smart-search/config.json (presence and validation only; secret values never enter argv, output, or receipts)",
+        "valid main provider for the machine configuration",
+        "profile-declared Grok2API account/session and non-empty model list (full-acceptance gate; ordinary search stays runtime-optional)"
+      ],
+      "recovery_probe_limit": 1
+    }
+  ],
+  "docs": {
+    "guide": "docs/managed-sync.md",
+    "errors": "docs/managed-sync-errors.md"
+  }
+}
