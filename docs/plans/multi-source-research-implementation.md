@@ -14,7 +14,7 @@
 
 ## 1. 目标与来源边界
 
-Smart Search 将扩展为由 Root Agent 驱动的多源研究系统。主流程是“多源发现 → 候选整理 → 关键文档深挖 → 可定位证据 → Claim 级综合”。用户只需给出研究目标、`quick | standard | deep` 强度及成本或时间约束；Root Agent 负责语义规划和最终表达，Smart Search 提供确定性的研究内核。
+Smart Search 将扩展为由 Root Agent 驱动的多源研究系统。主流程是“多源发现 → 候选整理 → 关键文档深挖 → 可定位证据 → Claim 级综合”。用户只需给出研究目标、`focused | standard | deep` 研究深度及成本或时间约束；Root Agent 负责语义规划和最终表达，Smart Search 提供确定性的研究内核。
 
 本项目明确复用和改编以下来源：
 
@@ -70,17 +70,19 @@ Root creates DelegateRequest
 
 所有公共对象使用稳定的 `schema_version`、`run_id`、`task_id`、`step_id`、`attempt_no` 和 `artifact_refs`。重复结果必须能归属到原任务和原尝试；Preview 不以此承诺自动重放或恢复。
 
-### 2.3 研究强度与动态资源选择
+### 2.3 公共工作流、研究深度与动态资源选择
 
-保留 `quick`、`standard`、`deep` 三种产品模式，不增加第四种强度：
+对用户公开两个概念工作流：`search` 用于即时检索；Skill 级 `Research Workflow` 用于持有 dossier、维护 Claim 和验证引用的完整研究。`deep`、`research` 和 `research-run` 是高级 CLI 接口，不与这两个工作流并列。
 
-| 模式 | 产品意图 | Root 的能力选择 |
+Research Workflow 提供三种研究深度：
+
+| 深度 | 产品意图 | Root 的能力选择 |
 | --- | --- | --- |
-| `quick` | 低延迟直接检索 | 从基础搜索与已知 URL 读取能力中动态选择 |
+| `focused` | 窄范围但可审计的核心证据闭环 | 优先直接来源、已知 URL 和权威来源；只在核心缺口无法直接闭合时委派 |
 | `standard` | 多源核验与必要的文档回读 | 动态组合 Smart Search 基础能力；需要补充发现时可委派 AnySearch 或 Search Scout |
 | `deep` | 广覆盖研究、关键文档深挖与 Claim 级综合 | 动态组合基础能力、项目 Subagent 和四类 Provider Research Agents |
 
-不设置固定 `SearchTask` 数、固定 Subagent 数、固定候选阈值或统一预算账本。Root 根据研究充分性、预期信息增益、用户成本/时间约束和观察到的缺口动态决策。
+研究深度影响 Claim 范围、发现广度、委派倾向、文档挖掘、交叉验证、重规划与停止门槛，不等同于是否使用 Subagent。系统不设置固定 `SearchTask` 数、固定 Subagent 数、固定候选阈值或统一预算账本。Root 根据研究充分性、预期信息增益、用户成本/时间约束和观察到的缺口动态决策。
 
 Smart Search 记录实际尝试、开始/结束时间、耗时、可观测用量、Provider 状态和失败原因。硬边界仅来自：
 
@@ -356,7 +358,7 @@ Gate 同时记录实际耗时、Provider/模型/工具调用和可观测用量�
 
 - Root 是唯一语义 Planner 和 Synthesizer；`build_deep_research_plan` 只提供离线规则种子。
 - Smart Search 只承担确定性内核职责，能校验合同、执行能力、归一化、存储 Trace/产物并检查引用完整性。
-- `quick | standard | deep` 均保留；任务数、Agent 数和 Curator 使用方式由 Root 动态决定。
+- `search` 与 Skill 级 `Research Workflow` 是公共概念工作流；Research Workflow 支持 `focused | standard | deep`，任务数、Agent 数和 Curator 使用方式由 Root 动态决定。
 - `deep` 对四类已配置 Provider Research Agent 并发尝试，结果彼此独立，单项失败不终止运行。
 - Root 接收候选摘要和原始索引，并自行决定全读或启动任意数量 Curator 及其分片。
 - AnySearch 只以独立 Skill 运行，其 `DelegateResult.payload` 进入公共候选管线。

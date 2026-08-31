@@ -43,6 +43,7 @@ def format_extra_sources(tavily_results: list[dict] | None, firecrawl_results: l
             url = r.get("url", "")
             if url in urls:
                 continue
+            urls.append(url)
             content = r.get("content", "")
             lines.append(f"{idx}. **[{title}]({url})**")
             if content:

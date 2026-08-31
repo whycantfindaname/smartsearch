@@ -206,8 +206,8 @@ class ResearchFrame(Contract):
         super().__post_init__()
         _validate_scope(self.run_id)
         _require_string("question", self.question)
-        if self.mode not in {"quick", "standard", "deep"}:
-            raise ContractValidationError("mode must be quick, standard, or deep")
+        if self.mode not in {"focused", "standard", "deep"}:
+            raise ContractValidationError("mode must be focused, standard, or deep")
         _require_mapping("scope", self.scope)
         _require_mapping("time_boundary", self.time_boundary)
         _require_mapping("user_constraints", self.user_constraints)

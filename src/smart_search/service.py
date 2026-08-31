@@ -184,6 +184,99 @@ RESEARCH_PROFILE_ORDER = {
     "site_map": ["tavily"],
     "synthesis": ["main-search"],
 }
+
+
+def describe_modes() -> dict[str, Any]:
+    """Return the static workflow and research-depth discovery contract."""
+    return {
+        "ok": True,
+        "mode": "modes",
+        "public_workflows": [
+            {
+                "id": "search",
+                "name": "Search",
+                "purpose": "Immediate retrieval, source discovery, and ordinary web research.",
+                "invocation": "smart-search search QUERY",
+                "research_depth_applies": False,
+                "state": "single command result; no ResearchRun dossier or Claim lifecycle",
+            },
+            {
+                "id": "research_workflow",
+                "name": "Research Workflow",
+                "purpose": "Caller-held, evidence-backed research with Claim records and citation verification.",
+                "invocation": "使用smart-search-cli的Research Workflow调研 <GOAL>",
+                "interface": "agent_skill",
+                "research_depth_applies": True,
+                "default_depth": "standard",
+                "supported_depths": ["focused", "standard", "deep"],
+            },
+        ],
+        "research_depths": [
+            {
+                "id": "focused",
+                "default": False,
+                "purpose": "Narrow, auditable evidence closure for the core question.",
+                "claim_scope": "core claims only",
+                "discovery": "prefer direct, known-URL, and authoritative sources; keep discovery narrow",
+                "delegation": "minimize delegation; use a project Agent only when a core evidence gap cannot be closed directly",
+                "document_mining": "only when a core source cannot be located reliably by direct reading",
+                "cross_validation": "minimum eligible direct evidence for each retained core claim",
+                "replanning": "avoid optional replanning; record unresolved gaps instead of expanding scope",
+                "stop_condition": "core claims meet the evidence bar, or the remaining gaps are explicit",
+            },
+            {
+                "id": "standard",
+                "default": True,
+                "purpose": "Normal multi-source research with material limits and source reading.",
+                "claim_scope": "core claims, main alternatives, and material limitations",
+                "discovery": "multi-source discovery across the question's necessary angles",
+                "delegation": "use Search Scouts, Source Curators, or Evidence Miners when they close a real gap",
+                "document_mining": "mine key sources when direct reading is insufficient for stable locators",
+                "cross_validation": "independent support for important claims when available",
+                "replanning": "replan when a material Claim or source gap remains",
+                "stop_condition": "core claims are cross-checked and material limitations are reported",
+            },
+            {
+                "id": "deep",
+                "default": False,
+                "purpose": "Broad, adversarial, checkpointed research for complex or high-risk questions.",
+                "claim_scope": "core claims, alternatives, counterevidence, boundaries, and unresolved disputes",
+                "discovery": "broad discovery plus explicit searches for omissions and counterevidence",
+                "delegation": "shard discovery and curation as needed and attempt configured Provider Research Agents",
+                "document_mining": "mine critical papers, reports, tables, and conflicting sources",
+                "cross_validation": "collect supporting, contradicting, and qualifying evidence",
+                "replanning": "checkpoint and replan from Claim-level gaps until the stop decision is justified",
+                "stop_condition": "material claims, counterevidence, and boundaries are handled; residual gaps remain explicit",
+            },
+        ],
+        "advanced_entrypoints": [
+            {
+                "id": "deep",
+                "purpose": "Create an offline rule-based research plan without calling providers.",
+                "invocation": "smart-search deep QUERY --budget focused|standard|deep",
+                "depth_effect": "changes planner decomposition and planned steps; focused is capped at two decomposition items and four steps",
+            },
+            {
+                "id": "research",
+                "purpose": "Run the compact live plan-discover-fetch-gap-check executor.",
+                "invocation": "smart-search research QUERY --budget focused|standard|deep",
+                "depth_effect": "changes the generated plan and reported depth; the current live pipeline does not use the plan step count as a runtime call cap",
+            },
+            {
+                "id": "research-run",
+                "purpose": "Apply deterministic operations to a caller-held ResearchRun dossier.",
+                "invocation": "smart-search research-run OPERATION ...",
+                "depth_effect": "ResearchFrame carries the depth; Root authors tasks, delegation, replanning, and stopping within that envelope",
+            },
+        ],
+        "notes": [
+            "Subagent count does not define a research depth.",
+            "A shallower depth may reduce coverage but never weakens evidence eligibility.",
+            "Use research-run capabilities, skills status, or doctor for live readiness; modes performs no probe.",
+        ],
+    }
+
+
 PROVIDER_PROFILES: dict[str, dict[str, Any]] = {
     "xai-responses": {
         "capability": "main_search",
@@ -1129,7 +1222,7 @@ def _deep_subquestion(sub_id: str, question: str, reason: str, required_capabili
 
 def _deep_budget(value: str) -> str:
     budget = (value or "standard").strip().lower()
-    return budget if budget in {"quick", "standard", "deep"} else "standard"
+    return budget if budget in {"focused", "standard", "deep"} else "standard"
 
 
 def _is_deep_complex(query: str, budget: str) -> bool:
@@ -1240,7 +1333,7 @@ def build_deep_research_plan(query: str, budget: str = "standard", evidence_dir:
             )
         )
         capability_plan.append(_deep_capability("broad_discovery", ["search"], "Find the initial answer shape and candidate sources."))
-        add_step("sq1", "search", "broad discovery and routing metadata", command_search(question, 1 if budget == "quick" else 3), "01-search.json")
+        add_step("sq1", "search", "broad discovery and routing metadata", command_search(question, 1 if budget == "focused" else 3), "01-search.json")
 
         if docs_intent:
             decomposition.append(
@@ -1348,9 +1441,9 @@ def build_deep_research_plan(query: str, budget: str = "standard", evidence_dir:
     for item in capability_plan:
         item["tools"] = [tool for tool in item["tools"] if tool in DEEP_ALLOWED_TOOLS]
     steps = [step for step in steps if step["tool"] in DEEP_ALLOWED_TOOLS]
-    if budget == "quick" and len(decomposition) > 2:
+    if budget == "focused" and len(decomposition) > 2:
         decomposition = decomposition[:2]
-    if budget == "quick" and len(steps) > 4:
+    if budget == "focused" and len(steps) > 4:
         limited_steps = steps[:4]
         if not any(step["tool"] == "fetch" for step in limited_steps):
             first_fetch = next((step for step in steps if step["tool"] == "fetch"), None)
@@ -1361,7 +1454,7 @@ def build_deep_research_plan(query: str, budget: str = "standard", evidence_dir:
                 first_fetch["output_path"] = fetch_path
                 limited_steps = steps[:3] + [first_fetch]
         steps = limited_steps[:4]
-    if budget == "quick":
+    if budget == "focused":
         valid_subquestion_ids = {item["id"] for item in decomposition}
         fallback_subquestion_id = decomposition[-1]["id"] if decomposition else "sq1"
         for index, step in enumerate(steps, start=1):
@@ -2045,7 +2138,7 @@ def _main_search_providers(provider_configs: list[dict[str, Any]], fallback: str
 
 async def fetch_available_models(api_url: str, api_key: str) -> list[str]:
     models_url = f"{api_url.rstrip('/')}/models"
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=10.0, verify=config.ssl_verify_enabled) as client:
         response = await client.get(
             models_url,
             headers={
@@ -2317,7 +2410,7 @@ async def call_tavily_extract(url: str) -> str | None:
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     body = {"urls": [url], "format": "markdown"}
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=60.0, verify=config.ssl_verify_enabled) as client:
             response = await client.post(endpoint, headers=headers, json=body)
             response.raise_for_status()
             data = _provider_response_object(response.json(), "Tavily")
@@ -2354,7 +2447,7 @@ async def call_tavily_search(query: str, max_results: int = 6) -> list[dict] | N
         "include_answer": False,
     }
     try:
-        async with httpx.AsyncClient(timeout=90.0) as client:
+        async with httpx.AsyncClient(timeout=90.0, verify=config.ssl_verify_enabled) as client:
             response = await client.post(endpoint, headers=headers, json=body)
             response.raise_for_status()
             data = _provider_response_object(response.json(), "Tavily")
@@ -2389,7 +2482,7 @@ async def call_firecrawl_search(query: str, limit: int = 14) -> list[dict] | Non
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     body = {"query": query, "limit": limit}
     try:
-        async with httpx.AsyncClient(timeout=90.0) as client:
+        async with httpx.AsyncClient(timeout=90.0, verify=config.ssl_verify_enabled) as client:
             response = await client.post(endpoint, headers=headers, json=body)
             response.raise_for_status()
             data = _provider_response_object(response.json(), "Firecrawl")
@@ -2432,7 +2525,7 @@ async def call_firecrawl_scrape(url: str, ctx=None) -> str | None:
             "waitFor": (attempt + 1) * 1500,
         }
         try:
-            async with httpx.AsyncClient(timeout=90.0) as client:
+            async with httpx.AsyncClient(timeout=90.0, verify=config.ssl_verify_enabled) as client:
                 response = await client.post(endpoint, headers=headers, json=body)
                 response.raise_for_status()
                 data = _provider_response_object(response.json(), "Firecrawl")
@@ -2492,7 +2585,7 @@ async def call_tavily_map(
     if instructions:
         body["instructions"] = instructions
     try:
-        async with httpx.AsyncClient(timeout=float(timeout + 10)) as client:
+        async with httpx.AsyncClient(timeout=float(timeout + 10), verify=config.ssl_verify_enabled) as client:
             response = await client.post(endpoint, headers=headers, json=body)
             response.raise_for_status()
             data = _provider_response_object(response.json(), "Tavily")
@@ -3755,7 +3848,7 @@ async def context7_docs(library_id: str, query: str) -> dict[str, Any]:
 async def _test_primary_chat_completion(api_url: str, api_key: str, model: str) -> dict[str, Any]:
     chat_url = f"{api_url.rstrip('/')}/chat/completions"
     start = time.time()
-    async with httpx.AsyncClient(timeout=20.0) as client:
+    async with httpx.AsyncClient(timeout=20.0, verify=config.ssl_verify_enabled) as client:
         response = await client.post(
             chat_url,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json", "Accept": "application/json, text/event-stream"},
@@ -4096,7 +4189,7 @@ async def _test_primary_connection(api_url: str, api_key: str, model: str) -> di
     models_url = f"{api_url.rstrip('/')}/models"
     start = time.time()
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0, verify=config.ssl_verify_enabled) as client:
             response = await client.get(
                 models_url,
                 headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
@@ -4159,7 +4252,7 @@ async def _test_primary_connection(api_url: str, api_key: str, model: str) -> di
 async def _test_primary_responses(api_url: str, api_key: str, model: str) -> dict[str, Any]:
     responses_url = f"{api_url.rstrip('/')}/responses"
     start = time.time()
-    async with httpx.AsyncClient(timeout=20.0) as client:
+    async with httpx.AsyncClient(timeout=20.0, verify=config.ssl_verify_enabled) as client:
         response = await client.post(
             responses_url,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
@@ -4207,7 +4300,7 @@ async def _test_exa_connection() -> dict[str, Any]:
     if not exa_key:
         return {"status": "not_configured", "message": "EXA_API_KEY 未设置，Exa 搜索功能不可用"}
     start = time.time()
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=10.0, verify=config.ssl_verify_enabled) as client:
         resp = await client.post(
             f"{config.exa_base_url.rstrip('/')}/search",
             headers={"x-api-key": exa_key, "content-type": "application/json"},
@@ -4273,7 +4366,7 @@ async def _test_firecrawl_connection() -> dict[str, Any]:
         }
     start = time.time()
     endpoint = f"{config.firecrawl_api_url.rstrip('/')}/team/credit-usage"
-    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True, verify=config.ssl_verify_enabled) as client:
         response = await client.get(
             endpoint,
             headers={"Authorization": f"Bearer {api_key}"},

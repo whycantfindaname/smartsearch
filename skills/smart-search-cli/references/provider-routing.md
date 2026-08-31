@@ -69,7 +69,7 @@ Intent router rules:
 - `map` currently uses Tavily only.
 - `exa-search` and `exa-similar` use Exa only.
 - `context7-library` and `context7-docs` use Context7 only.
-- AnySearch runs outside the Smart Search CLI provider registry. A Smart Search retrieval workflow reads `bundled-skills/anysearch/SKILL.md` and invokes `scripts/smart_search_anysearch.py` directly without waiting for a separate `/anysearch` invocation. If the bundled Skill or adapter is missing, record an availability gap; do not resolve another AnySearch entrypoint.
+- AnySearch runs outside the Smart Search CLI provider registry. A Smart Search retrieval workflow reads `bundled-skills/anysearch/CONTRACT.md` and invokes `scripts/smart_search_anysearch.py` directly without waiting for a separate `/anysearch` invocation. If the bundled capability or adapter is missing, record an availability gap; do not resolve another AnySearch entrypoint.
 - `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, and `sciverse-relations` use Sciverse only. They are explicit academic commands and must not be inserted into default provider fallback.
 - `zhipu-search` uses Zhipu only.
 - `zhipu-mcp-search`, `zhipu-mcp-reader`, and `zhipu-mcp-*` zread commands use Zhipu Coding Plan Remote MCP only.
@@ -110,11 +110,11 @@ Jina Reader:
 
 AnySearch:
 
-- AnySearch is an external bundled Skill, not a registered provider. Resolve `bundled-skills/anysearch/SKILL.md` and invoke its `scripts/smart_search_anysearch.py` adapter; this is the only active entrypoint.
+- AnySearch is an internally bundled capability, not a separately discoverable Skill or registered provider. Resolve `bundled-skills/anysearch/CONTRACT.md` and invoke its `scripts/smart_search_anysearch.py` adapter; this is the only active entrypoint.
 - The bundled snapshot is refreshed from the governed AnySearch source. `scripts/sync_anysearch_skill.py` refreshes both distributable Smart Search Skill trees while preserving the Smart Search-owned adapter and runtime overrides.
 - The official `anysearch-ai/anysearch-skill` repository is a fallback only when the preferred repository is reachable and the package is absent. A checkout, network, or authentication failure preserves the existing snapshot and must not silently switch sources.
 - Runtime resolution is the bundled adapter or unavailable. Missing files, credentials, quota, network, or provider failures degrade to other Smart Search sources.
-- Read the bundled AnySearch `SKILL.md` within the Smart Search workflow before execution. Vertical, batch, and known-URL extraction intents must execute the matching bundled capability through the adapter; vertical intent must follow the bundled Skill's `get_sub_domains`-first rule and required parameters. Do not ask the user for a separate slash invocation.
+- Read the bundled AnySearch `CONTRACT.md` within the Smart Search workflow before execution. Vertical, batch, and known-URL extraction intents must execute the matching bundled capability through the adapter; vertical intent must follow the bundled capability's `get_sub_domains`-first rule and required parameters. Do not ask the user for a separate slash invocation.
 - The adapter reads `ANYSEARCH_API_KEY` and `ANYSEARCH_API_KEY_FALLBACK` only from Smart Search's private `config.json` resolution. An explicit `--api_key` is a one-call single-key override. It never reads `.env` or process credentials, never uses anonymous access, and sends a non-empty Bearer header for every request.
 
 Sciverse:

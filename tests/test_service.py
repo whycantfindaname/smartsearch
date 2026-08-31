@@ -465,11 +465,11 @@ def test_deep_research_claim_verification_does_not_unconditionally_add_exa():
     assert "exa-search" not in tools
 
 
-def test_deep_research_quick_budget_keeps_fetch_and_valid_subquestion_links():
+def test_deep_research_focused_budget_keeps_fetch_and_valid_subquestion_links():
     result = service.build_deep_research_plan(
         "OpenAI Responses API web_search 和 Chat Completions 联网搜索怎么选",
-        budget="quick",
-        evidence_dir="C:/tmp/smart-search-evidence/test-quick",
+        budget="focused",
+        evidence_dir="C:/tmp/smart-search-evidence/test-focused",
     )
 
     subquestion_ids = {item["id"] for item in result["decomposition"]}
@@ -478,6 +478,21 @@ def test_deep_research_quick_budget_keeps_fetch_and_valid_subquestion_links():
     assert all(step["subquestion_id"] in subquestion_ids for step in result["steps"])
     for step in result["steps"]:
         assert step["output_path"] in step["command"]
+
+
+def test_describe_modes_is_static_and_does_not_read_config(monkeypatch):
+    class FailingConfig:
+        def __getattr__(self, name):
+            raise AssertionError(f"modes must not read config: {name}")
+
+    monkeypatch.setattr(service, "config", FailingConfig())
+
+    result = service.describe_modes()
+
+    assert result["ok"] is True
+    assert result["mode"] == "modes"
+    assert [item["id"] for item in result["research_depths"]] == ["focused", "standard", "deep"]
+    assert "quick" not in str(result)
 
 
 def _configure_research_minimum(monkeypatch):
@@ -2089,7 +2104,7 @@ async def test_tavily_custom_base_is_used_for_search_extract_and_map(monkeypatch
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
@@ -2134,7 +2149,7 @@ async def test_firecrawl_custom_base_is_used_for_search_and_scrape(monkeypatch):
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
@@ -2500,7 +2515,7 @@ async def test_primary_connection_checks_chat_even_when_models_endpoint_fails(mo
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
@@ -2541,7 +2556,7 @@ async def test_primary_connection_keeps_chat_ok_when_models_probe_errors(monkeyp
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
@@ -2580,7 +2595,7 @@ async def test_doctor_uses_responses_endpoint_for_explicit_xai_config(monkeypatc
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):
@@ -2616,7 +2631,7 @@ async def test_doctor_uses_chat_completions_for_only_openai_compatible_config(mo
     calls = []
 
     class FakeAsyncClient:
-        def __init__(self, timeout):
+        def __init__(self, timeout, verify=None):
             self.timeout = timeout
 
         async def __aenter__(self):

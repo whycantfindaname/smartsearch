@@ -62,10 +62,13 @@
 | --- | --- |
 | `.github/` | CI、npm 发布 workflow 和 release notes；不参与 CLI 运行时。 |
 | `.trellis/` | 本仓库唯一的 task/spec/workspace 治理系统，包含规范、任务、平台脚本和 workspace journal；属于 tracked 开发资料，不会被 npm 包发布。机器身份与 session runtime 由 `.trellis/.gitignore` 单独排除。 |
-| `.agents/`、`.claude/`、`.codex/` | Trellis 为 Codex 和 Claude Code 提供的仓库级 Skill、Agent、hook 与平台配置投影；属于 tracked 开发工具，不进入 npm runtime。 |
+| `.agents/`、`.claude/`、`.codex/`、`.zcode/` | Trellis 为 Codex、Claude Code 和 ZCode 提供的仓库级 Skill、Agent、hook 与平台配置投影；属于 tracked 开发工具，不进入 npm runtime。 |
+| `.terminology/` | Tracked 领域术语表（`termbase.json`），用于统一文档与研究产物的概念命名；不参与 CLI 运行时。 |
+| `docs/` | Tracked 开发文档：`architecture/`（架构说明）、`acceptance/`（阶段验收记录）、`research-runs/`（研究运行产物索引）、`plans/`（计划文档）。属于开发资料，不会被 npm 包发布。 |
+| `sidecar/` | Python 3.12 document-mining sidecar 的独立 uv 项目（`smart_search_sidecar`）；`src/smart_search/assets/sidecar/` 保存其随 package 分发的镜像，两边必须保持 byte-identical。 |
 | `npm/` | npm CLI wrapper、Node.js 安装、版本同步、测试、Skill parity 和打包安装 smoke 脚本。 |
-| `scripts/` | 仓库外层辅助检查；当前 tracked 文件是 `rebuild-mise-venv.ps1` 和 `test-jina-capability.ps1`，不包含 Python Provider 实现。 |
-| `skills/smart-search-cli/` | 仓库内 public `smart-search-cli` Skill，包含 `SKILL.md`、`agents/openai.yaml` 和 `references/*.md`。 |
+| `scripts/` | 仓库外层辅助检查：`rebuild-mise-venv.ps1`、`test-jina-capability.ps1` 和 `sync_anysearch_skill.py`（从上游仓库刷新 bundled AnySearch snapshot）；不包含 Python Provider 实现。 |
+| `skills/smart-search-cli/` | 仓库内 public `smart-search-cli` Skill，包含 `SKILL.md`、`agents/*.yaml`、`references/*.md` 和 `bundled-skills/anysearch/`（内置 AnySearch Skill 快照）。 |
 | `src/smart_search/` | Python package source。`cli.py` 是 CLI 编排与渲染入口；`service.py` 编排 capability、Provider 和 research；`config.py` 管理配置；`intent_router.py` 管理 capability routing；`providers/` 保存上游适配器；`skill_installer.py` 管理 Skill 安装；`assets/skills/` 保存随 package 分发的 Skill 镜像。 |
 | `tests/` | pytest 测试，覆盖 CLI、配置、intent router、Provider、service、smoke、regression、Skill parity 和 release contract。`tests/conftest.py` 将 `src` 加入 import path，并将测试配置隔离到临时目录。 |
 
@@ -168,7 +171,7 @@ Agent 与脚本的机器接口。Skill 不得复制 Provider 网络逻辑或自�
 | `docs_search` | `context7` -> `exa` | `context7-library/docs` 用于库、API 和框架文档；Exa 用于官方域名、论文、产品页和低噪声发现，不是普通新闻 fallback。 |
 | `web_search` | `zhipu` -> `zhipu-mcp` -> `tavily` -> `firecrawl` | 中文、国内、当前或补充来源发现；Zhipu REST Web Search 与 Coding Plan Remote MCP 是两层独立适配。 |
 | `web_fetch` | `tavily` -> `jina` -> `zhipu-mcp-reader` -> `firecrawl` | `fetch` 和已知 URL 的证据正文；Jina 是 fetch-only，只有配置 key 才满足 standard minimum profile。 |
-| `vertical_search` | bundled AnySearch Skill；Sciverse 在 capability status 中为 experimental 且 `route_enabled=false` | Agent 从 `bundled-skills/anysearch/SKILL.md` 读取并执行 AnySearch；它不是 Smart Search CLI 命令族。Sciverse 仅用于显式 `sciverse-*` 学术命令，不能加入默认 `search`/`research` 或 `docs_search`。 |
+| `vertical_search` | bundled AnySearch Skill；Sciverse 在 capability status 中为 experimental 且 `route_enabled=false` | Agent 从 `bundled-skills/anysearch/CONTRACT.md` 读取内部契约并通过 `scripts/smart_search_anysearch.py` 执行 AnySearch；它不是 Smart Search CLI 命令族。Sciverse 仅用于显式 `sciverse-*` 学术命令，不能加入默认 `search`/`research` 或 `docs_search`。 |
 | `site_map` | `tavily` | `map` 只做站点结构发现，不成为其他 capability 的 fallback。 |
 | `synthesis` | evidence-only synthesis | research 最终综合只接收已经 fetch/read 的证据，不再次调用 web Provider，也不把未抓取的 discovery candidate 当作证明。 |
 

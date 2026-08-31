@@ -634,7 +634,7 @@
             { kind: '阶段 02 · 公开示例仓库', label: 'mistralai/search-starter-app', url: 'https://github.com/mistralai/search-starter-app', note: 'Mistral 官方公开的 Agentic Search、MCP 与 Search Toolkit 集成示例。' }
           ],
           implementation: ['Root 从完整上下文创建 caller-held ResearchRun、ResearchFrame 与 ClaimSpec。', 'Kernel 校验并编译 Root 选择的能力；现有 CLI planner 仅作为离线规则基线或计划种子。', '只有 Root 通过 DelegateRequest 委派 Search Scout、Source Curator 或 Evidence Miner；DelegateResult 回到同一个 ResearchRun，子级只报告结果、缺口和建议。', '确定性代码输出候选数量、上下文估计、分组建议和 raw index；Root 决定是否需要零个、一个或多个 Curator。', 'EvidenceItem 带 snapshot identity 与 typed locator；ClaimRecord 保存定性判断，Root 一次性综合。', 'TraceEvent 从运行开始 append-only 写入，记录 attempt、时间、用量、状态和产物引用，不承诺暂停进程或自动恢复。'],
-          inputs: ['用户问题', 'quick | standard | deep', 'capability snapshot', '用户约束'], outputs: ['ResearchRun', 'EvidenceItem[]', 'ClaimRecord[]', '带引用结论'],
+          inputs: ['用户问题', 'focused | standard | deep', 'capability snapshot', '用户约束'], outputs: ['ResearchRun', 'EvidenceItem[]', 'ClaimRecord[]', '带引用结论'],
           constraints: ['AnySearch 始终是外部 Skill。', '外部内容是不可信数据，不能覆盖 ResearchFrame、任务或权限。', '激活 macOS 版本前必须取得用户批准。'],
           phase: ['A–F + 配置收尾 + E2E gate', '垂直实现主线', '先闭合内部证据链，再接文档工具、外部发现、四种研究代理和动态多 Agent，最后统一运行配置。'], related: ['planner', 'plan-compiler', 'search-task', 'miner', 'claim-ledger', 'roadmap', 'environment-config']
         },
@@ -655,15 +655,15 @@
         'plan-compiler': {
           path: 'Smart Search / 确定性内核', status: 'implemented', statusText: '已实现', title: 'Smart Search Kernel / Plan Compiler', summary: '无语义所有权的确定性内核：校验 Root 草案、编译能力调用、执行内部步骤、归一化结果并追加 TraceEvent。',
           principle: '代码保证契约、权限、可执行性和可追踪性；研究方向、工作量与停止时机仍由 Root 判断。',
-          implementation: ['校验 ResearchRun、ResearchFrame、ClaimSpec、SearchTask、EvidenceMiningTask 与 DelegateResult。', '按 quick、standard、deep 做能力边界校验，并读取带时间戳的 capability snapshot。', '编译 internal、provider_research、delegated_skill、delegated_agent 与 document_tool 步骤。', '为每次动作记录独立 ExecutionAttempt、时间、状态、usage 与原始产物引用。', '返回 validation errors、状态和可用性事实，不替 Root 选方向或派 Agent。'],
+          implementation: ['校验 ResearchRun、ResearchFrame、ClaimSpec、SearchTask、EvidenceMiningTask 与 DelegateResult。', '按 focused、standard、deep 做研究深度边界校验，并读取带时间戳的 capability snapshot。', '编译 internal、provider_research、delegated_skill、delegated_agent 与 document_tool 步骤。', '为每次动作记录独立 ExecutionAttempt、时间、状态、usage 与原始产物引用。', '返回 validation errors、状态和可用性事实，不替 Root 选方向或派 Agent。'],
           inputs: ['root plan draft', 'capability snapshot', 'DelegateResult'], outputs: ['compiled steps', 'ExecutionAttempt[]', 'TraceEvent[]', 'validation errors'], constraints: ['不决定 SearchTask、Subagent 或 Curator 数量。', '不暂停等待委派，也不承诺自动恢复。', '只有 Root 发出委派。'],
           phase: ['A/B', '契约、Trace 与内部证据闭环', '先固定控制权与事件链，再扩展能力。'], related: ['planner', 'modes', 'capabilities', 'execution-attempt']
         },
         modes: {
-          path: '编排层 / 强度', status: 'confirmed', statusText: '已确认', title: 'quick · standard · deep', summary: '三种产品模式共用证据管线，表示允许的研究强度与能力范围；不把它们换算成固定任务数或脚本化研究额度。',
-          principle: '模式限制能力范围，Root 根据问题和运行事实决定实际工作量。',
-          implementation: ['Root 选择任务、能力、委派与停止；Kernel 校验模式边界并记录实际 attempts、时间和 usage。', 'quick：以 Smart Search 基础能力完成短路径证据闭环。', 'standard：保留基础能力，并可由 Root 委派 AnySearch 或项目角色。', 'deep：包含 Firecrawl Agent、Jina DeepSearch、Exa Agent 与 Tavily Research；配置可用时四者都被表示和尝试，状态、错误与用量独立记录，再非 fail-fast 合并。'],
-          inputs: ['quick', 'standard', 'deep'], outputs: ['capability envelope', 'observed usage', 'stop decision'], constraints: ['不预设 SearchTask、Subagent 或 Curator 数量。', 'Provider 单路失败不取消其他路。'],
+          path: '编排层 / 研究深度', status: 'confirmed', statusText: '已确认', title: 'focused · standard · deep', summary: 'Research Workflow 的三种深度共用证据管线，分别改变 Claim 范围、发现广度、委派倾向、文档挖掘、交叉验证、重规划和停止门槛；不把它们换算成固定任务数。',
+          principle: '深度约束研究范围和充分性门槛，Root 根据问题和运行事实决定实际工作量。',
+          implementation: ['Root 选择任务、能力、委派与停止；Kernel 校验深度边界并记录实际 attempts、时间和 usage。', 'focused：优先直接和权威来源，完成核心 Claim 的窄范围证据闭环。', 'standard：覆盖核心 Claim、主要替代方案和重要限制，并在需要时委派 AnySearch 或项目角色。', 'deep：增加反证、边界和关键文档挖掘，并在配置可用时尝试 Provider Research Agents。'],
+          inputs: ['focused', 'standard', 'deep'], outputs: ['capability envelope', 'observed usage', 'stop decision'], constraints: ['不预设 SearchTask、Subagent 或 Curator 数量。', 'Provider 单路失败不取消其他路。'],
           phase: ['B', '模式门控', '模式规则由编译器确定性执行，Root Agent 负责语义任务结构。'], related: ['plan-compiler', 'planner', 'capabilities', 'roadmap']
         },
         'research-frame': {
@@ -702,7 +702,7 @@
             { kind: '上游项目', label: 'konbakuyomu/smartsearch', url: 'https://github.com/konbakuyomu/smartsearch', note: '现有 Smart Search 的原始仓库与 MIT License 来源。' },
             { kind: '当前改编', label: 'whycantfindaname/smartsearch', url: 'https://github.com/whycantfindaname/smartsearch', note: '多源研究 Preview 的当前仓库。' }
           ],
-          implementation: ['quick/standard/deep 都从现有能力注册表出发。', '使用 routing_decision、provider_attempts、fallback_used 和 source_warning 记录路由事实。', '发现结果统一转换为 DiscoveryCandidate。'],
+          implementation: ['focused/standard/deep 都从现有能力注册表出发。', '使用 routing_decision、provider_attempts、fallback_used 和 source_warning 记录路由事实。', '发现结果统一转换为 DiscoveryCandidate。'],
           inputs: ['query', 'capability', 'fallback policy'], outputs: ['search result', 'DiscoveryCandidate', 'provider metadata'], constraints: ['search 仍是快速入口，不能被静默升级为 Deep Research。', '发现候选在 fetch/read 前不能支撑关键主张。'],
           phase: ['已有 + B/F', '复用现有实现', '现有搜索继续工作；新增统一模型和证据合并。'], related: ['capabilities', 'fetch-read', 'normalize']
         },

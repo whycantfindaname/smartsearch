@@ -55,6 +55,13 @@ def test_contracts_reject_broken_run_refs_and_unsupported_statuses():
         )
 
 
+def test_research_frame_accepts_focused_and_rejects_obsolete_quick_mode():
+    assert ResearchFrame(run_id="run_focused", question="Question", mode="focused").mode == "focused"
+
+    with pytest.raises(ContractValidationError, match="focused, standard, or deep"):
+        ResearchFrame(run_id="run_quick", question="Question", mode="quick")
+
+
 def test_agent_facing_artifacts_reject_paths_urls_and_unsupported_tools():
     common = {
         "run_id": "run_alpha",

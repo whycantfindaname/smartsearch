@@ -310,7 +310,7 @@ def create_anysearch_dispatch(
         "skill_resolution": [
             {
                 "kind": "bundled_snapshot",
-                "path": "bundled-skills/anysearch/SKILL.md",
+                "path": "bundled-skills/anysearch/CONTRACT.md",
             },
         ],
     }

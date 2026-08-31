@@ -1,29 +1,16 @@
----
-name: anysearch
-description: Real-time search engine supporting web search, vertical domain search, parallel batch search, and URL content extraction.
-version: 3.1.0
-authors:
-  - AnySearch Team
-credentials:
-  - name: ANYSEARCH_API_KEY
-    required: true
-    description: "Primary AnySearch API key read from Smart Search private config."
-    storage: "Smart Search config.json"
-  - name: ANYSEARCH_API_KEY_FALLBACK
-    required: true
-    description: "Fallback AnySearch API key for one bounded authorization retry."
-    storage: "Smart Search config.json"
----
+# AnySearch Internal Contract
+
+Upstream contract version: `3.1.0`
 
 ## Overview
 
 AnySearch is a unified real-time search service supporting general web search, vertical domain search, parallel batch search, and full-page content extraction. In this Smart Search bundle, the portable `smart_search_anysearch.py` adapter is the only active entrypoint. It reuses the existing upstream Python CLI and preserves its command and output contract; the upstream Node.js, Bash, and PowerShell files remain source snapshots and are not invoked directly by Smart Search.
 
-This file owns AnySearch's operation and parameter contract. The parent `smart-search-cli/SKILL.md` owns integration and availability behavior. Do not invoke `/anysearch`, resolve a separately installed AnySearch Skill, or add AnySearch to the Smart Search provider registry.
+This ordinary Markdown reference owns AnySearch's operation and parameter contract. It is deliberately not named `SKILL.md`, so agent Skill discovery exposes only the parent `smart-search-cli/SKILL.md`. Do not invoke `/anysearch`, resolve a separately installed AnySearch Skill, or add AnySearch to the Smart Search provider registry.
 
 ## Trigger
 
-Use this Skill when the task needs:
+Use this bundled capability when the task needs:
 
 1. General information retrieval or fact checking.
 2. Web browsing or known-URL content extraction.
@@ -95,4 +82,4 @@ Do not print, persist, or repeat keys. If a response contains `auto_registered.a
 
 The four upstream runtime files and shared schema files are refreshed from their governed AnySearch source. The Smart Search adapter is a local overlay and must remain byte-identical in the public and packaged Skill trees. Snapshot refresh preserves the adapter and `runtime.conf`; it never copies the parent Smart Search `config.json` or private values. Do not edit the upstream Python CLI to implement Smart Search credential policy.
 
-If this bundled Skill or its adapter is missing, record AnySearch as unavailable and continue with the remaining Smart Search sources; do not resolve another AnySearch entrypoint.
+If this bundled contract or its adapter is missing, record AnySearch as unavailable and continue with the remaining Smart Search sources; do not resolve another AnySearch entrypoint.

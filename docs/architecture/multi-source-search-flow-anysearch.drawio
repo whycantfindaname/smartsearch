@@ -389,7 +389,7 @@
             <mxGeometry height="53" width="288" x="1550" y="97" as="geometry" />
           </mxCell>
         </UserObject>
-        <UserObject label="产品模式&#xa;quick / standard / deep" mermaidId="n:Mode" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#1f2937;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="产品模式&#xa;quick / standard / deep" id="38">
+        <UserObject label="研究深度&#xa;focused / standard / deep" mermaidId="n:Mode" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#1f2937;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="研究深度&#xa;focused / standard / deep" id="38">
           <mxCell parent="1" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#1f2937;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
             <mxGeometry height="73" width="280" x="1554" y="200" as="geometry" />
           </mxCell>

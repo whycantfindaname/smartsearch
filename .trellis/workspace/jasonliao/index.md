@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 6
-- **Last Active**: 2026-08-26
+- **Total Sessions**: 7
+- **Last Active**: 2026-08-29
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~156 | Active |
+| `journal-1.md` | ~177 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 7 | 2026-08-29 | Repo review fixes, spec reshape, termbase | `0e26c25` | `preview/multi-source-agentic-research` |
 | 6 | 2026-08-26 | Citation-backed research report finalization | `97e188e`, `3f9edf6` | `codex/citation-backed-research-reports` |
 | 5 | 2026-08-26 | Complete transient Smart Search recovery acceptance | `775eb8d`, `a5c7b7d`, `665a801`, `419eea2`, `e428683` | `preview/multi-source-agentic-research` |
 | 4 | 2026-08-26 | Bound transient Smart Search error recovery | `ef3af983729219e8a3a31428bf1f51049467d4fe`, `de038a41573f3e8fb5fce5d308dbb277fab3abd7` | `preview/multi-source-agentic-research` |

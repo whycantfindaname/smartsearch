@@ -4,7 +4,7 @@ from datetime import datetime
 from .config import config
 
 logger = logging.getLogger("smart_search")
-logger.setLevel(getattr(logging, config.log_level))
+logger.setLevel(getattr(logging, config.log_level, logging.INFO))
 logger.addHandler(logging.NullHandler())
 
 
@@ -23,7 +23,7 @@ def _configure_file_logging() -> None:
     log_file = log_dir / f"smart_search_{datetime.now().strftime('%Y%m%d')}.log"
 
     file_handler = logging.FileHandler(log_file, encoding="utf-8")
-    file_handler.setLevel(getattr(logging, config.log_level))
+    file_handler.setLevel(getattr(logging, config.log_level, logging.INFO))
 
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -36,8 +36,9 @@ def _configure_file_logging() -> None:
 _configure_file_logging()
 
 async def log_info(ctx, message: str, is_debug: bool = False):
-    if is_debug:
-        logger.info(message)
+    # 始终写入 logger：默认只有 NullHandler（无输出），开启
+    # SMART_SEARCH_LOG_TO_FILE 后消息才能落到文件；日志级别继续过滤。
+    logger.info(message)
 
     if ctx:
         await ctx.info(message)

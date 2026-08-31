@@ -88,12 +88,25 @@ function assertPackContents(files) {
     "src/smart_search/assets/sidecar/pyproject.toml",
     "src/smart_search/assets/sidecar/src/smart_search_sidecar/protocol.py",
     "THIRD_PARTY_NOTICES.md",
-    "skills/smart-search-cli/bundled-skills/anysearch/SKILL.md",
+    "skills/smart-search-cli/bundled-skills/anysearch/CONTRACT.md",
     "skills/smart-search-cli/bundled-skills/anysearch-source.json",
-    "src/smart_search/assets/skills/smart-search-cli/bundled-skills/anysearch/SKILL.md"
+    "src/smart_search/assets/skills/smart-search-cli/bundled-skills/anysearch/CONTRACT.md"
   ]) {
     assert.ok(files.some((file) => file.path === requiredPath), `tarball is missing ${requiredPath}`);
   }
+  const nestedSkillEntrypoints = files
+    .map((file) => file.path)
+    .filter(
+      (filePath) =>
+        filePath.includes("skills/smart-search-cli/") &&
+        filePath.endsWith("/SKILL.md") &&
+        !filePath.endsWith("skills/smart-search-cli/SKILL.md")
+    );
+  assert.deepEqual(
+    nestedSkillEntrypoints,
+    [],
+    "smart-search-cli tarball must not expose a nested discoverable Skill"
+  );
 }
 
 function normalizePackOutput(packOutput) {
@@ -152,6 +165,23 @@ function main() {
     capture: true
   });
   assert.match(version, new RegExp(`smart-search ${packageJson.version.replaceAll(".", "\\.")}`));
+  const modesOutput = run(process.execPath, [wrapperPath, "modes", "--format", "json"], {
+    cwd: callerCwd,
+    env: isolatedEnv,
+    capture: true
+  });
+  const modes = JSON.parse(modesOutput);
+  assert.deepEqual(
+    modes.public_workflows.map((item) => item.id),
+    ["search", "research_workflow"],
+    "packed modes command must expose the two public workflows"
+  );
+  assert.deepEqual(
+    modes.research_depths.map((item) => item.id),
+    ["focused", "standard", "deep"],
+    "packed modes command must expose the current research depths"
+  );
+  assert.equal(modesOutput.includes('"quick"'), false, "packed modes output must not expose the obsolete depth");
   run(process.execPath, [wrapperPath, "regression"], { cwd: callerCwd, env: isolatedEnv });
   const smokeOutput = run(process.execPath, [wrapperPath, "smoke", "--mock", "--format", "json"], {
     cwd: callerCwd,

@@ -4,6 +4,7 @@ from typing import Any
 
 import httpx
 
+from ..config import config
 from ..provider_errors import classify_provider_exception
 
 
@@ -76,7 +77,7 @@ class JinaReaderProvider:
         endpoint = f"{self.reader_api_url}/{url}"
         try:
             timeout = httpx.Timeout(connect=6.0, read=self.timeout, write=10.0, pool=None)
-            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, verify=config.ssl_verify_enabled) as client:
                 response = await client.get(endpoint, headers=headers)
                 response.raise_for_status()
             content = response.text.strip()

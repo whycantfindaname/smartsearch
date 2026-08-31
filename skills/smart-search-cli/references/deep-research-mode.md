@@ -32,7 +32,7 @@ Deep Research does not change default `smart-search search` behavior and does no
 
 The confirmed multi-source architecture adds a Root-led caller-held loop without changing these public compatibility commands. Root Agent is the sole semantic planner and synthesizer: it decides task counts, project-agent counts and shards, replanning, and stopping. Smart Search performs deterministic contract validation, capability execution, normalization, artifact/Trace persistence, and citation verification. Read `agentic-research-architecture.md` before using `research-run`, project-agent definitions, registered-artifact document mining, or Provider Research Agents.
 
-The product modes are `quick`, `standard`, and `deep`. Do not add another product mode. Provider Research Agents is the formal category for Firecrawl Agent, Jina DeepSearch, Exa Agent, and Tavily Research.
+The research depths are `focused`, `standard`, and `deep`; no compatibility alias is accepted. Provider Research Agents is the formal category for Firecrawl Agent, Jina DeepSearch, Exa Agent, and Tavily Research.
 
 ## Offline Planner And Live Executor
 
@@ -73,7 +73,7 @@ Use this shape as the planning artifact:
     "source_authority_need": "normal|high",
     "claim_risk": "low|medium|high",
     "cross_validation_need": "normal|high",
-    "breadth_depth_budget": "quick|standard|deep"
+    "breadth_depth_budget": "focused|standard|deep"
   },
   "decomposition": [
     {
@@ -156,7 +156,7 @@ Prefer PowerShell-safe quoted commands in generated plans because Windows users 
 - `exa-search`: low-noise source discovery for official domains, papers, product pages, known domains, and trusted pages. Do not treat Exa as the universal second hop for every high-risk or verification task.
 - `exa-similar`: adjacent-source discovery when a known reliable URL is available.
 - `search --extra-sources N`: Tavily/Firecrawl horizontal candidate collection for breadth. Treat those candidates as discovery until fetched.
-- Bundled AnySearch: read `bundled-skills/anysearch/SKILL.md` within the Smart Search workflow and invoke its `scripts/smart_search_anysearch.py` adapter for vertical, batch, or known-URL extraction work without requiring `/anysearch`. If the bundle is missing, record an availability gap. Do not insert AnySearch into a Smart Search provider fallback chain or resolve another AnySearch entrypoint.
+- Bundled AnySearch: read `bundled-skills/anysearch/CONTRACT.md` within the Smart Search workflow and invoke its `scripts/smart_search_anysearch.py` adapter for vertical, batch, or known-URL extraction work without requiring `/anysearch`. If the bundle is missing, record an availability gap. Do not insert AnySearch into a Smart Search provider fallback chain or resolve another AnySearch entrypoint.
 - `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, and `sciverse-relations`: explicit experimental academic commands. Use them directly when the task needs Sciverse academic fields, semantic paper hits, document chunks, or citation/reference relations; do not insert Sciverse into default Deep Research fallback.
 - `fetch`: page-content evidence. Key claims require fetched page text under `fetch_before_claim`.
 - `map`: site structure exploration before many fetches from one site; not claim evidence by itself.
@@ -189,7 +189,7 @@ Safe research overrides are `SMART_SEARCH_RESEARCH_PREFERRED_PROVIDERS` and `SMA
 
 ## Closeout Lessons
 
-- Budget limits must not break evidence policy. Even `--budget quick` plans must retain at least one `fetch` step when claim-level conclusions are expected, and retained steps must keep valid `subquestion_id` links.
+- Budget limits must not break evidence policy. Even `--budget focused` plans must retain at least one `fetch` step when claim-level conclusions are expected, and retained steps must keep valid `subquestion_id` links.
 - If a smoke issue is found, fix the affected docs/code/tests and rerun the affected smoke until it passes or is proven to be an external provider blocker.
 - Final answers assembled from discovery-only output should list unverified candidates rather than presenting them as supported claims.
 

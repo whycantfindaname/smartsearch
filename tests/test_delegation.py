@@ -124,7 +124,7 @@ def test_anysearch_dispatch_is_bundled_only_and_has_no_concrete_command():
     assert dispatch["skill_resolution"] == [
         {
             "kind": "bundled_snapshot",
-            "path": "bundled-skills/anysearch/SKILL.md",
+            "path": "bundled-skills/anysearch/CONTRACT.md",
         }
     ]
     assert "command" not in dispatch

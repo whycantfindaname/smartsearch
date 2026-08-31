@@ -41,6 +41,7 @@ EXIT_NETWORK_ERROR = 4
 EXIT_RUNTIME_ERROR = 5
 
 COMMAND_ALIASES = {
+    "modes": [],
     "search": ["s"],
     "route": ["rt"],
     "fetch": ["f"],
@@ -1070,9 +1071,63 @@ def _format_skills_markdown(data: dict[str, Any]) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def _format_modes_markdown(data: dict[str, Any]) -> str:
+    lines = ["# Smart Search Workflows and Research Depths", ""]
+    workflows = data.get("public_workflows") or []
+    if workflows:
+        rows = []
+        for item in workflows:
+            depth = "—"
+            if item.get("research_depth_applies"):
+                supported = ", ".join(item.get("supported_depths") or [])
+                depth = f"{supported}; default={item.get('default_depth', '')}"
+            rows.append([item.get("name", item.get("id", "")), item.get("purpose", ""), item.get("invocation", ""), depth])
+        lines.extend(["## Public Workflows", ""])
+        lines.extend(_markdown_table(["Workflow", "Purpose", "Invocation", "Research depth"], rows))
+
+    depths = data.get("research_depths") or []
+    if depths:
+        lines.extend(["", "## Research Depth Presets"])
+        for item in depths:
+            default = " (default)" if item.get("default") else ""
+            lines.extend(
+                [
+                    "",
+                    f"### `{item.get('id', '')}`{default}",
+                    "",
+                    str(item.get("purpose", "")),
+                    "",
+                    f"- **Claim scope:** {item.get('claim_scope', '')}",
+                    f"- **Discovery:** {item.get('discovery', '')}",
+                    f"- **Delegation:** {item.get('delegation', '')}",
+                    f"- **Document mining:** {item.get('document_mining', '')}",
+                    f"- **Cross-validation:** {item.get('cross_validation', '')}",
+                    f"- **Replanning:** {item.get('replanning', '')}",
+                    f"- **Stop condition:** {item.get('stop_condition', '')}",
+                ]
+            )
+
+    advanced = data.get("advanced_entrypoints") or []
+    if advanced:
+        rows = [
+            [item.get("id", ""), item.get("purpose", ""), item.get("invocation", ""), item.get("depth_effect", "")]
+            for item in advanced
+        ]
+        lines.extend(["", "## Advanced CLI Interfaces", ""])
+        lines.extend(_markdown_table(["Interface", "Purpose", "Invocation", "Depth effect"], rows))
+
+    notes = data.get("notes") or []
+    if notes:
+        lines.extend(["", "## Boundaries", ""])
+        lines.extend(f"- {item}" for item in notes)
+    return "\n".join(lines).strip() + "\n"
+
+
 def _format_markdown(command: str, data: dict[str, Any]) -> str:
     if command == "research-run" and data.get("rendered_report"):
         return str(data["rendered_report"]).rstrip() + "\n"
+    if command == "modes":
+        return _format_modes_markdown(data)
     if command == "search":
         if not data.get("ok", False) and (data.get("error") or data.get("error_type")):
             lines = ["# Smart Search Search", ""]
@@ -1282,6 +1337,14 @@ def _plain_result_lines(data: dict[str, Any]) -> list[str]:
 def _format_content(command: str, data: dict[str, Any]) -> str:
     if command == "research-run" and data.get("rendered_report"):
         return str(data["rendered_report"]).rstrip() + "\n"
+    if command == "modes":
+        lines = ["Public workflows: search; Research Workflow (default depth: standard)"]
+        for item in data.get("research_depths") or []:
+            suffix = " (default)" if item.get("default") else ""
+            lines.append(f"Research depth {item.get('id', '')}{suffix}: {item.get('purpose', '')}")
+        lines.append("Advanced interfaces: deep; research; research-run")
+        lines.extend(str(item) for item in data.get("notes") or [])
+        return "\n".join(lines).strip() + "\n"
     if command in {"search", "fetch", "context7-docs", "research"}:
         content = data.get("content")
         if content:
@@ -2986,6 +3049,7 @@ def _sidecar_health(python: str, *, timeout_seconds: float = 30.0) -> dict[str, 
                 input='{"id":"doctor-1","op":"health"}\n',
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 timeout=max(1.0, min(float(timeout_seconds), 30.0)),
                 check=False,
             )
@@ -3047,6 +3111,7 @@ def _run_research_environment(args: argparse.Namespace) -> int:
             [args.python, "-c", "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=15,
             check=False,
         )
@@ -3074,7 +3139,7 @@ def _run_research_environment(args: argparse.Namespace) -> int:
     )
     for command in commands:
         try:
-            completed = subprocess.run(command, capture_output=True, text=True, timeout=args.install_timeout, check=False)
+            completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=args.install_timeout, check=False)
         except (OSError, subprocess.TimeoutExpired) as exc:
             data = {
                 "ok": False,
@@ -3105,6 +3170,8 @@ def _run_research_environment(args: argparse.Namespace) -> int:
 
 
 async def _run_async(args: argparse.Namespace) -> int:
+    if args.command == "modes":
+        return _print_result("modes", service.describe_modes(), args.format, args.output)
     if args.command == "research-run":
         return await _run_research_runtime(args)
     if args.command == "search":
@@ -3567,6 +3634,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("-v", "--v", "--version", action="version", version=f"%(prog)s {_get_version()}")
     sub = parser.add_subparsers(dest="command", required=True, parser_class=SmartSearchArgumentParser)
 
+    modes_parser = sub.add_parser(
+        "modes",
+        aliases=COMMAND_ALIASES["modes"],
+        help="Explain public workflows, research depths, and advanced interfaces without running probes.",
+    )
+    modes_parser.set_defaults(command="modes")
+    _add_format_args(modes_parser)
+
     search_parser = sub.add_parser(
         "search", aliases=COMMAND_ALIASES["search"], help="Run OpenAI-compatible web search."
     )
@@ -3821,7 +3896,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     deep_parser.set_defaults(command="deep")
     deep_parser.add_argument("query")
-    deep_parser.add_argument("--budget", choices=["quick", "standard", "deep"], default="standard")
+    deep_parser.add_argument("--budget", choices=["focused", "standard", "deep"], default="standard")
     deep_parser.add_argument("--evidence-dir", default="")
     _add_format_args(deep_parser)
 
@@ -3832,7 +3907,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     research_parser.set_defaults(command="research")
     research_parser.add_argument("query")
-    research_parser.add_argument("--budget", choices=["quick", "standard", "deep"], default="deep")
+    research_parser.add_argument("--budget", choices=["focused", "standard", "deep"], default="deep")
     research_parser.add_argument("--evidence-dir", default="")
     research_parser.add_argument("--fallback", choices=["auto", "off"], default="auto")
     _add_format_args(research_parser)

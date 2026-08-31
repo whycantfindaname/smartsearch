@@ -731,7 +731,7 @@ class IntentRouter:
         }
         payload = {"model": self.config.intent_embedding_model, "input": inputs}
         timeout = httpx.Timeout(self.config.intent_router_timeout)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with httpx.AsyncClient(timeout=timeout, verify=self.config.ssl_verify_enabled) as client:
             response = await client.post(self.config.intent_embedding_api_url, headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
@@ -774,7 +774,7 @@ class IntentRouter:
             "response_format": {"type": "json_object"},
         }
         timeout = httpx.Timeout(self.config.intent_router_timeout)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with httpx.AsyncClient(timeout=timeout, verify=self.config.ssl_verify_enabled) as client:
             response = await client.post(self.config.intent_classifier_api_url, headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()

@@ -17,6 +17,8 @@ from typing import Any, Awaitable, Callable, Mapping, Protocol, Sequence
 
 import httpx
 
+from .config import config
+
 
 ATTEMPT_SCHEMA_VERSION = "1"
 ATTEMPT_STATUSES = frozenset(
@@ -63,7 +65,7 @@ class HTTPXTransport:
         json: Mapping[str, Any] | None = None,
         timeout: float | None = None,
     ) -> httpx.Response:
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, verify=config.ssl_verify_enabled) as client:
             return await client.request(method, url, headers=dict(headers), json=json)
 
 

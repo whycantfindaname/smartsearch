@@ -13,6 +13,11 @@ const packagedSkillRoot = path.join(
   "smart-search-cli"
 );
 
+// Mirror package.json `files` exclusions: these machine-local files are
+// stripped from the published tarball, so parity must not count them either.
+const excludedNames = new Set(["__pycache__"]);
+const excludedFileNames = new Set(["config.json", ".env"]);
+
 function readTree(root) {
   const files = new Map();
   const pending = [root];
@@ -22,11 +27,11 @@ function readTree(root) {
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
       const entryPath = path.join(current, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name === "__pycache__") {
+        if (excludedNames.has(entry.name)) {
           continue;
         }
         pending.push(entryPath);
-      } else if (entry.isFile() && !entry.name.endsWith(".pyc")) {
+      } else if (entry.isFile() && !entry.name.endsWith(".pyc") && !excludedFileNames.has(entry.name)) {
         files.set(path.relative(root, entryPath).split(path.sep).join("/"), fs.readFileSync(entryPath));
       }
     }

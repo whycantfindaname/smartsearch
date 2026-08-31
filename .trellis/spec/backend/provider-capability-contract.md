@@ -23,6 +23,7 @@ installed wrappers, or uncommitted config files.
 CLI signatures:
 
 ```text
+smart-search modes [--format json|markdown|content] [--output PATH]
 smart-search search QUERY
   [--validation fast|balanced|strict]
   [--fallback auto|off]
@@ -32,7 +33,7 @@ smart-search search QUERY
   [--max-try ATTEMPTS]
   [--format json|markdown|content]
 smart-search research QUERY
-  [--budget quick|standard|deep]
+  [--budget focused|standard|deep]
   [--evidence-dir PATH]
   [--fallback auto|off]
   [--format json|markdown|content]
@@ -138,6 +139,7 @@ smart-search context7-docs LIBRARY_ID QUERY --format json|markdown|content
 Service-level contracts:
 
 ```python
+describe_modes() -> dict[str, Any]
 get_capability_status() -> dict[str, Any]
 validate_minimum_profile() -> dict[str, Any]
 search(query, platform="", model="", extra_sources=0,
@@ -164,6 +166,20 @@ contract. Root Agent is the sole semantic planner and synthesizer. Smart Search
 is a deterministic kernel and must not choose task count, project-Agent count,
 Source Curator count, semantic replanning, or stopping policy.
 
+The exact user request `使用smart-search-cli的Research Workflow调研 <GOAL>`, its
+spaced form, and direct equivalents activate the Skill-level `Research Workflow` mode. The
+Skill loads `references/research-workflow.md` and expands the short request into
+the Root-led contract without asking the user to restate it. This named mode is
+not a CLI subcommand or a fourth product mode; it defaults to `standard` unless
+the user selects `focused` or `deep`.
+
+Inside the Preview checkout, this mode resolves the repository root and invokes
+`node <repo>/npm/bin/smart-search.js` for every operation. It must not use the
+PATH-resolved global package, change the checkout, or downgrade to the compact
+`smart-search research` executor. If the Preview source entrypoint or project
+Agent definitions are unavailable, it stops before retrieval and reports the
+missing Preview boundary.
+
 - The caller holds the `ResearchRun` dossier and submits explicit operations.
 - `create` establishes `ResearchFrame`, `ClaimSpec`, Root-created `SearchTask`,
   capability snapshot, append-only artifact registry, and Trace.
@@ -176,8 +192,9 @@ Source Curator count, semantic replanning, or stopping policy.
   Source Curator, Evidence Miner, or MinerU. Only Root may turn child gaps or
   suggestions into new tasks through `add-search-tasks` or
   `add-evidence-tasks`.
-- AnySearch remains an external bundled Skill. Smart Search retrieval workflows
-  read `bundled-skills/anysearch/SKILL.md` and invoke its
+- AnySearch remains an internal bundled capability outside the Provider
+  registry. Smart Search retrieval workflows read
+  `bundled-skills/anysearch/CONTRACT.md` and invoke its
   `scripts/smart_search_anysearch.py` adapter without requiring a separate slash
   command. The bundled adapter is the only active AnySearch entrypoint; a
   missing bundle is recorded as an availability gap.
@@ -241,13 +258,13 @@ The commands in this subsection remain compatibility entry points and a rule
 baseline. They are not the Root-led Preview control plane described above.
 
 - Deep Research has a public offline planner command:
-  `smart-search deep QUERY [--budget quick|standard|deep] [--evidence-dir PATH]`.
+  `smart-search deep QUERY [--budget focused|standard|deep] [--evidence-dir PATH]`.
   Alias: `dr`.
 - `smart-search deep` is a planner, not an executor. It must not call live
   providers, run `doctor`, fetch pages, or change configuration by default.
   Live research happens only when the AI agent or user executes the planned
   `steps[].command` values, or when the user calls `smart-search research`.
-- `smart-search research QUERY [--budget quick|standard|deep] [--evidence-dir
+- `smart-search research QUERY [--budget focused|standard|deep] [--evidence-dir
   PATH] [--fallback auto|off]` is the live Deep Research executor. It performs
   plan -> source discovery -> fetch/read -> gap check -> evidence-only
   synthesis.
@@ -321,6 +338,43 @@ baseline. They are not the Root-led Preview control plane described above.
   source metadata. It must not call web providers again and must not cite
   unfetched discovery candidates as proof. If evidence cannot close, return a
   degraded result with explicit gaps instead of unsupported claims.
+
+Mode discovery and research-depth semantics:
+
+- `smart-search modes` is the read-only, offline discovery surface. Its
+  structured result contains `public_workflows`, `research_depths`,
+  `advanced_entrypoints`, and `notes`; Markdown and content render from that
+  same service-owned projection.
+- Public workflows are `search` for immediate retrieval and the Skill-level
+  `Research Workflow` for a caller-held evidence and Claim lifecycle. `deep`,
+  `research`, and `research-run` remain advanced interfaces rather than peer
+  public workflows.
+- Research depths are `focused`, `standard`, and `deep`. The obsolete public
+  value `quick` is rejected rather than retained as an alias. Unrelated
+  lightweight diagnostic probes may continue to use the ordinary English word
+  `quick` internally.
+- `focused` narrows Claim scope and uses the former bounded planner envelope:
+  at most two decomposition items and four planned steps, while retaining a
+  fetch step when Claim-level conclusions require evidence.
+- `standard` is the Research Workflow default and performs multi-source
+  verification with necessary source reading; project-Agent delegation and
+  document mining are gap-driven.
+- `deep` expands discovery to counterevidence and boundaries, uses critical
+  document mining and Provider Research Agents, and supports checkpointed
+  replanning before Claim-level synthesis.
+- Subagent count does not define a depth. Root may launch zero or more project
+  Agents according to the selected envelope and observed gaps.
+- A shallower depth may reduce coverage but never weakens evidence eligibility,
+  fetch-before-claim, locator, or citation-verification requirements.
+- The compact `research` executor currently records the selected plan and depth
+  but does not execute the planner's step list as a runtime call cap and does
+  not become the Root-led Workflow in `deep`. `modes` and the focused
+  References must state this boundary until a separate runtime-budget design is
+  implemented.
+- `modes` must not read private configuration, inspect activation/cache state,
+  probe the Preview checkout, or call providers. Use `research-run
+  capabilities`, `skills status`, `doctor`, or the named Workflow's Preview
+  preflight for those distinct observations.
 
 Minimum profile:
 
@@ -922,6 +976,9 @@ smart-search doctor --format json
 
 | Condition | Behavior |
 | --- | --- |
+| `smart-search modes` with any supported format | Return the same static service-owned contract without reading config or calling providers |
+| `--budget quick` or ResearchFrame `mode=quick` | Reject as an invalid parameter/contract value; do not silently alias it |
+| `--budget focused` or ResearchFrame `mode=focused` | Accept and apply the bounded focused planning/capability envelope |
 | Missing required capability under `standard` | Return `ok: false`, `error_type: "config_error"`, and missing capability ids |
 | Invalid validation/fallback/minimum enum | Return `error_type: "parameter_error"` |
 | Provider filter excludes all configured main providers | Return config error; do not silently choose another capability |
@@ -929,6 +986,7 @@ smart-search doctor --format json
 | `OPENAI_COMPATIBLE_STREAM` or `--stream` is true | Send `stream: true` only to OpenAI-compatible `search()` / `fetch()` and parse SSE deltas, ignoring `[DONE]` |
 | `--no-stream` is set | Force non-streaming OpenAI-compatible `search()` for that invocation even when config is true |
 | Bundled AnySearch Skill or adapter is unavailable or unusable | Record delegated Skill unavailability and continue with remaining Smart Search routes |
+| Named `Research Workflow` is invoked outside the Preview checkout or without its project-local entrypoint or Agent definitions | Stop before retrieval; report the missing Preview boundary and do not use a PATH-resolved global package or `smart-search research` |
 | Exa `--include-domains` / `--exclude-domains` receives comma-separated, whitespace-separated, or PowerShell-split values | Normalize to a flat domain list before sending `includeDomains` / `excludeDomains` to Exa |
 | Exa returns HTTP 400 or 422 | Return `error_type: "parameter_error"` and preserve the Exa response body excerpt for diagnosis |
 | Provider HTTP/network/timeout/schema error | Record `provider_attempts[].status="error"` and try next same-capability provider when fallback is `auto`; this is provider fallback, not logical replay |
@@ -977,7 +1035,25 @@ smart-search doctor --format json
 
 ## 5. Good/Base/Bad Cases
 
+Mode discovery and depth cases:
+
+- Good: `smart-search modes --format json` separates public workflows,
+  research depths, and advanced interfaces while performing no readiness or
+  provider probe.
+- Base: `smart-search deep "question" --budget focused` emits no more than two
+  decomposition items and four steps and retains a fetch step when Claim-level
+  evidence is required.
+- Bad: `--budget quick` must fail instead of hiding the public rename behind an
+  alias.
+- Bad: documentation must not claim that compact `research --budget focused`
+  enforces the planner's four-step limit on its live execution pipeline.
+
 Good:
+
+- Request: `使用smart-search-cli的Research Workflow调研 近期 Agentic IQA 论文`.
+- Expected: load `references/research-workflow.md`, use the project-local Preview
+  entrypoint, default to `standard`, and let Root dynamically decide project-Agent
+  delegation without requiring the long orchestration prompt.
 
 - Query: `React useEffect API docs`.
 - Route: `main_search` answer plus `docs_search` fallback chain.
@@ -1062,6 +1138,15 @@ Release bad:
 
 When this contract changes, add or update tests that assert:
 
+- `modes` JSON/Markdown/content/output-file behavior and failing sentinels for
+  config/provider access prove the command is offline;
+- `focused` planner and ResearchFrame acceptance, obsolete `quick` rejection,
+  focused fetch preservation, and unchanged standard/deep defaults;
+- the Skill entrypoint is a conditional Reference router and contains no
+  Research Workflow walkthrough, architecture diagram, platform runtime
+  snapshot, private host path, or active-model snapshot;
+- removed Reference files have no dangling public/package links and the public
+  and packaged Skill trees remain byte-identical;
 - minimum profile fails closed when any required capability is missing;
 - capability fallback order is fixed and same-capability only;
 - provider error and empty result both trigger fallback;
@@ -1100,6 +1185,10 @@ When this contract changes, add or update tests that assert:
   provider fallback; its adapter consumes two private config fields separately;
 - AnySearch capability status records delegated Skill metadata and does not
   change required minimum capabilities;
+- the exact Research Workflow activation phrase and direct equivalents route to
+  `references/research-workflow.md`, default to `standard`, use the project-local
+  Preview source entrypoint, and remain byte-identical across public and packaged
+  Skill trees;
 - bundled-only resolution, unavailable degradation, snapshot provenance, and
   preservation of private local configuration are covered;
 - AnySearch's dual private config fields are read-only adapter inputs, masked in
@@ -1393,6 +1482,19 @@ what to type.
 
 ### Wrong
 
+Treat search, deep, research, and Research Workflow as four peer modes and
+describe quick, standard, and deep as if each value changed every executor in
+the same way.
+
+### Correct
+
+Expose search and Research Workflow as the two public workflows. Describe
+focused, standard, and deep as Research Workflow depth presets, and list deep,
+research, and research-run separately as advanced interfaces with their actual
+execution boundaries.
+
+### Wrong
+
 Updating only the public skill copy after a CLI contract change:
 
 ```text
@@ -1413,6 +1515,24 @@ src/smart_search/assets/skills/smart-search-cli/references/cli-contract.md
 
 Then assert both copies match, and run source checkout regression before
 release.
+
+### Wrong
+
+Expand the named Research Workflow through the global CLI or the compact
+single-executor path:
+
+```text
+smart-search research "<GOAL>"
+```
+
+### Correct
+
+Load `references/research-workflow.md`, resolve the open Preview checkout, and
+use its source entrypoint for the Root-held workflow:
+
+```text
+node <repo>/npm/bin/smart-search.js research-run capabilities --format json
+```
 
 ### Wrong
 

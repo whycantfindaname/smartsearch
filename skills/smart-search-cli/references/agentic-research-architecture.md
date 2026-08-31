@@ -10,11 +10,11 @@ Only Root creates `SearchTask`, `EvidenceMiningTask`, and `DelegateRequest` obje
 
 Smart Search is the deterministic research kernel. It validates public contracts and stable identities, compiles Root-authored operations, executes internal capabilities and Provider Research Agents, normalizes candidates and evidence, registers immutable artifacts, appends run-local Trace events, and verifies citation integrity.
 
-## Product modes and capability selection
+## Research depths and capability selection
 
-The product exposes exactly three modes:
+Research Workflow exposes exactly three depth presets:
 
-- `quick`: low-latency search and known-URL reading selected by Root.
+- `focused`: narrow evidence closure for the core question, with direct and authoritative sources preferred.
 - `standard`: multi-source verification and necessary source reading; Root may add AnySearch or Search Scouts when they can close a real gap.
 - `deep`: broad discovery, critical-document mining, Provider Research Agents, and Claim-level synthesis.
 
@@ -77,7 +77,7 @@ Evidence Miner receives an `EvidenceMiningTask` bound to one registered artifact
 
 ## AnySearch and external delegate boundaries
 
-AnySearch remains an external bundled Skill, never a Smart Search provider or fallback member. Read `../bundled-skills/anysearch/SKILL.md` from the Smart Search workflow and invoke its `scripts/smart_search_anysearch.py` adapter for matching vertical, batch, or known-URL extraction work; no separate `/anysearch` invocation is required. If the bundle is missing or unusable, record a gap and continue with other routes. Follow the bundled Skill's operation and parameter contract. The adapter is a Smart Search-owned overlay; do not modify the unchanged upstream runtime files as part of Smart Search architecture work.
+AnySearch remains an internally bundled capability, never a Smart Search provider or fallback member. Read `../bundled-skills/anysearch/CONTRACT.md` from the Smart Search workflow and invoke its `scripts/smart_search_anysearch.py` adapter for matching vertical, batch, or known-URL extraction work; no separate `/anysearch` invocation is required. If the bundle is missing or unusable, record a gap and continue with other routes. Follow the bundled capability's operation and parameter contract. The adapter is a Smart Search-owned overlay; do not modify the unchanged upstream runtime files as part of Smart Search architecture work.
 
 AnySearch returns through `DelegateResult`. Its payload preserves the original query and source items; normalized source items enter the same `DiscoveryCandidate` pipeline as other discovery. Missing credentials, quota, network, or Skill files produce an explicit gap while other routes continue.
 

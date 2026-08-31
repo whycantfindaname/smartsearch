@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/provider-capability-contract.md","reason":"Owns CLI signatures, research mode contracts, routing boundaries, validation matrix, and required tests."}
+{"file":".trellis/spec/backend/packaging-contract.md","reason":"Requires public and packaged Skill trees and tarball contents to stay synchronized."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Defines full-suite, parity, tarball, subprocess, and cross-platform verification gates."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"The modes projection crosses service, CLI renderer, docs, Skill packaging, and activation layers."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Use one structured modes projection instead of duplicating semantics in JSON and Markdown renderers."}
+{"file":".trellis/tasks/08-31-smart-search-workflow-routing/design.md","reason":"Approved information architecture, focused-depth contract, output schema, and non-goals."}

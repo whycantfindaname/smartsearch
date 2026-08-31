@@ -152,7 +152,7 @@ Trellis、hooks、agents 或 commands。
 | `web_search` | 智谱 Web Search API -> 智谱 Coding Plan MCP `web_search_prime` -> Tavily -> Firecrawl |
 | `web_fetch` | Tavily -> 带 `JINA_API_KEY` 的 Jina Reader -> 智谱 Coding Plan MCP `webReader` -> Firecrawl |
 
-AnySearch 是 Smart Search 内置委派的外部 Skill，不是 Smart Search provider。每次 Smart Search 检索工作流会主动读取 `bundled-skills/anysearch/SKILL.md`，并在垂直检索、批量检索和已知 URL 抽取场景通过 `scripts/smart_search_anysearch.py` 执行；用户不需要另外输入 `/anysearch`。内置 Skill 或适配器不可用时继续使用其他来源。AnySearch 和 Sciverse 都不是 `standard` 最低配置要求。Sciverse 也不是 `docs_search`，不会加入默认 `search` / `research` 路由。
+AnySearch 是 Smart Search 的内部能力，不再作为可单独发现的 Skill，也不是 Smart Search provider。每次 Smart Search 检索工作流会主动读取 `bundled-skills/anysearch/CONTRACT.md`，并在垂直检索、批量检索和已知 URL 抽取场景通过 `scripts/smart_search_anysearch.py` 执行；用户不需要另外输入 `/anysearch`。内部契约或适配器不可用时继续使用其他来源。AnySearch 和 Sciverse 都不是 `standard` 最低配置要求。Sciverse 也不是 `docs_search`，不会加入默认 `search` / `research` 路由。
 
 Jina Reader 只属于 `web_fetch`，不是通用搜索 provider。只有配置 `JINA_API_KEY` 后，它才可以满足 `SMART_SEARCH_MINIMUM_PROFILE=standard`；匿名 `r.jina.ai` 只能当显式/实验抓取能力，不能让最低配置检查放松。
 
@@ -254,6 +254,18 @@ Preview 增加了一套由调用方控制的研究运行时，不改变默认 `s
 `research` 的行为。它面向负责规划与综合的 Root Agent；Smart Search 负责执行
 确定性的 ResearchRun 操作，并保存可审计的 Research Workspace。
 
+在当前 Agent 任务中打开 Preview checkout 后，只需一句话即可启动完整流程：
+
+```text
+使用smart-search-cli的Research Workflow调研 <研究目标>
+```
+
+Skill 会自动展开项目内 Preview 入口、能力观察、动态 Project Agent 委派、分步保存的
+caller-held 运行循环、证据挖掘与引用验证。`Research Workflow` 是 Skill 级编排模式，
+不是 CLI 子命令，也不是并列的 CLI 模式；用户未指定 `focused` 或 `deep` 时默认使用
+`standard`。运行 `smart-search modes` 可以离线查看公共工作流、研究深度和高级接口，
+不会探测 Provider。
+
 ```bash
 # 查看当前已配置、可访问且账号有权限使用的研究能力。
 smart-search research-run capabilities --format json
@@ -266,15 +278,16 @@ smart-search research-environment doctor --format json
 smart-search research-view /path/to/research-workspace --port 8080
 ```
 
-`research-run` 还提供 `create`、`execute`、`import`、添加任务、文档挖掘、
-Claim 处理、Root 决策、引用验证和 `materialize` 等操作。这些命令通过结构化
-JSON dossier 与调用它的 Agent 交换状态，不替代面向用户的 `research` 命令。
+`research-run` 还提供 `create`、`execute`、`import`、`add-search-tasks`、
+`add-evidence-tasks`、`document`、`claims`、`decision`、`verify` 和
+`materialize` 等操作。这些命令通过结构化 JSON dossier 与调用它的 Agent 交换
+状态，不替代面向用户的 `research` 命令。
 
 Dossier、append-only Trace、Artifact Registry、EvidenceItem 和 Claim 记录是
 权威数据；Markdown 与可视化页面只是便于阅读的投影，不保存隐藏推理。只有能力
 已经配置、当前可访问，并且账号有权使用时，Provider Research Agent 才会发起
-尝试。AnySearch 和 MinerU 继续作为外部 Skill 使用，凭据不复制到 Smart Search
-配置中。
+尝试。AnySearch 只通过 Smart Search 内置适配层使用，并从 Smart Search 私有配置中
+读取两把 Key；MinerU 继续作为凭据独立管理的外部 Skill。
 
 生成带引用的最终报告时，Root 在 `draft_report` 中写入精确的
 `[cite:<citation_id>]` 标记，并把它与既有 `citations` 映射一起交给
@@ -283,7 +296,7 @@ Claim/Evidence/artifact/Trace 链和 locator，按首次出现顺序渲染编号
 References 章节，并保存三种边界明确的投影：面向读者的 `final_synthesis.md`、
 用于权威反向验证的 `evidence/citation_verification.json`，以及用于审计映射的派生
 `evidence/reference_register.json`。Manifest entrypoints 只是 Workspace 文档索引。
-`quick`、`standard` 和 `deep` Research Workspace 使用同一套契约。
+`focused`、`standard` 和 `deep` Research Workspace 使用同一套契约。
 
 文档 Sidecar 必须由明确指定的 Python 3.12 解释器创建独立虚拟环境，默认位置是
 `$SMART_SEARCH_CONFIG_DIR/research-sidecar`。只有健康检查通过后，Smart Search
@@ -360,7 +373,7 @@ smart-search route-calibrate --models "Qwen/Qwen3-Embedding-8B" --format markdow
 - `TAVILY_API_URL` 只影响 Tavily，不会代理智谱。Tavily Hikari / 号池用 `https://<host>/api/tavily`；setup 会把根域名或 `/mcp` 输入规范化成这个 REST base。
 - `TAVILY_ENABLED` 默认是 `true`。即使已有 key，设为 `false` 也会禁用 Tavily：它会从 web-search 和 fetch 路由中移除，直接 Tavily 调用和 `doctor` 都不会发 Tavily 请求，`map` 会本地返回配置错误。它不会启用 Firecrawl，也不会改变同 capability 兜底边界。
 - `FIRECRAWL_API_URL` 默认是 `https://api.firecrawl.dev/v2`。
-- AnySearch 不属于 provider 或 setup wizard 能力。Agent 在 Smart Search 工作流内主动读取 `bundled-skills/anysearch/SKILL.md` 并按其当前接口执行，不要求用户单独调用 `/anysearch`。内置适配器从 Smart Search 既有私有 `config.json` 读取两个密钥字段；setup 不打印或迁移密钥值。内置快照来自 `jason-liao-skills/main/skill-packages/anysearch`；仅当首选仓库可访问但缺少该包时，才使用官方仓库。
+- AnySearch 不属于 provider、setup wizard 能力或可单独发现的 Skill。Agent 在 Smart Search 工作流内主动读取 `bundled-skills/anysearch/CONTRACT.md` 并按其内部契约执行，不要求用户单独调用 `/anysearch`。内置适配器从 Smart Search 既有私有 `config.json` 读取两个密钥字段；setup 不打印或迁移密钥值。内置快照来自 `jason-liao-skills/main/skill-packages/anysearch`；仅当首选仓库可访问但缺少该包时，才使用官方仓库。
 - Sciverse 默认走 `https://api.sciverse.space` 的 native HTTP/OpenAPI。必须配置 `SCIVERSE_API_TOKEN`；未配置时本地返回 `config_error` 且不发网络请求；已配置时发送 `Authorization: Bearer ...`。它保持 explicit-only：不是 `docs_search`，不满足 `standard`，不进入默认 `search` / `research` 兜底。
 - `doctor` 和 `route` 会报告 intent router 的配置状态、embedding 模型、threshold、margin、配置来源、超时和是否可降级，不会暴露 router API key。
 
@@ -517,6 +530,7 @@ xAI 的 hard deadline 覆盖连接尝试、重试等待、响应等待和状态�
 | `setup` | `init` | 配置向导 |
 | `config` | `cfg` | 本机配置读写 |
 | `model` | `mdl` | 查看显式 provider 模型；修改请用 `config set XAI_MODEL` 或 `OPENAI_COMPATIBLE_MODEL` |
+| `skills` | `skill` | 检查或更新已安装的 smart-search-cli skills（`status` / `update`，配合 `--targets codex,claude,cursor,hermes`） |
 | `smoke` | `sm` | provider 路由冒烟测试 |
 | `regression` | `reg` | 离线回归测试 |
 

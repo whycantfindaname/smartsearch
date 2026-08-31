@@ -10,7 +10,7 @@
 
 ## Local Modifications
 
-- Copied the minimal runnable package: `SKILL.md`, `.env.example`, `requirements.txt`, `runtime.conf.example`, `scripts/`, `LICENSE`, and `NOTICE`.
+- Copied the minimal runnable package: `CONTRACT.md`, `.env.example`, `requirements.txt`, `runtime.conf.example`, `scripts/`, `LICENSE`, and `NOTICE`.
 - Kept the upstream CLI scripts and shared schema files unchanged so their source snapshot remains auditable.
 - Added `scripts/smart_search_anysearch.py`, the Smart Search-owned adapter and only active bundled entrypoint.
 - Added this README for source tracking, package scope, and secrets policy.

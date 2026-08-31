@@ -159,7 +159,7 @@ Fallback is same-capability only:
 | `web_search` | Zhipu Web Search API -> Zhipu Coding Plan MCP `web_search_prime` -> Tavily -> Firecrawl |
 | `web_fetch` | Tavily -> Jina Reader with `JINA_API_KEY` -> Zhipu Coding Plan MCP `webReader` -> Firecrawl |
 
-AnySearch is an external bundled Skill rather than a Smart Search provider and is not a registered provider. A Smart Search retrieval workflow reads `bundled-skills/anysearch/SKILL.md` and invokes its `scripts/smart_search_anysearch.py` adapter for matching vertical, batch, and known-URL extraction work; the user does not need to invoke `/anysearch` separately. If the bundle or adapter is unavailable, research continues with other sources. AnySearch and Sciverse are not required by the `standard` minimum profile. Sciverse is also not a `docs_search` provider and does not join default `search` or `research` routing.
+AnySearch is an internal Smart Search capability. It is not a separately discoverable Skill and not a registered provider. A Smart Search retrieval workflow reads `bundled-skills/anysearch/CONTRACT.md` and invokes its `scripts/smart_search_anysearch.py` adapter for matching vertical, batch, and known-URL extraction work; the user does not need to invoke `/anysearch` separately. If the bundle or adapter is unavailable, research continues with other sources. AnySearch and Sciverse are not required by the `standard` minimum profile. Sciverse is also not a `docs_search` provider and does not join default `search` or `research` routing.
 
 Jina Reader is a `web_fetch` provider only. `JINA_API_KEY` is required before Jina satisfies `SMART_SEARCH_MINIMUM_PROFILE=standard`; anonymous `r.jina.ai` behavior is treated as explicit/experimental fetch behavior and must not weaken fail-closed setup checks.
 
@@ -246,6 +246,21 @@ default `search`, `deep`, or `research` behavior. It is intended for a Root
 Agent that owns planning and synthesis while Smart Search performs
 deterministic ResearchRun operations and stores an auditable workspace.
 
+When the Preview checkout is open in the current Agent task, the complete
+Root-led flow can be invoked with one request:
+
+```text
+使用smart-search-cli的Research Workflow调研 <GOAL>
+```
+
+The Skill expands that named mode into the project-local Preview entrypoint,
+capability observation, dynamic project-Agent delegation, checkpointed
+caller-held run loop, evidence mining, and citation verification. `Research
+Workflow` is a Skill-level orchestration mode, not a CLI subcommand or a peer
+CLI mode; it defaults to `standard` unless the request selects `focused` or
+`deep`. Use `smart-search modes` to inspect the public workflows, research
+depths, and advanced interfaces without contacting a Provider.
+
 ```bash
 # Observe currently configured, reachable, and entitled research capabilities.
 smart-search research-run capabilities --format json
@@ -258,17 +273,19 @@ smart-search research-environment doctor --format json
 smart-search research-view /path/to/research-workspace --port 8080
 ```
 
-`research-run` also exposes `create`, `execute`, `import`, task-addition,
-document-mining, claim, decision, citation-verification, and `materialize`
-operations. These commands exchange structured JSON dossiers with the calling
-Agent; they are not a replacement for the user-facing `research` command.
+`research-run` also exposes `create`, `execute`, `import`, `add-search-tasks`,
+`add-evidence-tasks`, `document`, `claims`, `decision`, `verify`, and
+`materialize` operations. These commands exchange structured JSON dossiers with
+the calling Agent; they are not a replacement for the user-facing `research`
+command.
 
 The dossier, append-only Trace, Artifact Registry, EvidenceItem, and Claim
 records are authoritative. Markdown files and the visualizer are readable
 projections and do not store hidden reasoning. Provider Research Agents are
 attempted only when their capabilities are configured, reachable, and covered
-by the current account entitlement. AnySearch and MinerU remain external Skills
-and keep their credentials outside Smart Search configuration.
+by the current account entitlement. AnySearch is exposed only through Smart
+Search and reads its two keys from Smart Search's private configuration. MinerU
+remains an external Skill with separately managed credentials.
 
 For a citation-backed final report, Root writes exact `[cite:<citation_id>]`
 markers in `draft_report` and submits them with the existing `citations` mapping
@@ -278,7 +295,7 @@ citations and one References section, and persists three distinct projections:
 `final_synthesis.md` for readers, authoritative
 `evidence/citation_verification.json` for reverse-trace validation, and derived
 `evidence/reference_register.json` for the audit mapping. Manifest entrypoints
-are only the Workspace document index. The same contract applies to `quick`,
+are only the Workspace document index. The same contract applies to `focused`,
 `standard`, and `deep` Research Workspaces.
 
 The document sidecar requires an explicit Python 3.12 interpreter and creates a
@@ -360,7 +377,7 @@ Important boundaries:
 - `TAVILY_API_URL` affects Tavily only. It does not proxy Zhipu. For Tavily Hikari / pooled endpoints, use `https://<host>/api/tavily`; setup normalizes root-host or `/mcp` inputs to that REST base.
 - `TAVILY_ENABLED` defaults to `true`. Set it to `false` to disable Tavily even when a key is present: Tavily is removed from web-search and fetch routing, direct Tavily calls and `doctor` make no Tavily request, and `map` returns a local configuration error. This does not enable Firecrawl or change same-capability fallback boundaries.
 - `FIRECRAWL_API_URL` defaults to `https://api.firecrawl.dev/v2`.
-- AnySearch is not a provider or setup-wizard capability. The agent reads `bundled-skills/anysearch/SKILL.md` inside the Smart Search workflow and follows that Skill's current runtime contract without requiring a separate slash invocation. The bundled adapter reads its two key fields from Smart Search's existing private `config.json`; setup does not print or migrate their values. The bundled snapshot is refreshed from `jason-liao-skills/main/skill-packages/anysearch`; the official repository is used only when the preferred repository is reachable and that package is absent.
+- AnySearch is not a provider, setup-wizard capability, or separately discoverable Skill. The agent reads `bundled-skills/anysearch/CONTRACT.md` inside the Smart Search workflow and follows that internal contract without requiring a separate slash invocation. The bundled adapter reads its two key fields from Smart Search's existing private `config.json`; setup does not print or migrate their values. The bundled snapshot is refreshed from `jason-liao-skills/main/skill-packages/anysearch`; the official repository is used only when the preferred repository is reachable and that package is absent.
 - Sciverse uses native HTTP/OpenAPI at `https://api.sciverse.space` by default. It requires `SCIVERSE_API_TOKEN`, returns `config_error` without a network request when the token is absent, sends `Authorization: Bearer ...` when configured, and remains explicit-only: not `docs_search`, not `standard`, and not default `search` / `research` fallback.
 - `doctor` and `route` report intent router status, embedding model, threshold, margin, their config source, timeout, and degradation behavior. They do not expose router API keys.
 
@@ -473,6 +490,7 @@ Provider timeouts:
 | `setup` | `init` | Interactive or scripted setup |
 | `config` | `cfg` | Local config read/write |
 | `model` | `mdl` | Show explicit provider model settings; use `config set XAI_MODEL` or `OPENAI_COMPATIBLE_MODEL` to change them |
+| `skills` | `skill` | Inspect or update installed smart-search-cli skills (`status` / `update` with `--targets codex,claude,cursor,hermes`) |
 | `smoke` | `sm` | Provider routing smoke tests |
 | `regression` | `reg` | Offline regression checks |
 

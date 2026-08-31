@@ -16,7 +16,7 @@ if sys.stderr.encoding != "utf-8":
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 # Identifies access mode + spec version to the backend (X-Anysearch-Client).
-# Keep the version aligned with SKILL.md `version`.
+# Keep the version aligned with CONTRACT.md `Upstream contract version`.
 CLIENT_HEADER = "skill/3.0.1"
 
 def _load_env():

@@ -33,11 +33,12 @@ PRESERVED_NAMES = {".env", "runtime.conf", "config.json"}
 PRESERVED_RELATIVE_NAMES = {"scripts/smart_search_anysearch.py"}
 SMART_SEARCH_OVERLAY_RELATIVE_NAMES = {
     ".env.example",
+    "CONTRACT.md",
     "README.md",
-    "SKILL.md",
     "runtime.conf.example",
     "scripts/smart_search_anysearch.py",
 }
+UPSTREAM_ENTRYPOINT_NAME = "SKILL.md"
 IGNORED_NAMES = {".DS_Store", "__pycache__"}
 IGNORED_PARTS = {".git"}
 REQUIRED_FILES = {"SKILL.md", "LICENSE", "NOTICE"}
@@ -142,6 +143,14 @@ def _included_files(root: Path) -> dict[str, Path]:
     return files
 
 
+def _included_source_files(root: Path) -> dict[str, Path]:
+    """Return upstream runtime files without exposing its Skill entrypoint."""
+
+    files = _included_files(root)
+    files.pop(UPSTREAM_ENTRYPOINT_NAME, None)
+    return files
+
+
 def _validate_source(source: Path) -> None:
     if not source.is_dir():
         raise SyncError(f"AnySearch Skill source not found: {source}")
@@ -211,7 +220,7 @@ def _resolve_source(temp_root: Path) -> tuple[Path, dict[str, object]]:
 
 
 def _different(source: Path, destination: Path) -> list[str]:
-    source_files = _included_files(source)
+    source_files = _included_source_files(source)
     destination_files = _included_files(destination) if destination.is_dir() else {}
     for rel in SMART_SEARCH_OVERLAY_RELATIVE_NAMES:
         if rel in destination_files:
@@ -226,7 +235,7 @@ def _different(source: Path, destination: Path) -> list[str]:
 
 def _sync(source: Path, destination: Path) -> list[str]:
     changed = _different(source, destination)
-    source_files = _included_files(source)
+    source_files = _included_source_files(source)
     destination_files = _included_files(destination) if destination.is_dir() else {}
     overlays = {
         rel: (destination / rel).read_bytes()
