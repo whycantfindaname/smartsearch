@@ -9,7 +9,33 @@
 - [ ] 记录 Linux、8×A100 的显存 SKU、Driver、CUDA 与容器环境。
 - [ ] 明确可用 Provider、现有 Entitlement、禁止自动充值和失败策略。
 - [ ] 固定 canonical Agent YAML、Root Prompt Wrapper 和相同 Qwen reasoning 配置。
-- [ ] 由用户确认首轮 Pilot 的 Benchmark、Case IDs、Judge 与执行上限。
+- [x] Benchmark 与 Judge 已由用户确认（2026-08-31）：首轮 Pilot 为 BrowseComp
+      小样本（约 20 题）+ LiveResearchBench 子集（约 5 题）；Judge 使用本地
+      Qwen，结果标记 benchmark-derived internal，不声称官方排行榜名次。
+- [ ] Case IDs 与执行上限（每题超时、并发、Provider 用量上限）在 Pilot 启动前
+      另行冻结。
+
+### Phase 0 冻结进展（2026-08-31，Mac 本机核查，未启动实施）
+
+- Smart Search 锚点：分支 `preview/multi-source-agentic-research`，本机 HEAD
+  `eadcf57`（含 Stage G 证据包 `1fe0068` 的后代）；Linux 实施时以实际 checkout
+  的 commit 为准重新冻结。
+- Canonical Agent YAML 已核实：`skills/smart-search-cli/agents/{search_scout,
+  source_curator,evidence_miner}.yaml` 为角色权威（`src/smart_search/assets/`
+  下同名文件是打包镜像，`.codex/agents/*.toml` 是 Codex 投影）。注意
+  `deployment_defaults.model` 当前为托管模型 `gpt-5.6-luna`：Benchmark 运行时
+  HarnessDriver 必须用固定 Qwen 端点覆盖该默认值，模型身份漂移按 Phase 2 要求
+  显式失败。
+- Root Prompt Wrapper 在产品代码中尚不存在，属 Phase 2 待建物；Phase 0 只冻结
+  其内容边界（Benchmark 问题、模式、Workspace 目录、答案格式）。
+- Provider configured 快照（脱敏，可达性与 Entitlement 未实测，不做真实调用）：
+  AnySearch（含 fallback key）、Tavily、Exa、Firecrawl、Jina、SciVerse、
+  Context7、本地 OpenAI-compatible 网关（`127.0.0.1:8000/v1`）、SiliconFlow
+  intent router（Qwen3-Embedding-8B + Qwen2.5-7B-Instruct）。配置源：
+  `~/.config/smart-search/config.json`。Linux 侧需复制同等 Provider 配置并保留
+  失败可见策略。
+- Harness 版本参考（Mac 本机，非冻结值）：codex-cli 0.150.1、Claude Code
+  2.1.251；pi 与 opencode 本机未安装，Linux 侧安装后冻结版本。
 
 ## Phase 1 — SGLang Protocol Preflight
 

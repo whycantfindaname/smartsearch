@@ -20,6 +20,9 @@
   Viewer 写入当前 Benchmark 任务的 PRD、Design 和 Implementation Plan。
 - Trellis `task.py validate 08-24-benchmark-evaluation-integration` 已通过；没有启动
   Benchmark、模型服务、Provider 或 Judge。
+- 2026-08-31 用户已确认首轮 Pilot 范围与 Judge：BrowseComp 小样本（约 20 题）
+  + LiveResearchBench 子集（约 5 题），本地 Qwen Judge（benchmark-derived
+  internal）。实施启动仍待批准；Case IDs 与执行上限尚未冻结。
 
 详细计划与证据以这些文件为准，不在本交接文档重复维护第二份设计：
 
