@@ -1,6 +1,6 @@
 ---
 name: smart-search-cli
-description: "Instructions for AI agents to use the local smart-search CLI for current web search, source-backed fact checking, URL fetching, site mapping, official/API/documentation search, deep research, and reproducible evidence instead of MCP tools or native web search."
+description: "Instructions for AI agents to use the local smart-search CLI for current web search, source-backed fact checking, URL fetching, site mapping, official/API/documentation search, deep research, the Root-led multi-agent Research Workflow, and reproducible evidence instead of MCP tools or native web search."
 ---
 
 # Smart Search CLI
@@ -15,6 +15,12 @@ Use the local `smart-search` command as the default execution layer for web rese
 - The Skill is not an MCP server, does not store provider API keys, and does not create Trellis, hooks, agents, or commands.
 - `smart-search setup --install-skills ...` is the first-install path. After a CLI upgrade, use `skills status` for a read-only check and `skills update` to refresh only the managed Skill files.
 - Skill updates do not change provider configuration or API keys. Missing optional keys remain skipped rather than being treated as successful live checks.
+
+## Research Workflow Mode
+
+Treat “使用smart-search-cli的Research Workflow调研 <GOAL>”, its spaced form “使用 smart-search-cli 的 Research Workflow 调研 <GOAL>”, and direct equivalents as an explicit request for the Root-led Multi-Source Research Flow. The text after “调研” is the research goal; preserve any scope, source, time, cost, language, and output constraints supplied with it.
+
+Read [`references/research-workflow.md`](references/research-workflow.md) before taking action. Apply its defaults and full orchestration contract without asking the user to paste or restate a longer prompt. `Research Workflow` is a Skill-level orchestration mode, not a CLI subcommand or a fourth product mode; its default product mode is `standard` unless the user selects `quick` or `deep`.
 
 ## Default Workflow
 
@@ -59,7 +65,7 @@ behavior, or the structured output contract must change.
 
 ## Key Boundaries
 
-- `smart-search` should resolve from the user's PATH.
+- Outside Research Workflow mode, `smart-search` should resolve from the user's PATH. Research Workflow in the Preview checkout must use the project-local source entrypoint resolved as described in `references/research-workflow.md`; it must not silently fall back to a global install.
 - Private API keys should be saved with `smart-search setup` or `smart-search config set`; environment variables remain supported for CI and advanced users.
 - In sandboxed runtimes, set `SMART_SEARCH_CONFIG_DIR` to an absolute writable path when the default config directory is unavailable or must be pinned.
 - The standard minimum profile requires one configured provider in each of `main_search`, `docs_search`, and fetch capability. Missing required capabilities are hard configuration failures.
@@ -112,6 +118,7 @@ F --> V[Smart Search citation verification<br/>reverse trace to artifact and Tra
 - Command examples, evidence files, and guardrails: `references/command-patterns.md`
 - Deep Research planner/executor workflow, plan fields, gap check, and smoke matrix: `references/deep-research-mode.md`
 - Root-led multi-source architecture, project-agent roles, caller-held dossier operations, Claim lifecycle, document mining, Trace, and reverse citation tracing: `references/agentic-research-architecture.md`
+- Named Research Workflow activation phrase, defaults, Preview source resolution, Root startup contract, persistence, and finalization: `references/research-workflow.md`
 - CLI entrypoints, command signatures, aliases, output fields, exit codes, and tool policy: `references/cli-core.md`
 - Setup, config storage, skill installation, provider endpoints, and OpenAI-compatible diagnostics: `references/setup-config.md`
 - Intent routing, provider capabilities, source provenance, fallback boundaries, and routing maintenance: `references/provider-routing.md`

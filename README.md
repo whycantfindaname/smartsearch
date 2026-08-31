@@ -246,6 +246,20 @@ default `search`, `deep`, or `research` behavior. It is intended for a Root
 Agent that owns planning and synthesis while Smart Search performs
 deterministic ResearchRun operations and stores an auditable workspace.
 
+When the Preview checkout is open in the current Agent task, the complete
+Root-led flow can be invoked with one request:
+
+```text
+使用smart-search-cli的Research Workflow调研 <GOAL>
+```
+
+The Skill expands that named mode into the project-local Preview entrypoint,
+capability observation, dynamic project-Agent delegation, checkpointed
+caller-held run loop, evidence mining, and citation verification. `Research
+Workflow` is a Skill-level orchestration mode, not a CLI subcommand or a fourth
+product mode; it defaults to `standard` unless the request selects `quick` or
+`deep`.
+
 ```bash
 # Observe currently configured, reachable, and entitled research capabilities.
 smart-search research-run capabilities --format json

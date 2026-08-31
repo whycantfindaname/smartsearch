@@ -164,6 +164,20 @@ contract. Root Agent is the sole semantic planner and synthesizer. Smart Search
 is a deterministic kernel and must not choose task count, project-Agent count,
 Source Curator count, semantic replanning, or stopping policy.
 
+The exact user request `使用smart-search-cli的Research Workflow调研 <GOAL>`, its
+spaced form, and direct equivalents activate the Skill-level `Research Workflow` mode. The
+Skill loads `references/research-workflow.md` and expands the short request into
+the Root-led contract without asking the user to restate it. This named mode is
+not a CLI subcommand or a fourth product mode; it defaults to `standard` unless
+the user selects `quick` or `deep`.
+
+Inside the Preview checkout, this mode resolves the repository root and invokes
+`node <repo>/npm/bin/smart-search.js` for every operation. It must not use the
+PATH-resolved global package, change the checkout, or downgrade to the compact
+`smart-search research` executor. If the Preview source entrypoint or project
+Agent definitions are unavailable, it stops before retrieval and reports the
+missing Preview boundary.
+
 - The caller holds the `ResearchRun` dossier and submits explicit operations.
 - `create` establishes `ResearchFrame`, `ClaimSpec`, Root-created `SearchTask`,
   capability snapshot, append-only artifact registry, and Trace.
@@ -176,8 +190,9 @@ Source Curator count, semantic replanning, or stopping policy.
   Source Curator, Evidence Miner, or MinerU. Only Root may turn child gaps or
   suggestions into new tasks through `add-search-tasks` or
   `add-evidence-tasks`.
-- AnySearch remains an external bundled Skill. Smart Search retrieval workflows
-  read `bundled-skills/anysearch/SKILL.md` and invoke its
+- AnySearch remains an internal bundled capability outside the Provider
+  registry. Smart Search retrieval workflows read
+  `bundled-skills/anysearch/CONTRACT.md` and invoke its
   `scripts/smart_search_anysearch.py` adapter without requiring a separate slash
   command. The bundled adapter is the only active AnySearch entrypoint; a
   missing bundle is recorded as an availability gap.
@@ -929,6 +944,7 @@ smart-search doctor --format json
 | `OPENAI_COMPATIBLE_STREAM` or `--stream` is true | Send `stream: true` only to OpenAI-compatible `search()` / `fetch()` and parse SSE deltas, ignoring `[DONE]` |
 | `--no-stream` is set | Force non-streaming OpenAI-compatible `search()` for that invocation even when config is true |
 | Bundled AnySearch Skill or adapter is unavailable or unusable | Record delegated Skill unavailability and continue with remaining Smart Search routes |
+| Named `Research Workflow` is invoked outside the Preview checkout or without its project-local entrypoint or Agent definitions | Stop before retrieval; report the missing Preview boundary and do not use a PATH-resolved global package or `smart-search research` |
 | Exa `--include-domains` / `--exclude-domains` receives comma-separated, whitespace-separated, or PowerShell-split values | Normalize to a flat domain list before sending `includeDomains` / `excludeDomains` to Exa |
 | Exa returns HTTP 400 or 422 | Return `error_type: "parameter_error"` and preserve the Exa response body excerpt for diagnosis |
 | Provider HTTP/network/timeout/schema error | Record `provider_attempts[].status="error"` and try next same-capability provider when fallback is `auto`; this is provider fallback, not logical replay |
@@ -978,6 +994,11 @@ smart-search doctor --format json
 ## 5. Good/Base/Bad Cases
 
 Good:
+
+- Request: `使用smart-search-cli的Research Workflow调研 近期 Agentic IQA 论文`.
+- Expected: load `references/research-workflow.md`, use the project-local Preview
+  entrypoint, default to `standard`, and let Root dynamically decide project-Agent
+  delegation without requiring the long orchestration prompt.
 
 - Query: `React useEffect API docs`.
 - Route: `main_search` answer plus `docs_search` fallback chain.
@@ -1100,6 +1121,10 @@ When this contract changes, add or update tests that assert:
   provider fallback; its adapter consumes two private config fields separately;
 - AnySearch capability status records delegated Skill metadata and does not
   change required minimum capabilities;
+- the exact Research Workflow activation phrase and direct equivalents route to
+  `references/research-workflow.md`, default to `standard`, use the project-local
+  Preview source entrypoint, and remain byte-identical across public and packaged
+  Skill trees;
 - bundled-only resolution, unavailable degradation, snapshot provenance, and
   preservation of private local configuration are covered;
 - AnySearch's dual private config fields are read-only adapter inputs, masked in
@@ -1413,6 +1438,24 @@ src/smart_search/assets/skills/smart-search-cli/references/cli-contract.md
 
 Then assert both copies match, and run source checkout regression before
 release.
+
+### Wrong
+
+Expand the named Research Workflow through the global CLI or the compact
+single-executor path:
+
+```text
+smart-search research "<GOAL>"
+```
+
+### Correct
+
+Load `references/research-workflow.md`, resolve the open Preview checkout, and
+use its source entrypoint for the Root-held workflow:
+
+```text
+node <repo>/npm/bin/smart-search.js research-run capabilities --format json
+```
 
 ### Wrong
 

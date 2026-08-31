@@ -254,6 +254,17 @@ Preview 增加了一套由调用方控制的研究运行时，不改变默认 `s
 `research` 的行为。它面向负责规划与综合的 Root Agent；Smart Search 负责执行
 确定性的 ResearchRun 操作，并保存可审计的 Research Workspace。
 
+在当前 Agent 任务中打开 Preview checkout 后，只需一句话即可启动完整流程：
+
+```text
+使用smart-search-cli的Research Workflow调研 <研究目标>
+```
+
+Skill 会自动展开项目内 Preview 入口、能力观察、动态 Project Agent 委派、分步保存的
+caller-held 运行循环、证据挖掘与引用验证。`Research Workflow` 是 Skill 级编排模式，
+不是 CLI 子命令，也不是第四种产品模式；用户未指定 `quick` 或 `deep` 时默认使用
+`standard`。
+
 ```bash
 # 查看当前已配置、可访问且账号有权限使用的研究能力。
 smart-search research-run capabilities --format json
@@ -274,8 +285,8 @@ smart-search research-view /path/to/research-workspace --port 8080
 Dossier、append-only Trace、Artifact Registry、EvidenceItem 和 Claim 记录是
 权威数据；Markdown 与可视化页面只是便于阅读的投影，不保存隐藏推理。只有能力
 已经配置、当前可访问，并且账号有权使用时，Provider Research Agent 才会发起
-尝试。AnySearch 和 MinerU 继续作为外部 Skill 使用，凭据不复制到 Smart Search
-配置中。
+尝试。AnySearch 只通过 Smart Search 内置适配层使用，并从 Smart Search 私有配置中
+读取两把 Key；MinerU 继续作为凭据独立管理的外部 Skill。
 
 生成带引用的最终报告时，Root 在 `draft_report` 中写入精确的
 `[cite:<citation_id>]` 标记，并把它与既有 `citations` 映射一起交给

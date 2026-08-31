@@ -391,6 +391,41 @@ def test_agentic_research_skill_uses_confirmed_architecture_and_terms():
         assert marker in text
 
 
+def test_research_workflow_mode_is_discoverable_and_packaged():
+    relative_reference = Path("references/research-workflow.md")
+    public_skill = (PUBLIC_SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+    packaged_skill = (PACKAGED_SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+    public_reference = (PUBLIC_SKILL_DIR / relative_reference).read_text(encoding="utf-8")
+    packaged_reference = (PACKAGED_SKILL_DIR / relative_reference).read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+
+    for skill_text in (public_skill, packaged_skill):
+        assert "## Research Workflow Mode" in skill_text
+        assert "使用smart-search-cli的Research Workflow调研 <GOAL>" in skill_text
+        assert "references/research-workflow.md" in skill_text
+        assert "without asking the user to paste or restate a longer prompt" in skill_text
+
+    assert public_reference == packaged_reference
+    for user_document in (readme, readme_zh):
+        assert "使用smart-search-cli的Research Workflow调研" in user_document
+        assert "not a CLI subcommand" in user_document or "不是 CLI 子命令" in user_document
+    reference_markers = [
+        "This short request is the complete activation surface",
+        "Skill-level orchestration mode",
+        "does not add a fourth product mode",
+        "Use `standard` by default",
+        "not the PATH-resolved global package",
+        "node <repo>/npm/bin/smart-search.js",
+        "research-run capabilities --format json",
+        "Do not run the entire long workflow in one `execute` call",
+        "language-system",
+        "error-recovery.md",
+    ]
+    for marker in reference_markers:
+        assert marker in public_reference
+
+
 def test_zhipu_setup_contract_public_and_packaged_assets_match():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
