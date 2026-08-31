@@ -248,19 +248,19 @@ smart-search deep "https://example.com/source" --format json
 
 看到输出里有 `mode=deep_research`、`decomposition`、多步 `steps`、`evidence_policy=fetch_before_claim`、`preflight.executed_by_deep_command=false`，就说明已经进入 Deep Research 计划模式。
 
-## Agentic Research Preview
+## Agentic Research
 
-Preview 增加了一套由调用方控制的研究运行时，不改变默认 `search`、`deep` 和
+Agentic Research 增加了一套由调用方控制的研究运行时，不改变默认 `search`、`deep` 和
 `research` 的行为。它面向负责规划与综合的 Root Agent；Smart Search 负责执行
 确定性的 ResearchRun 操作，并保存可审计的 Research Workspace。
 
-在当前 Agent 任务中打开 Preview checkout 后，只需一句话即可启动完整流程：
+在当前 Agent 任务中打开 Smart Search 源码 checkout 后，只需一句话即可启动完整流程：
 
 ```text
 使用smart-search-cli的Research Workflow调研 <研究目标>
 ```
 
-Skill 会自动展开项目内 Preview 入口、能力观察、动态 Project Agent 委派、分步保存的
+Skill 会自动展开项目内源码入口、能力观察、动态 Project Agent 委派、分步保存的
 caller-held 运行循环、证据挖掘与引用验证。`Research Workflow` 是 Skill 级编排模式，
 不是 CLI 子命令，也不是并列的 CLI 模式；用户未指定 `focused` 或 `deep` 时默认使用
 `standard`。运行 `smart-search modes` 可以离线查看公共工作流、研究深度和高级接口，
@@ -306,11 +306,11 @@ References 章节，并保存三种边界明确的投影：面向读者的 `fina
 [Agentic Research architecture](skills/smart-search-cli/references/agentic-research-architecture.md)
 以及 [smart-search-cli Skill](skills/smart-search-cli/SKILL.md)。
 
-当前 Preview 实现与验收证据统一收录在
+实现与验收证据统一收录在
 [Stage G 研究索引](docs/acceptance/stage-g-research-index.md)，并提供可在其他机器上直接读取的
 [可移植证据包](docs/research-runs/run-stage-g-seq-20260823T191412Z/README.md)，不依赖被 Git
-忽略的本地完整 Workspace。这些产物目前只发布在 Preview 分支，不代表已经 merge，
-也不代表已经替换当前 macOS 激活 Skill。
+忽略的本地完整 Workspace。该工作流在 `lwj_dev` 分支开发；这些产物记录验收运行，
+不代表已经替换当前 macOS 激活 Skill。
 
 ## API 和 Key 申请入口
 

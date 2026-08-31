@@ -26,7 +26,7 @@ The project-agent adapter defaults are model `gpt-5.6-luna`, reasoning effort `m
 
 ## Caller-held run loop
 
-Root or its harness holds the compact `ResearchRun` dossier. Preview does not promise an automatic resume workflow. Run artifacts and append-only Trace support audit after interruption, but the caller remains responsible for preserving and resubmitting the dossier.
+Root or its harness holds the compact `ResearchRun` dossier. The workflow does not promise automatic resume. Run artifacts and append-only Trace support audit after interruption, but the caller remains responsible for preserving and resubmitting the dossier.
 
 For long `deep` runs, prefer a checkpointed caller loop: add the next Root-decided task or small parallel batch, execute it, and persist the returned dossier before planning the next step. Do not put every long Provider Research Agent and follow-up task into one `execute` call when the Harness has a shorter process deadline. If a process is interrupted, Trace may contain events that were appended before the caller received the updated dossier; treat the last persisted dossier as caller state and the Trace as audit evidence, not as an automatic resume point.
 

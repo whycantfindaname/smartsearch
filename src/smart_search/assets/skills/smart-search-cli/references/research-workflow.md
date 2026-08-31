@@ -30,11 +30,11 @@ Use `standard` when the user does not choose a depth. `focused`, `standard`, and
 
 Depth never weakens the evidence rule: a retained source-dependent Claim still needs locator-backed evidence. Depth also does not set a fixed task count, Subagent count, token quota, or Provider-call count. Root chooses resources from the observed gaps and the user's actual constraints.
 
-## Preview source boundary
+## Source boundary
 
-Run this workflow from the current Preview source checkout, not a PATH-resolved global package:
+Run this workflow from the current Smart Search source checkout, not a PATH-resolved global package:
 
-1. Resolve the repository root with `git rev-parse --show-toplevel` and confirm branch `preview/multi-source-agentic-research`.
+1. Resolve the repository root with `git rev-parse --show-toplevel` and confirm branch `lwj_dev`.
 2. Confirm that `<repo>/npm/bin/smart-search.js`, `<repo>/skills/smart-search-cli/agents/`, and the `research-run` command family exist.
 3. Use the absolute project-local entrypoint for every Smart Search invocation:
 
@@ -51,7 +51,7 @@ If this source boundary cannot be satisfied, stop before retrieval and report th
 Root performs the following work without requiring the user to enumerate it:
 
 1. Read `agentic-research-architecture.md`, the matching definitions under `../agents/`, and `../bundled-skills/anysearch/CONTRACT.md` before dispatching those capabilities.
-2. Run one `research-run capabilities --format json` observation through the Preview entrypoint. Select capabilities from observed configured, reachable, and entitled state. This is not permission to repeat `doctor`.
+2. Run one `research-run capabilities --format json` observation through the project-local entrypoint. Select capabilities from observed configured, reachable, and entitled state. This is not permission to repeat `doctor`.
 3. Convert the goal, chosen depth, and constraints into a `ResearchFrame`, initial `ClaimSpec` records, Root-authored search tasks, and any required `DelegateRequest` objects.
 4. Use the deterministic kernel and launch zero or more Search Scouts, Source Curators, and Evidence Miners only when they close a real gap. Root owns decomposition, sharding, replanning, stopping, and final synthesis. Each child returns one `DelegateResult`; it does not create tasks, spawn descendants, broaden scope, or write the final answer.
 5. Hold the dossier in the caller and advance it with the applicable `create`, `add-search-tasks`, `execute`, `import`, `add-evidence-tasks`, `document`, `claims`, `decision`, and `verify` operations. Do not put an entire long workflow into one `execute` call.

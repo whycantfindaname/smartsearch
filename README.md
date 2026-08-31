@@ -239,21 +239,21 @@ smart-search deep "帮我核验这个说法是真是假：某某工具已经完�
 smart-search deep "https://example.com/source" --format json
 ```
 
-## Agentic Research Preview
+## Agentic Research
 
-The Preview adds a caller-controlled research runtime without changing the
+Agentic Research adds a caller-controlled research runtime without changing the
 default `search`, `deep`, or `research` behavior. It is intended for a Root
 Agent that owns planning and synthesis while Smart Search performs
 deterministic ResearchRun operations and stores an auditable workspace.
 
-When the Preview checkout is open in the current Agent task, the complete
-Root-led flow can be invoked with one request:
+When the Smart Search source checkout is open in the current Agent task, the
+complete Root-led flow can be invoked with one request:
 
 ```text
 使用smart-search-cli的Research Workflow调研 <GOAL>
 ```
 
-The Skill expands that named mode into the project-local Preview entrypoint,
+The Skill expands that named mode into the project-local source entrypoint,
 capability observation, dynamic project-Agent delegation, checkpointed
 caller-held run loop, evidence mining, and citation verification. `Research
 Workflow` is a Skill-level orchestration mode, not a CLI subcommand or a peer
@@ -309,12 +309,12 @@ See [Research Runtime Configuration](docs/architecture/research-runtime-config.m
 and the [smart-search-cli Skill](skills/smart-search-cli/SKILL.md) for the full
 contract and orchestration guidance.
 
-The current Preview implementation and acceptance evidence are indexed in the
+The implementation and acceptance evidence are indexed in the
 [Stage G research index](docs/acceptance/stage-g-research-index.md), with a
 [portable evidence bundle](docs/research-runs/run-stage-g-seq-20260823T191412Z/README.md)
-that can be read on another machine without the ignored local Workspace. These
-artifacts are published on the Preview branch only; they do not mean the branch
-has been merged or the active macOS Skill has been replaced.
+that can be read on another machine without the ignored local Workspace. The
+workflow is developed on the `lwj_dev` branch; these artifacts record the
+acceptance runs and do not mean the active macOS Skill has been replaced.
 
 ## Provider And API Key Guide
 

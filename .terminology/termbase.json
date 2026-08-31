@@ -195,7 +195,7 @@
           "language": "en",
           "term": "ResearchRun",
           "search_query": "ResearchRun Smart Search caller-held dossier",
-          "source_url": "project:README.zh-CN.md#agentic-research-preview",
+          "source_url": "project:README.zh-CN.md#agentic-research",
           "observed_usage": "The Preview exposes deterministic ResearchRun operations through structured JSON dossiers controlled by the calling Agent.",
           "checked_at": "2026-08-25"
         }
@@ -219,7 +219,7 @@
           "language": "en",
           "term": "Research Workspace",
           "search_query": "Research Workspace Smart Search materialized run",
-          "source_url": "project:README.zh-CN.md#agentic-research-preview",
+          "source_url": "project:README.zh-CN.md#agentic-research",
           "observed_usage": "The Preview materializes caller-held research state into a durable Research Workspace and serves that workspace through a read-only local visualizer.",
           "checked_at": "2026-08-25"
         }
