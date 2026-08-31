@@ -175,3 +175,24 @@ Full repo review (626 tests green) found 2 P1 + 7 P2 issues; fixed all in 7 comm
 ### Status
 
 [OK] **Completed**
+
+
+## Session 8: Simplify Smart Search workflow routing
+
+**Date**: 2026-08-31
+**Task**: Simplify Smart Search workflow routing
+**Branch**: `preview/multi-source-agentic-research`
+
+### Summary
+
+Added offline modes discovery, replaced public quick with focused, reduced SKILL.md to routing, moved Research Workflow mechanics into references, integrated lwj_dev, synchronized governed personal Skills, and verified macOS immutable activation.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `55a38d4c211cce4bf1b9042622e0a6fb41437780` | (see git log) |
+
+### Status
+
+[OK] **Completed**
