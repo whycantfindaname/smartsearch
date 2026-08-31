@@ -21,6 +21,7 @@
 
 ## Commands
 
+- `smart-search modes [--format json|markdown|content] [--output PATH]`
 - `smart-search search QUERY [--platform NAME] [--model ID] [--extra-sources N] [--validation fast|balanced|strict] [--fallback auto|off] [--providers auto|CSV] [--stream|--no-stream] [--timeout SECONDS] [--max-try ATTEMPTS] [--format json|markdown|content] [--output PATH]` (`--timeout` defaults to `120`; `--max-try` defaults to `5`.)
 - `smart-search route QUERY [--validation fast|balanced|strict] [--router-mode hybrid|rules|off] [--format json|markdown|content] [--output PATH]`
 - `smart-search fetch URL [--format json|markdown|content] [--output PATH]`
@@ -39,8 +40,8 @@
 - `smart-search sciverse-relations UNIQUE_ID [--relation CITATIONS|REFERENCES|RELATED_WORKS] [--page N] [--page-size N] [--format json|markdown|content] [--output PATH]`
 - `smart-search context7-library NAME [QUERY] [--format json|markdown|content] [--output PATH]`
 - `smart-search context7-docs LIBRARY_ID QUERY [--format json|markdown|content] [--output PATH]`
-- `smart-search deep QUERY [--budget quick|standard|deep] [--evidence-dir PATH] [--format json|markdown|content] [--output PATH]`
-- `smart-search research QUERY [--budget quick|standard|deep] [--evidence-dir PATH] [--fallback auto|off] [--format json|markdown|content] [--output PATH]`
+- `smart-search deep QUERY [--budget focused|standard|deep] [--evidence-dir PATH] [--format json|markdown|content] [--output PATH]`
+- `smart-search research QUERY [--budget focused|standard|deep] [--evidence-dir PATH] [--fallback auto|off] [--format json|markdown|content] [--output PATH]`
 - `smart-search research-run create|execute|import|add-search-tasks|add-evidence-tasks|document|claims|decision|verify --input JSON_OR_PATH --artifact-root PATH [--workspace PATH] [--checkpoint LABEL]... [--format json|markdown|content] [--output PATH]`
 - `smart-search research-run materialize --input JSON_OR_PATH --artifact-root PATH --workspace PATH [--checkpoint LABEL]... [--format json|markdown|content] [--output PATH]`
 - `smart-search research-run capabilities [--format json|markdown|content] [--output PATH]`
@@ -60,7 +61,7 @@
 
 ## Aliases
 
-Top-level aliases normalize to the same service behavior as their full command: `search`/`s`, `route`/`rt`, `fetch`/`f`, `map`/`m`, `exa-search`/`exa`/`x`, `exa-similar`/`xs`, `zhipu-search`/`z`/`zp`, `zhipu-mcp-search`/`zmcp-search`, `zhipu-mcp-reader`/`zmcp-reader`, `zhipu-mcp-search-doc`/`zmcp-doc`, `zhipu-mcp-repo-structure`/`zmcp-tree`, `zhipu-mcp-read-file`/`zmcp-file`, `sciverse-catalog`/`sv-catalog`, `sciverse-search`/`sv-search`/`sv`, `sciverse-semantic`/`sv-semantic`, `sciverse-read`/`sv-read`, `sciverse-relations`/`sv-relations`, `context7-library`/`c7`/`ctx7`, `context7-docs`/`c7d`/`c7docs`/`ctx7-docs`, `deep`/`dr`, `research`/`rs`, `research-run`/`rr`, `research-view`/`rv`, `research-environment`/`research-env`/`renv`, `route-calibrate`/`route-cal`/`rcal`, `doctor`/`d`, `diagnose`/`diag`, `setup`/`init`, `config`/`cfg`, `model`/`mdl`, `smoke`/`sm`, and `regression`/`reg`.
+Top-level aliases normalize to the same service behavior as their full command: `search`/`s`, `route`/`rt`, `fetch`/`f`, `map`/`m`, `exa-search`/`exa`/`x`, `exa-similar`/`xs`, `zhipu-search`/`z`/`zp`, `zhipu-mcp-search`/`zmcp-search`, `zhipu-mcp-reader`/`zmcp-reader`, `zhipu-mcp-search-doc`/`zmcp-doc`, `zhipu-mcp-repo-structure`/`zmcp-tree`, `zhipu-mcp-read-file`/`zmcp-file`, `sciverse-catalog`/`sv-catalog`, `sciverse-search`/`sv-search`/`sv`, `sciverse-semantic`/`sv-semantic`, `sciverse-read`/`sv-read`, `sciverse-relations`/`sv-relations`, `context7-library`/`c7`/`ctx7`, `context7-docs`/`c7d`/`c7docs`/`ctx7-docs`, `deep`/`dr`, `research`/`rs`, `research-run`/`rr`, `research-view`/`rv`, `research-environment`/`research-env`/`renv`, `route-calibrate`/`route-cal`/`rcal`, `doctor`/`d`, `diagnose`/`diag`, `setup`/`init`, `config`/`cfg`, `model`/`mdl`, `smoke`/`sm`, and `regression`/`reg`. `modes` intentionally has no alias.
 
 Nested aliases: `config path`/`cfg p`, `config list`/`cfg ls`/`cfg l`, `config set`/`cfg s`, `config unset`/`cfg rm`/`cfg u`, `model current`/`mdl cur`/`mdl c`, and `model set`/`mdl s`.
 

@@ -262,8 +262,9 @@ Preview 增加了一套由调用方控制的研究运行时，不改变默认 `s
 
 Skill 会自动展开项目内 Preview 入口、能力观察、动态 Project Agent 委派、分步保存的
 caller-held 运行循环、证据挖掘与引用验证。`Research Workflow` 是 Skill 级编排模式，
-不是 CLI 子命令，也不是第四种产品模式；用户未指定 `quick` 或 `deep` 时默认使用
-`standard`。
+不是 CLI 子命令，也不是并列的 CLI 模式；用户未指定 `focused` 或 `deep` 时默认使用
+`standard`。运行 `smart-search modes` 可以离线查看公共工作流、研究深度和高级接口，
+不会探测 Provider。
 
 ```bash
 # 查看当前已配置、可访问且账号有权限使用的研究能力。
@@ -295,7 +296,7 @@ Claim/Evidence/artifact/Trace 链和 locator，按首次出现顺序渲染编号
 References 章节，并保存三种边界明确的投影：面向读者的 `final_synthesis.md`、
 用于权威反向验证的 `evidence/citation_verification.json`，以及用于审计映射的派生
 `evidence/reference_register.json`。Manifest entrypoints 只是 Workspace 文档索引。
-`quick`、`standard` 和 `deep` Research Workspace 使用同一套契约。
+`focused`、`standard` 和 `deep` Research Workspace 使用同一套契约。
 
 文档 Sidecar 必须由明确指定的 Python 3.12 解释器创建独立虚拟环境，默认位置是
 `$SMART_SEARCH_CONFIG_DIR/research-sidecar`。只有健康检查通过后，Smart Search

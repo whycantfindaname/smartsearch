@@ -618,7 +618,7 @@ def test_citation_verification_projection_is_supplied_data(tmp_path):
     assert "## Phase 7: Citation Verification" in (root / "main_log.md").read_text()
 
 
-@pytest.mark.parametrize("mode", ["quick", "standard", "deep"])
+@pytest.mark.parametrize("mode", ["focused", "standard", "deep"])
 def test_citation_backed_report_register_is_materialized_for_every_mode(tmp_path, mode):
     dossier = _stage_g_dossier()
     dossier = dataclasses.replace(

@@ -256,9 +256,10 @@ Root-led flow can be invoked with one request:
 The Skill expands that named mode into the project-local Preview entrypoint,
 capability observation, dynamic project-Agent delegation, checkpointed
 caller-held run loop, evidence mining, and citation verification. `Research
-Workflow` is a Skill-level orchestration mode, not a CLI subcommand or a fourth
-product mode; it defaults to `standard` unless the request selects `quick` or
-`deep`.
+Workflow` is a Skill-level orchestration mode, not a CLI subcommand or a peer
+CLI mode; it defaults to `standard` unless the request selects `focused` or
+`deep`. Use `smart-search modes` to inspect the public workflows, research
+depths, and advanced interfaces without contacting a Provider.
 
 ```bash
 # Observe currently configured, reachable, and entitled research capabilities.
@@ -294,7 +295,7 @@ citations and one References section, and persists three distinct projections:
 `final_synthesis.md` for readers, authoritative
 `evidence/citation_verification.json` for reverse-trace validation, and derived
 `evidence/reference_register.json` for the audit mapping. Manifest entrypoints
-are only the Workspace document index. The same contract applies to `quick`,
+are only the Workspace document index. The same contract applies to `focused`,
 `standard`, and `deep` Research Workspaces.
 
 The document sidecar requires an explicit Python 3.12 interpreter and creates a

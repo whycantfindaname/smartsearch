@@ -157,7 +157,7 @@ def test_deep_research_cli_contract_documents_plan_and_smoke_matrix():
         "Prefer `skills status` and",
         "rerun the affected smoke until it passes or is proven to be an external provider blocker",
         "Budget limits must not break evidence policy",
-        "Even `--budget quick` plans must retain at least one `fetch` step",
+        "Even `--budget focused` plans must retain at least one `fetch` step",
         "`steps[].command` and `steps[].output_path` are one contract",
         "Prefer PowerShell-safe quoted commands",
         "`tempfile.gettempdir()`",
@@ -185,10 +185,10 @@ def test_search_error_recovery_catalog_is_the_single_instruction_source():
     packaged_catalog = (PACKAGED_SKILL_DIR / catalog_relative_path).read_text(encoding="utf-8")
 
     entrypoint_markers = [
-        "## Error Handling",
+        "## Decision Path",
         "references/error-recovery.md",
-        "only instruction source for status-specific and provider-specific handling",
-        "Change code and tests only when machine classification, automatic",
+        "before retrying, replaying, falling back, probing, or stopping",
+        "Change code, tests, and specifications only when machine classification",
     ]
     contract_markers = [
         "single extensible decision catalog",
@@ -306,6 +306,9 @@ def test_readme_language_split_and_provider_links_are_documented():
 
 def test_deep_research_shared_skill_files_are_synchronized():
     assert _skill_text_files(PUBLIC_SKILL_DIR) == _skill_text_files(PACKAGED_SKILL_DIR)
+    for skill_dir in (PUBLIC_SKILL_DIR, PACKAGED_SKILL_DIR):
+        assert not (skill_dir / "references" / "current-search-flow.md").exists()
+        assert not (skill_dir / "references" / "cli-contract.md").exists()
 
 
 def test_agentic_research_project_agents_are_packaged_and_match():
@@ -355,7 +358,7 @@ def test_agentic_research_skill_uses_confirmed_architecture_and_terms():
     for deprecated in ("Native Research", "Multi-Research Planner"):
         assert deprecated not in text
     assert not re.search(
-        r"quick\s*(?:/|\|)\s*standard\s*(?:/|\|)\s*deep\s*(?:/|\|)\s*max",
+        r"focused\s*(?:/|\|)\s*standard\s*(?:/|\|)\s*deep\s*(?:/|\|)\s*max",
         text,
         flags=re.IGNORECASE,
     )
@@ -370,7 +373,7 @@ def test_agentic_research_skill_uses_confirmed_architecture_and_terms():
         "Search Scout",
         "Source Curator",
         "Evidence Miner",
-        "only Root can turn suggestions into new tasks",
+        "A child may return gaps and suggestions in `DelegateResult`",
         "bundled-skills/anysearch/CONTRACT.md",
         "scripts/smart_search_anysearch.py",
         "Root may read all candidates or create any number of Curator shards",
@@ -401,10 +404,15 @@ def test_research_workflow_mode_is_discoverable_and_packaged():
     readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
 
     for skill_text in (public_skill, packaged_skill):
-        assert "## Research Workflow Mode" in skill_text
-        assert "使用smart-search-cli的Research Workflow调研 <GOAL>" in skill_text
+        assert "## Decision Path" in skill_text
+        assert "使用 smart-search-cli 的 Research Workflow 调研 <GOAL>" in skill_text
         assert "references/research-workflow.md" in skill_text
-        assert "without asking the user to paste or restate a longer prompt" in skill_text
+        assert "This file is a router" in skill_text
+        assert "## Multi-Source Research Flow" not in skill_text
+        assert "OPPO" not in skill_text
+        assert "Linux" not in skill_text
+        assert "/home/" not in skill_text
+        assert len(skill_text.splitlines()) < 100
 
     assert public_reference == packaged_reference
     for user_document in (readme, readme_zh):
@@ -412,13 +420,13 @@ def test_research_workflow_mode_is_discoverable_and_packaged():
         assert "not a CLI subcommand" in user_document or "不是 CLI 子命令" in user_document
     reference_markers = [
         "This short request is the complete activation surface",
-        "Skill-level orchestration mode",
-        "does not add a fourth product mode",
-        "Use `standard` by default",
-        "not the PATH-resolved global package",
+        "Use `standard` when the user does not choose a depth",
+        "## Research depth effects",
+        "Subagents are optional execution resources",
+        "not a PATH-resolved global package",
         "node <repo>/npm/bin/smart-search.js",
         "research-run capabilities --format json",
-        "Do not run the entire long workflow in one `execute` call",
+        "Do not put an entire long workflow into one `execute` call",
         "language-system",
         "error-recovery.md",
     ]
@@ -626,7 +634,7 @@ def test_anysearch_uses_internal_contract_without_separate_skill_discovery():
         assert "bundled-skills/anysearch/CONTRACT.md" in instruction_text
         assert "scripts/smart_search_anysearch.py" in instruction_text
         assert "$" + "anysearch" not in instruction_text
-        assert "do not wait for, emit, or ask the user to invoke `/anysearch`" in instruction_text
+        assert "do not wait for or request a separately installed `/anysearch` Skill" in instruction_text
         for command in forbidden_compatibility_commands:
             assert command not in instruction_text
 

@@ -465,11 +465,11 @@ def test_deep_research_claim_verification_does_not_unconditionally_add_exa():
     assert "exa-search" not in tools
 
 
-def test_deep_research_quick_budget_keeps_fetch_and_valid_subquestion_links():
+def test_deep_research_focused_budget_keeps_fetch_and_valid_subquestion_links():
     result = service.build_deep_research_plan(
         "OpenAI Responses API web_search 和 Chat Completions 联网搜索怎么选",
-        budget="quick",
-        evidence_dir="C:/tmp/smart-search-evidence/test-quick",
+        budget="focused",
+        evidence_dir="C:/tmp/smart-search-evidence/test-focused",
     )
 
     subquestion_ids = {item["id"] for item in result["decomposition"]}
@@ -478,6 +478,21 @@ def test_deep_research_quick_budget_keeps_fetch_and_valid_subquestion_links():
     assert all(step["subquestion_id"] in subquestion_ids for step in result["steps"])
     for step in result["steps"]:
         assert step["output_path"] in step["command"]
+
+
+def test_describe_modes_is_static_and_does_not_read_config(monkeypatch):
+    class FailingConfig:
+        def __getattr__(self, name):
+            raise AssertionError(f"modes must not read config: {name}")
+
+    monkeypatch.setattr(service, "config", FailingConfig())
+
+    result = service.describe_modes()
+
+    assert result["ok"] is True
+    assert result["mode"] == "modes"
+    assert [item["id"] for item in result["research_depths"]] == ["focused", "standard", "deep"]
+    assert "quick" not in str(result)
 
 
 def _configure_research_minimum(monkeypatch):

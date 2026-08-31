@@ -31,6 +31,7 @@ def test_help_contains_commands(capsys):
         assert exc.code == 0
 
     out = capsys.readouterr().out
+    assert "modes" in out
     assert "search" in out
     assert "doctor" in out
     assert "regression" in out
@@ -50,6 +51,7 @@ def test_version_flags_exit_successfully(monkeypatch, capsys):
 
 def test_each_subcommand_help_exits_successfully(capsys):
     commands = [
+        ["modes", "--help"],
         ["search", "--help"],
         ["route", "--help"],
         ["fetch", "--help"],
@@ -115,6 +117,43 @@ def test_each_subcommand_help_exits_successfully(capsys):
     out = capsys.readouterr().out
     assert "usage: smart-search search" in out
     assert "usage: smart-search regression" in out
+
+
+def test_modes_exposes_workflows_depths_and_advanced_interfaces(capsys, tmp_path):
+    output_path = tmp_path / "modes.md"
+
+    code = cli.main(["modes", "--format", "json"])
+    data = json.loads(capsys.readouterr().out)
+
+    assert code == cli.EXIT_OK
+    assert [item["id"] for item in data["public_workflows"]] == ["search", "research_workflow"]
+    assert [item["id"] for item in data["research_depths"]] == ["focused", "standard", "deep"]
+    assert [item["id"] for item in data["advanced_entrypoints"]] == ["deep", "research", "research-run"]
+    assert "quick" not in json.dumps(data)
+
+    markdown_code = cli.main(["modes", "--format", "markdown", "--output", str(output_path)])
+    markdown = capsys.readouterr().out
+    assert markdown_code == cli.EXIT_OK
+    assert "# Smart Search Workflows and Research Depths" in markdown
+    assert "Research Workflow" in markdown
+    assert "runtime call cap" in markdown
+    assert output_path.read_text(encoding="utf-8") == markdown
+
+    content_code = cli.main(["modes", "--format", "content"])
+    content = capsys.readouterr().out
+    assert content_code == cli.EXIT_OK
+    assert "Research depth focused" in content
+    assert "Subagent count does not define" in content
+
+
+@pytest.mark.parametrize("command", ["deep", "research"])
+def test_product_budget_rejects_obsolete_quick_value(command):
+    parser = cli.build_parser()
+
+    with pytest.raises(SystemExit) as exc_info:
+        parser.parse_args([command, "question", "--budget", "quick"])
+
+    assert exc_info.value.code == cli.EXIT_PARAMETER_ERROR
 
 
 def test_research_run_document_rejects_unregistered_mineru_payload(

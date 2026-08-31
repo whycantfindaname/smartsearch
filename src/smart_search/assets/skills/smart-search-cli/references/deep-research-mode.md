@@ -32,7 +32,7 @@ Deep Research does not change default `smart-search search` behavior and does no
 
 The confirmed multi-source architecture adds a Root-led caller-held loop without changing these public compatibility commands. Root Agent is the sole semantic planner and synthesizer: it decides task counts, project-agent counts and shards, replanning, and stopping. Smart Search performs deterministic contract validation, capability execution, normalization, artifact/Trace persistence, and citation verification. Read `agentic-research-architecture.md` before using `research-run`, project-agent definitions, registered-artifact document mining, or Provider Research Agents.
 
-The product modes are `quick`, `standard`, and `deep`. Do not add another product mode. Provider Research Agents is the formal category for Firecrawl Agent, Jina DeepSearch, Exa Agent, and Tavily Research.
+The research depths are `focused`, `standard`, and `deep`; no compatibility alias is accepted. Provider Research Agents is the formal category for Firecrawl Agent, Jina DeepSearch, Exa Agent, and Tavily Research.
 
 ## Offline Planner And Live Executor
 
@@ -73,7 +73,7 @@ Use this shape as the planning artifact:
     "source_authority_need": "normal|high",
     "claim_risk": "low|medium|high",
     "cross_validation_need": "normal|high",
-    "breadth_depth_budget": "quick|standard|deep"
+    "breadth_depth_budget": "focused|standard|deep"
   },
   "decomposition": [
     {
@@ -189,7 +189,7 @@ Safe research overrides are `SMART_SEARCH_RESEARCH_PREFERRED_PROVIDERS` and `SMA
 
 ## Closeout Lessons
 
-- Budget limits must not break evidence policy. Even `--budget quick` plans must retain at least one `fetch` step when claim-level conclusions are expected, and retained steps must keep valid `subquestion_id` links.
+- Budget limits must not break evidence policy. Even `--budget focused` plans must retain at least one `fetch` step when claim-level conclusions are expected, and retained steps must keep valid `subquestion_id` links.
 - If a smoke issue is found, fix the affected docs/code/tests and rerun the affected smoke until it passes or is proven to be an external provider blocker.
 - Final answers assembled from discovery-only output should list unverified candidates rather than presenting them as supported claims.
 

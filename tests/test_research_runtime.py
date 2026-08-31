@@ -962,7 +962,7 @@ async def test_evidence_miner_roundtrip_claim_and_final_citation_backtrace(monke
     assert result["backtrace"]["citation-1"]["artifact_id"] == document.artifact_id
 
 
-@pytest.mark.parametrize("mode", ["quick", "standard", "deep"])
+@pytest.mark.parametrize("mode", ["focused", "standard", "deep"])
 def test_citation_report_is_deterministic_across_product_modes(tmp_path, mode):
     dossier, citations = _citation_ready_dossier(tmp_path, mode=mode)
     draft = (

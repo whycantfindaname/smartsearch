@@ -165,6 +165,23 @@ function main() {
     capture: true
   });
   assert.match(version, new RegExp(`smart-search ${packageJson.version.replaceAll(".", "\\.")}`));
+  const modesOutput = run(process.execPath, [wrapperPath, "modes", "--format", "json"], {
+    cwd: callerCwd,
+    env: isolatedEnv,
+    capture: true
+  });
+  const modes = JSON.parse(modesOutput);
+  assert.deepEqual(
+    modes.public_workflows.map((item) => item.id),
+    ["search", "research_workflow"],
+    "packed modes command must expose the two public workflows"
+  );
+  assert.deepEqual(
+    modes.research_depths.map((item) => item.id),
+    ["focused", "standard", "deep"],
+    "packed modes command must expose the current research depths"
+  );
+  assert.equal(modesOutput.includes('"quick"'), false, "packed modes output must not expose the obsolete depth");
   run(process.execPath, [wrapperPath, "regression"], { cwd: callerCwd, env: isolatedEnv });
   const smokeOutput = run(process.execPath, [wrapperPath, "smoke", "--mock", "--format", "json"], {
     cwd: callerCwd,

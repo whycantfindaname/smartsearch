@@ -10,11 +10,11 @@ Only Root creates `SearchTask`, `EvidenceMiningTask`, and `DelegateRequest` obje
 
 Smart Search is the deterministic research kernel. It validates public contracts and stable identities, compiles Root-authored operations, executes internal capabilities and Provider Research Agents, normalizes candidates and evidence, registers immutable artifacts, appends run-local Trace events, and verifies citation integrity.
 
-## Product modes and capability selection
+## Research depths and capability selection
 
-The product exposes exactly three modes:
+Research Workflow exposes exactly three depth presets:
 
-- `quick`: low-latency search and known-URL reading selected by Root.
+- `focused`: narrow evidence closure for the core question, with direct and authoritative sources preferred.
 - `standard`: multi-source verification and necessary source reading; Root may add AnySearch or Search Scouts when they can close a real gap.
 - `deep`: broad discovery, critical-document mining, Provider Research Agents, and Claim-level synthesis.
 

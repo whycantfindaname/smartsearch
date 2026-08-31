@@ -1,0 +1,5 @@
+{"file":".trellis/spec/backend/provider-capability-contract.md","reason":"Check public signatures, focused-depth semantics, modes output, validation, and branch boundaries against implementation."}
+{"file":".trellis/spec/backend/packaging-contract.md","reason":"Check removed/added Skill references, wheel data, npm tarball, and mirror parity."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Run the required full suite and packaging gates with explicit environments."}
+{"file":".trellis/tasks/08-31-smart-search-workflow-routing/prd.md","reason":"Verify every user requirement and acceptance criterion, including no main modification and no publication."}
+{"file":".trellis/tasks/08-31-smart-search-workflow-routing/design.md","reason":"Verify the final router and modes command preserve the accepted layer boundaries and honest budget behavior."}
