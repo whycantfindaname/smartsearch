@@ -9,8 +9,8 @@
 - Managed branch: lwj_dev（开发权威）；main 仅跟随 upstream（origin = konbakuyomu/smartsearch）
 - Publication: fork = whycantfindaname/smartsearch，branch lwj_dev（companion manifest clone_remote=fork）
 - Workflow status: full_workflow
-- 合同: .agent-infra/managed-project.json
-- 错误目录: docs/managed-sync-errors.md
+- 合同: .jason-liao-agent-infra/managed-project.json
+- 错误目录: .jason-liao-agent-infra/errors.md
 - Provider/请求恢复错误: skills/smart-search-cli/references/error-recovery.md（不在本指南范围）
 <!-- MANAGED-SYNC:STATUS-BLOCK:END -->
 

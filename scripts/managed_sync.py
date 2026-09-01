@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Smart Search managed-sync project entrypoint.
 
-Minimal contract entrypoint referenced by .agent-infra/managed-project.json.
+Minimal contract entrypoint referenced by .jason-liao-agent-infra/managed-project.json.
 It never reads secret values, never pushes, and never mutates the worktree.
 """
 

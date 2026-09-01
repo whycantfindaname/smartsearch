@@ -80,7 +80,7 @@
     }
   ],
   "docs": {
-    "guide": "docs/managed-sync.md",
-    "errors": "docs/managed-sync-errors.md"
+    "guide": ".jason-liao-agent-infra/README.md",
+    "errors": ".jason-liao-agent-infra/errors.md"
   }
 }
