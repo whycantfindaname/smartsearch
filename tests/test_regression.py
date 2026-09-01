@@ -434,6 +434,31 @@ def test_research_workflow_mode_is_discoverable_and_packaged():
         assert marker in public_reference
 
 
+def test_opencode_skill_path_contract_is_synchronized():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+    public_contract = _read_reference_tree(PUBLIC_SKILL_DIR)
+    packaged_contract = _read_reference_tree(PACKAGED_SKILL_DIR)
+    required_markers = [
+        "~/.config/opencode/skills/smart-search-cli",
+        "~/.opencode/skills/smart-search-cli",
+        "legacy_locations",
+        "synthetic home",
+    ]
+
+    for marker in required_markers:
+        assert marker in readme
+        assert marker in public_contract
+        assert marker in packaged_contract
+
+    for marker in [
+        "~/.config/opencode/skills/smart-search-cli",
+        "~/.opencode/skills/smart-search-cli",
+        "legacy_locations",
+    ]:
+        assert marker in readme_zh
+
+
 def test_zhipu_setup_contract_public_and_packaged_assets_match():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
@@ -567,6 +592,10 @@ def test_streaming_and_internal_anysearch_contract_public_and_packaged_assets_ma
         "sciverse-semantic",
         "sciverse-read",
         "sciverse-relations",
+        "--retrieval",
+        "--mode",
+        "FILTER_OP_GTE",
+        "no `collection` selector",
         "vertical_search",
         "not a registered provider",
         "not `docs_search`",
@@ -583,6 +612,9 @@ def test_streaming_and_internal_anysearch_contract_public_and_packaged_assets_ma
         "SCIVERSE_API_TOKEN",
         "sciverse-catalog",
         "sciverse-relations",
+        "--retrieval",
+        "deprecated bridge",
+        "no `collection` selector",
         "explicit-only",
         "Do not insert Sciverse into `docs_search`",
         "not required by and must not satisfy the `standard` minimum",
@@ -601,6 +633,8 @@ def test_streaming_and_internal_anysearch_contract_public_and_packaged_assets_ma
         "sciverse-catalog",
         "sciverse-search",
         "sciverse-relations",
+        "--retrieval",
+        "--mode",
         "vertical_search",
         "不是 Smart Search provider",
         "不是 `docs_search`",
@@ -610,9 +644,8 @@ def test_streaming_and_internal_anysearch_contract_public_and_packaged_assets_ma
         assert marker in readme_zh
 
 
-def test_anysearch_uses_internal_contract_without_separate_skill_discovery():
-    forbidden_compatibility_commands = [
-        "anysearch-*",
+def test_anysearch_internal_contract_coexists_with_explicit_cli_commands():
+    explicit_cli_commands = [
         "anysearch-domains",
         "anysearch-search",
         "anysearch-extract",
@@ -635,8 +668,8 @@ def test_anysearch_uses_internal_contract_without_separate_skill_discovery():
         assert "scripts/smart_search_anysearch.py" in instruction_text
         assert "$" + "anysearch" not in instruction_text
         assert "do not wait for or request a separately installed `/anysearch` Skill" in instruction_text
-        for command in forbidden_compatibility_commands:
-            assert command not in instruction_text
+        for command in explicit_cli_commands:
+            assert command in instruction_text
 
 
 def test_openai_compatible_fallback_is_fail_over_not_time_slice():
@@ -646,10 +679,38 @@ def test_openai_compatible_fallback_is_fail_over_not_time_slice():
     readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
     markers = [
         "fail-over after a hard primary-model failure, not a time slice",
-        "remaining `--timeout` budget",
+        "remaining shared main-search budget",
     ]
     for marker in markers:
         assert marker in public_contract
         assert marker in packaged_contract
     assert "fail-over, not a time slice" in readme
     assert "失败后接力，不是时间片" in readme_zh
+
+
+def test_openai_compatible_responses_mode_contract_is_documented_and_packaged():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+    provider_contract = (ROOT / ".trellis/spec/backend/provider-capability-contract.md").read_text(encoding="utf-8")
+    public_text = _read_skill_tree(PUBLIC_SKILL_DIR)
+    packaged_text = _read_skill_tree(PACKAGED_SKILL_DIR)
+
+    for marker in [
+        "OPENAI_COMPATIBLE_API_MODE",
+        "chat-completions",
+        "responses",
+        "named relay",
+        "official",
+    ]:
+        assert marker in public_text
+        assert marker in packaged_text
+        assert marker in provider_contract
+
+    assert "does not promise `/responses` support" in public_text
+    assert "does not promise `/responses` support" in packaged_text
+    assert "official protocol subset plus named relay acceptance" in provider_contract
+
+    assert "OPENAI_COMPATIBLE_API_MODE=responses" in readme
+    assert "official `model` + `instructions`/`input` request subset" in readme
+    assert "OPENAI_COMPATIBLE_API_MODE=responses" in readme_zh
+    assert "官方 `model` + `instructions`/`input` 请求子集" in readme_zh

@@ -23,10 +23,10 @@ Deep Research planner output uses an explicit `--evidence-dir` when supplied, ot
 ## Common Commands
 
 ```powershell
-smart-search search "query" --extra-sources 5 --timeout 120 --max-try 5 --format json --output result.json
+smart-search search "query" --extra-sources 5 --timeout 180 --max-try 5 --format json --output result.json
 smart-search search "query" --stream --format json
 smart-search diagnose openai-compatible --format markdown
-smart-search search "query" --platform "Reuters" --model "model-id" --extra-sources 3 --timeout 120 --max-try 5 --format json
+smart-search search "query" --platform "Reuters" --model "model-id" --extra-sources 3 --timeout 180 --max-try 5 --format json
 smart-search search "nba战报" --format content
 smart-search search "query" --validation strict --fallback auto --providers auto --format json
 smart-search exa-search "query" --num-results 5 --search-type neural --include-text --include-highlights --include-domains docs.example.com developer.mozilla.org --format json
@@ -36,7 +36,7 @@ smart-search context7-docs "/reactjs/react.dev" "useEffect cleanup" --format jso
 smart-search zhipu-search "today China AI news" --count 5 --format json
 smart-search sciverse-catalog --collection papers --format json
 smart-search sciverse-search "transformer retrieval" --year-from 2020 --page-size 5 --format json
-smart-search sciverse-semantic "attention mechanism" --top-k 3 --mode balanced --format json
+smart-search sciverse-semantic "attention mechanism" --top-k 3 --retrieval hybrid --source-types web,pdf --format json
 smart-search sciverse-read "doc-id-from-search" --offset 0 --limit 4096 --format json
 smart-search sciverse-relations "unique-id-from-search" --relation CITATIONS --page-size 25 --format json
 smart-search fetch "https://example.com" --format markdown --output page.md
@@ -52,6 +52,7 @@ smart-search skills update --targets codex --format json
 smart-search skills update --all --format json
 smart-search route "React useEffect API docs" --format markdown
 smart-search setup --non-interactive --zhipu-api-url "https://open.bigmodel.cn/api" --zhipu-search-engine "search_std"
+smart-search setup --non-interactive --openai-compatible-api-mode responses
 smart-search setup --non-interactive --openai-compatible-stream true
 smart-search setup --non-interactive --openai-compatible-fallback-models "model-a,model-b"
 smart-search setup --non-interactive --sciverse-token "key" --sciverse-api-url "https://api.sciverse.space"
@@ -66,8 +67,11 @@ smart-search config set XAI_TOOLS "web_search,x_search" --format json
 smart-search config set OPENAI_COMPATIBLE_API_URL "https://api.openai.com/v1" --format json
 smart-search config set OPENAI_COMPATIBLE_API_KEY "key" --format json
 smart-search config set OPENAI_COMPATIBLE_MODEL "model-id" --format json
+smart-search config set OPENAI_COMPATIBLE_API_MODE "responses" --format json
 smart-search config set OPENAI_COMPATIBLE_FALLBACK_MODELS "model-a,model-b" --format json
 smart-search config set OPENAI_COMPATIBLE_STREAM "true" --format json
+smart-search config set SMART_SEARCH_TIMEOUT_SECONDS "180" --format json
+smart-search config set ANYSEARCH_API_URL "https://api.anysearch.com/mcp" --format json
 smart-search config set SCIVERSE_API_TOKEN "key" --format json
 smart-search config set SMART_SEARCH_INTENT_ROUTER "hybrid" --format json
 smart-search config set INTENT_EMBEDDING_API_URL "https://api.siliconflow.cn/v1/embeddings" --format json

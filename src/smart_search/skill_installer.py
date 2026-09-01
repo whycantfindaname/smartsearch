@@ -34,7 +34,7 @@ SKILL_TARGETS: tuple[SkillTarget, ...] = (
     SkillTarget("codex", "Codex", ".codex/skills", True),
     SkillTarget("claude", "Claude Code", ".claude/skills", True),
     SkillTarget("cursor", "Cursor", ".cursor/skills", True),
-    SkillTarget("opencode", "OpenCode", ".opencode/skills"),
+    SkillTarget("opencode", "OpenCode", ".config/opencode/skills"),
     SkillTarget("copilot", "GitHub Copilot", ".copilot/skills"),
     SkillTarget("gemini", "Gemini CLI", ".gemini/skills"),
     SkillTarget("kiro", "Kiro", ".kiro/skills"),
@@ -50,6 +50,9 @@ SKILL_TARGETS: tuple[SkillTarget, ...] = (
 
 SKILL_TARGET_BY_ID = {target.target_id: target for target in SKILL_TARGETS}
 DEFAULT_SKILL_TARGET_IDS = [target.target_id for target in SKILL_TARGETS if target.default]
+LEGACY_SKILL_ROOTS_BY_TARGET: dict[str, tuple[str, ...]] = {
+    "opencode": (".opencode/skills",),
+}
 
 _TARGET_ALIASES = {
     "agents": "codex",
@@ -310,13 +313,33 @@ def status_skill_targets(
     root = Path(project_root).expanduser().resolve() if project_root else Path.home().expanduser().resolve()
     selected = [SKILL_TARGET_BY_ID[target_id] for target_id in target_ids]
     source = Path(source_root).expanduser().resolve() if source_root is not None else None
-    return _status_for_skill(
+    result = _status_for_skill(
         skill_name=SKILL_NAME,
         root=root,
         selected=selected,
         source=source,
         preserved_files=PRESERVED_LOCAL_FILES,
     )
+    for target, item in zip(selected, result["targets"]):
+        legacy_locations: list[dict[str, Any]] = []
+        for legacy_relative_root in LEGACY_SKILL_ROOTS_BY_TARGET.get(target.target_id, ()):
+            legacy_target = SkillTarget(
+                target_id=target.target_id,
+                label=target.label,
+                relative_root=legacy_relative_root,
+            )
+            legacy_item = _status_for_skill(
+                skill_name=SKILL_NAME,
+                root=root,
+                selected=[legacy_target],
+                source=source,
+                preserved_files=PRESERVED_LOCAL_FILES,
+            )["targets"][0]
+            if Path(legacy_item["path"]).exists():
+                legacy_locations.append(legacy_item)
+        if legacy_locations:
+            item["legacy_locations"] = legacy_locations
+    return result
 
 
 def _install_skill(

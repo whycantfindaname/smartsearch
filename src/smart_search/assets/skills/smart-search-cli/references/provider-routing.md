@@ -40,19 +40,19 @@ Intent router rules:
 
 ## Provider Boundaries
 
-- `search` builds `main_search` from configured peer providers: `XAI_API_KEY` for xAI Responses and `OPENAI_COMPATIBLE_API_URL` + `OPENAI_COMPATIBLE_API_KEY` for OpenAI-compatible Chat Completions.
+- `search` builds `main_search` from configured peer providers: `XAI_API_KEY` for xAI Responses and `OPENAI_COMPATIBLE_API_URL` + `OPENAI_COMPATIBLE_API_KEY` for an OpenAI-compatible route.
 - `search` uses unified `IntentRouter` output to populate `required_capabilities` and `supplemental_paths`; provider execution still follows capability-first fallback.
 - `research` reuses the same `IntentRouter` before provider-advantage ordering.
 - `deep` uses offline rules/local signals only and must not call remote embeddings or classifier components.
-- Official xAI uses the Responses API `/responses` route through `XAI_*`. Compatible relays/gateways use Chat Completions `/chat/completions` through `OPENAI_COMPATIBLE_*`.
+- Official xAI uses `/responses` through `XAI_*`. OpenAI-compatible relays default to `/chat/completions`; `OPENAI_COMPATIBLE_API_MODE=responses` explicitly selects `/responses` for a relay that supports the documented subset.
 - `OPENAI_COMPATIBLE_STREAM=true` or `search --stream` sets `stream=true` only for OpenAI-compatible `search` and provider-side `fetch`; it is a relay compatibility switch and does not affect xAI Responses, URL description, or source ranking.
 - Legacy `SMART_SEARCH_API_URL`, `SMART_SEARCH_API_KEY`, `SMART_SEARCH_API_MODE`, `SMART_SEARCH_MODEL`, and `SMART_SEARCH_XAI_TOOLS` are unsupported config keys.
 - xAI Responses mode may use only `XAI_TOOLS=web_search,x_search` and a subset of those tools.
 - xAI Responses requests carry a generated `X-Request-ID`. `search --timeout` is the first wait window; after it expires, compatible gateways are polled through `GET /v1/request-status/{request_id}`. `running` extends the wait, terminal states close a stuck response connection, and unknown status remains bounded by one `XAI_HARD_TIMEOUT_SECONDS` deadline that includes retries and retry waits. Automatic retry is limited to connection failures before request submission; failures after submission preserve single-submission semantics.
 - `XAI_SOFT_TIMEOUT_SECONDS`, `XAI_STATUS_POLL_SECONDS`, and `XAI_HARD_TIMEOUT_SECONDS` default to `120`, `15`, and `7200` seconds.
-- Chat Completions mode must not send xAI `web_search` / `x_search` tools or legacy `search_parameters`; xAI Chat Completions Live Search is deprecated.
+- Neither OpenAI-compatible API mode sends xAI `web_search` / `x_search` tools or legacy `search_parameters`; xAI Chat Completions Live Search is deprecated.
 - The standard minimum profile requires one configured provider in each of `main_search`, `docs_search`, and fetch capability. Missing required capabilities should be treated as a hard configuration failure.
-- AnySearch is reported as a bundled delegated Skill for `vertical_search`; it is not a registered provider, does not join any CLI fallback chain, and is not required by the `standard` minimum profile. The Smart Search-owned adapter is its only active entrypoint.
+- AnySearch is reported as a bundled delegated Skill for `vertical_search` and is not required by the `standard` minimum profile. The explicit experimental `anysearch-*` CLI family is a second entrypoint; when its key is configured, it may reinforce vertical intent without joining default broad-search fallback.
 - Sciverse is reported only as optional experimental explicit-only `vertical_search`; it is not `docs_search`, not part of default `search` / `research` fallback, and not required by the `standard` minimum profile.
 - Jina Reader is `web_fetch` only, not a general search provider. `JINA_API_KEY` is required before Jina satisfies the standard minimum profile; anonymous `r.jina.ai` is explicit/experimental fetch behavior.
 - Same-capability fallback is allowed; cross-capability fallback is not. Context7 is not used for unrelated broad web queries, and page extraction providers are not used as docs search providers.
@@ -69,7 +69,7 @@ Intent router rules:
 - `map` currently uses Tavily only.
 - `exa-search` and `exa-similar` use Exa only.
 - `context7-library` and `context7-docs` use Context7 only.
-- AnySearch runs outside the Smart Search CLI provider registry. A Smart Search retrieval workflow reads `bundled-skills/anysearch/CONTRACT.md` and invokes `scripts/smart_search_anysearch.py` directly without waiting for a separate `/anysearch` invocation. If the bundled capability or adapter is missing, record an availability gap; do not resolve another AnySearch entrypoint.
+- The delegated AnySearch workflow runs outside the Smart Search CLI provider registry: it reads `bundled-skills/anysearch/CONTRACT.md` and invokes `scripts/smart_search_anysearch.py` without waiting for a separate `/anysearch` invocation. Direct `anysearch-*` commands are the distinct JSON-RPC CLI surface, not a fallback replacement for a missing bundle.
 - `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, and `sciverse-relations` use Sciverse only. They are explicit academic commands and must not be inserted into default provider fallback.
 - `zhipu-search` uses Zhipu only.
 - `zhipu-mcp-search`, `zhipu-mcp-reader`, and `zhipu-mcp-*` zread commands use Zhipu Coding Plan Remote MCP only.
@@ -110,10 +110,10 @@ Jina Reader:
 
 AnySearch:
 
-- AnySearch is an internally bundled capability, not a separately discoverable Skill or registered provider. Resolve `bundled-skills/anysearch/CONTRACT.md` and invoke its `scripts/smart_search_anysearch.py` adapter; this is the only active entrypoint.
+- The bundled AnySearch adapter is not a separately discoverable Skill and not a registered provider. For delegated execution, resolve `bundled-skills/anysearch/CONTRACT.md` and invoke `scripts/smart_search_anysearch.py`; for explicit JSON-RPC execution, use the matching `anysearch-*` CLI command. AnySearch is not required by the `standard` minimum profile.
 - The bundled snapshot is refreshed from the governed AnySearch source. `scripts/sync_anysearch_skill.py` refreshes both distributable Smart Search Skill trees while preserving the Smart Search-owned adapter and runtime overrides.
 - The official `anysearch-ai/anysearch-skill` repository is a fallback only when the preferred repository is reachable and the package is absent. A checkout, network, or authentication failure preserves the existing snapshot and must not silently switch sources.
-- Runtime resolution is the bundled adapter or unavailable. Missing files, credentials, quota, network, or provider failures degrade to other Smart Search sources.
+- Delegated runtime resolution is the bundled adapter or unavailable. Missing files, credentials, quota, network, or provider failures degrade to other Smart Search sources; do not silently switch that delegated workflow to the CLI surface.
 - Read the bundled AnySearch `CONTRACT.md` within the Smart Search workflow before execution. Vertical, batch, and known-URL extraction intents must execute the matching bundled capability through the adapter; vertical intent must follow the bundled capability's `get_sub_domains`-first rule and required parameters. Do not ask the user for a separate slash invocation.
 - The adapter reads `ANYSEARCH_API_KEY` and `ANYSEARCH_API_KEY_FALLBACK` only from Smart Search's private `config.json` resolution. An explicit `--api_key` is a one-call single-key override. It never reads `.env` or process credentials, never uses anonymous access, and sends a non-empty Bearer header for every request.
 
@@ -122,17 +122,25 @@ Sciverse:
 - `SCIVERSE_API_URL` defaults to `https://api.sciverse.space`; `SCIVERSE_TIMEOUT_SECONDS` defaults to `30`.
 - `SCIVERSE_API_TOKEN` is required. Missing token returns `error_type=config_error` without a network request; configured requests send `Authorization: Bearer ...` and must never expose the token.
 - Commands map directly to Sciverse OpenAPI: catalog -> `GET /meta-catalog`, search -> `POST /meta-search`, semantic -> `POST /agentic-search`, read -> `GET /content`, relations -> `POST /meta-paper-relations`.
+- Current `meta-catalog` and `meta-search` schemas have no `collection` selector. Legacy `--collection papers` is accepted without being sent upstream; `authors` and `sources` return `parameter_error` before a request. `meta-search` sends only `query`, `filters`, `sort`, `freshness_boost`, `page`, and `page_size`. `--title-contains` / `--abstract-contains` fold into `query`; author, journal, subject, and year conveniences become current filter items.
+- Advanced filters and sorts are structured local contracts: filters require `field` and `value` with a current `operator` such as `FILTER_OP_GTE`; legacy `op` is accepted only when it maps unambiguously. Sort items require `field` and normalize `order` to `SORT_ORDER_ASC` or `SORT_ORDER_DESC`. Full-text `query` and any `sort` conflict, so `--sort-by-year` defaults to `none` and sorting is filter-only.
+- `sciverse-semantic --retrieval hybrid|milvus|es` is the current semantic contract. Deprecated `--mode fast|balanced|quality` maps to `retrieval=hybrid` with a warning; it conflicts with explicit `milvus` or `es`. Semantic `--source-types` accepts only `web,pdf`.
 - `sciverse-read` uses `doc_id`; `sciverse-relations` uses `unique_id`.
 - Relation direction must stay explicit: `CITATIONS` means papers citing the target paper, `REFERENCES` means papers cited by the target paper, and `RELATED_WORKS` means related work suggestions.
-- Local limits reject before network: search `page_size <= 50`, semantic `top_k <= 30`, read `limit <= 16384`, relations `page_size <= 200`.
-- `--filters-advanced` and `--sort-advanced` must be JSON arrays and fail with `parameter_error` before service/provider calls when invalid.
+- Sciverse's documented HTTP `504` deadline response is `timeout`; other `5xx` responses remain `network_error`.
+- Local limits reject before network: search `page_size <= 200` and `page * page_size <= 10000`, semantic `top_k <= 100`, read `limit <= 16384`, relations `page_size <= 200`.
+- `--filters-advanced` and `--sort-advanced` must be JSON arrays of valid objects and fail with `parameter_error` before service/provider calls when malformed.
 
 OpenAI-compatible streaming:
 
+- `OPENAI_COMPATIBLE_API_MODE` defaults to `chat-completions` and accepts only `chat-completions` or `responses`. The selected protocol applies consistently to `search()`, provider-side `fetch()`, `describe_url()`, `rank_sources()`, `doctor`, and `diagnose openai-compatible`.
+- Responses mode handles the official `model` + `instructions`/`input` subset, heterogeneous `output` text parts, URL citations, typed stream deltas, and terminal failures. It does not promise `/responses` support from every relay marketed as OpenAI-compatible; accept each named relay with both diagnose stream probes.
 - `OPENAI_COMPATIBLE_STREAM` defaults to `false` and accepts `true`, `1`, or `yes` as true.
 - `search --stream` means "prefer stream first"; stream empty/timeout/retryable protocol failures fall back to the same provider/model with `stream=false`.
 - `search --no-stream` forces `stream=false` for the current invocation.
-- `OPENAI_COMPATIBLE_FALLBACK_MODELS` is an optional comma-separated ordered list. It is fail-over after a hard primary-model failure, not a time slice. The current candidate keeps the remaining `--timeout` budget; extra fallback models must not shrink that budget. `--fallback off` or `--model MODEL` disables this model fallback for the invocation.
+- `SMART_SEARCH_TIMEOUT_SECONDS` defines one 180-second default monotonic `search` budget. Hybrid remote routing shares a cap while reserving main-model capacity; explicit `search --timeout` overrides the saved value for one invocation.
+- `OPENAI_COMPATIBLE_FALLBACK_MODELS` is an optional comma-separated ordered list. It is fail-over after a hard primary-model failure, not a time slice. The current candidate keeps the remaining shared main-search budget; extra fallback models must not shrink that budget. `--fallback off` or `--model MODEL` disables this model fallback for the invocation.
+- `timeout_phase`, `phase_attempts`, elapsed/remaining deadline values, and `partial_success` are scheduler telemetry. Optional extra/supplemental timeout retains primary content and completed sources; strict evidence validation still reports insufficient evidence when no sources remain.
 - OpenAI-compatible attempts may include `model`, `transport`, `fallback_from_transport`, `fallback_from_model`, and `breaker_state`. `transport_fallback_used` records stream-to-non-stream recovery separately from provider/model `fallback_used`.
 - Streaming applies only to OpenAI-compatible `search()` and provider-side `fetch()` calls. `describe_url()` and `rank_sources()` stay non-streaming. xAI Responses behavior is unchanged.
 

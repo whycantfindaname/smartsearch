@@ -123,8 +123,10 @@ smart-search setup --non-interactive --install-skills codex,claude,cursor,hermes
 ```
 
 Skill installation writes the bundled `smart-search-cli` skill into user-level tool directories such as
-`~/.codex/skills`, `~/.claude/skills`, `~/.cursor/skills`, and `~/.hermes/skills`. It does not initialize
-Trellis, hooks, agents, or commands. `--skills-root PATH` is only an advanced override for portable or test installs.
+`~/.codex/skills`, `~/.claude/skills`, `~/.cursor/skills`, `~/.hermes/skills`, and OpenCode
+`~/.config/opencode/skills/smart-search-cli`. It does not initialize Trellis, hooks, agents, or commands. `--skills-root PATH` is a
+synthetic home-root override for portable or test installs, so an OpenCode install under `T` writes to
+`T/.config/opencode/skills/smart-search-cli`.
 
 9. After upgrading the CLI, refresh the installed global skill:
 
@@ -135,17 +137,19 @@ smart-search skills update --targets codex --format json
 
 `setup --install-skills` remains available for first-time setup. For routine synchronization after package updates, use
 `skills status` and `skills update`; they only inspect or overwrite the managed `smart-search-cli` files and do not change
-provider keys or create Trellis/hooks/agents/commands.
+provider keys or create Trellis/hooks/agents/commands. OpenCode status reports a discovered legacy
+`~/.opencode/skills/smart-search-cli` tree as read-only `legacy_locations` metadata; it is never moved or deleted automatically. Setup and update write
+only managed bundled files to the canonical OpenCode target and leave legacy and other extra files untouched.
 
 ## Current Architecture
 
 | Capability | Main commands | Providers | Role |
 | --- | --- | --- | --- |
-| `main_search` | `search` | xAI Responses, OpenAI-compatible Chat Completions | Broad answer generation and synthesis |
+| `main_search` | `search` | xAI Responses, OpenAI-compatible Chat Completions or Responses | Broad answer generation and synthesis |
 | `docs_search` | `context7-library`, `context7-docs`, `exa-search` | Context7, Exa | Official docs, SDKs, APIs, framework/library evidence |
 | `web_search` | `zhipu-search`, `zhipu-mcp-search`, intent-routed reinforcement inside `search` | Zhipu Web Search API, Zhipu Coding Plan MCP, Tavily, Firecrawl | Chinese, domestic, current, domain-filtered, or supplementary web discovery |
 | `web_fetch` | `fetch`, `zhipu-mcp-reader` | Tavily, Jina Reader, Zhipu Coding Plan MCP Reader, Firecrawl | Exact URL content extraction for evidence |
-| `vertical_search` | delegated bundled AnySearch adapter; `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, `sciverse-relations` | AnySearch Skill and Sciverse (experimental) | Agent-level supplemental retrieval plus explicit Sciverse academic search |
+| `vertical_search` | `anysearch-domains`, `anysearch-search`, `anysearch-extract`, `anysearch-batch`; delegated bundled AnySearch adapter; `sciverse-catalog`, `sciverse-search`, `sciverse-semantic`, `sciverse-read`, `sciverse-relations` | AnySearch and Sciverse (experimental) | Explicit vertical retrieval plus agent-level bundled delegation |
 | `site_map` | `map` | Tavily | Site/documentation structure discovery |
 | `deep_planner` | `deep` / `dr` | Local planner only | Offline plan generation; no provider call by default |
 | `research_executor` | `research` / `rs` | Registered providers by capability | Live staged research: plan, discover, fetch/read, gap check, evidence-only synthesis |
@@ -159,7 +163,7 @@ Fallback is same-capability only:
 | `web_search` | Zhipu Web Search API -> Zhipu Coding Plan MCP `web_search_prime` -> Tavily -> Firecrawl |
 | `web_fetch` | Tavily -> Jina Reader with `JINA_API_KEY` -> Zhipu Coding Plan MCP `webReader` -> Firecrawl |
 
-AnySearch is an internal Smart Search capability. It is not a separately discoverable Skill and not a registered provider. A Smart Search retrieval workflow reads `bundled-skills/anysearch/CONTRACT.md` and invokes its `scripts/smart_search_anysearch.py` adapter for matching vertical, batch, and known-URL extraction work; the user does not need to invoke `/anysearch` separately. If the bundle or adapter is unavailable, research continues with other sources. AnySearch and Sciverse are not required by the `standard` minimum profile. Sciverse is also not a `docs_search` provider and does not join default `search` or `research` routing.
+AnySearch has two explicit surfaces. The `anysearch-*` CLI family uses the configured JSON-RPC endpoint for direct experimental calls and can supply optional vertical-search reinforcement. The bundled delegated workflow remains internal to the Smart Search Skill: it reads `bundled-skills/anysearch/CONTRACT.md` and invokes `scripts/smart_search_anysearch.py` without requiring a separate `/anysearch` Skill. That bundled adapter is not a separately discoverable Skill and not a registered provider. AnySearch is not required by the `standard` minimum profile. Sciverse is also not a `docs_search` provider and does not join default `search` or `research` routing.
 
 Jina Reader is a `web_fetch` provider only. `JINA_API_KEY` is required before Jina satisfies `SMART_SEARCH_MINIMUM_PROFILE=standard`; anonymous `r.jina.ai` behavior is treated as explicit/experimental fetch behavior and must not weaken fail-closed setup checks.
 
@@ -225,7 +229,7 @@ The research router is capability-first plus provider-advantage:
 - Zhipu Coding Plan MCP remains a separate quota route through `web_search_prime` and `webReader`.
 - Jina is favored for known public URLs, PDFs, and arXiv extraction; ReaderLM-v2 still requires `JINA_API_KEY`.
 - Firecrawl is favored for JS-heavy, dynamic, browser-like, OCR/PDF, or robust fallback extraction.
-- AnySearch is delegated at agent level when it can close a general, vertical, batch, or URL-extraction evidence gap; it never participates in Smart Search provider fallback.
+- AnySearch may be delegated through the bundled adapter for general, vertical, batch, or URL-extraction gaps. Separately, a configured `anysearch-*` CLI route may reinforce a vertical-search intent; neither route joins default broad-search fallback.
 - Sciverse is explicit-only in this release and does not participate in `research` provider fallback; use `sciverse-*` commands directly for academic relations.
 
 Advanced routing overrides are available through `SMART_SEARCH_RESEARCH_PREFERRED_PROVIDERS` and `SMART_SEARCH_RESEARCH_DISABLED_PROVIDERS`. They can reorder or disable registered providers inside their supported capability, but they cannot move a provider across capability boundaries.
@@ -324,7 +328,7 @@ The default interactive setup wizard includes optional smart intent router promp
 | Provider / route | Used for | Main config keys | Official docs | Key / dashboard |
 | --- | --- | --- | --- | --- |
 | xAI Responses API | Primary live search with `web_search,x_search` tools | `XAI_API_KEY`, `XAI_API_URL`, `XAI_MODEL`, `XAI_TOOLS` | [docs.x.ai](https://docs.x.ai/docs) | [xAI API keys](https://console.x.ai/team/default/api-keys) |
-| OpenAI-compatible Chat Completions | Primary search through OpenAI or a compatible relay; no xAI search tools are sent here | `OPENAI_COMPATIBLE_API_URL`, `OPENAI_COMPATIBLE_API_KEY`, `OPENAI_COMPATIBLE_MODEL`, `OPENAI_COMPATIBLE_FALLBACK_MODELS`, `OPENAI_COMPATIBLE_STREAM` | [OpenAI platform docs](https://platform.openai.com/docs) | [OpenAI API keys](https://platform.openai.com/api-keys) or your relay provider |
+| OpenAI-compatible Chat Completions / Responses | Primary search through OpenAI or a compatible relay; no xAI search tools are sent in either mode | `OPENAI_COMPATIBLE_API_URL`, `OPENAI_COMPATIBLE_API_KEY`, `OPENAI_COMPATIBLE_MODEL`, `OPENAI_COMPATIBLE_API_MODE`, `OPENAI_COMPATIBLE_FALLBACK_MODELS`, `OPENAI_COMPATIBLE_STREAM` | [OpenAI platform docs](https://platform.openai.com/docs) | [OpenAI API keys](https://platform.openai.com/api-keys) or your relay provider |
 | Exa | Low-noise official docs, API, paper, product, trusted-page discovery | `EXA_API_KEY` | [Exa docs](https://docs.exa.ai/) | [Exa API keys](https://dashboard.exa.ai/api-keys) |
 | Context7 | SDK, library, framework, and API documentation fallback | `CONTEXT7_API_KEY`, `CONTEXT7_BASE_URL` | [Context7 docs](https://context7.com/docs) | [Context7](https://context7.com/) |
 | Zhipu Web Search API | Chinese, domestic, current, or domain-filtered web discovery | `ZHIPU_API_KEY`, `ZHIPU_API_URL`, `ZHIPU_SEARCH_ENGINE` | [Zhipu web search docs](https://docs.bigmodel.cn/cn/guide/tools/web-search) | [Zhipu API keys](https://open.bigmodel.cn/usercenter/apikeys) |
@@ -349,6 +353,7 @@ Intent router configuration:
 | `INTENT_CLASSIFIER_API_KEY` | Optional classifier API key; masked by `doctor` and config output |
 | `INTENT_CLASSIFIER_MODEL` | Classifier model name |
 | `INTENT_ROUTER_TIMEOUT_SECONDS` | Timeout for optional remote router calls, default `8` |
+| `SMART_SEARCH_TIMEOUT_SECONDS` | Total monotonic `search` budget, default `180`; `search --timeout` overrides it for one invocation |
 
 Default `hybrid` is fail-open: if embeddings or classifier settings are missing or fail, routing records `degraded_reason` and falls back to local rules. Semantic routing may add a capability only when the top similarity score is at least `INTENT_EMBEDDING_THRESHOLD` and the top-vs-second score gap is at least `INTENT_EMBEDDING_MARGIN`; otherwise it records an ambiguous signal without adding a capability. The classifier may add capabilities, but unknown capability names and provider names are ignored. Providers are still selected only by capability.
 
@@ -364,11 +369,14 @@ Use the report's recommended `INTENT_EMBEDDING_THRESHOLD` and `INTENT_EMBEDDING_
 
 Important boundaries:
 
-- xAI official live search uses the Responses API `/responses` route through `XAI_*`. Compatible relays and gateways use Chat Completions `/chat/completions` through `OPENAI_COMPATIBLE_*`.
+- xAI official live search uses `/responses` through `XAI_*`. OpenAI-compatible relays use `/chat/completions` by default; set `OPENAI_COMPATIBLE_API_MODE=responses` only for a relay that explicitly supports the documented Responses subset.
 - `OPENAI_COMPATIBLE_STREAM=true` or `smart-search search --stream` sets `stream=true` only for OpenAI-compatible `search` and provider-side `fetch` calls. It is a relay compatibility switch for long requests and does not change xAI Responses behavior, URL description, or source ranking.
-- `OPENAI_COMPATIBLE_FALLBACK_MODELS` is fail-over, not a time slice. The primary model keeps the remaining `--timeout` budget. A fallback model is tried only after a hard failure such as `model_not_found`, auth, empty content, or a non-retryable protocol error. `doctor` and `diagnose openai-compatible` warn when a configured fallback id is missing from `/models`.
+- `SMART_SEARCH_TIMEOUT_SECONDS` is the persistent total `search` budget. Environment values override the local config file; `search --timeout SECONDS` overrides both. The default is `180` seconds.
+- The service owns one monotonic deadline across router, main search, extra sources, and supplemental evidence. Hybrid remote routing shares a cap and reserves `min(120 seconds, two thirds of the total)` for main search; optional work may finish partially but cannot erase a primary answer.
+- `OPENAI_COMPATIBLE_FALLBACK_MODELS` is fail-over, not a time slice. The primary model keeps the remaining shared main-search budget. A fallback model is tried only after a hard failure such as `model_not_found`, auth, empty content, or a non-retryable protocol error. `doctor` and `diagnose openai-compatible` warn when a configured fallback id is missing from `/models`.
 - Legacy `SMART_SEARCH_API_URL`, `SMART_SEARCH_API_KEY`, `SMART_SEARCH_API_MODE`, `SMART_SEARCH_MODEL`, and `SMART_SEARCH_XAI_TOOLS` are not supported config keys. Use `XAI_*` or `OPENAI_COMPATIBLE_*` explicitly.
-- Do not force xAI `web_search` / `x_search` tools or legacy `search_parameters` into the OpenAI-compatible Chat Completions route.
+- Do not force xAI `web_search` / `x_search` tools or legacy `search_parameters` into either OpenAI-compatible API mode.
+- Responses mode supports the official `model` + `instructions`/`input` request subset, heterogeneous `output` text parts, URL-citation annotations, and typed terminal stream events. It is not a claim that every "OpenAI-compatible" relay implements `/responses`; use `diagnose openai-compatible` with both stream settings to accept a named relay before relying on it.
 - `zhipu-search` support is the Web Search API route, not Zhipu Chat Completions `tools=[web_search]`, not Search Agent, and not the MCP Server.
 - Zhipu Coding Plan support is a separate Remote MCP route. `web_search_prime` maps to `web_search`, `webReader` maps to `web_fetch`, and zread tools map to explicit repo/docs discovery commands. It is not mixed into the existing `/paas/v4/web_search` Zhipu REST provider.
 - Zhipu Coding Plan MCP requires its own Coding Plan entitlement. A normal `ZHIPU_API_KEY` for Web Search API does not prove `zhipu-mcp-search` or zread access. If `ZHIPU_MCP_API_KEY` is absent or unauthorized, Smart Search skips those MCP providers; the `standard` minimum profile and same-capability fallback still work through the configured REST/search/fetch providers.
@@ -377,7 +385,7 @@ Important boundaries:
 - `TAVILY_API_URL` affects Tavily only. It does not proxy Zhipu. For Tavily Hikari / pooled endpoints, use `https://<host>/api/tavily`; setup normalizes root-host or `/mcp` inputs to that REST base.
 - `TAVILY_ENABLED` defaults to `true`. Set it to `false` to disable Tavily even when a key is present: Tavily is removed from web-search and fetch routing, direct Tavily calls and `doctor` make no Tavily request, and `map` returns a local configuration error. This does not enable Firecrawl or change same-capability fallback boundaries.
 - `FIRECRAWL_API_URL` defaults to `https://api.firecrawl.dev/v2`.
-- AnySearch is not a provider, setup-wizard capability, or separately discoverable Skill. The agent reads `bundled-skills/anysearch/CONTRACT.md` inside the Smart Search workflow and follows that internal contract without requiring a separate slash invocation. The bundled adapter reads its two key fields from Smart Search's existing private `config.json`; setup does not print or migrate their values. The bundled snapshot is refreshed from `jason-liao-skills/main/skill-packages/anysearch`; the official repository is used only when the preferred repository is reachable and that package is absent.
+- AnySearch is experimental and not a minimum-profile capability or separately discoverable Skill. Direct `anysearch-*` CLI commands use `ANYSEARCH_API_URL`, optional `ANYSEARCH_API_KEY`, and `ANYSEARCH_TIMEOUT_SECONDS`; the bundled workflow instead follows `bundled-skills/anysearch/CONTRACT.md` and its file-only dual-key adapter policy. The bundled snapshot is refreshed from `jason-liao-skills/main/skill-packages/anysearch`; the official repository is used only when the preferred repository is reachable and that package is absent.
 - Sciverse uses native HTTP/OpenAPI at `https://api.sciverse.space` by default. It requires `SCIVERSE_API_TOKEN`, returns `config_error` without a network request when the token is absent, sends `Authorization: Bearer ...` when configured, and remains explicit-only: not `docs_search`, not `standard`, and not default `search` / `research` fallback.
 - `doctor` and `route` report intent router status, embedding model, threshold, margin, their config source, timeout, and degradation behavior. They do not expose router API keys.
 
@@ -390,8 +398,10 @@ smart-search setup --non-interactive `
   --openai-compatible-api-url "https://api.openai.com/v1" `
   --openai-compatible-api-key "your-openai-or-relay-key" `
   --openai-compatible-model "gpt-4.1" `
+  --openai-compatible-api-mode "chat-completions" `
   --openai-compatible-stream "false" `
   --validation-level "balanced" `
+  --search-timeout "180" `
   --fallback-mode "auto" `
   --minimum-profile "standard" `
   --intent-router "hybrid" `
@@ -429,24 +439,30 @@ Experimental Sciverse configuration is also optional and does not satisfy or cha
 smart-search setup --non-interactive --sciverse-token "your-sciverse-token" --sciverse-api-url "https://api.sciverse.space"
 smart-search sciverse-catalog --collection papers --format json
 smart-search sciverse-search "transformer retrieval" --year-from 2020 --page-size 5 --format json
-smart-search sciverse-semantic "attention mechanism" --top-k 3 --mode balanced --format json
+smart-search sciverse-semantic "attention mechanism" --top-k 3 --retrieval hybrid --source-types web,pdf --format json
 smart-search sciverse-read "doc-id-from-search" --offset 0 --limit 4096 --format json
 smart-search sciverse-relations "unique-id-from-search" --relation CITATIONS --page-size 25 --format json
 ```
 
-Use `doc_id` for `sciverse-read` and `unique_id` for `sciverse-relations`. `CITATIONS` means papers citing the target paper; `REFERENCES` means papers cited by the target paper; `RELATED_WORKS` means related work suggestions. `--filters-advanced` and `--sort-advanced` accept JSON arrays for fields not promoted to first-class CLI flags.
+The current `GET /meta-catalog` and `POST /meta-search` schemas have no `collection` selector. Legacy `--collection papers` remains accepted without being sent upstream; `authors` and `sources` return `parameter_error` before a request. The `POST /meta-search` body uses only `query`, `filters`, `sort`, `freshness_boost`, `page`, and `page_size`. `--title-contains` and `--abstract-contains` are folded into `query`; authors, journals, subjects, and year bounds become current `FieldFilterItem` filters.
+
+`--filters-advanced` and `--sort-advanced` accept structured JSON arrays, not arbitrary pass-through JSON. A filter item needs `field` and `value`, uses current `operator` values such as `FILTER_OP_GTE`, and accepts legacy `op` only when it maps unambiguously. A sort item needs `field` and accepts `order` values `SORT_ORDER_ASC` or `SORT_ORDER_DESC` (or `asc` / `desc`). Full-text `query` cannot be combined with any sort in the current schema, so `--sort-by-year` defaults to `none` and sorting is for filter-only searches.
+
+Use `--retrieval hybrid|milvus|es` for semantic search. Legacy `--mode fast|balanced|quality` remains accepted with a deprecation warning and maps to `--retrieval hybrid`; combining it with `--retrieval milvus` or `--retrieval es` is a parameter error. Semantic `--source-types` accepts `web,pdf`. Use `doc_id` for `sciverse-read` and `unique_id` for `sciverse-relations`. `CITATIONS` means papers citing the target paper; `REFERENCES` means papers cited by the target paper; `RELATED_WORKS` means related work suggestions.
 
 Local config path:
 
 - Windows default: `%LOCALAPPDATA%\smart-search\config.json`.
 - Linux/macOS default: `~/.config/smart-search/config.json`.
 - `SMART_SEARCH_CONFIG_DIR` is an advanced override for CI, containers, sandboxes, or portable installs.
+- `SMART_SEARCH_TIMEOUT_SECONDS` saves the default total `search` budget. Environment wins over this file; `search --timeout` is the one-call override.
 - `SMART_SEARCH_RESEARCH_PREFERRED_PROVIDERS` and `SMART_SEARCH_RESEARCH_DISABLED_PROVIDERS` are advanced `research` routing overrides. They accept provider CSV values and can only reorder or disable providers inside existing capability boundaries.
 - Earlier Windows source builds defaulted to `~\.config\smart-search\config.json`, while some installs were already pinned to `%LOCALAPPDATA%\smart-search` through `SMART_SEARCH_CONFIG_DIR`. If the new Windows default file is missing but the old home config exists, Smart Search reads the old file as `legacy_windows_home` so upgrades do not lose configuration. `doctor` reports the active path, default path, old home path, `SMART_SEARCH_CONFIG_DIR`, and whether that override merely matches the current default.
 
 Provider timeouts:
 
-- `search --timeout` defaults to `120` seconds and is the initial wait window for xAI Responses. When it expires, Smart Search polls `GET /v1/request-status/{request_id}` on compatible gateways and keeps waiting while the request is running.
+- `SMART_SEARCH_TIMEOUT_SECONDS` defaults to `180`. It is the shared service deadline; `search --timeout` overrides it for one invocation. JSON output adds `timeout_phase`, `phase_attempts`, elapsed/remaining deadline values, and `partial_success` when optional work is cut short after primary output succeeds.
+- For xAI Responses, the remaining main-search budget is the initial wait window. When it expires, Smart Search polls `GET /v1/request-status/{request_id}` on compatible gateways and keeps waiting while the request is running, bounded by the xAI hard deadline.
 - `search --max-try N` replays only explicit terminal xAI HTTP 504 failures; it defaults to five logical attempts.
 - `XAI_SOFT_TIMEOUT_SECONDS` defaults to `120` for direct provider calls without a CLI timeout. `XAI_STATUS_POLL_SECONDS` defaults to `15` and `XAI_HARD_TIMEOUT_SECONDS` defaults to `7200`.
 - Gateways without the request-status extension are treated as unknown and remain bounded by `XAI_HARD_TIMEOUT_SECONDS`.
@@ -499,12 +515,13 @@ Smoke output includes `status` (`healthy`, `degraded`, or `failed`) and explicit
 Useful examples:
 
 ```powershell
-smart-search search "query" --validation balanced --extra-sources 3 --timeout 90 --format json --output result.json
+smart-search search "query" --validation balanced --extra-sources 3 --timeout 180 --format json --output result.json
 smart-search route "React useEffect API docs" --format markdown
 smart-search route-calibrate --models "Qwen/Qwen3-Embedding-8B" --format markdown
 smart-search research "query" --budget deep --fallback auto --format json --output research.json
 smart-search search "query" --stream --format json
 smart-search search "query" --no-stream --format json
+smart-search config set OPENAI_COMPATIBLE_API_MODE "responses" --format json
 smart-search config set OPENAI_COMPATIBLE_FALLBACK_MODELS "grok-4.3-fast" --format json
 smart-search search "nba report" --format content
 smart-search exa-search "OpenAI Responses API documentation" --include-domains platform.openai.com developers.openai.com --num-results 5 --include-text --format json
@@ -552,6 +569,8 @@ smart-search doctor --format content
 ```
 
 `content` is intentionally brief. Use `doctor --format markdown` for general human troubleshooting, `diagnose openai-compatible --format markdown` for OpenAI-compatible search hangs/timeouts, and JSON formats for complete machine-readable contracts.
+
+When `search` has primary content but an optional phase reaches the deadline, JSON keeps the content and completed sources with `partial_success=true`; inspect `timeout_phase`, `timed_out_phases`, and `phase_attempts` before retrying or broadening source work.
 
 Save multi-source evidence under an explicit stable folder. The default uses the platform temp directory; the commands below use a Windows explicit path example:
 

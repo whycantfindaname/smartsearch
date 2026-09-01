@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "smart-search"
-version = "0.1.16"
-description = "CLI-first multi-source web search and Agentic Research Preview with structured evidence workspaces."
+version = "0.1.17"
+description = "CLI-first multi-source web research with structured Agentic Research workspaces, xAI/OpenAI-compatible search, Exa, Context7, Zhipu, Tavily, Firecrawl, and Deep Research planning."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

@@ -24,6 +24,13 @@ from .embedding_presets import (
     QWEN3_EMBEDDING_8B_PRESET,
     embedding_preset_for_model,
 )
+from .providers.anysearch import parse_sub_domain_params
+from .sciverse_schema import (
+    SciverseParameterError,
+    normalize_sciverse_filters,
+    normalize_sciverse_retrieval,
+    normalize_sciverse_sort,
+)
 from .skill_installer import (
     DEFAULT_SKILL_TARGET_IDS,
     SKILL_TARGETS,
@@ -376,8 +383,6 @@ def _search_timeout_result(query: str, timeout: float, search_kwargs: dict[str, 
         "diagnose_command": "smart-search diagnose openai-compatible --format markdown",
         "recommendation": "Run `smart-search diagnose openai-compatible --format markdown` to check whether OpenAI-compatible stream/no-stream search requests are hanging upstream.",
     }
-
-
 def _one_line(value: Any, limit: int = 160) -> str:
     text = "" if value is None else str(value)
     text = " ".join(text.replace("\r", " ").replace("\n", " ").split())
@@ -543,6 +548,23 @@ def _result_rows(results: list[Any]) -> list[list[Any]]:
     return rows
 
 
+def _search_timeout_lines(data: dict[str, Any]) -> list[str]:
+    lines: list[str] = []
+    timeout_seconds = data.get("timeout_seconds")
+    if timeout_seconds is not None:
+        try:
+            lines.append(f"Search budget: {_format_seconds(float(timeout_seconds))} seconds")
+        except (TypeError, ValueError):
+            pass
+    if data.get("timeout_phase"):
+        lines.append(f"Timeout phase: `{data.get('timeout_phase')}`")
+    if data.get("partial_success"):
+        lines.append("Partial success: YES")
+    if data.get("timeout_warning"):
+        lines.append(f"Timeout warning: {data.get('timeout_warning')}")
+    return lines
+
+
 def _format_result_markdown(command: str, data: dict[str, Any], title: str) -> str:
     lines = [
         f"# {title}",
@@ -591,6 +613,8 @@ def _format_doctor_markdown(data: dict[str, Any]) -> str:
         f"Resolved log dir: `{data.get('resolved_log_dir', '')}`",
         f"File logging enabled: {_yes_no(data.get('file_logging_enabled'))}",
     ]
+    if data.get("openai_compatible_endpoint"):
+        lines.append(f"OpenAI-compatible endpoint: `{data.get('openai_compatible_endpoint')}`")
     if data.get("legacy_windows_config_file"):
         lines.append(f"Legacy Windows config file: `{data.get('legacy_windows_config_file')}`")
         lines.append(f"Legacy Windows config exists: {_status_label(data.get('legacy_windows_config_exists'))}")
@@ -761,6 +785,7 @@ def _provider_detail_lines(title: str, provider_tests: dict[str, Any]) -> list[s
         nested_checks = [
             ("models_endpoint_test", test.get("models_endpoint_test")),
             ("chat_completion_test", test.get("chat_completion_test")),
+            ("responses_test", test.get("responses_test")),
         ]
         if not message and not available_models and not any(isinstance(item, dict) for _, item in nested_checks):
             continue
@@ -836,6 +861,8 @@ def _format_diagnose_markdown(data: dict[str, Any]) -> str:
         f"API URL: `{data.get('api_url', '')}`",
         f"API key: `{data.get('api_key', '')}`",
         f"Model: `{data.get('model', '')}`",
+        f"Configured API mode: `{data.get('configured_api_mode', 'chat-completions')}`",
+        f"Endpoint: `{data.get('endpoint', '')}`",
         f"Configured stream: {_yes_no(data.get('configured_stream'))}",
         f"Timeout: {_format_seconds(float(data.get('timeout_seconds', 0) or 0))} seconds",
         f"Timeout policy: `{data.get('timeout_policy', 'remaining_budget')}`",
@@ -1007,6 +1034,8 @@ def _format_model_markdown(data: dict[str, Any]) -> str:
         rows.append(["xai-responses", data.get("xai_model")])
     if data.get("openai_compatible_model"):
         rows.append(["openai-compatible", data.get("openai_compatible_model")])
+    if data.get("openai_compatible_api_mode"):
+        rows.append(["openai-compatible API mode", data.get("openai_compatible_api_mode")])
     fallback_models = data.get("openai_compatible_fallback_models") or []
     if fallback_models:
         rows.append(["openai-compatible fallback", ", ".join(fallback_models)])
@@ -1064,6 +1093,25 @@ def _format_skills_markdown(data: dict[str, Any]) -> str:
             )
         lines.extend(["", "## Targets"])
         lines.extend(_markdown_table(["Target", "Status", "Files", "Installed", "Hash match", "Extra", "Path"], rows))
+    legacy_rows = []
+    for item in targets:
+        for legacy in item.get("legacy_locations") or []:
+            legacy_rows.append(
+                [
+                    item.get("target", ""),
+                    legacy.get("status", ""),
+                    legacy.get("installed_files", ""),
+                    len(legacy.get("extra_files") or []),
+                    legacy.get("path", ""),
+                ]
+            )
+    if legacy_rows:
+        lines.extend([
+            "",
+            "## Legacy Locations",
+            "Reported read-only; setup and update write only to the canonical target.",
+        ])
+        lines.extend(_markdown_table(["Target", "Status", "Installed", "Extra", "Path"], legacy_rows))
     if data.get("failed"):
         lines.extend(["", "## Failed"])
         lines.extend(_markdown_table(["Target", "Path", "Error"], [[item.get("target"), item.get("path"), item.get("error")] for item in data.get("failed", [])]))
@@ -1139,6 +1187,10 @@ def _format_markdown(command: str, data: dict[str, Any]) -> str:
                 lines.append(f"Model: `{data.get('model')}`")
             if data.get("stream") is not None:
                 lines.append(f"Stream: {_yes_no(data.get('stream'))}")
+            lines.extend(_search_timeout_lines(data))
+            if data.get("content"):
+                lines.extend(["", "## Content"])
+                lines.extend(_markdown_code_block(data.get("content")))
             if data.get("recommendation"):
                 lines.extend(["", "## Recommendation", str(data.get("recommendation"))])
             if data.get("diagnose_command"):
@@ -1148,6 +1200,7 @@ def _format_markdown(command: str, data: dict[str, Any]) -> str:
             lines.extend(_error_lines(data))
             return "\n".join(lines).strip() + "\n"
         lines = [data.get("content", "")]
+        lines.extend(_search_timeout_lines(data))
         primary_sources = data.get("primary_sources") or []
         extra_sources = data.get("extra_sources") or []
         if primary_sources or extra_sources:
@@ -2729,6 +2782,7 @@ def _run_advanced_setup_prompts(values: dict[str, str], current: dict[str, str],
         ("OPENAI_COMPATIBLE_API_KEY", "OpenAI-compatible API key", True),
         ("OPENAI_COMPATIBLE_MODEL", "OpenAI-compatible model", True),
         ("OPENAI_COMPATIBLE_FALLBACK_MODELS", "OpenAI-compatible fallback models (comma-separated)", True),
+        ("OPENAI_COMPATIBLE_API_MODE", "OpenAI-compatible API mode (chat-completions/responses)", True),
         ("OPENAI_COMPATIBLE_STREAM", "OpenAI-compatible stream mode (true/false)", True),
         ("SMART_SEARCH_VALIDATION_LEVEL", "Validation level (fast/balanced/strict)", True),
         ("SMART_SEARCH_FALLBACK_MODE", "Fallback mode (auto/off)", True),
@@ -3185,31 +3239,14 @@ async def _run_async(args: argparse.Namespace) -> int:
         }
         if args.stream is not None:
             search_kwargs["stream"] = args.stream
-        if "timeout_seconds" in inspect.signature(service.search).parameters:
+        if args.timeout is not None and "timeout_seconds" in inspect.signature(service.search).parameters:
             search_kwargs["timeout_seconds"] = args.timeout
-        configured_providers = {
-            item.strip().lower()
-            for item in str(args.providers or "auto").split(",")
-            if item.strip()
-        }
-        xai_status_monitor_active = bool(service.config.xai_api_key) and (
-            "auto" in configured_providers or "xai-responses" in configured_providers
-        )
         provider_attempts: list[dict[str, Any]] = []
         logical_attempts = 0
         retry_reason = ""
         for logical_attempt in range(1, args.max_try + 1):
             logical_attempts = logical_attempt
-            try:
-                if xai_status_monitor_active:
-                    data = await service.search(args.query, **search_kwargs)
-                else:
-                    data = await asyncio.wait_for(
-                        service.search(args.query, **search_kwargs),
-                        timeout=args.timeout,
-                    )
-            except asyncio.TimeoutError:
-                data = _search_timeout_result(args.query, args.timeout, search_kwargs)
+            data = await service.search(args.query, **search_kwargs)
 
             for attempt in data.get("provider_attempts") or []:
                 if isinstance(attempt, dict):
@@ -3305,8 +3342,12 @@ async def _run_async(args: argparse.Namespace) -> int:
         return _print_result("sciverse-catalog", data, args.format, args.output)
     if args.command == "sciverse-search":
         try:
-            filters_advanced = _parse_json_array_arg(args.filters_advanced, "--filters-advanced")
-            sort_advanced = _parse_json_array_arg(args.sort_advanced, "--sort-advanced")
+            filters_advanced = normalize_sciverse_filters(
+                _parse_json_array_arg(args.filters_advanced, "--filters-advanced")
+            )
+            sort_advanced = normalize_sciverse_sort(
+                _parse_json_array_arg(args.sort_advanced, "--sort-advanced")
+            )
         except ValueError as exc:
             data = {"ok": False, "provider": "sciverse", "error_type": "parameter_error", "error": str(exc)}
             return _print_result("sciverse-search", data, args.format, args.output)
@@ -3329,10 +3370,17 @@ async def _run_async(args: argparse.Namespace) -> int:
         )
         return _print_result("sciverse-search", data, args.format, args.output)
     if args.command == "sciverse-semantic":
+        try:
+            retrieval, warning = normalize_sciverse_retrieval(args.retrieval, legacy_mode=args.mode)
+        except SciverseParameterError as exc:
+            data = {"ok": False, "provider": "sciverse", "error_type": "parameter_error", "error": str(exc)}
+            return _print_result("sciverse-semantic", data, args.format, args.output)
+        if warning:
+            print(f"Warning: {warning}", file=sys.stderr)
         data = await service.sciverse_semantic(
             args.query,
             top_k=args.top_k,
-            mode=args.mode,
+            retrieval=retrieval,
             source_types=args.source_types,
         )
         return _print_result("sciverse-semantic", data, args.format, args.output)
@@ -3462,6 +3510,7 @@ def _run_setup(args: argparse.Namespace) -> int:
         return _print_result("setup", data, args.format, args.output)
 
     values = {
+        "SMART_SEARCH_TIMEOUT_SECONDS": args.search_timeout,
         "XAI_API_URL": args.xai_api_url,
         "XAI_API_KEY": args.xai_api_key,
         "XAI_MODEL": args.xai_model,
@@ -3470,6 +3519,7 @@ def _run_setup(args: argparse.Namespace) -> int:
         "OPENAI_COMPATIBLE_API_KEY": args.openai_compatible_api_key,
         "OPENAI_COMPATIBLE_MODEL": args.openai_compatible_model,
         "OPENAI_COMPATIBLE_FALLBACK_MODELS": args.openai_compatible_fallback_models,
+        "OPENAI_COMPATIBLE_API_MODE": args.openai_compatible_api_mode,
         "OPENAI_COMPATIBLE_STREAM": args.openai_compatible_stream,
         "SMART_SEARCH_VALIDATION_LEVEL": args.validation_level,
         "SMART_SEARCH_FALLBACK_MODE": args.fallback_mode,
@@ -3537,24 +3587,37 @@ def _run_setup(args: argparse.Namespace) -> int:
         if _has_embedding_setup_values(values):
             setup_warnings.extend(_apply_embedding_setup_preset(values, current_for_setup, interactive=False, lang=lang))
 
-    try:
-        for key, value in values.items():
-            if value:
-                service.config._validate_research_config_value(key, value)
-    except ValueError as exc:
-        data = {
-            "ok": False,
-            "error_type": "parameter_error",
-            "error": str(exc),
-            "config_file": service.config_path()["config_file"],
-            "saved": {},
-        }
-        return _print_result("setup", data, args.format, args.output)
+    # Validate all local enum/numeric constraints before persisting any setup
+    # field, so an invalid API mode cannot leave a partial provider profile.
+    for key, value in values.items():
+        if not value:
+            continue
+        try:
+            service.config._validate_research_config_value(key, value)
+            service.config._validate_config_value(key, value)
+        except ValueError as exc:
+            data = {
+                "ok": False,
+                "error_type": "parameter_error",
+                "error": str(exc),
+                "config_file": service.config_path()["config_file"],
+                "saved": {},
+            }
+            return _print_result("setup", data, args.format, args.output)
 
     saved: dict[str, str] = {}
     for key, value in values.items():
         if value:
             result = service.config_set(key, value)
+            if not result.get("ok", False):
+                data = {
+                    "ok": False,
+                    "error_type": result.get("error_type", "parameter_error"),
+                    "error": result.get("error", f"Unable to save {key}."),
+                    "config_file": result.get("config_file", service.config_path()["config_file"]),
+                    "saved": saved,
+                }
+                return _print_result("setup", data, args.format, args.output)
             saved[key] = result.get("value", "")
 
     skill_result = None
@@ -3659,9 +3722,9 @@ def build_parser() -> argparse.ArgumentParser:
     search_parser.add_argument(
         "--timeout",
         type=float,
-        default=120,
+        default=None,
         metavar="SECONDS",
-        help="Search timeout in seconds (default: 120); xAI Responses checks request status before extending the wait.",
+        help="Total search budget in seconds; overrides SMART_SEARCH_TIMEOUT_SECONDS.",
     )
     search_parser.add_argument(
         "--max-try",
@@ -3803,10 +3866,15 @@ def build_parser() -> argparse.ArgumentParser:
     sciverse_catalog_parser = sub.add_parser(
         "sciverse-catalog",
         aliases=COMMAND_ALIASES["sciverse-catalog"],
-        help="List Sciverse academic metadata fields.",
+        help="List Sciverse academic metadata fields (current API supports papers only).",
     )
     sciverse_catalog_parser.set_defaults(command="sciverse-catalog")
-    sciverse_catalog_parser.add_argument("--collection", choices=["papers", "authors", "sources"], default="papers")
+    sciverse_catalog_parser.add_argument(
+        "--collection",
+        choices=["papers", "authors", "sources"],
+        default="papers",
+        help="Legacy selector; authors and sources return parameter_error with the current API.",
+    )
     sciverse_catalog_parser.add_argument("--include-sample-values", action="store_true")
     sciverse_catalog_parser.add_argument("--include-field-stats", action="store_true")
     _add_format_args(sciverse_catalog_parser)
@@ -3818,7 +3886,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sciverse_search_parser.set_defaults(command="sciverse-search")
     sciverse_search_parser.add_argument("query", nargs="?", default="")
-    sciverse_search_parser.add_argument("--collection", choices=["papers", "authors", "sources"], default="papers")
+    sciverse_search_parser.add_argument(
+        "--collection",
+        choices=["papers", "authors", "sources"],
+        default="papers",
+        help="Legacy selector; authors and sources return parameter_error with the current API.",
+    )
     sciverse_search_parser.add_argument("--title-contains", default="")
     sciverse_search_parser.add_argument("--abstract-contains", default="")
     sciverse_search_parser.add_argument("--authors", default="", help="Comma-separated author names.")
@@ -3826,9 +3899,9 @@ def build_parser() -> argparse.ArgumentParser:
     sciverse_search_parser.add_argument("--subjects", default="", help="Comma-separated subject labels.")
     sciverse_search_parser.add_argument("--year-from", type=int, default=None)
     sciverse_search_parser.add_argument("--year-to", type=int, default=None)
-    sciverse_search_parser.add_argument("--filters-advanced", default="", help="JSON array forwarded to Sciverse advanced filters.")
-    sciverse_search_parser.add_argument("--sort-advanced", default="", help="JSON array forwarded to Sciverse advanced sorting.")
-    sciverse_search_parser.add_argument("--sort-by-year", choices=["desc", "asc", "none"], default="desc")
+    sciverse_search_parser.add_argument("--filters-advanced", default="", help="JSON array of current Sciverse FieldFilterItem values.")
+    sciverse_search_parser.add_argument("--sort-advanced", default="", help="JSON array of current Sciverse SortFieldItem values.")
+    sciverse_search_parser.add_argument("--sort-by-year", choices=["desc", "asc", "none"], default="none")
     sciverse_search_parser.add_argument("--freshness-boost", choices=["NONE", "MILD", "STRONG"], default="NONE")
     sciverse_search_parser.add_argument("--page", type=int, default=1)
     sciverse_search_parser.add_argument("--page-size", type=int, default=10)
@@ -3842,8 +3915,14 @@ def build_parser() -> argparse.ArgumentParser:
     sciverse_semantic_parser.set_defaults(command="sciverse-semantic")
     sciverse_semantic_parser.add_argument("query")
     sciverse_semantic_parser.add_argument("--top-k", type=int, default=10)
-    sciverse_semantic_parser.add_argument("--mode", choices=["fast", "balanced", "quality"], default="balanced")
-    sciverse_semantic_parser.add_argument("--source-types", default="", help="Comma-separated Sciverse source types.")
+    sciverse_semantic_parser.add_argument("--retrieval", choices=["hybrid", "milvus", "es"], default="")
+    sciverse_semantic_parser.add_argument(
+        "--mode",
+        choices=["fast", "balanced", "quality"],
+        default=None,
+        help="Deprecated compatibility alias; maps to --retrieval hybrid.",
+    )
+    sciverse_semantic_parser.add_argument("--source-types", default="", help="Comma-separated Sciverse source types: web,pdf.")
     _add_format_args(sciverse_semantic_parser)
 
     sciverse_read_parser = sub.add_parser(
@@ -4071,7 +4150,7 @@ def build_parser() -> argparse.ArgumentParser:
     skills_status.add_argument(
         "--skills-root",
         default="",
-        help="Advanced override for the user-level skill root; defaults to the current user's home directory.",
+        help="Advanced synthetic home-directory override for portable or test installs; defaults to the current user's home directory.",
     )
     _add_format_args(skills_status)
     skills_update = skills_sub.add_parser("update", aliases=SKILLS_COMMAND_ALIASES["update"], help="Overwrite selected installed skill files with bundled assets.")
@@ -4085,7 +4164,7 @@ def build_parser() -> argparse.ArgumentParser:
     skills_update.add_argument(
         "--skills-root",
         default="",
-        help="Advanced override for the user-level skill root; defaults to the current user's home directory.",
+        help="Advanced synthetic home-directory override for portable or test installs; defaults to the current user's home directory.",
     )
     _add_format_args(skills_update)
 
@@ -4105,7 +4184,7 @@ def build_parser() -> argparse.ArgumentParser:
     setup_parser.add_argument(
         "--skills-root",
         default="",
-        help="Advanced override for the user-level skill root; defaults to the current user's home directory.",
+        help="Advanced synthetic home-directory override for portable or test installs; defaults to the current user's home directory.",
     )
     setup_parser.add_argument("--xai-api-url", default="", help="Save XAI_API_URL.")
     setup_parser.add_argument("--xai-api-key", default="", help="Save XAI_API_KEY.")
@@ -4115,11 +4194,19 @@ def build_parser() -> argparse.ArgumentParser:
     setup_parser.add_argument("--openai-compatible-api-key", default="", help="Save OPENAI_COMPATIBLE_API_KEY.")
     setup_parser.add_argument("--openai-compatible-model", default="", help="Save OPENAI_COMPATIBLE_MODEL.")
     setup_parser.add_argument("--openai-compatible-fallback-models", default="", help="Save OPENAI_COMPATIBLE_FALLBACK_MODELS.")
+    setup_parser.add_argument("--openai-compatible-api-mode", default="", help="Save OPENAI_COMPATIBLE_API_MODE (chat-completions or responses).")
     setup_parser.add_argument("--openai-compatible-stream", default="", help="Save OPENAI_COMPATIBLE_STREAM.")
     setup_parser.add_argument("--validation-level", default="", help="Save SMART_SEARCH_VALIDATION_LEVEL.")
     setup_parser.add_argument("--fallback-mode", default="", help="Save SMART_SEARCH_FALLBACK_MODE.")
     setup_parser.add_argument("--minimum-profile", default="", help="Save SMART_SEARCH_MINIMUM_PROFILE.")
     setup_parser.add_argument("--intent-router", default="", help="Save SMART_SEARCH_INTENT_ROUTER.")
+    setup_parser.add_argument(
+        "--search-timeout",
+        "--search-timeout-seconds",
+        dest="search_timeout",
+        default="",
+        help="Save SMART_SEARCH_TIMEOUT_SECONDS.",
+    )
     setup_parser.add_argument("--intent-embedding-api-url", default="", help="Save INTENT_EMBEDDING_API_URL.")
     setup_parser.add_argument("--intent-embedding-api-key", default="", help="Save INTENT_EMBEDDING_API_KEY.")
     setup_parser.add_argument("--intent-embedding-model", default="", help="Save INTENT_EMBEDDING_MODEL.")
