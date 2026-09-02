@@ -1,13 +1,13 @@
-# Smart Search 受管同步错误目录（当前有效）
+# Smart Search 受管交付错误目录（当前有效）
 
-只记录仓库/打包/传播/激活错误的当前有效处理。历史处理由 Git history 保留，不在本文件
-堆叠版本。搜索 provider 与请求恢复错误见
-`skills/smart-search-cli/references/error-recovery.md`（source authority，Smart Search
-`lwj_dev`），不复制到本目录。
+只记录 Smart Search 交付生命周期中的稳定错误：发布就绪、下游发布、平台交接和真实
+消费者验收。历史处理由 Git history 保留，不在本文件堆叠版本。搜索 provider 与请求
+恢复错误见 `skills/smart-search-cli/references/error-recovery.md`（source authority，
+Smart Search `lwj_dev`），不复制到交付错误目录。
 
 ## SS_SYNC_DIRTY_UNSCOPED
 
-- 阶段：仓库收敛 / 项目工作流前置
+- 阶段：release_readiness 前置
 - 含义：工作树存在无法归属到当前任务的改动。
 - 检查：`git status --short`；对每个路径确认归属。
 - 处理：属于其他任务 → 先完成或提交该任务；不明 → 停止并交给人决定。
@@ -15,7 +15,7 @@
 
 ## SS_SYNC_BRANCH_MISMATCH
 
-- 阶段：仓库收敛
+- 阶段：release_readiness 前置
 - 含义：当前分支/remote 与登记（companion manifest）不一致。
 - 检查：`git branch --show-current`、`git remote -v`、manifest `branch`/`clone_remote`。
 - 处理：以登记为准切回/修复 remote；若登记本身过时，先在 Agent Infra manifest 修正。
@@ -23,7 +23,7 @@
 
 ## SS_SYNC_SKILL_PARITY_DRIFT
 
-- 阶段：项目工作流
+- 阶段：release_readiness
 - 含义：`skills/smart-search-cli` 与 `src/smart_search/assets/skills/smart-search-cli`
   不一致。
 - 检查：`npm run check:skill-parity`（输出差异文件）。
@@ -32,7 +32,7 @@
 
 ## SS_SYNC_PACKED_SMOKE_FAILED
 
-- 阶段：项目工作流
+- 阶段：release_readiness
 - 含义：`npm run smoke:tarball` 在临时安装后行为校验失败。
 - 检查：重跑并记录失败子命令（`--version` / `modes` / `regression` / `smoke --mock`）。
 - 处理：按失败子命令定位 npm 打包面（`files`、bin wrapper、sidecar 资源）；修复后
@@ -41,7 +41,7 @@
 
 ## SS_SYNC_PUSH_REJECTED
 
-- 阶段：发布（阶段 2 之后）
+- 阶段：下游传播 / 发布
 - 含义：`fork/lwj_dev` 推送被拒或远端回读与本地不一致。
 - 检查：`git ls-remote fork refs/heads/lwj_dev` 对比本地 `lwj_dev`。
 - 处理：确认远端无他人新提交；有则停止并交给人决定合并策略。禁止 force。
@@ -49,7 +49,7 @@
 
 ## SS_VERIFY_EXTERNAL_GATE_MISSING
 
-- 阶段：显式功能验收
+- 阶段：functional_verification 前置
 - 含义：机器私有配置、主 provider 或 Grok2API 闸门缺失/校验失败。
 - 检查：只看配置是否存在与校验结果，不读取密钥内容。
 - 处理：补齐对应闸门后重新显式运行 `agent-infra sync verify smartsearch`。
@@ -57,7 +57,7 @@
 
 ## SS_VERIFY_PROVIDER_ERROR
 
-- 阶段：显式功能验收
+- 阶段：functional_verification
 - 含义：真实请求失败（一次验收最多一次恢复探针后仍失败），或 doctor 通过但固定的
   真实搜索用例失败（此时验收结果为 `activated`/diagnostic ready，不是 `live`）。
 - 处理：请求/恢复类错误转入

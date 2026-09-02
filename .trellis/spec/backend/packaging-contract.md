@@ -60,6 +60,71 @@ without the smoke check (or vice versa) is a silent drift.
   two copies (`sidecar/` and `src/smart_search/assets/sidecar/`) must stay
   byte-identical — `tests/test_sidecar_packaging.py` enforces it.
 
+## Scenario: managed delivery handoff
+
+### 1. Scope / Trigger
+
+Use this handoff when the repeatable way to produce, install, identify, or
+verify the Smart Search release artifact changes. Ordinary product tests,
+lint, architecture notes, and Trellis task state do not trigger it.
+
+### 2. Signatures
+
+The portable contract lives at `.jason-liao-agent-infra/managed-project.json`
+with schema `jason-agent-infra.managed-delivery-workflow.v2`. Its release
+readiness commands are `python3 scripts/managed_sync.py inspect`,
+`npm run --silent check:skill-parity`, and
+`npm run --silent smoke:tarball`; explicit live acceptance is
+`python3 scripts/managed_sync.py verify-live`.
+
+### 3. Contracts
+
+- `.jason-liao-agent-infra/RUNBOOK.md` is the human delivery handoff and
+  `errors.md` is the stable delivery-error catalog; the colocated `README.md`
+  is only a bounded migration bridge.
+- Release readiness proves a clean authority checkout, public/packaged Skill
+  parity, and behavior of a temporary packed install. It does not publish,
+  activate a host runtime, or perform a provider request.
+- Skills propagation and platform activation remain owned by their Infra/Skills
+  profiles. Provider/request recovery remains in the Skill reference catalog.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+| --- | --- |
+| public and packaged Skill trees differ | stop before packed smoke; use `SS_SYNC_SKILL_PARITY_DRIFT` |
+| packed install misses a declared file or behavior | stop publication; use `SS_SYNC_PACKED_SMOKE_FAILED` |
+| contract is changed but not committed | Infra sync rejects the stale contract before running stages |
+| provider gate is absent during explicit verification | retain pending live state; use `SS_VERIFY_EXTERNAL_GATE_MISSING` |
+
+### 5. Good / Base / Bad Cases
+
+- Good: update both Skill surfaces, run parity and packed smoke, commit the
+  contract, then hand the producer commit to the downstream updater.
+- Base: a source-only refactor with no artifact or delivery change stays in
+  the normal project test/Trellis workflow.
+- Bad: mark a listening provider or a local dirty tree as a published release,
+  or copy a platform path into the portable contract.
+
+### 6. Tests Required
+
+- Run `npm run --silent check:skill-parity` and
+  `npm run --silent smoke:tarball` for every release-readiness contract change.
+- Run the focused release suite (`tests/test_release_workflow.py`,
+  `tests/test_package_data.py`, and `tests/test_regression.py`) when packaging
+  files or behavior changes.
+- Run explicit live verification only with the selected platform's external
+  gates and never retry its bounded probe loop.
+
+### 7. Wrong vs Correct
+
+Wrong: update `skills/smart-search-cli/SKILL.md`, skip the packaged mirror,
+and let a later platform activation discover the drift.
+
+Correct: keep both Skill surfaces byte-identical, pass the artifact gates,
+commit the contract, and report platform/live states only from their own
+independent owner and probe.
+
 ## Wrong vs Correct
 
 ```text

@@ -1,5 +1,5 @@
 {
-  "schema": "jason-agent-infra.managed-project-workflow.v1",
+  "schema": "jason-agent-infra.managed-delivery-workflow.v2",
   "project_id": "smartsearch",
   "commands": {
     "inspect": {
@@ -33,40 +33,40 @@
   },
   "stages": [
     {
-      "id": "project_workflow",
-      "stage": "project_workflow",
+      "id": "release_inspection",
+      "stage": "release_readiness",
       "command": "inspect",
       "depends_on": [],
       "allowed_mutations": [],
       "failure_policy": "stop_project",
-      "verification_level": "source",
+      "verification_level": "committed",
       "error_catalog": ["SS_SYNC_DIRTY_UNSCOPED", "SS_SYNC_BRANCH_MISMATCH"]
     },
     {
-      "id": "project_workflow_parity",
-      "stage": "project_workflow",
+      "id": "release_skill_parity",
+      "stage": "release_readiness",
       "command": "skill_parity",
-      "depends_on": ["project_workflow"],
+      "depends_on": ["release_inspection"],
       "allowed_mutations": [],
       "failure_policy": "stop_project",
-      "verification_level": "source",
+      "verification_level": "committed",
       "error_catalog": ["SS_SYNC_SKILL_PARITY_DRIFT"]
     },
     {
-      "id": "project_workflow_smoke",
-      "stage": "project_workflow",
+      "id": "release_packed_smoke",
+      "stage": "release_readiness",
       "command": "packed_smoke",
-      "depends_on": ["project_workflow_parity"],
+      "depends_on": ["release_skill_parity"],
       "allowed_mutations": [],
       "failure_policy": "stop_project",
-      "verification_level": "source",
+      "verification_level": "committed",
       "error_catalog": ["SS_SYNC_PACKED_SMOKE_FAILED"]
     },
     {
       "id": "functional_verification",
       "stage": "functional_verification",
       "command": "verify_live",
-      "depends_on": ["project_workflow_smoke"],
+      "depends_on": ["release_packed_smoke"],
       "allowed_mutations": [],
       "failure_policy": "stop_project",
       "verification_level": "live",
@@ -80,7 +80,13 @@
     }
   ],
   "docs": {
-    "guide": ".jason-liao-agent-infra/README.md",
+    "guide": ".jason-liao-agent-infra/RUNBOOK.md",
     "errors": ".jason-liao-agent-infra/errors.md"
+  },
+  "recovery": {
+    "owner": "selected Agent Infra platform adapter",
+    "restore_authority": "the selected platform profile recovery authority for smart-search-config and anysearch-credentials",
+    "generation_requirement": "restore the exact prior profile-approved generation recorded in the platform receipt",
+    "post_restore_acceptance": "run the declared functional verification once and require doctor plus the fixed real-search evidence"
   }
 }
