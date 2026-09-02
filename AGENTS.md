@@ -26,7 +26,7 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 - Managed branch: `lwj_dev` (upstream mirror baseline: `main`, origin = konbakuyomu/smartsearch; publication: fork = whycantfindaname/smartsearch, branch `lwj_dev`)
 - Repository convergence authority: Agent Infra registry and sync contract (fetch, classify, safe fast-forward)
 - Owner workflow: this project's managed-project contract; product/runtime authority stays with this repository's own source and docs
-- Workflow status: `full_workflow`
-- Read order: `AGENTS.md` -> `.jason-liao-agent-infra/managed-project.json` -> `.jason-liao-agent-infra/RUNBOOK.md` -> `.jason-liao-agent-infra/errors.md` (`README.md` is a temporary migration bridge only)
+- Delivery status: `delivery_contract` (v2).
+- Read order: `AGENTS.md` -> `.jason-liao-agent-infra/managed-project.json` -> `.jason-liao-agent-infra/RUNBOOK.md` -> `.jason-liao-agent-infra/errors.md`
 - Update triggers: managed branch or remote change; build/release chain change; platform activation change; service/config/secret ownership change; new stable error class; a completed reusable major update flow
 - Provider/request recovery errors live in `skills/smart-search-cli/references/error-recovery.md`, not in the sync error catalog
