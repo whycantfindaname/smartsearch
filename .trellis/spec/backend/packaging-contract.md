@@ -16,6 +16,17 @@ Key consequence: **the wheel path feeds npm users too.** A file missing from
 package-data is missing from the installed skill files even though `git` and
 the npm tarball both have it.
 
+### Qoder regional Skill destination
+
+`SkillTarget.skill_path_for()` is shared by status and installation. An existing
+`.qoder/skills/smart-search-cli` entry (including a symbolic link) takes priority;
+otherwise an existing `.qoder-cn/skills` directory selects the regional path.
+Without either, the default remains `.qoder/skills`. Status may inspect symbolic
+links, but Qoder installation rejects them before writing any Skill file so an
+externally managed source is preserved. `tests/test_cli.py` covers regional and
+default paths, both-location precedence, status/update consistency, and symbolic
+link preservation.
+
 ## Contract 1: Every bundled asset must be wheel-reachable
 
 Every file under `src/smart_search/assets/` must either (a) match a

@@ -2975,6 +2975,123 @@ def test_skill_installer_pi_target_uses_agent_skill_root(tmp_path):
     assert not (tmp_path / "project" / ".pi" / "skills" / "smart-search-cli").exists()
 
 
+@pytest.mark.parametrize("layout", ["empty", "regional-root", "regional-skill", "global-skill", "both"])
+def test_qoder_status_and_update_select_the_same_existing_location(tmp_path, capsys, layout):
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "SKILL.md").write_text("new", encoding="utf-8")
+    root = tmp_path / "home"
+    canonical = root / ".qoder" / "skills" / "smart-search-cli"
+    regional = root / ".qoder-cn" / "skills" / "smart-search-cli"
+    if layout in {"regional-root", "regional-skill", "both"}:
+        regional.parent.mkdir(parents=True)
+    for path, enabled in (
+        (canonical, layout in {"global-skill", "both"}),
+        (regional, layout in {"regional-skill", "both"}),
+    ):
+        if enabled:
+            path.mkdir(parents=True)
+            (path / "SKILL.md").write_text("old", encoding="utf-8")
+    selected = regional if layout.startswith("regional-") else canonical
+    status = skill_installer.status_skill_targets(
+        ["qoder"], project_root=root, source_root=source,
+    )["targets"][0]
+    assert status["path"] == str(selected)
+    assert status["status"] == ("stale" if selected.exists() else "missing")
+    if selected.exists():
+        assert (selected / "SKILL.md").read_text(encoding="utf-8") == "old"
+
+    result = skill_installer.install_skill_targets(
+        ["qoder"], project_root=root, source_root=source,
+    )
+    assert result["ok"] is True
+    assert result["installed"][0]["path"] == status["path"]
+    assert (selected / "SKILL.md").read_text(encoding="utf-8") == "new"
+    code = cli.main([
+        "skills", "status", "--targets", "qoder", "--skills-root", str(root), "--format", "json",
+    ])
+    observed = json.loads(capsys.readouterr().out)
+    assert code == cli.EXIT_OK
+    assert observed["targets"][0]["path"] == str(selected)
+    assert observed["targets"][0]["status"] != "missing"
+    assert (selected / "SKILL.md").read_text(encoding="utf-8") == "new"
+    if layout.startswith("regional-"):
+        assert not canonical.parent.exists()
+    if layout == "both":
+        assert (regional / "SKILL.md").read_text(encoding="utf-8") == "old"
+
+
+@pytest.mark.parametrize("tool_root", [".qoder", ".qoder-cn"])
+def test_qoder_status_reads_managed_link_but_update_preserves_it(tmp_path, tool_root):
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "SKILL.md").write_text("bundled", encoding="utf-8")
+    owner = tmp_path / "governed-source"
+    owner.mkdir()
+    (owner / "SKILL.md").write_text("owner adaptation", encoding="utf-8")
+    root = tmp_path / "home"
+    link = root / tool_root / "skills" / "smart-search-cli"
+    link.parent.mkdir(parents=True)
+    try:
+        link.symlink_to(owner, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"directory symlinks unavailable: {error}")
+    status = skill_installer.status_skill_targets(
+        ["qoder"], project_root=root, source_root=source,
+    )["targets"][0]
+    assert status["path"] == str(link)
+    assert status["status"] == "stale"
+    result = skill_installer.install_skill_targets(
+        ["qoder"], project_root=root, source_root=source,
+    )
+    assert result["ok"] is False
+    assert result["installed_count"] == 0
+    assert result["failed_count"] == 1
+    assert "symbolic link" in result["failed"][0]["error"]
+    assert result["failed"][0]["path"] == str(link)
+    assert link.is_symlink()
+    assert link.readlink() == owner
+    assert (owner / "SKILL.md").read_text(encoding="utf-8") == "owner adaptation"
+    if tool_root == ".qoder-cn":
+        assert not (root / ".qoder").exists()
+
+
+def test_qoder_unreadable_regional_directory_reports_structured_failure(tmp_path, monkeypatch):
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "SKILL.md").write_text("bundled", encoding="utf-8")
+    root = tmp_path / "home"
+    regional_parent = root / ".qoder-cn" / "skills"
+    original_is_dir = Path.is_dir
+
+    def is_dir(path):
+        if path == regional_parent:
+            raise PermissionError("regional directory is not readable")
+        return original_is_dir(path)
+
+    monkeypatch.setattr(Path, "is_dir", is_dir)
+    status = skill_installer.status_skill_targets(
+        ["qoder"], project_root=root, source_root=source,
+    )
+    assert status["ok"] is False
+    assert status["targets"][0]["status"] == "error"
+    assert "not readable" in status["targets"][0]["error"]
+    updated = skill_installer.install_skill_targets(
+        ["qoder"], project_root=root, source_root=source,
+    )
+    assert updated["ok"] is False
+    assert updated["installed_count"] == 0
+    assert "not readable" in updated["failed"][0]["error"]
+    assert not root.exists()
+
+
+def test_qoder_setup_choice_names_the_regional_location():
+    choices = cli._skill_target_choices([], "en")
+    qoder = next(choice for choice in choices if choice["value"] == "qoder")
+    assert "~/.qoder/skills" in qoder["name"]
+    assert "~/.qoder-cn/skills" in qoder["name"]
+
+
 def test_opencode_status_reports_legacy_tree_without_migrating_or_overwriting_extras(tmp_path, capsys):
     source = tmp_path / "source"
     source.mkdir()

@@ -2156,7 +2156,10 @@ def _skill_target_choices(selected: list[str], lang: str) -> list[dict[str, Any]
     choices: list[dict[str, Any]] = []
     for target in SKILL_TARGETS:
         label = target.label
-        name = f"{label} (~/{target.relative_root})"
+        location = f"~/{target.relative_root}"
+        if target.target_id == "qoder":
+            location += " or existing ~/.qoder-cn/skills"
+        name = f"{label} ({location})"
         choices.append({"name": name, "value": target.target_id, "enabled": target.target_id in selected_set})
     return choices
 

@@ -141,6 +141,12 @@ provider keys or create Trellis/hooks/agents/commands. OpenCode status reports a
 `~/.opencode/skills/smart-search-cli` tree as read-only `legacy_locations` metadata; it is never moved or deleted automatically. Setup and update write
 only managed bundled files to the canonical OpenCode target and leave legacy and other extra files untouched.
 
+For Qoder, status and update share the same destination: an existing
+`~/.qoder/skills/smart-search-cli` takes priority; otherwise an existing
+`~/.qoder-cn/skills` directory is used. With neither present, the default is
+`~/.qoder/skills`. Qoder Skill symbolic links are inspected read-only;
+update refuses to write through them and directs you to their managing tool.
+
 ## Current Architecture
 
 | Capability | Main commands | Providers | Role |

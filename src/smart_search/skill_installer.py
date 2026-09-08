@@ -29,6 +29,14 @@ class SkillTarget:
     def skill_relative_path_for(self, skill_name: str) -> str:
         return f"{self.relative_root}/{skill_name}"
 
+    def skill_path_for(self, root: Path, skill_name: str) -> Path:
+        destination = root / self.skill_relative_path_for(skill_name)
+        if self.target_id == "qoder" and not (destination.exists() or destination.is_symlink()):
+            regional = root / ".qoder-cn" / "skills" / skill_name
+            if regional.parent.is_dir():
+                return regional
+        return destination
+
 
 SKILL_TARGETS: tuple[SkillTarget, ...] = (
     SkillTarget("codex", "Codex", ".codex/skills", True),
@@ -218,7 +226,7 @@ def _status_for_skill(
     targets: list[dict[str, Any]] = []
 
     for target in selected:
-        dest = root / Path(target.skill_relative_path_for(skill_name))
+        dest = root / target.skill_relative_path_for(skill_name)
         item: dict[str, Any] = {
             "target": target.target_id,
             "label": target.label,
@@ -235,6 +243,8 @@ def _status_for_skill(
             "stale_files": [],
         }
         try:
+            dest = target.skill_path_for(root, skill_name)
+            item["path"] = str(dest)
             installed_files = _target_installed_files(dest)
             installed_by_path = {rel_path: content for rel_path, content in installed_files}
             installed_managed_files = [
@@ -355,8 +365,13 @@ def _install_skill(
     preserved = preserved_files or set()
 
     for target in selected:
-        dest = root / Path(target.skill_relative_path_for(skill_name))
+        dest = root / target.skill_relative_path_for(skill_name)
         try:
+            dest = target.skill_path_for(root, skill_name)
+            if target.target_id == "qoder" and dest.is_symlink():
+                raise OSError(
+                    "Qoder skill is a symbolic link; update it through the tool that manages the link."
+                )
             for rel_path, content in files:
                 if Path(rel_path).name in preserved:
                     continue
