@@ -14,3 +14,5 @@ logs/
 node_modules/
 *.tgz
 .agent/
+# Anchored to the root only: sidecar/uv.lock is tracked on purpose.
+/uv.lock
