@@ -99,9 +99,16 @@ if [[ ! -f "$macos_directory/Package.swift" ]]; then
   exit 1
 fi
 scratch_directory="$run_directory/swift-build"
-swift build --package-path "$macos_directory" --configuration release --product SmartSearchDesktop --arch "$architecture" --scratch-path "$scratch_directory"
-bin_directory="$(swift build --package-path "$macos_directory" --configuration release --arch "$architecture" --scratch-path "$scratch_directory" --show-bin-path)"
-desktop_binary="$bin_directory/SmartSearchDesktop"
+if swift build --package-path "$macos_directory" --configuration release --product SmartSearchDesktop --arch "$architecture" --scratch-path "$scratch_directory"; then
+  bin_directory="$(swift build --package-path "$macos_directory" --configuration release --arch "$architecture" --scratch-path "$scratch_directory" --show-bin-path)"
+  desktop_binary="$bin_directory/SmartSearchDesktop"
+else
+  echo "SwiftPM build is unavailable; falling back to direct swiftc compilation." >&2
+  desktop_binary="$run_directory/SmartSearchDesktop"
+  swiftc -O -target "${architecture}-apple-macosx13.0" \
+    -o "$desktop_binary" \
+    "$macos_directory/Sources/SmartSearchDesktop"/*.swift
+fi
 if [[ ! -f "$desktop_binary" ]]; then
   echo "SwiftPM did not create the expected desktop executable: $desktop_binary" >&2
   exit 1

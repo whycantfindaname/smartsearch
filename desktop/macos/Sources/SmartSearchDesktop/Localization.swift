@@ -14,11 +14,18 @@ enum Localization {
     static let messages: [String: [String]] = {
         // Installed .apps use their own resource directory; SwiftPM serves development/tests.
         guard let url = Bundle.main.url(forResource: "Localization", withExtension: "json")
-                ?? Bundle.module.url(forResource: "Localization", withExtension: "json"),
+                ?? packageResourceURL,
               let data = try? Data(contentsOf: url),
               let result = try? JSONDecoder().decode([String: [String]].self, from: data) else { return [:] }
         return result
     }()
+    private static var packageResourceURL: URL? {
+#if SWIFT_PACKAGE
+        return Bundle.module.url(forResource: "Localization", withExtension: "json")
+#else
+        return nil
+#endif
+    }
     static let placeholders = try! NSRegularExpression(pattern: #"\{([0-9]+)\}"#)
 }
 
