@@ -8,6 +8,31 @@ import pytest
 from smart_search import cli, skill_installer
 
 
+@pytest.fixture(autouse=True)
+def isolated_cli_locale(monkeypatch, tmp_path):
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path))
+    monkeypatch.setenv("LC_ALL", "en_US.UTF-8")
+
+
+def test_markdown_outputs_preserve_long_identifiers_and_escape_pipes():
+    long_path = "C:/" + "long-directory/" * 20 + "config.json"
+    long_url = "https://example.com/" + "path/" * 40 + "?option=a|b"
+    values = {"SMART_SEARCH_LOG_DIR": long_path, "EXA_BASE_URL": long_url}
+    for command, data in (
+        ("config", {"ok": True, "values": values}),
+        ("setup", {"ok": True, "saved": values}),
+        ("doctor", {"ok": True, **values, "config_sources": {key: "config_file" for key in values}}),
+        ("skills", {"ok": True, "targets": [{"target": "codex", "path": long_path, "legacy_locations": [{"path": long_path}]}]}),
+    ):
+        output = cli._render(command, data, "markdown")
+        assert long_path in output, command
+        if command != "skills":
+            assert long_url.replace("|", r"\|") in output, command
+    description = "explanation " * 40
+    output = cli._render("exa-search", {"ok": True, "results": [{"url": long_url, "description": description}]}, "markdown")
+    assert long_url.replace("|", r"\|") in output
+    assert description.strip() not in output
+
 class GbkStdout:
     encoding = "gbk"
     errors = "strict"
@@ -47,6 +72,16 @@ def test_version_flags_exit_successfully(monkeypatch, capsys):
             assert exc.code == 0
 
         assert capsys.readouterr().out.strip() == "smart-search 9.9.9-test"
+
+
+def test_frozen_version_prefers_bundle_manifest_over_leftover_distribution(tmp_path, monkeypatch):
+    module = tmp_path / "backend/_internal/smart_search/cli.py"
+    module.parent.mkdir(parents=True)
+    monkeypatch.setattr(cli, "__file__", str(module))
+    monkeypatch.setattr(cli.metadata, "version", lambda _: "0.1.20")
+    assert cli._get_version() == "0.1.20"
+    (tmp_path / "backend/package.json").write_text('{"version":"0.1.21"}')
+    assert cli._get_version() == "0.1.21"
 
 
 def test_each_subcommand_help_exits_successfully(capsys):
@@ -105,6 +140,9 @@ def test_each_subcommand_help_exits_successfully(capsys):
         ["model", "--help"],
         ["model", "set", "--help"],
         ["model", "current", "--help"],
+        ["providers", "--help"],
+        ["providers", "status", "--help"],
+        ["providers", "reset", "--help"],
         ["regression", "--help"],
     ]
 
@@ -578,6 +616,7 @@ def test_command_aliases_parse_to_canonical_commands():
         (["init", "--non-interactive"], "setup"),
         (["cfg", "ls"], "config"),
         (["mdl", "cur"], "model"),
+        (["prov", "status"], "providers"),
         (["reg"], "regression"),
     ]
 
@@ -609,6 +648,14 @@ def test_command_aliases_parse_to_canonical_commands():
     ]
     for argv, skills_command in skills_cases:
         assert parser.parse_args(argv).skills_command == skills_command
+
+    providers_cases = [
+        (["providers", "st"], "status"),
+        (["prov", "ls"], "status"),
+        (["providers", "clear"], "reset"),
+    ]
+    for argv, providers_command in providers_cases:
+        assert parser.parse_args(argv).providers_command == providers_command
 
 
 def test_search_help_exposes_timeout(capsys):
@@ -2405,7 +2452,7 @@ def test_skills_unknown_target_returns_parameter_error(tmp_path, capsys):
     assert code == cli.EXIT_PARAMETER_ERROR
     assert data["error_type"] == "parameter_error"
     assert "Unknown skill target" in data["error"]
-    assert not (tmp_path / ".codex" / "skills" / "smart-search-cli").exists()
+    assert not (tmp_path / ".agents" / "skills" / "smart-search-cli").exists()
 
 
 def test_setup_non_interactive_saves_values(monkeypatch, capsys):
@@ -2816,7 +2863,7 @@ def test_setup_non_interactive_installs_selected_skills_under_user_root_override
     assert code == cli.EXIT_OK
     assert saved == {}
     assert data["skills"]["installed_count"] == 4
-    assert (tmp_path / ".codex" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
+    assert (tmp_path / ".agents" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
     assert (tmp_path / ".claude" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
     cursor_skill = tmp_path / ".cursor" / "skills" / "smart-search-cli"
     assert (cursor_skill / "SKILL.md").is_file()
@@ -2845,9 +2892,9 @@ def test_setup_non_interactive_installs_skill_under_home_by_default(monkeypatch,
     assert code == cli.EXIT_OK
     assert data["skills"]["installed_count"] == 2
     assert {item["target"] for item in data["skills"]["installed"]} == {"codex", "hermes"}
-    assert (fake_home / ".codex" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
+    assert (fake_home / ".agents" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
     assert (fake_home / ".hermes" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
-    assert not (tmp_path / "project" / ".codex" / "skills" / "smart-search-cli").exists()
+    assert not (tmp_path / "project" / ".agents" / "skills" / "smart-search-cli").exists()
     assert not (tmp_path / "project" / ".hermes" / "skills" / "smart-search-cli").exists()
 
 
@@ -2868,7 +2915,7 @@ def test_setup_skip_skills_writes_no_skill_files(monkeypatch, tmp_path, capsys):
 
     assert code == cli.EXIT_OK
     assert "skills" not in data
-    assert not (tmp_path / ".codex" / "skills" / "smart-search-cli").exists()
+    assert not (tmp_path / ".agents" / "skills" / "smart-search-cli").exists()
 
 
 def test_setup_unknown_skill_target_returns_parameter_error(monkeypatch, capsys):
@@ -2905,11 +2952,11 @@ def test_setup_guided_installs_tui_selected_skill_targets(monkeypatch, tmp_path,
 
     assert code == cli.EXIT_OK
     assert data["skills"]["installed_count"] == 2
-    assert (tmp_path / ".codex" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
+    assert (tmp_path / ".agents" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
     assert (tmp_path / ".cursor" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
     skill_choices = next(choices for message, choices in checkbox_calls if "AI tools" in message)
     skill_choice_names = [choice["name"] for choice in skill_choices]
-    assert "Codex (~/.codex/skills)" in skill_choice_names
+    assert "Codex (~/.agents/skills)" in skill_choice_names
     assert "Cursor (~/.cursor/skills)" in skill_choice_names
     assert not any("project/" in name for name in skill_choice_names)
     assert "Install the smart-search-cli skill" in captured.err
@@ -2954,7 +3001,7 @@ def test_skill_installer_parse_aliases_and_all(tmp_path):
 
     assert result["ok"] is True
     assert result["installed_count"] == 1
-    assert (tmp_path / "project" / ".codex" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
+    assert (tmp_path / "project" / ".agents" / "skills" / "smart-search-cli" / "SKILL.md").is_file()
 
 
 def test_skill_installer_pi_target_uses_agent_skill_root(tmp_path):
@@ -3210,7 +3257,7 @@ def test_skill_installer_status_detects_stale_and_extra_files(tmp_path):
     source.mkdir()
     (source / "SKILL.md").write_text("new", encoding="utf-8")
     root = tmp_path / "project"
-    dest = root / ".codex" / "skills" / "smart-search-cli"
+    dest = root / ".agents" / "skills" / "smart-search-cli"
     dest.mkdir(parents=True)
 
     (dest / "SKILL.md").write_text("old", encoding="utf-8")
@@ -3637,9 +3684,9 @@ def test_setup_guided_autofills_qwen3_8b_embedding_preset(monkeypatch, capsys):
     assert "embed-test-secret" not in captured.err
 
 
-def test_setup_interactive_language_prompt(monkeypatch, capsys):
+def test_setup_interactive_uses_resolved_language(monkeypatch, capsys):
     saved = {}
-    answers = iter(["en", "skip", "skip", "skip", "n", "n", "n"])
+    answers = iter(["skip", "skip", "skip", "n", "n", "n"])
 
     monkeypatch.setattr(cli.service, "config_set", lambda key, value: {"ok": True, "value": "***"})
     monkeypatch.setattr(cli.service, "config_path", lambda: {"ok": True, "config_file": "C:/tmp/config.json"})
@@ -4287,3 +4334,174 @@ def test_regression_uses_mock_smoke_when_packaged_tests_missing(monkeypatch, cap
     assert code == cli.EXIT_OK
     assert "Packaged install has no test files" in captured.err
     assert json.loads(captured.out)["mode"] == "mock"
+
+
+def test_providers_status_reports_cooldown_in_json_and_markdown(monkeypatch, capsys):
+    payload = {
+        "ok": True,
+        "enabled": True,
+        "cooldown_seconds": 900.0,
+        "failure_threshold": 2,
+        "store_path": "/tmp/provider_health.json",
+        "providers": [
+            {
+                "provider": "zhipu",
+                "configured": True,
+                "state": "cooldown",
+                "consecutive_failures": 1,
+                "error_type": "auth_error",
+                "error": "HTTP 401: invalid api key",
+                "cooldown_remaining_seconds": 3540.0,
+                "hard_failure": True,
+            }
+        ],
+        "cooldown_providers": ["zhipu"],
+    }
+    monkeypatch.setattr(cli.service, "provider_health_status", lambda: payload)
+
+    assert cli.main(["providers", "status"]) == cli.EXIT_OK
+    assert json.loads(capsys.readouterr().out)["cooldown_providers"] == ["zhipu"]
+
+    assert cli.main(["providers", "status", "--format", "markdown"]) == cli.EXIT_OK
+    out = capsys.readouterr().out
+    assert "# Provider Health" in out
+    assert "| zhipu | YES | cooldown |" in out
+    assert "auth_error" in out
+
+    assert cli.main(["prov", "status", "--format", "content"]) == cli.EXIT_OK
+    assert "cooldown=zhipu" in capsys.readouterr().out
+
+
+def test_providers_reset_reports_cleared_providers(monkeypatch, capsys):
+    seen = {}
+
+    def fake_reset(providers=None):
+        seen["providers"] = providers
+        return {"ok": True, "error_type": "", "error": "", "cleared": ["zhipu"], "known_providers": ["zhipu"]}
+
+    monkeypatch.setattr(cli.service, "reset_provider_health", fake_reset)
+
+    assert cli.main(["providers", "reset", "zhipu", "--format", "content"]) == cli.EXIT_OK
+    assert seen["providers"] == ["zhipu"]
+    assert "zhipu" in capsys.readouterr().out
+
+    assert cli.main(["providers", "reset", "--format", "content"]) == cli.EXIT_OK
+    assert seen["providers"] is None
+    capsys.readouterr()
+
+
+def test_providers_reset_rejects_unknown_provider(monkeypatch, capsys):
+    monkeypatch.setattr(
+        cli.service,
+        "reset_provider_health",
+        lambda providers=None: {
+            "ok": False,
+            "error_type": "parameter_error",
+            "error": "Unknown provider: nope",
+            "cleared": [],
+        },
+    )
+
+    assert cli.main(["providers", "reset", "nope", "--format", "content"]) == cli.EXIT_PARAMETER_ERROR
+    assert "Unknown provider" in capsys.readouterr().out
+
+
+def test_search_markdown_keeps_steady_cooldowns_out_of_a_successful_answer(monkeypatch, capsys):
+    result = {
+        "ok": True,
+        "content": "Answer",
+        "sources": [],
+        "sources_count": 0,
+        "provider_notices": [
+            {
+                "provider": "zhipu",
+                "capability": "web_search",
+                "status": "cooldown",
+                "error_type": "auth_error",
+                "error": "HTTP 401",
+                "cooldown_remaining_seconds": 3540.0,
+                "hint": "reset it",
+            }
+        ],
+    }
+
+    async def fake_search(query, **kwargs):
+        return result
+
+    monkeypatch.setattr(cli.service, "search", fake_search)
+
+    assert cli.main(["search", "query", "--format", "markdown"]) == cli.EXIT_OK
+    assert "Degraded providers" not in capsys.readouterr().out
+
+    result["ok"] = False
+    result["error_type"] = "network_error"
+    result["error"] = "搜索失败或无结果"
+    assert cli.main(["search", "query", "--format", "markdown"]) == cli.EXIT_NETWORK_ERROR
+    out = capsys.readouterr().out
+    assert "Degraded providers: zhipu (cooldown 3540s, auth_error)" in out
+
+
+def test_search_markdown_reports_a_fresh_provider_failure(monkeypatch, capsys):
+    async def fake_search(query, **kwargs):
+        return {
+            "ok": True,
+            "content": "Answer",
+            "sources": [],
+            "sources_count": 0,
+            "provider_notices": [
+                {
+                    "provider": "tavily",
+                    "capability": "web_search",
+                    "status": "failed",
+                    "error_type": "rate_limited",
+                    "error": "HTTP 429",
+                    "cooldown_remaining_seconds": 0.0,
+                    "hint": "",
+                }
+            ],
+        }
+
+    monkeypatch.setattr(cli.service, "search", fake_search)
+
+    assert cli.main(["search", "query", "--format", "markdown"]) == cli.EXIT_OK
+    assert "Degraded providers: tavily (rate_limited)" in capsys.readouterr().out
+
+
+def test_doctor_reports_providers_on_cooldown(monkeypatch, capsys):
+    payload = {
+        "ok": True,
+        "config_status": "ok: 配置完整",
+        "minimum_profile_ok": True,
+        "capability_status": {},
+        "provider_health": {
+            "cooldown_providers": ["zhipu"],
+            "providers": [
+                {
+                    "provider": "zhipu",
+                    "configured": True,
+                    "state": "cooldown",
+                    "consecutive_failures": 1,
+                    "error_type": "auth_error",
+                    "error": "HTTP 401: invalid api key",
+                    "cooldown_remaining_seconds": 3540.0,
+                    "hard_failure": True,
+                },
+                {"provider": "exa", "configured": True, "state": "closed", "cooldown_remaining_seconds": 0.0},
+            ],
+        },
+    }
+
+    async def fake_doctor():
+        return payload
+
+    monkeypatch.setattr(cli.service, "doctor", fake_doctor)
+
+    assert cli.main(["doctor", "--format", "markdown"]) == cli.EXIT_OK
+    out = capsys.readouterr().out
+    assert "## Providers On Cooldown" in out
+    assert "| zhipu | cooldown |" in out
+    # A healthy provider does not need a row in a cooldown report.
+    assert "| exa |" not in out
+
+    assert cli.main(["doctor", "--format", "content"]) == cli.EXIT_OK
+    assert "Providers on cooldown: zhipu" in capsys.readouterr().out

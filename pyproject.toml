@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "smart-search"
-version = "0.1.17"
+version = "0.1.23"
 description = "CLI-first multi-source web research with structured Agentic Research workspaces, xAI/OpenAI-compatible search, Exa, Context7, Zhipu, Tavily, Firecrawl, and Deep Research planning."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -52,6 +52,8 @@ smart_search = [
     "assets/skills/smart-search-cli/bundled-skills/anysearch/scripts/*.sh",
     "assets/skills/smart-search-cli/bundled-skills/anysearch/scripts/shared/*.json",
     "assets/skills/smart-search-cli/bundled-skills/anysearch/scripts/shared/*.md",
+    "assets/ui/*.html",
+    "assets/i18n/*.json",
 ]
 
 [project.scripts]

@@ -894,7 +894,7 @@ def capability_inventory(
         configured = bool(adapter.api_key)
         reachable: bool | None = None
         entitled: bool | None = None
-        observed_at = _iso_timestamp(clock())
+        observed_at = _iso_timestamp(clock()) if attempts else ""
         status = "not_configured" if not configured else "configured_unobserved"
         if observed:
             status = str(observed.get("status") or status)
@@ -921,7 +921,7 @@ def capability_inventory(
     ]
     return {
         "schema_version": "1",
-        "observed_at": _iso_timestamp(clock()),
+        "observed_at": _iso_timestamp(clock()) if attempts else "",
         "capability_pool": {
             name: [provider for provider, item in providers.items() if name in item["capabilities"]]
             for name in capability_names

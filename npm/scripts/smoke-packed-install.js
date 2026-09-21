@@ -49,9 +49,12 @@ function assertPackContents(files) {
     "pyproject.toml"
   ]);
   const allowedPrefixes = [
+    "assets/branding/",
     "npm/",
     "src/smart_search/assets/research_visualizer/",
     "src/smart_search/assets/sidecar/",
+    "src/smart_search/assets/ui/",
+    "src/smart_search/assets/i18n/",
     "skills/smart-search-cli/",
     "src/smart_search/assets/skills/smart-search-cli/"
   ];

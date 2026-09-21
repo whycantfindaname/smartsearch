@@ -1,16 +1,22 @@
 from __future__ import annotations
+from .i18n import tr
 
 import os
+import shlex
+import shutil
+import stat
+import uuid
 from dataclasses import dataclass
 from hashlib import sha256
 from importlib import resources
 from pathlib import Path
 from typing import Any
+from .state_files import file_lock
+
 
 SKILL_NAME = "smart-search-cli"
-# Local runtime overrides stay at their destination. The Smart Search parent
-# config is never part of an installed Skill tree, even if a source checkout
-# accidentally contains a config.json beside the bundled files.
+# These files belong to the user's local runtime and must never be overwritten
+# by a bundled Skill refresh.
 PRESERVED_LOCAL_FILES = {".env", "runtime.conf", "config.json"}
 PACKAGE_ROOT_ENV = "SMART_SEARCH_PACKAGE_ROOT"
 
@@ -31,20 +37,35 @@ class SkillTarget:
 
     def skill_path_for(self, root: Path, skill_name: str) -> Path:
         destination = root / self.skill_relative_path_for(skill_name)
+        if self.target_id == "codex":
+            # ~/.agents/skills is the current shared location. Existing macOS
+            # installations under ~/.codex/skills remain authoritative until
+            # the user explicitly migrates them, so updates never silently
+            # create a second active copy.
+            if destination.exists() or destination.is_symlink():
+                return destination
+            legacy = root / ".codex" / "skills" / skill_name
+            if legacy.exists() or legacy.is_symlink():
+                return legacy
         if self.target_id == "qoder" and not (destination.exists() or destination.is_symlink()):
             regional = root / ".qoder-cn" / "skills" / skill_name
-            if regional.parent.is_dir():
-                return regional
+            try:
+                if regional.parent.is_dir():
+                    return regional
+            except OSError as error:
+                raise SkillInstallError(str(error)) from error
         return destination
 
 
 SKILL_TARGETS: tuple[SkillTarget, ...] = (
-    SkillTarget("codex", "Codex", ".codex/skills", True),
+    SkillTarget("codex", "Codex", ".agents/skills", True),
     SkillTarget("claude", "Claude Code", ".claude/skills", True),
     SkillTarget("cursor", "Cursor", ".cursor/skills", True),
     SkillTarget("opencode", "OpenCode", ".config/opencode/skills"),
     SkillTarget("copilot", "GitHub Copilot", ".copilot/skills"),
     SkillTarget("gemini", "Gemini CLI", ".gemini/skills"),
+    SkillTarget("cline", "Cline", ".cline/skills"),
+    SkillTarget("roo", "Roo Code", ".roo/skills"),
     SkillTarget("kiro", "Kiro", ".kiro/skills"),
     SkillTarget("qoder", "Qoder", ".qoder/skills"),
     SkillTarget("codebuddy", "CodeBuddy", ".codebuddy/skills"),
@@ -59,6 +80,7 @@ SKILL_TARGETS: tuple[SkillTarget, ...] = (
 SKILL_TARGET_BY_ID = {target.target_id: target for target in SKILL_TARGETS}
 DEFAULT_SKILL_TARGET_IDS = [target.target_id for target in SKILL_TARGETS if target.default]
 LEGACY_SKILL_ROOTS_BY_TARGET: dict[str, tuple[str, ...]] = {
+    "codex": (".codex/skills",),
     "opencode": (".opencode/skills",),
 }
 
@@ -82,6 +104,111 @@ class SkillInstallError(ValueError):
     pass
 
 
+def target_path(target_id: str, home: Path, env: dict) -> Path:
+    if target_id == "claude" and env.get("CLAUDE_CONFIG_DIR"):
+        root = Path(env["CLAUDE_CONFIG_DIR"]).expanduser()
+        if not root.is_absolute():
+            raise SkillInstallError(tr('CLAUDE_CONFIG_DIR 必须是绝对路径。'))
+        return root / "skills" / SKILL_NAME
+    return SKILL_TARGET_BY_ID[target_id].skill_path_for(home, SKILL_NAME)
+
+
+def split_local_note(content: bytes) -> tuple[bytes, bytes]:
+    content = content.replace(b"\r\n", b"\n")
+    for heading in ("\n## Independent CLI on this computer", "\n## 本机独立 CLI"):
+        start = content.find(heading.encode("utf-8"))
+        if start >= 0:
+            return content[:start].rstrip() + b"\n", content[start:]
+    return content, b""
+
+
+def with_invocation(files: dict[str, bytes], invocation: list[str], config_dir: str) -> dict[str, bytes]:
+    files = dict(files)
+    if invocation:
+        command = ("& " + " ".join("'" + str(arg).replace("'", "''") + "'" for arg in invocation)
+                   if os.name == "nt" else shlex.join(invocation))
+        note = ("\n## Independent CLI on this computer\n\nThis independent npm installation does not depend on the Smart Search App. "
+                "Replace the `smart-search` command in this skill with the following full invocation prefix, then append the original arguments:\n\n"
+                f"```{'powershell' if os.name == 'nt' else 'sh'}\n{command}\n```\n\n"
+                f"Configuration directory: `{config_dir}`. If this is not the default, set SMART_SEARCH_CONFIG_DIR to it before calling the CLI. "
+                "Never copy API keys into command arguments. Check `--version` first, then search when the user requests it.\n")
+        files["SKILL.md"] = split_local_note(files["SKILL.md"])[0].rstrip() + b"\n" + note.encode("utf-8")
+    return files
+
+
+def _same_content(rel: str, installed: bytes, expected: bytes) -> bool:
+    if rel == "SKILL.md" and not split_local_note(expected)[1]:
+        installed = split_local_note(installed)[0]
+    return installed.replace(b"\r\n", b"\n").rstrip() == expected.replace(b"\r\n", b"\n").rstrip()
+
+
+def _refuse_links(path: Path) -> None:
+    for part in (path, *path.parents):
+        try:
+            attributes = getattr(part.lstat(), "st_file_attributes", 0)
+        except FileNotFoundError:
+            attributes = 0
+        # Path.is_junction is unavailable on supported Python 3.10/3.11.
+        if part.is_symlink() or attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+            raise SkillInstallError(tr('技能路径包含链接，未覆盖：{0}', path))
+
+
+def write_skill_files(dest: Path, files: dict[str, bytes], backup_root: Path, *, backup_prefix: str = "") -> dict:
+    """Back up before atomic file replacements; keep extras and recover after a failed write."""
+    _refuse_links(dest)
+    lock = dest.parent / ".smart-search-cli-write"
+    _refuse_links(lock.with_name(lock.name + ".lock"))
+    with file_lock(lock):
+        return _write_skill_files(dest, files, backup_root, backup_prefix=backup_prefix)
+
+
+def _write_skill_files(dest: Path, files: dict[str, bytes], backup_root: Path, *, backup_prefix: str) -> dict:
+    _refuse_links(dest)
+    changes = {}
+    for rel, content in files.items():
+        path = dest / rel
+        if not path.resolve().is_relative_to(dest.resolve()):
+            raise SkillInstallError(tr('归档包含越界路径。'))
+        _refuse_links(path)
+        original = path.read_bytes() if path.exists() else None
+        if original != content:
+            changes[path] = (original, content)
+    backup = None
+    if changes and dest.exists():
+        backup = backup_root / (backup_prefix + uuid.uuid4().hex)
+        _refuse_links(backup)
+        shutil.copytree(dest, backup, symlinks=True)
+
+    def replace(path, content):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
+        try:
+            with temporary.open("xb") as stream:
+                stream.write(content)
+            temporary.replace(path)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    written = []
+    try:
+        for path, (_, content) in changes.items():
+            _refuse_links(path)
+            replace(path, content)
+            written.append(path)
+    except (OSError, SkillInstallError) as error:
+        for path in reversed(written):
+            original = changes[path][0]
+            try:
+                if original is None:
+                    path.unlink(missing_ok=True)
+                else:
+                    replace(path, original)
+            except OSError:
+                pass  # The pre-write backup remains available even if recovery is denied.
+        raise SkillInstallError(tr('Skills 写入失败；备份位置：{0}', str(backup or "—"))) from error
+    return {"changed_files": len(changes), "backup": str(backup) if backup else ""}
+
+
 def parse_skill_targets(raw: str) -> list[str]:
     if not raw.strip():
         return []
@@ -94,9 +221,9 @@ def parse_skill_targets(raw: str) -> list[str]:
     for token in tokens:
         if not token:
             continue
-        if token in {"skip", "none", "no", "n", "跳过", "无", "否"}:
+        if token in {"skip", "none", "no", "n", tr('跳过'), tr('无'), tr('否')}:
             return []
-        if token in {"all", "全部"}:
+        if token in {"all", tr('全部')}:
             return [target.target_id for target in SKILL_TARGETS]
         target_id = _TARGET_ALIASES.get(token, token)
         if target_id not in SKILL_TARGET_BY_ID:
@@ -107,13 +234,13 @@ def parse_skill_targets(raw: str) -> list[str]:
 
     if invalid:
         valid = ", ".join(target.target_id for target in SKILL_TARGETS)
-        raise SkillInstallError(f"Unknown skill target(s): {', '.join(invalid)}. Valid targets: {valid}")
+        raise SkillInstallError(tr('Unknown skill target(s): {0}. Valid targets: {1}', ', '.join(invalid), valid))
     return selected
 
 
-def _resource_skill_root(skill_name: str = SKILL_NAME) -> Any:
+def _resource_skill_root() -> Any:
     try:
-        root = resources.files("smart_search").joinpath("assets", "skills", skill_name)
+        root = resources.files("smart_search").joinpath("assets", "skills", SKILL_NAME)
         if root.is_dir():
             return root
     except (FileNotFoundError, ModuleNotFoundError, AttributeError):
@@ -121,20 +248,20 @@ def _resource_skill_root(skill_name: str = SKILL_NAME) -> Any:
     return None
 
 
-def _filesystem_skill_root(skill_name: str = SKILL_NAME) -> Path | None:
+def _filesystem_skill_root() -> Path | None:
     candidates: list[Path] = []
     package_root = os.getenv(PACKAGE_ROOT_ENV, "").strip()
     if package_root:
         base = Path(package_root)
         candidates.extend([
-            base / "src" / "smart_search" / "assets" / "skills" / skill_name,
-            base / "skills" / skill_name,
+            base / "src" / "smart_search" / "assets" / "skills" / SKILL_NAME,
+            base / "skills" / SKILL_NAME,
         ])
 
     repo_root = Path(__file__).resolve().parents[2]
     candidates.extend([
-        repo_root / "src" / "smart_search" / "assets" / "skills" / skill_name,
-        repo_root / "skills" / skill_name,
+        repo_root / "src" / "smart_search" / "assets" / "skills" / SKILL_NAME,
+        repo_root / "skills" / SKILL_NAME,
     ])
 
     for candidate in candidates:
@@ -166,29 +293,25 @@ def _iter_filesystem_files(root: Path) -> list[tuple[str, bytes]]:
     ]
 
 
-def _load_skill_files(
-    source_root: Path | None = None,
-    *,
-    skill_name: str = SKILL_NAME,
-) -> list[tuple[str, bytes]]:
+def _load_skill_files(source_root: Path | None = None) -> list[tuple[str, bytes]]:
     if source_root is not None:
         if not source_root.is_dir():
-            raise SkillInstallError(f"Skill source directory not found: {source_root}")
+            raise SkillInstallError(tr('Skill source directory not found: {0}', source_root))
         return _iter_filesystem_files(source_root)
 
-    resource_root = _resource_skill_root(skill_name)
+    resource_root = _resource_skill_root()
     if resource_root is not None:
         files = _iter_resource_files(resource_root)
         if files:
             return files
 
-    filesystem_root = _filesystem_skill_root(skill_name)
+    filesystem_root = _filesystem_skill_root()
     if filesystem_root is not None:
         files = _iter_filesystem_files(filesystem_root)
         if files:
             return files
 
-    raise SkillInstallError(f"Bundled {skill_name} skill files were not found.")
+    raise SkillInstallError(tr('Bundled smart-search-cli skill files were not found.'))
 
 
 def _skill_digest(files: list[tuple[str, bytes]]) -> str:
@@ -201,100 +324,133 @@ def _skill_digest(files: list[tuple[str, bytes]]) -> str:
     return digest.hexdigest()
 
 
+def _local_skill_files(source: Path | None) -> list[tuple[str, bytes]]:
+    files = dict(_load_skill_files(source))
+    root, node = os.getenv(PACKAGE_ROOT_ENV), os.getenv("SMART_SEARCH_NODE_PATH")
+    if source is None and root and node and Path(node).is_file() and (Path(root) / "npm/bin/smart-search.js").is_file():
+        from .config import config
+        files = with_invocation(files, [node, str(Path(root) / "npm/bin/smart-search.js")], str(config.config_file.parent))
+    return list(files.items())
+
+
 def _target_installed_files(path: Path) -> list[tuple[str, bytes]]:
     if not path.is_dir():
         return []
     return _iter_filesystem_files(path)
 
 
-def _status_for_skill(
+def _describe_installed_skill(
+    dest: Path,
     *,
-    skill_name: str,
-    root: Path,
-    selected: list[SkillTarget],
-    source: Path | None = None,
-    preserved_files: set[str] | None = None,
+    source_by_path: dict[str, bytes],
+    bundled_digest: str,
 ) -> dict[str, Any]:
-    preserved = preserved_files or set()
+    item: dict[str, Any] = {
+        "path": str(dest),
+        "status": "missing",
+        "files": len(source_by_path),
+        "installed_files": 0,
+        "bundled_hash": bundled_digest,
+        "installed_hash": "",
+        "hash_match": False,
+        "managed_hash_match": False,
+        "extra_files": [],
+        "missing_files": sorted(source_by_path),
+        "stale_files": [],
+    }
+    try:
+        installed_files = [
+            (rel_path, content)
+            for rel_path, content in _target_installed_files(dest)
+            if Path(rel_path).name not in PRESERVED_LOCAL_FILES
+        ]
+        installed_by_path = {rel_path: content for rel_path, content in installed_files}
+        item["installed_files"] = len(installed_files)
+        if not dest.exists():
+            return item
+        if not dest.is_dir():
+            item["status"] = "error"
+            item["error"] = "Installed skill path exists but is not a directory."
+            return item
+
+        installed_digest = _skill_digest(installed_files)
+        extra_files = sorted(rel_path for rel_path in installed_by_path if rel_path not in source_by_path)
+        missing_files = sorted(rel_path for rel_path in source_by_path if rel_path not in installed_by_path)
+        stale_files = sorted(
+            rel_path
+            for rel_path, content in source_by_path.items()
+            if rel_path in installed_by_path and not _same_content(rel_path, installed_by_path[rel_path], content)
+        )
+        managed_hash_match = not missing_files and all(installed_by_path.get(rel) == content for rel, content in source_by_path.items())
+        hash_match = installed_digest == bundled_digest
+        item.update(
+            {
+                "installed_hash": installed_digest if installed_files else "",
+                "hash_match": hash_match,
+                "managed_hash_match": managed_hash_match,
+                "extra_files": extra_files,
+                "missing_files": missing_files,
+                "stale_files": stale_files,
+            }
+        )
+        if missing_files or stale_files:
+            item["status"] = "stale"
+        elif extra_files:
+            item["status"] = "extra_files"
+        else:
+            item["status"] = "up_to_date"
+    except (OSError, SkillInstallError) as e:
+        item["status"] = "error"
+        item["error"] = str(e)
+    return item
+
+
+def status_skill_targets(
+    target_ids: list[str],
+    *,
+    project_root: str | Path | None = None,
+    source_root: str | Path | None = None,
+    files: dict[str, bytes] | None = None,
+    env: dict | None = None,
+) -> dict[str, Any]:
+    root = Path(project_root).expanduser().resolve() if project_root else Path.home().expanduser().resolve()
+    selected = [SKILL_TARGET_BY_ID[target_id] for target_id in target_ids]
+    source = Path(source_root).expanduser().resolve() if source_root is not None else None
+    source_files = list(files.items()) if files is not None else _local_skill_files(source)
     source_files = [
         (rel_path, content)
-        for rel_path, content in _load_skill_files(source, skill_name=skill_name)
-        if Path(rel_path).name not in preserved
+        for rel_path, content in source_files
+        if Path(rel_path).name not in PRESERVED_LOCAL_FILES
     ]
     source_by_path = {rel_path: content for rel_path, content in source_files}
     bundled_digest = _skill_digest(source_files)
     targets: list[dict[str, Any]] = []
 
     for target in selected:
-        dest = root / target.skill_relative_path_for(skill_name)
-        item: dict[str, Any] = {
-            "target": target.target_id,
-            "label": target.label,
-            "path": str(dest),
-            "status": "missing",
-            "files": len(source_files),
-            "installed_files": 0,
-            "bundled_hash": bundled_digest,
-            "installed_hash": "",
-            "hash_match": False,
-            "managed_hash_match": False,
-            "extra_files": [],
-            "missing_files": sorted(source_by_path),
-            "stale_files": [],
-        }
         try:
-            dest = target.skill_path_for(root, skill_name)
-            item["path"] = str(dest)
-            installed_files = _target_installed_files(dest)
-            installed_by_path = {rel_path: content for rel_path, content in installed_files}
-            installed_managed_files = [
-                (rel_path, content)
-                for rel_path, content in installed_files
-                if Path(rel_path).name not in preserved
-            ]
-            item["installed_files"] = len(installed_files)
-            if not dest.exists():
-                targets.append(item)
-                continue
-            if not dest.is_dir():
-                item["status"] = "error"
-                item["error"] = "Installed skill path exists but is not a directory."
-                targets.append(item)
-                continue
-
-            installed_digest = _skill_digest(installed_managed_files)
-            extra_files = sorted(
-                rel_path
-                for rel_path in installed_by_path
-                if rel_path not in source_by_path and Path(rel_path).name not in preserved
-            )
-            missing_files = sorted(rel_path for rel_path in source_by_path if rel_path not in installed_by_path)
-            stale_files = sorted(
-                rel_path
-                for rel_path, content in source_by_path.items()
-                if rel_path in installed_by_path and installed_by_path[rel_path] != content
-            )
-            managed_hash_match = not missing_files and not stale_files
-            hash_match = managed_hash_match and not extra_files
-            item.update(
-                {
-                    "installed_hash": installed_digest if installed_files else "",
-                    "hash_match": hash_match,
-                    "managed_hash_match": managed_hash_match,
-                    "extra_files": extra_files,
-                    "missing_files": missing_files,
-                    "stale_files": stale_files,
-                }
-            )
-            if missing_files or stale_files:
-                item["status"] = "stale"
-            elif extra_files:
-                item["status"] = "extra_files"
-            else:
-                item["status"] = "up_to_date"
-        except OSError as e:
-            item["status"] = "error"
-            item["error"] = str(e)
+            dest = target_path(target.target_id, root, env if env is not None else os.environ if project_root is None else {})
+        except SkillInstallError as error:
+            targets.append({"target": target.target_id, "label": target.label, "path": "", "installed_hash": "", "status": "error", "error": str(error)})
+            continue
+        item = _describe_installed_skill(
+            dest,
+            source_by_path=source_by_path,
+            bundled_digest=bundled_digest,
+        )
+        item.update({"target": target.target_id, "label": target.label})
+        legacy_locations = []
+        for legacy_relative_root in LEGACY_SKILL_ROOTS_BY_TARGET.get(target.target_id, ()):
+            legacy_dest = root / Path(legacy_relative_root) / SKILL_NAME
+            if legacy_dest.exists():
+                legacy_locations.append(
+                    _describe_installed_skill(
+                        legacy_dest,
+                        source_by_path=source_by_path,
+                        bundled_digest=bundled_digest,
+                    )
+                )
+        if legacy_locations:
+            item["legacy_locations"] = legacy_locations
         targets.append(item)
 
     status_counts: dict[str, int] = {}
@@ -306,99 +462,12 @@ def _status_for_skill(
         "ok": not any(item.get("status") == "error" for item in targets),
         "root": str(root),
         "selected": [target.target_id for target in selected],
-        "skill": skill_name,
+        "skill": SKILL_NAME,
         "bundled_files": len(source_files),
         "bundled_hash": bundled_digest,
         "targets": targets,
         "status_counts": status_counts,
     }
-
-
-def status_skill_targets(
-    target_ids: list[str],
-    *,
-    project_root: str | Path | None = None,
-    source_root: str | Path | None = None,
-) -> dict[str, Any]:
-    root = Path(project_root).expanduser().resolve() if project_root else Path.home().expanduser().resolve()
-    selected = [SKILL_TARGET_BY_ID[target_id] for target_id in target_ids]
-    source = Path(source_root).expanduser().resolve() if source_root is not None else None
-    result = _status_for_skill(
-        skill_name=SKILL_NAME,
-        root=root,
-        selected=selected,
-        source=source,
-        preserved_files=PRESERVED_LOCAL_FILES,
-    )
-    for target, item in zip(selected, result["targets"]):
-        legacy_locations: list[dict[str, Any]] = []
-        for legacy_relative_root in LEGACY_SKILL_ROOTS_BY_TARGET.get(target.target_id, ()):
-            legacy_target = SkillTarget(
-                target_id=target.target_id,
-                label=target.label,
-                relative_root=legacy_relative_root,
-            )
-            legacy_item = _status_for_skill(
-                skill_name=SKILL_NAME,
-                root=root,
-                selected=[legacy_target],
-                source=source,
-                preserved_files=PRESERVED_LOCAL_FILES,
-            )["targets"][0]
-            if Path(legacy_item["path"]).exists():
-                legacy_locations.append(legacy_item)
-        if legacy_locations:
-            item["legacy_locations"] = legacy_locations
-    return result
-
-
-def _install_skill(
-    *,
-    skill_name: str,
-    files: list[tuple[str, bytes]],
-    root: Path,
-    selected: list[SkillTarget],
-    preserved_files: set[str] | None = None,
-) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
-    installed: list[dict[str, Any]] = []
-    failed: list[dict[str, str]] = []
-    preserved = preserved_files or set()
-
-    for target in selected:
-        dest = root / target.skill_relative_path_for(skill_name)
-        try:
-            dest = target.skill_path_for(root, skill_name)
-            if target.target_id == "qoder" and dest.is_symlink():
-                raise OSError(
-                    "Qoder skill is a symbolic link; update it through the tool that manages the link."
-                )
-            for rel_path, content in files:
-                if Path(rel_path).name in preserved:
-                    continue
-                file_path = dest / Path(rel_path)
-                file_path.parent.mkdir(parents=True, exist_ok=True)
-                file_path.write_bytes(content)
-            installed.append(
-                {
-                    "skill": skill_name,
-                    "target": target.target_id,
-                    "label": target.label,
-                    "path": str(dest),
-                    "files": len([rel_path for rel_path, _ in files if Path(rel_path).name not in preserved]),
-                    "preserved_files": sorted(preserved),
-                }
-            )
-        except OSError as e:
-            failed.append(
-                {
-                    "skill": skill_name,
-                    "target": target.target_id,
-                    "label": target.label,
-                    "path": str(dest),
-                    "error": str(e),
-                }
-            )
-    return installed, failed
 
 
 def install_skill_targets(
@@ -423,14 +492,67 @@ def install_skill_targets(
         }
 
     source = Path(source_root).expanduser().resolve() if source_root is not None else None
-    files = _load_skill_files(source, skill_name=SKILL_NAME)
-    installed, failed = _install_skill(
-        skill_name=SKILL_NAME,
-        files=files,
-        root=root,
-        selected=selected,
-        preserved_files=PRESERVED_LOCAL_FILES,
-    )
+    files = dict(_local_skill_files(source))
+    installed: list[dict[str, Any]] = []
+    failed: list[dict[str, str]] = []
+
+    for target in selected:
+        dest = root / target.skill_relative_path
+        try:
+            dest = target_path(target.target_id, root, os.environ if project_root is None else {})
+            if target.target_id == "qoder" and dest.is_symlink():
+                raise SkillInstallError(
+                    "Qoder skill is a symbolic link; update it through the tool that manages the link."
+                )
+            expected = {
+                rel_path: content
+                for rel_path, content in files.items()
+                if Path(rel_path).name not in PRESERVED_LOCAL_FILES
+            }
+            existing = dest / "SKILL.md"
+            _refuse_links(existing)
+            if existing.is_file() and not split_local_note(expected.get("SKILL.md", b""))[1]:
+                note = split_local_note(existing.read_bytes())[1]
+                if note:
+                    expected["SKILL.md"] = expected["SKILL.md"].rstrip() + b"\n" + note
+            receipt = write_skill_files(dest, expected, dest.parent / ".smart-search-backups")
+            # Explicit project-root installs may still be consumed by older
+            # macOS Codex launchers that scan ~/.codex/skills. Keep a
+            # compatibility projection only when that old tree is absent; an
+            # existing legacy tree is selected above and updated in place.
+            if target.target_id == "codex" and project_root is not None and dest == root / ".agents" / "skills" / SKILL_NAME:
+                legacy_dest = root / ".codex" / "skills" / SKILL_NAME
+                if not legacy_dest.exists() and not legacy_dest.is_symlink():
+                    legacy_receipt = write_skill_files(
+                        legacy_dest,
+                        expected,
+                        legacy_dest.parent / ".smart-search-backups",
+                        backup_prefix="codex-legacy-",
+                    )
+                    receipt = {
+                        **receipt,
+                        "legacy_path": str(legacy_dest),
+                        "legacy_changed_files": legacy_receipt["changed_files"],
+                    }
+            installed.append(
+                {
+                    "target": target.target_id,
+                    "label": target.label,
+                    "path": str(dest),
+                    "files": len(expected),
+                    "preserved_files": sorted(PRESERVED_LOCAL_FILES),
+                    **receipt,
+                }
+            )
+        except (OSError, SkillInstallError) as e:
+            failed.append(
+                {
+                    "target": target.target_id,
+                    "label": target.label,
+                    "path": str(dest),
+                    "error": str(e),
+                }
+            )
 
     return {
         "ok": not failed,

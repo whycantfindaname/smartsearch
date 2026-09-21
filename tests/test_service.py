@@ -1017,9 +1017,10 @@ def test_xai_tools_validation(monkeypatch, tmp_path):
     service.config_set("XAI_TOOLS", "web_search,x_search,web_search")
     assert service.config.parse_xai_tools() == ["web_search", "x_search"]
 
-    service.config_set("XAI_TOOLS", "web_search,bad_tool")
-    with pytest.raises(ValueError, match="Invalid XAI_TOOLS"):
-        service.config.parse_xai_tools()
+    rejected = service.config_set("XAI_TOOLS", "web_search,bad_tool")
+    assert rejected["ok"] is False
+    assert "Invalid XAI_TOOLS" in rejected["error"]
+    assert service.config.parse_xai_tools() == ["web_search", "x_search"]
 
 
 @pytest.mark.asyncio
@@ -1209,6 +1210,8 @@ async def test_search_fallbacks_from_xai_responses_to_openai_compatible(monkeypa
     assert result["content"] == "Fallback answer."
     assert result["fallback_used"] is True
     assert [a["provider"] for a in result["provider_attempts"][:2]] == ["xAI Responses", "OpenAI-compatible"]
+    assert [a["model"] for a in result["provider_attempts"][:2]] == ["xai-model", "relay-model"]
+    assert result["provider"] == "openai-compatible"
     assert result["provider_attempts"][0]["status"] == "error"
     assert result["provider_attempts"][1]["status"] == "ok"
     assert result["primary_api_mode"] == "chat-completions"
@@ -1779,7 +1782,7 @@ def test_zhipu_mcp_key_satisfies_web_search_and_reader_fetch_as_separate_provide
     assert result["ok"] is True
     assert result["missing"] == []
     assert result["capability_status"]["web_search"]["configured"] == ["zhipu-mcp"]
-    assert result["capability_status"]["web_search"]["fallback_chain"] == ["zhipu", "zhipu-mcp", "tavily", "firecrawl"]
+    assert result["capability_status"]["web_search"]["fallback_chain"] == ["zhipu", "zhipu-mcp", "tavily", "firecrawl", "tinyfish"]
     assert result["capability_status"]["web_fetch"]["configured"] == ["zhipu-mcp-reader"]
 
 
@@ -3354,12 +3357,12 @@ async def test_search_timeout_config_precedence_and_default(monkeypatch, tmp_pat
     configured_result = await service.search("configured timeout", validation="fast")
     monkeypatch.setenv("SMART_SEARCH_TIMEOUT_SECONDS", "240")
     environment_result = await service.search("environment timeout", validation="fast")
-    override_result = await service.search("override timeout", validation="fast", timeout_seconds=300)
+    override_result = await service.search("override timeout", validation="fast", timeout_seconds=420)
 
-    assert default_result["timeout_seconds"] == 180
+    assert default_result["timeout_seconds"] == 300
     assert configured_result["timeout_seconds"] == 210
     assert environment_result["timeout_seconds"] == 240
-    assert override_result["timeout_seconds"] == 300
+    assert override_result["timeout_seconds"] == 420
     assert all(result["ok"] is True for result in (default_result, configured_result, environment_result, override_result))
 
 
@@ -3551,3 +3554,275 @@ async def test_extra_source_collection_cancels_children_when_search_is_cancelled
         await collection
 
     assert cancelled.is_set()
+
+
+@pytest.mark.asyncio
+async def test_failing_zhipu_is_skipped_on_the_next_run_instead_of_retried(monkeypatch):
+    monkeypatch.setenv("ZHIPU_API_KEY", "zhipu-test-secret")
+    monkeypatch.setenv("TAVILY_API_KEY", "tavily-test-secret")
+    calls = {"zhipu": 0, "tavily": 0}
+
+    async def failing_zhipu(query, count=10, **kwargs):
+        calls["zhipu"] += 1
+        return {"ok": False, "error_type": "auth_error", "error": "HTTP 401: invalid api key"}
+
+    async def working_tavily(query, max_results=6):
+        calls["tavily"] += 1
+        return [{"title": "T", "url": "https://example.com/a", "content": "body"}]
+
+    monkeypatch.setattr(service, "zhipu_search", failing_zhipu)
+    monkeypatch.setattr(service, "call_tavily_search", working_tavily)
+
+    _, first_attempts = await service._run_web_search_fallback("query")
+    _, second_attempts = await service._run_web_search_fallback("query")
+
+    assert [(item["provider"], item["status"]) for item in first_attempts] == [("zhipu", "error"), ("tavily", "ok")]
+    assert [(item["provider"], item["status"]) for item in second_attempts] == [("zhipu", "skipped"), ("tavily", "ok")]
+    # The dead channel is called once, not once per invocation.
+    assert calls == {"zhipu": 1, "tavily": 2}
+    assert second_attempts[0]["error_type"] == "auth_error"
+    assert second_attempts[0]["provider_health"]["state"] == "cooldown"
+
+
+@pytest.mark.asyncio
+async def test_soft_failure_needs_two_runs_before_it_is_skipped(monkeypatch):
+    monkeypatch.setenv("ZHIPU_API_KEY", "zhipu-test-secret")
+    calls = {"n": 0}
+
+    async def flaky_zhipu(query, count=10, **kwargs):
+        calls["n"] += 1
+        return {"ok": False, "error_type": "timeout", "error": "request timed out"}
+
+    monkeypatch.setattr(service, "zhipu_search", flaky_zhipu)
+
+    first = (await service._run_web_search_fallback("query"))[1]
+    second = (await service._run_web_search_fallback("query"))[1]
+    third = (await service._run_web_search_fallback("query"))[1]
+
+    assert [item["status"] for item in first] == ["error"]
+    assert [item["status"] for item in second] == ["error"]
+    # The whole chain is cooling, so the soft failure is probed once per window.
+    assert [item["status"] for item in third] == ["error"]
+    assert third[0]["provider_health"]["state"] == "cooldown"
+    assert calls["n"] == 3
+
+
+@pytest.mark.asyncio
+async def test_a_single_hard_failure_provider_is_not_probed_again(monkeypatch):
+    monkeypatch.setenv("ZHIPU_API_KEY", "zhipu-test-secret")
+    calls = {"n": 0}
+
+    async def dead_zhipu(query, count=10, **kwargs):
+        calls["n"] += 1
+        return {"ok": False, "error_type": "auth_error", "error": "HTTP 401"}
+
+    monkeypatch.setattr(service, "zhipu_search", dead_zhipu)
+
+    await service._run_web_search_fallback("query")
+    attempts = (await service._run_web_search_fallback("query"))[1]
+
+    assert [item["status"] for item in attempts] == ["skipped"]
+    assert calls["n"] == 1
+
+
+@pytest.mark.asyncio
+async def test_empty_results_never_open_a_cooldown(monkeypatch):
+    monkeypatch.setenv("ZHIPU_API_KEY", "zhipu-test-secret")
+    calls = {"n": 0}
+
+    async def empty_zhipu(query, count=10, **kwargs):
+        calls["n"] += 1
+        return {"ok": True, "results": []}
+
+    monkeypatch.setattr(service, "zhipu_search", empty_zhipu)
+
+    for _ in range(3):
+        attempts = (await service._run_web_search_fallback("query"))[1]
+        assert [item["status"] for item in attempts] == ["empty"]
+    assert calls["n"] == 3
+    assert service.provider_health_status()["cooldown_providers"] == []
+
+
+@pytest.mark.asyncio
+async def test_recovered_provider_clears_its_own_cooldown(monkeypatch):
+    monkeypatch.setenv("ZHIPU_API_KEY", "zhipu-test-secret")
+    state = {"fail": True}
+
+    async def recovering_zhipu(query, count=10, **kwargs):
+        if state["fail"]:
+            return {"ok": False, "error_type": "timeout", "error": "request timed out"}
+        return {"ok": True, "results": [{"title": "T", "url": "https://example.com/a", "content": "body"}]}
+
+    monkeypatch.setattr(service, "zhipu_search", recovering_zhipu)
+
+    await service._run_web_search_fallback("query")
+    await service._run_web_search_fallback("query")
+    assert service.provider_health_status()["cooldown_providers"] == ["zhipu"]
+
+    state["fail"] = False
+    sources, attempts = await service._run_web_search_fallback("query")
+
+    assert sources
+    assert [item["status"] for item in attempts] == ["ok"]
+    assert service.provider_health_status()["cooldown_providers"] == []
+
+
+@pytest.mark.asyncio
+async def test_rekeying_a_provider_clears_its_cooldown(monkeypatch):
+    monkeypatch.setenv("ZHIPU_API_KEY", "zhipu-old-secret")
+
+    async def dead_zhipu(query, count=10, **kwargs):
+        return {"ok": False, "error_type": "auth_error", "error": "HTTP 401"}
+
+    monkeypatch.setattr(service, "zhipu_search", dead_zhipu)
+    await service._run_web_search_fallback("query")
+    assert (await service._run_web_search_fallback("query"))[1][0]["status"] == "skipped"
+
+    monkeypatch.setenv("ZHIPU_API_KEY", "zhipu-new-secret")
+
+    assert (await service._run_web_search_fallback("query"))[1][0]["status"] == "error"
+
+
+@pytest.mark.asyncio
+async def test_search_reports_one_notice_per_degraded_provider(monkeypatch):
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_URL", "https://relay.example.com/v1")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_KEY", "relay-test-secret")
+    monkeypatch.setenv("ZHIPU_API_KEY", "zhipu-test-secret")
+
+    async def fake_primary_search(self, query, platform="", ctx=None):
+        return "Answer."
+
+    async def dead_zhipu(query, count=10, **kwargs):
+        return {"ok": False, "error_type": "auth_error", "error": "HTTP 401: invalid api key"}
+
+    monkeypatch.setattr(service.OpenAICompatibleSearchProvider, "search", fake_primary_search)
+    monkeypatch.setattr(service, "zhipu_search", dead_zhipu)
+
+    first = await service.search("最新消息", validation="balanced")
+    second = await service.search("最新消息", validation="balanced")
+
+    assert first["ok"] is True
+    assert [notice["provider"] for notice in first["provider_notices"]] == ["zhipu"]
+    assert first["provider_notices"][0]["status"] == "cooldown"
+    assert second["provider_notices"][0]["error_type"] == "auth_error"
+    assert second["provider_notices"][0]["cooldown_remaining_seconds"] > 0
+
+
+@pytest.mark.asyncio
+async def test_cooldown_can_be_disabled_by_config(monkeypatch):
+    monkeypatch.setenv("ZHIPU_API_KEY", "zhipu-test-secret")
+    monkeypatch.setenv("SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS", "0")
+    calls = {"n": 0}
+
+    async def dead_zhipu(query, count=10, **kwargs):
+        calls["n"] += 1
+        return {"ok": False, "error_type": "auth_error", "error": "HTTP 401"}
+
+    monkeypatch.setattr(service, "zhipu_search", dead_zhipu)
+
+    for _ in range(3):
+        attempts = (await service._run_web_search_fallback("query"))[1]
+        assert [item["status"] for item in attempts] == ["error"]
+    assert calls["n"] == 3
+
+
+@pytest.mark.asyncio
+async def test_fetch_reports_the_remembered_failure_when_every_provider_is_cooling(monkeypatch):
+    monkeypatch.setenv("JINA_API_KEY", "jina-test-secret")
+
+    async def dead_jina(url):
+        return {"ok": False, "error_type": "auth_error", "error": "HTTP 401: invalid api key"}
+
+    monkeypatch.setattr(service, "jina_fetch", dead_jina)
+
+    first = await service.fetch("https://example.com/a")
+    second = await service.fetch("https://example.com/a")
+
+    assert first["error_type"] == "auth_error"
+    assert second["ok"] is False
+    assert second["error_type"] == "auth_error"
+    assert "invalid api key" in second["error"]
+    assert second["provider_attempts"][0]["status"] == "skipped"
+    assert [notice["provider"] for notice in second["provider_notices"]] == ["jina"]
+
+
+def test_reset_provider_health_rejects_unknown_providers():
+    assert service.reset_provider_health(["nope"])["error_type"] == "parameter_error"
+    assert service.reset_provider_health(["zhipu"])["ok"] is True
+
+
+def test_provider_cooldown_config_rejects_invalid_persisted_values(monkeypatch, tmp_path):
+    _reset_config(monkeypatch, tmp_path)
+
+    for value in ("-1", "nan", "inf", "not-a-number"):
+        result = service.config_set("SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS", value)
+        assert result["ok"] is False
+        assert result["error_type"] == "parameter_error"
+
+    for value in ("0", "-1", "1.5", "not-a-number"):
+        result = service.config_set("SMART_SEARCH_PROVIDER_FAILURE_THRESHOLD", value)
+        assert result["ok"] is False
+        assert result["error_type"] == "parameter_error"
+
+    saved = service.config.get_saved_config(masked=False)
+    assert "SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS" not in saved
+    assert "SMART_SEARCH_PROVIDER_FAILURE_THRESHOLD" not in saved
+
+    assert service.config_set("SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS", "0")["ok"] is True
+    assert service.config.provider_cooldown_seconds == 0.0
+    assert service.config_set("SMART_SEARCH_PROVIDER_FAILURE_THRESHOLD", "3")["ok"] is True
+    assert service.config.provider_failure_threshold == 3
+
+
+def test_provider_cooldown_defaults_are_reported_in_config_info(monkeypatch, tmp_path):
+    _reset_config(monkeypatch, tmp_path)
+
+    info = service.config.get_config_info()
+
+    assert info["SMART_SEARCH_TIMEOUT_SECONDS"] == 300.0
+    assert info["SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS"] == 900.0
+    assert info["SMART_SEARCH_PROVIDER_FAILURE_THRESHOLD"] == 2
+    assert info["config_parameter_errors"] == []
+
+
+def test_invalid_provider_cooldown_env_is_reported_not_raised(monkeypatch, tmp_path):
+    _reset_config(monkeypatch, tmp_path)
+    monkeypatch.setenv("SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS", "soon")
+
+    info = service.config.get_config_info()
+
+    assert any("SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS" in error for error in info["config_parameter_errors"])
+    assert info["config_status"].startswith("config_error")
+
+
+@pytest.mark.asyncio
+async def test_main_search_reserve_scales_with_the_larger_default_budget(monkeypatch, tmp_path):
+    _reset_config(monkeypatch, tmp_path)
+
+    budget = service.SearchBudget(service.config.search_timeout)
+
+    assert service.config.search_timeout == 300.0
+    # 2/3 of a 300s budget stays under the 240s cap, so routing may use the rest.
+    assert budget.main_reserve_seconds() == pytest.approx(200.0)
+    assert budget.router_cap_seconds(8.0) == pytest.approx(8.0, abs=0.5)
+
+
+@pytest.mark.asyncio
+async def test_main_search_shares_its_deadline_with_the_xai_provider(monkeypatch, tmp_path):
+    _reset_config(monkeypatch, tmp_path)
+    monkeypatch.setenv("XAI_API_KEY", "xai-test-secret")
+    seen = {}
+
+    async def fake_xai_search(self, query, platform="", ctx=None):
+        seen["deadline"] = self._search_deadline_monotonic
+        seen["read_timeout"] = self._request_timeout().read
+        return "Answer."
+
+    monkeypatch.setattr(service.XAIResponsesSearchProvider, "search", fake_xai_search)
+
+    result = await service.search("deadline sharing", validation="fast", timeout_seconds=280)
+
+    assert result["ok"] is True
+    assert seen["deadline"] is not None
+    # The provider gets the whole remaining budget rather than a fixed 120s read.
+    assert seen["read_timeout"] > 240.0

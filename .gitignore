@@ -8,6 +8,9 @@ build/
 .venv/
 .smart-search-python/
 .env
+*.pfx
+*.p12
+*.dpapi
 .smart-search/
 logs/
 .pytest_cache/
@@ -16,3 +19,18 @@ node_modules/
 .agent/
 # Anchored to the root only: sidecar/uv.lock is tracked on purpose.
 /uv.lock
+.agents/
+.claude/
+.codex/
+.codestable/
+.trellis/
+.desktop-artifacts/
+.playwright-cli/
+.comet/runtime/
+.comet/current-change.json
+desktop/windows/**/bin/
+desktop/windows/**/obj/
+desktop/tests/**/bin/
+desktop/tests/**/obj/
+desktop/macos/.build/
+desktop/macos/.swiftpm/

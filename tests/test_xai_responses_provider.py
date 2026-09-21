@@ -216,8 +216,9 @@ async def test_xai_responses_execute_posts_to_responses(monkeypatch):
         async def __aexit__(self, exc_type, exc, tb):
             return None
 
-        async def post(self, url, headers, json):
+        async def post(self, url, headers, json, timeout=None):
             calls.append((url, headers, json))
+            self.request_timeout = timeout
             return httpx.Response(
                 200,
                 json={"output": [{"content": [{"type": "output_text", "text": "ok", "annotations": []}]}]},
@@ -500,3 +501,38 @@ async def test_xai_responses_outer_cancellation_stops_inflight_post(monkeypatch)
     with pytest.raises(asyncio.CancelledError):
         await search_task
     assert post_cancelled.is_set()
+
+
+def test_xai_request_timeout_follows_the_shared_deadline():
+    import time
+
+    provider = XAIResponsesSearchProvider("https://api.x.ai/v1", "test-key", "test-model", [])
+    provider.set_search_deadline(time.monotonic() + 280.0)
+
+    timeout = provider._request_timeout()
+
+    assert timeout.read > 240.0
+    assert timeout.connect == 6.0
+
+
+def test_xai_standalone_request_timeout_uses_the_configured_budget(monkeypatch):
+    provider = XAIResponsesSearchProvider("https://api.x.ai/v1", "test-key", "test-model", [])
+    monkeypatch.setenv("SMART_SEARCH_TIMEOUT_SECONDS", "450")
+
+    assert provider._request_timeout().read == 450.0
+
+    monkeypatch.setenv("SMART_SEARCH_TIMEOUT_SECONDS", "not-a-number")
+
+    # An invalid saved budget must not turn into a transport error here.
+    assert provider._request_timeout().read == 300.0
+
+
+@pytest.mark.asyncio
+async def test_xai_expired_deadline_fails_before_any_request():
+    import time
+
+    provider = XAIResponsesSearchProvider("https://api.x.ai/v1", "test-key", "test-model", [])
+    provider.set_search_deadline(time.monotonic() - 0.01)
+
+    with pytest.raises(asyncio.TimeoutError):
+        await provider.search("expired deadline")

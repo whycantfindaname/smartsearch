@@ -1,6 +1,7 @@
 const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
+const { t } = require("../i18n").localize([], process.env);
 
 const packageRoot = path.resolve(__dirname, "..", "..");
 const venvDir = path.join(packageRoot, ".smart-search-python");
@@ -20,6 +21,10 @@ function run(command, args, options = {}) {
 }
 
 function pythonCandidates() {
+  if (process.env.SMART_SEARCH_PYTHON) {
+    // The App can select an independent interpreter without changing global Python.
+    return [{ command: process.env.SMART_SEARCH_PYTHON, args: [] }];
+  }
   if (process.platform === "win32") {
     return [
       { command: "py", args: ["-3"] },
@@ -56,23 +61,23 @@ function venvPython() {
 
 const python = findPython();
 if (!python) {
-  console.error("smart-search requires Python 3.10 or newer.");
-  console.error("Install Python, then run: npm install -g @konbakuyomu/smart-search@latest");
+  console.error(t("smart-search requires Python 3.10 or newer."));
+  console.error(t("Install Python, then run: npm install -g @konbakuyomu/smart-search@latest"));
   process.exit(1);
 }
 
 if (!fs.existsSync(venvPython())) {
-  console.log("Creating smart-search Python runtime...");
+  console.log(t("Creating smart-search Python runtime..."));
   const created = run(python.command, [...python.args, "-m", "venv", venvDir]);
   if (!created.ok) {
-    console.error("Failed to create the smart-search Python virtual environment.");
+    console.error(t("Failed to create the smart-search Python virtual environment."));
     process.exit(created.status || 1);
   }
 }
 
 const py = venvPython();
 
-console.log("Installing smart-search Python package...");
+console.log(t("Installing smart-search Python package..."));
 const install = run(py, [
   "-m",
   "pip",
@@ -82,6 +87,6 @@ const install = run(py, [
 ]);
 
 if (!install.ok) {
-  console.error("Failed to install the bundled smart-search Python package.");
+  console.error(t("Failed to install the bundled smart-search Python package."));
   process.exit(install.status || 1);
 }

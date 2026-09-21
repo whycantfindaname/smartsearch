@@ -1,9 +1,11 @@
+from ..i18n import source_message
 import asyncio
 import json
 import logging
 import re
 import uuid
 from contextlib import suppress
+import time
 from typing import Any
 from urllib.parse import quote, urlsplit
 
@@ -11,7 +13,7 @@ import httpx
 from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt
 
 from .base import BaseSearchProvider
-from .openai_compatible import _WaitWithRetryAfter, get_local_time_info
+from .openai_compatible import _StopAtDeadline, _WaitWithRetryAfter, _is_retryable_exception, get_local_time_info
 from ..config import config
 from ..logger import log_info
 from ..utils import search_prompt
@@ -52,6 +54,31 @@ class XAIResponsesSearchProvider(BaseSearchProvider):
         super().__init__(api_url.rstrip("/"), api_key)
         self.model = model
         self.tools = tools or []
+        self._search_deadline_monotonic: float | None = None
+
+    def set_search_deadline(self, deadline_monotonic: float | None) -> None:
+        """Set by the service for one main-search candidate; standalone calls stay unchanged."""
+        self._search_deadline_monotonic = deadline_monotonic
+
+    def _request_timeout(self) -> httpx.Timeout:
+        if self._search_deadline_monotonic is None:
+            return httpx.Timeout(connect=6.0, read=config.search_timeout_or_default(), write=10.0, pool=None)
+        remaining = self._search_deadline_monotonic - time.monotonic()
+        if remaining <= 0:
+            raise asyncio.TimeoutError(source_message('main_search deadline exhausted'))
+        bounded = max(0.001, remaining)
+        return httpx.Timeout(
+            connect=min(6.0, bounded),
+            read=bounded,
+            write=min(10.0, bounded),
+            pool=bounded,
+        )
+
+    def _retry_stop(self):
+        stop = stop_after_attempt(config.retry_max_attempts + 1)
+        if self._search_deadline_monotonic is not None:
+            return stop | _StopAtDeadline(self._search_deadline_monotonic)
+        return stop
 
     def get_provider_name(self) -> str:
         return "xAI Responses"
@@ -105,7 +132,14 @@ class XAIResponsesSearchProvider(BaseSearchProvider):
         soft_timeout_seconds: float | None = None,
     ) -> str:
         hard_timeout = config.xai_hard_timeout
-        hard_deadline = asyncio.get_running_loop().time() + hard_timeout
+        loop = asyncio.get_running_loop()
+        now = loop.time()
+        if self._search_deadline_monotonic is not None:
+            remaining = self._search_deadline_monotonic - now
+            if remaining <= 0:
+                raise asyncio.TimeoutError(source_message('main_search deadline exhausted'))
+            hard_timeout = min(hard_timeout, remaining)
+        hard_deadline = now + hard_timeout
         execution_task = asyncio.create_task(
             self._execute_response_attempts(
                 headers,
@@ -139,9 +173,16 @@ class XAIResponsesSearchProvider(BaseSearchProvider):
         timeout = httpx.Timeout(connect=6.0, read=None, write=10.0, pool=None)
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, verify=self._get_ssl_verify()) as client:
             async for attempt in AsyncRetrying(
-                stop=stop_after_attempt(config.retry_max_attempts + 1),
-                wait=_WaitWithRetryAfter(config.retry_multiplier, config.retry_max_wait),
-                retry=retry_if_exception(_is_pre_submission_connection_failure),
+                stop=self._retry_stop(),
+                wait=_WaitWithRetryAfter(
+                    config.retry_multiplier,
+                    config.retry_max_wait,
+                    deadline_monotonic=hard_deadline,
+                ),
+                retry=retry_if_exception(
+                    lambda exc: not isinstance(exc, (XAIRequestOutcomeUnknown, XAIRequestHardTimeout))
+                    and (_is_pre_submission_connection_failure(exc) or _is_retryable_exception(exc))
+                ),
                 reraise=True,
             ):
                 with attempt:

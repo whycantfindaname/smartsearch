@@ -1,8 +1,10 @@
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -247,8 +249,8 @@ def test_release_version_metadata_and_tarball_support_are_synchronized():
 
 
 def test_release_docs_explain_beta_lane_and_npm_immutability():
-    readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+    readme = (ROOT / "docs/guide/en/development.md").read_text(encoding="utf-8")
+    readme_zh = (ROOT / "docs/guide/zh-CN/development.md").read_text(encoding="utf-8")
     public_contract = read_reference_tree(ROOT / "skills" / "smart-search-cli")
     packaged_contract = read_reference_tree(
         ROOT / "src" / "smart_search" / "assets" / "skills" / "smart-search-cli"
@@ -334,3 +336,31 @@ def test_v015_release_notes_cover_beta_and_stable_lanes():
         assert marker in beta_notes
     for marker in ["v0.1.15", "npm `latest`", "Context7", "AnySearch", "Validation"]:
         assert marker in stable_notes
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="The release runner uses Python 3.11+ file_digest")
+@pytest.mark.parametrize("windows_suffix", ["signed", "unsigned-test"])
+def test_desktop_release_requires_signed_windows_and_accepts_nested_paths(tmp_path, monkeypatch, windows_suffix):
+    workflow = yaml.safe_load((ROOT / ".github/workflows/desktop-build.yml").read_text())
+    step = next(step for step in workflow["jobs"]["release-assets"]["steps"]
+                if step.get("name") == "Validate version, platforms and checksums")
+    script = step["run"].split("python - <<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
+    names = [f"SmartSearch-0.1.20-win-{arch}-Setup-{windows_suffix}.exe" for arch in ("x64", "arm64")]
+    names += [f"SmartSearch-0.1.20-macos-{arch}-unsigned-test.dmg" for arch in ("x86_64", "arm64")]
+    (tmp_path / "package.json").write_text('{"version":"0.1.20"}')
+    for index, name in enumerate(names):
+        package = tmp_path / "release-packages" / f"build-{index}" / "installer" / name
+        package.parent.mkdir(parents=True)
+        package.write_bytes(name.encode())
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("RELEASE_TAG", "v0.1.20")
+    if windows_suffix != "signed":
+        with pytest.raises(AssertionError, match="Missing or unexpected"):
+            exec(compile(script, "desktop-release-validation", "exec"), {})
+        assert not (tmp_path / "release-packages" / "SHA256SUMS.txt").exists()
+        return
+    exec(compile(script, "desktop-release-validation", "exec"), {})
+    root = tmp_path / "release-packages"
+    assert {path.name for path in root.iterdir() if path.is_file()} == set(names) | {"SHA256SUMS.txt"}
+    assert all((root / name).read_bytes() == name.encode() for name in names)
+    assert len((root / "SHA256SUMS.txt").read_text().splitlines()) == 4

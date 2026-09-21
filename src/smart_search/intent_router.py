@@ -1,3 +1,4 @@
+from .i18n import source_message
 import json
 import math
 import re
@@ -326,7 +327,7 @@ def contains_any(query: str, keywords: set[str]) -> bool:
 
 def extract_urls(query: str) -> list[str]:
     urls = []
-    for match in re.findall(r"https?://[^\s<>\]\)\"']+", query):
+    for match in re.findall(r"https?://[^\s<>\]\)\"'，。；！？、：）】》」』]+", query):
         cleaned = match.rstrip(".,;，。；)")
         if cleaned:
             urls.append(cleaned)
@@ -373,15 +374,15 @@ def build_rules_route(
         signal_scores[capability] = max(signal_scores.get(capability, 0.0), score)
 
     if docs_intent:
-        add_capability("docs_search", "rules matched docs/API/library terms", 0.82)
+        add_capability("docs_search", source_message('rules matched docs/API/library terms'), 0.82)
     if web_current_intent:
-        add_capability("web_search", "rules matched current/locale/news terms", 0.84)
+        add_capability("web_search", source_message('rules matched current/locale/news terms'), 0.84)
     if validation_level == "strict":
-        add_capability("web_search", "strict validation requires source reinforcement", 0.72)
+        add_capability("web_search", source_message('strict validation requires source reinforcement'), 0.72)
     if fetch_intent:
-        add_capability("web_fetch", "rules matched a known URL or fetch request", 0.95 if urls else 0.78)
+        add_capability("web_fetch", source_message('rules matched a known URL or fetch request'), 0.95 if urls else 0.78)
     if vertical_intent:
-        add_capability("vertical_search", "rules matched vertical-domain terms", 0.72)
+        add_capability("vertical_search", source_message('rules matched vertical-domain terms'), 0.72)
 
     confidence = max(signal_scores.values(), default=0.35)
     intent_signals: dict[str, Any] = {
@@ -490,8 +491,7 @@ def _embedding_preset_recommendation(
     message = ""
     if missing_or_mismatched:
         message = (
-            f"{preset.model} works best with INTENT_EMBEDDING_THRESHOLD={preset.threshold} "
-            f"and INTENT_EMBEDDING_MARGIN={preset.margin} based on the current Smart Search calibration set."
+            source_message('{0} works best with INTENT_EMBEDDING_THRESHOLD={1} and INTENT_EMBEDDING_MARGIN={2} based on the current Smart Search calibration set.', preset.model, preset.threshold, preset.margin)
         )
     return {
         "embedding_preset_id": preset.preset_id,
@@ -572,7 +572,7 @@ class IntentRouter:
         selected_mode = (mode or self.config.intent_router_mode).strip().lower()
         if selected_mode not in ALLOWED_INTENT_ROUTER_MODES:
             allowed = ", ".join(sorted(ALLOWED_INTENT_ROUTER_MODES))
-            raise ValueError(f"Invalid SMART_SEARCH_INTENT_ROUTER: {selected_mode}. Supported values: {allowed}")
+            raise ValueError(source_message('Invalid SMART_SEARCH_INTENT_ROUTER: {0}. Supported values: {1}', selected_mode, allowed))
         if selected_mode == "off":
             return IntentRouteResult(
                 query=query,
@@ -628,19 +628,17 @@ class IntentRouter:
                     capability = str(summary["top_capability"])
                     merged_caps.add(capability)
                     merged_reasons.append(
-                        f"embeddings matched {capability} examples "
-                        f"(score {summary['top_score']:.3f}, margin {summary['margin']:.3f})"
+                        source_message('embeddings matched {0} examples (score {1:.3f}, margin {2:.3f})', capability, summary['top_score'], summary['margin'])
                     )
                     confidence = max(confidence, float(summary["top_score"]))
                 elif summary["passed_threshold"] and not summary["passed_margin"]:
                     merged_reasons.append(
-                        "embeddings ambiguous: top semantic score passed threshold "
-                        f"but margin {summary['margin']:.3f} was below {summary['minimum_margin']:.3f}"
+                        source_message('embeddings ambiguous: top semantic score passed threshold but margin {0:.3f} was below {1:.3f}', summary['margin'], summary['minimum_margin'])
                     )
             except Exception as exc:
-                degraded_reasons.append(f"embeddings unavailable: {exc}")
+                degraded_reasons.append(source_message('embeddings unavailable: {0}', exc))
         else:
-            degraded_reasons.append("embeddings not configured")
+            degraded_reasons.append(source_message('embeddings not configured'))
 
         if self._classifier_configured():
             try:
@@ -650,11 +648,11 @@ class IntentRouter:
                     if capability in ROUTABLE_CAPABILITIES and _classifier_can_add_capability(capability, rules):
                         merged_caps.add(capability)
                     elif capability in ROUTABLE_CAPABILITIES:
-                        merged_reasons.append(f"classifier ignored unsupported capability for current signals: {capability}")
+                        merged_reasons.append(source_message('classifier ignored unsupported capability for current signals: {0}', capability))
                     else:
-                        merged_reasons.append(f"classifier ignored unknown capability: {capability}")
+                        merged_reasons.append(source_message('classifier ignored unknown capability: {0}', capability))
                 if classifier.get("provider") or classifier.get("providers"):
-                    merged_reasons.append("classifier provider choices were ignored; router only accepts capabilities")
+                    merged_reasons.append(source_message('classifier provider choices were ignored; router only accepts capabilities'))
                 classifier_signals = classifier.get("intent_signals") if isinstance(classifier.get("intent_signals"), dict) else {}
                 for key, value in classifier_signals.items():
                     if key not in {"provider", "providers", "provider_id"}:
@@ -666,9 +664,9 @@ class IntentRouter:
                     if isinstance(reason, str) and reason:
                         merged_reasons.append(f"classifier: {reason}")
             except Exception as exc:
-                degraded_reasons.append(f"classifier unavailable: {exc}")
+                degraded_reasons.append(source_message('classifier unavailable: {0}', exc))
         else:
-            degraded_reasons.append("classifier not configured")
+            degraded_reasons.append(source_message('classifier not configured'))
 
         required_capabilities = _ordered_capabilities(merged_caps)
         return IntentRouteResult(
@@ -679,7 +677,7 @@ class IntentRouter:
             confidence=round(min(confidence, 1.0), 3),
             router_engines_used=engines,
             degraded=bool(degraded_reasons),
-            degraded_reason="; ".join(degraded_reasons),
+            degraded_reason=source_message("; ".join("{" + str(index) + "}" for index in range(len(degraded_reasons))), *degraded_reasons),
             reasons=merged_reasons,
             docs_intent=rules.docs_intent or "docs_search" in required_capabilities,
             zh_current_intent=rules.zh_current_intent,
@@ -737,12 +735,12 @@ class IntentRouter:
             data = response.json()
         rows = data.get("data") if isinstance(data, dict) else None
         if not isinstance(rows, list) or len(rows) < len(inputs):
-            raise ValueError("embedding response missing data rows")
+            raise ValueError(source_message('embedding response missing data rows'))
         embeddings: list[list[float]] = []
         for row in rows[: len(inputs)]:
             embedding = row.get("embedding") if isinstance(row, dict) else None
             if not isinstance(embedding, list):
-                raise ValueError("embedding response row missing embedding")
+                raise ValueError(source_message('embedding response row missing embedding'))
             embeddings.append([float(value) for value in embedding])
         return embeddings
 
@@ -781,7 +779,7 @@ class IntentRouter:
         content = self._extract_classifier_content(data)
         parsed = json.loads(content) if isinstance(content, str) else content
         if not isinstance(parsed, dict):
-            raise ValueError("classifier response is not a JSON object")
+            raise ValueError(source_message('classifier response is not a JSON object'))
         return parsed
 
     @staticmethod
@@ -796,4 +794,4 @@ class IntentRouter:
                     return message["content"]
             if "output_text" in data:
                 return data["output_text"]
-        raise ValueError("classifier response missing JSON content")
+        raise ValueError(source_message('classifier response missing JSON content'))

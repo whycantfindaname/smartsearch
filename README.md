@@ -12,6 +12,10 @@ CLI-first, skill-driven web research for AI agents and terminal users. `smart-se
 
 ![Star History Chart](https://api.star-history.com/svg?repos=konbakuyomu/smartsearch&type=Date)
 
+## Desktop App
+
+The upstream desktop app is included in the current release line (`0.1.23`). It provides provider configuration, search and research activity, and selected Agent Skills update flows while keeping the independent CLI available after the app is closed. Download the latest package from the [release page](https://github.com/konbakuyomu/smartsearch/releases/latest), or see the [desktop guide](docs/guide/en/app.md). macOS packages remain unsigned and unnotarized; the native desktop build and CLI share the same provider/configuration contracts.
+
 ## What It Is
 
 `smart-search` is not an MCP server. It is a normal CLI that AI agents can call through a skill:

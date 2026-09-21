@@ -3,6 +3,8 @@
 const { spawn, spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
+const { localize } = require("../i18n");
+const { language, t } = localize(process.argv.slice(2), process.env);
 
 const packageRoot = path.resolve(__dirname, "..", "..");
 const callerCwd = process.env.INIT_CWD || process.cwd();
@@ -13,26 +15,27 @@ const pythonPath =
     : path.join(venvDir, "bin", "python");
 
 function printReinstallHint() {
-  console.error("Repair it by reinstalling the package:");
+  console.error(t("Repair it by reinstalling the package:"));
   console.error("  npm install -g @konbakuyomu/smart-search");
 }
 
 if (!fs.existsSync(pythonPath)) {
   const postinstall = path.join(packageRoot, "npm", "scripts", "postinstall.js");
-  console.error("smart-search Python runtime is missing; attempting repair...");
+  console.error(t("smart-search Python runtime is missing; attempting repair..."));
   const repaired = spawnSync(process.execPath, [postinstall], {
     cwd: packageRoot,
-    stdio: "inherit",
+    stdio: ["inherit", 2, 2],
+    env: { ...process.env, SMART_SEARCH_LANGUAGE: language },
     windowsHide: true
   });
   if (repaired.error) {
-    console.error(`smart-search runtime repair failed: ${repaired.error.message}`);
+    console.error(t("smart-search runtime repair failed: {0}", repaired.error.message));
     printReinstallHint();
     process.exit(5);
   }
   if (repaired.status !== 0 || !fs.existsSync(pythonPath)) {
-    console.error("smart-search npm wrapper could not find its Python runtime.");
-    console.error(`Expected: ${pythonPath}`);
+    console.error(t("smart-search npm wrapper could not find its Python runtime."));
+    console.error(t("Expected: {0}", pythonPath));
     printReinstallHint();
     process.exit(repaired.status || 5);
   }
@@ -47,6 +50,7 @@ const child = spawn(
     env: {
       ...process.env,
       SMART_SEARCH_PACKAGE_ROOT: packageRoot,
+      SMART_SEARCH_NODE_PATH: process.execPath,
       PYTHONIOENCODING: process.env.PYTHONIOENCODING || "utf-8",
       PYTHONUTF8: process.env.PYTHONUTF8 || "1"
     },
@@ -55,7 +59,7 @@ const child = spawn(
 );
 
 child.on("error", (error) => {
-  console.error(`Failed to start smart-search: ${error.message}`);
+  console.error(t("Failed to start smart-search: {0}", error.message));
   process.exit(5);
 });
 
