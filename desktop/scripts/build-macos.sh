@@ -103,7 +103,11 @@ if swift build --package-path "$macos_directory" --configuration release --produ
   bin_directory="$(swift build --package-path "$macos_directory" --configuration release --arch "$architecture" --scratch-path "$scratch_directory" --show-bin-path)"
   desktop_binary="$bin_directory/SmartSearchDesktop"
 else
-  echo "SwiftPM build is unavailable; falling back to direct swiftc compilation." >&2
+  if swift package dump-package --package-path "$macos_directory" >/dev/null 2>&1; then
+    echo "SwiftPM source build failed after a valid manifest; refusing the direct swiftc fallback." >&2
+    exit 1
+  fi
+  echo "SwiftPM manifest is unavailable; falling back to direct swiftc compilation." >&2
   desktop_binary="$run_directory/SmartSearchDesktop"
   swiftc -O -target "${architecture}-apple-macosx13.0" \
     -o "$desktop_binary" \
