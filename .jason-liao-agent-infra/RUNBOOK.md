@@ -31,13 +31,13 @@ gate）继续由本仓库自己的 CI/Trellis 运行。只有直接证明 Smart 
 | 合同阶段 | 本项目声明的动作 | 所有者 | 默认是否执行 |
 | --- | --- | --- | --- |
 | `release_readiness` | checkout/Skill 镜像检查、Skill parity、packed tarball 安装 smoke | Smart Search | `sync project --through readiness` |
-| `downstream_propagation` | 将本次 producer commit 传播到 Skills `main`，再合并到原生 profile | Skills `updating-agent-skills` + Infra | 由下游流程执行；本合同不伪造项目命令 |
+| `downstream_propagation` | 只读核验 Skills `main` 的已提交 catalog、README、包与 producer Skill tree，并给出交接 | Skills `updating-agent-skills` + Infra | 仅 `--through downstream` 或 `activation`；不执行采纳 |
 | `platform_activation` | governed package、immutable cache 和平台目标的安装/回读 | 选定 Infra profile/adapter | `sync current-machine` 的平台流程 |
 | `functional_verification` | 一次 doctor 与一个固定、无敏感内容的真实搜索请求 | Smart Search + 选定平台 | 仅显式 `sync verify smartsearch` |
 
-合同只声明 Smart Search 能真实执行的 `release_readiness` 与
-`functional_verification` 命令。下游传播和平台激活需要 Skills/Infra 的外部状态，
-所以它们由各自 owner 的流程完成，不能用一个空操作或重复检查冒充完成证据。
+本合同声明下游只读核验命令，实际采纳仍由 Skills owner 执行。
+本 slice 没有 `platform_activation` 阶段；即使 `--through activation` 成功，
+也只代表已声明阶段完成，平台安装仍是 not declared/not verified。
 
 ## 发布就绪
 
@@ -71,8 +71,17 @@ agent-infra sync project smartsearch \
 
 Smart Search 的 producer commit 通过 Skills 仓库的 `updating-agent-skills` 流程进入
 `skill-packages/smart-search-cli`，然后由 package-aware 合并传播到选定平台分支。
-该流程拥有下游工作树、package pin、immutable cache 和运行时投影；Smart Search
-只提供已通过 release readiness 的 producer identity，不直接修改 Skills 或平台目录。
+`python3 scripts/managed_sync.py downstream-handoff` 读取 Infra 提供的 workspace/registry
+根路径，按 registry 的 `skills.common` 定位 Skills `main`。历史消费者 ID `skills-common`
+只标识这个既有 owner，不建立第二个登记。Skills 的只读 helper 核对分支、远端、
+已提交 catalog pin/README 快照和 producer Skill tree；所选 artifact 与 provenance
+的未提交修改需要先处理，无关文件的修改保持原样且不阻断核验。局部适配由已提交 provenance
+表明，不要求整个包与上游字节相同。不同 producer commit 若 Skill tree 相同，
+只标为 artifact-equivalent，不称 exact-current pin。改变的 Skill tree 未采纳时，
+`handoff_required` 并给出 `scripts/update_global_skill.py` 的预览命令。
+
+普通 `--through readiness` 不运行该命令。核验不修改下游工作树；实际 package pin、
+原生 profile、immutable cache 与运行时投影仍由相应 owner 操作并独立验收。
 
 平台 profile 再按自己的 `RUNBOOK.md`/adapter 将 governed package 安装到目标运行时并
 回读来源一致性。平台路径、service manager、secret、runtime root 和机器特有错误不
