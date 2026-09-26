@@ -3,7 +3,7 @@ id: "source_curator"
 display_name: "Source Curator"
 description: "Review a Root-selected candidate shard and return a reversible key-source proposal."
 deployment_defaults:
-  model: "gpt-5.6-luna"
+  model: "gpt-6-luna"
   reasoning_effort: "max"
   service_tier: "priority"
 contracts:

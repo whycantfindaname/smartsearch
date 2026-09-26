@@ -353,7 +353,7 @@ def test_agentic_research_project_agents_are_packaged_and_match():
         assert definition["contracts"]["inputs"] == input_contracts
         assert definition["contracts"]["output"] == "DelegateResult"
         assert definition["deployment_defaults"] == {
-            "model": "gpt-5.6-luna",
+            "model": "gpt-6-luna",
             "reasoning_effort": "max",
             "service_tier": "priority",
         }

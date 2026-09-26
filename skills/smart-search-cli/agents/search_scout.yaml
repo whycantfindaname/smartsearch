@@ -3,7 +3,7 @@ id: "search_scout"
 display_name: "Search Scout"
 description: "Find candidates inside a Root-authored search assignment and return structured discovery results."
 deployment_defaults:
-  model: "gpt-5.6-luna"
+  model: "gpt-6-luna"
   reasoning_effort: "max"
   service_tier: "priority"
 contracts:
