@@ -32,3 +32,12 @@ project_doc_fallback_filenames = ["AGENTS.md"]
 # Research roles complete their work without child delegation.
 [agents]
 max_depth = 2
+
+[agents.trellis-research]
+config_file = "agents/trellis-research.toml"
+
+[agents.trellis-implement]
+config_file = "agents/trellis-implement.toml"
+
+[agents.trellis-check]
+config_file = "agents/trellis-check.toml"
