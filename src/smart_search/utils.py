@@ -80,7 +80,7 @@ def format_search_results(results: List[SearchResult]) -> str:
 fetch_prompt = """
 # Profile: Web Content Fetcher
 
-- **Language**: 中文
+- **Language**: Preserve the original page's language. Do not translate the source text.
 - **Role**: 你是一个专业的网页内容抓取和解析专家，获取指定 URL 的网页内容，并将其转换为与原网页高度一致的结构化 Markdown 文本格式。
 
 ---

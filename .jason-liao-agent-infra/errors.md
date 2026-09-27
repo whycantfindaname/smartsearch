@@ -47,6 +47,19 @@ Smart Search `lwj_dev`），不复制到交付错误目录。
 - 处理：确认远端无他人新提交；有则停止并交给人决定合并策略。禁止 force。
 - 停止条件：远端与本地精确 SHA 未对齐前不宣称 pushed。
 
+## SS_SYNC_DOWNSTREAM_HANDOFF_REQUIRED
+
+- 阶段：downstream_propagation 只读核验。
+- 含义：Skills `main` checkout/helper 缺失、分支/远端不符、所选 artifact 或 provenance 未提交、
+  已提交 catalog/README provenance 不一致，或本次 producer Skill tree 尚未采纳。
+- 检查：`agent-infra sync project smartsearch --workspace-root ABSOLUTE_PATH --through downstream`；
+  查看 JSON 的 `handoff_required` 与 consumer pin/producer commit。该命令不写 Skills。
+- 处理：先解决 checkout 或所选 artifact/provenance 问题，无关 dirty 保留；改变的 artifact 由 Skills owner 预览
+  `python3 SKILLS_COMMON/scripts/update_global_skill.py smart-search-cli --repo-root SKILLS_COMMON --source-checkout SOURCE_CHECKOUT --target PRODUCER_COMMIT`，
+  审阅后通过原更新器采纳、提交，再重跑此核验。
+- 停止条件：所选 artifact 与 Skills `main` provenance 没有对应的已提交身份前，不称 downstream completed；
+  本阶段通过也不称平台 activated/live。
+
 ## SS_VERIFY_EXTERNAL_GATE_MISSING
 
 - 阶段：functional_verification 前置

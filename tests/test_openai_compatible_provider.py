@@ -825,3 +825,42 @@ async def test_ssl_warning_emitted_once(monkeypatch, caplog):
 
     warning_count = sum(1 for r in caplog.records if "SSL_VERIFY=false" in r.message)
     assert warning_count == 1
+
+
+def test_request_read_timeout_follows_the_shared_deadline(monkeypatch):
+    provider = OpenAICompatibleSearchProvider("https://api.example.com", "test-key", "test-model")
+    provider.set_search_deadline(time.monotonic() + 280.0)
+
+    timeout = provider._request_timeout()
+
+    # The shared main_search deadline is the only ceiling; a slow reasoning model
+    # must not be cut off by a second, smaller read cap.
+    assert timeout.read > 240.0
+    assert timeout.connect == 6.0
+    assert timeout.write == 10.0
+
+
+def test_standalone_request_read_timeout_uses_the_configured_budget(monkeypatch):
+    from smart_search.providers.openai_compatible import config
+
+    provider = OpenAICompatibleSearchProvider("https://api.example.com", "test-key", "test-model")
+    monkeypatch.setenv("SMART_SEARCH_TIMEOUT_SECONDS", "450")
+
+    assert provider._request_timeout().read == 450.0
+    assert config.search_timeout == 450.0
+
+    monkeypatch.setenv("SMART_SEARCH_TIMEOUT_SECONDS", "not-a-number")
+
+    # An invalid saved budget must not turn into a transport error here.
+    assert provider._request_timeout().read == 300.0
+
+
+def test_short_deadline_still_shrinks_every_timeout_component():
+    provider = OpenAICompatibleSearchProvider("https://api.example.com", "test-key", "test-model")
+    provider.set_search_deadline(time.monotonic() + 2.0)
+
+    timeout = provider._request_timeout()
+
+    assert timeout.read <= 2.0
+    assert timeout.connect <= 2.0
+    assert timeout.write <= 2.0

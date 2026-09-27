@@ -1,9 +1,18 @@
+from .i18n import tr
 import json
 import math
 import os
 import sys
+import hashlib
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from urllib.parse import urlsplit
+
+from .state_files import file_lock
+from .jev import JEV_DEFAULTS, JevSettings, validate_jev_value
+
+_snapshot = ContextVar("smart_search_config_snapshot", default=None)
 
 class Config:
     _instance = None
@@ -20,7 +29,9 @@ class Config:
     _DEFAULT_MINIMUM_PROFILE = "standard"
     _DEFAULT_INTENT_ROUTER_MODE = "hybrid"
     _DEFAULT_INTENT_ROUTER_TIMEOUT_SECONDS = "8"
-    _DEFAULT_SEARCH_TIMEOUT_SECONDS = "180"
+    _DEFAULT_SEARCH_TIMEOUT_SECONDS = "300"
+    _DEFAULT_PROVIDER_COOLDOWN_SECONDS = "900"
+    _DEFAULT_PROVIDER_FAILURE_THRESHOLD = "2"
     _DEFAULT_INTENT_EMBEDDING_THRESHOLD = "0.74"
     _DEFAULT_INTENT_EMBEDDING_MARGIN = "0.05"
     _DEFAULT_DOCUMENT_EMBEDDING_SOURCE = "intent"
@@ -33,11 +44,12 @@ class Config:
     _ALLOWED_VALIDATION_LEVELS = {"fast", "balanced", "strict"}
     _ALLOWED_FALLBACK_MODES = {"auto", "off"}
     _ALLOWED_MINIMUM_PROFILES = {"standard", "off"}
-    _ALLOWED_INTENT_ROUTER_MODES = {"hybrid", "rules", "off"}
+    _ALLOWED_INTENT_ROUTER_MODES = {"hybrid", "rules", "off", "jev"}
     _ALLOWED_DOCUMENT_EMBEDDING_SOURCES = {"intent", "openai-compatible", "off"}
     _ALLOWED_DOCUMENT_SPLITTERS = {"markdown", "character"}
     _ALLOWED_LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "WARN", "ERROR", "CRITICAL", "FATAL", "NOTSET"}
     _CONFIG_KEYS = {
+        "SMART_SEARCH_LANGUAGE",
         "XAI_API_URL",
         "XAI_API_KEY",
         "XAI_MODEL",
@@ -58,6 +70,8 @@ class Config:
         "SMART_SEARCH_RESEARCH_DISABLED_PROVIDERS",
         "SMART_SEARCH_INTENT_ROUTER",
         "SMART_SEARCH_TIMEOUT_SECONDS",
+        "SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS",
+        "SMART_SEARCH_PROVIDER_FAILURE_THRESHOLD",
         "INTENT_EMBEDDING_API_URL",
         "INTENT_EMBEDDING_API_KEY",
         "INTENT_EMBEDDING_MODEL",
@@ -101,6 +115,10 @@ class Config:
         "TAVILY_TIMEOUT_SECONDS",
         "FIRECRAWL_API_KEY",
         "FIRECRAWL_API_URL",
+        "TINYFISH_API_KEY",
+        "TINYFISH_SEARCH_API_URL",
+        "TINYFISH_FETCH_API_URL",
+        "TINYFISH_TIMEOUT_SECONDS",
         "ANYSEARCH_API_KEY",
         "ANYSEARCH_API_URL",
         "ANYSEARCH_TIMEOUT_SECONDS",
@@ -117,7 +135,47 @@ class Config:
         "SMART_SEARCH_LOG_TO_FILE",
         "SSL_VERIFY",
     }
+    _CONFIG_KEYS.update(JEV_DEFAULTS)
     _LEGACY_CONFIG_KEYS: dict[str, str] = {}
+    # Writing any of these invalidates the resolved-model cache.
+    _MODEL_CACHE_KEYS = frozenset({
+        "XAI_API_URL",
+        "XAI_API_KEY",
+        "XAI_MODEL",
+        "XAI_TOOLS",
+        "OPENAI_COMPATIBLE_API_URL",
+        "OPENAI_COMPATIBLE_API_KEY",
+        "OPENAI_COMPATIBLE_MODEL",
+        "OPENAI_COMPATIBLE_FALLBACK_MODELS",
+        "OPENAI_COMPATIBLE_API_MODE",
+        "OPENAI_COMPATIBLE_STREAM",
+        "SMART_SEARCH_VALIDATION_LEVEL",
+        "SMART_SEARCH_FALLBACK_MODE",
+        "SMART_SEARCH_MINIMUM_PROFILE",
+        "SMART_SEARCH_INTENT_ROUTER",
+    })
+    # Keys validated on write. The four original entries validate unconditionally;
+    # the rest skip an empty value, which every getter already reads as "unset".
+    _PLAIN_FLOAT_KEYS = frozenset({
+        "INTENT_ROUTER_TIMEOUT_SECONDS",
+        "SMART_SEARCH_RETRY_MULTIPLIER",
+        "EXA_TIMEOUT_SECONDS",
+        "CONTEXT7_TIMEOUT_SECONDS",
+        "ZHIPU_TIMEOUT_SECONDS",
+        "ZHIPU_MCP_TIMEOUT_SECONDS",
+        "JINA_TIMEOUT_SECONDS",
+        "TAVILY_TIMEOUT_SECONDS",
+        "ANYSEARCH_TIMEOUT_SECONDS",
+        "SCIVERSE_TIMEOUT_SECONDS",
+    })
+    _PLAIN_INT_KEYS = frozenset({
+        "SMART_SEARCH_RETRY_MAX_ATTEMPTS",
+        "SMART_SEARCH_RETRY_MAX_WAIT",
+    })
+    _UNIT_INTERVAL_KEYS = frozenset({
+        "INTENT_EMBEDDING_THRESHOLD",
+        "INTENT_EMBEDDING_MARGIN",
+    })
 
     def __new__(cls):
         if cls._instance is None:
@@ -184,6 +242,9 @@ class Config:
 
     @property
     def config_file(self) -> Path:
+        snapshot = _snapshot.get()
+        if snapshot is not None:
+            return snapshot["path"]
         if self._config_file is None:
             config_dir, config_dir_source = self._resolve_config_dir()
             ok = self._safe_mkdir(config_dir)
@@ -198,29 +259,142 @@ class Config:
 
     @property
     def config_dir_source(self) -> str:
+        snapshot = _snapshot.get()
+        if snapshot is not None:
+            return snapshot["source"]
         if self._config_file is None:
             _ = self.config_file
         return self._config_dir_source or "override"
 
-    def _load_config_file(self) -> dict:
+    def _load_config_file(self, *, strict: bool = False) -> dict:
         try:
             with open(self.config_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                return data if isinstance(data, dict) else {}
-        except (FileNotFoundError, PermissionError, OSError, json.JSONDecodeError):
+                if not isinstance(data, dict):
+                    if strict:
+                        raise ValueError(tr('配置文件不是 JSON 对象；请先修复，原文件未修改。'))
+                    return {}
+                return data
+        except FileNotFoundError:
+            return {}
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            if strict:
+                raise ValueError(tr('无法读取有效配置；请检查文件和权限，原文件未修改。')) from None
             return {}
 
-    def _save_config_file(self, config_data: dict) -> None:
+    def revision(self) -> str:
         try:
-            # config.json 保存明文 API key；POSIX 上以 0600 创建，避免多用户机器可读。
-            fd = os.open(self.config_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            raw = self.config_file.read_bytes()
+        except FileNotFoundError:
+            raw = b""
+        return hashlib.sha256(raw).hexdigest()
+
+    def snapshot_revision(self) -> str:
+        snapshot = _snapshot.get()
+        if snapshot is not None and snapshot.get("revision") is not None:
+            return snapshot["revision"]
+        return self.revision()
+
+    def effective_values(self, masked: bool = True) -> dict[str, str]:
+        snapshot = _snapshot.get()
+        if snapshot is not None:
+            values = dict(snapshot["values"])
+        else:
+            values = self.get_saved_config(masked=False)
+            values.update({key: os.environ[key] for key in self._CONFIG_KEYS if key in os.environ})
+        return {key: self._mask_if_secret(key, value) for key, value in values.items()} if masked else values
+
+    @contextmanager
+    def snapshot(self, values: dict[str, str] | None = None, *, merge: bool = True, directory: str = "",
+                 source_overrides: dict[str, str] | None = None):
+        """Freeze one invocation without changing process-wide environment variables."""
+        previous = _snapshot.get()
+        if directory:
+            path = Path(directory).expanduser()
+            if not path.is_absolute():
+                raise ValueError(tr('配置目录必须是绝对路径。'))
+            path = path / "config.json"
+            source = self.config_dir_source if self._config_file is not None and path == self._config_file else "override"
+        else:
+            path, source = self.config_file, self.config_dir_source
+        if previous is not None and not directory:
+            resolved, sources = dict(previous["values"]), dict(previous["sources"])
+            revision = previous.get("revision")
+            saved = dict(previous.get("saved", {}))
+        else:
+            # Values and optimistic revision must describe the very same bytes.
+            # Read atomically replaced files once; read-only profiles need no lock file.
+            try:
+                raw = path.read_bytes()
+            except FileNotFoundError:
+                raw = b""
+            except OSError:
+                raw = None
+            try:
+                data = json.loads(raw or b"{}")
+            except (ValueError, UnicodeError):
+                data = {}
+            saved = self.get_saved_config(masked=False, data=data if isinstance(data, dict) else {})
+            revision = hashlib.sha256(raw).hexdigest() if raw is not None else None
+            resolved = dict(saved)
+            resolved.update({key: os.environ[key] for key in self._CONFIG_KEYS if key in os.environ})
+            sources = {key: "environment" if key in os.environ else "config_file" if key in saved else "default"
+                       for key in self._CONFIG_KEYS}
+        if not merge:
+            resolved = {}
+        resolved.update({key: str(value) for key, value in (values or {}).items()})
+        if source_overrides is not None:
+            sources = {key: source_overrides.get(key, "default") for key in self._CONFIG_KEYS}
+        token = _snapshot.set({"path": path, "source": source, "values": resolved, "sources": sources,
+                               "revision": revision, "saved": saved})
+        try:
+            yield
+        finally:
+            _snapshot.reset(token)
+
+    def secret_values(self) -> tuple[str, ...]:
+        return tuple(value for key, value in self.effective_values(masked=False).items()
+                     if value and any(part in key for part in ("KEY", "TOKEN", "SECRET")))
+
+    def _save_config_file(self, config_data: dict) -> None:
+        """Write config.json atomically.
+
+        A truncating in-place write can leave an empty or half-written file if the
+        process dies mid-save, and an empty config.json silently means "no API keys
+        configured". Write a private temp file and rename it over the target instead,
+        the same way ``provider_health._save`` already does.
+        """
+        path = self.config_file
+        temp_path = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+        try:
+            # A temp file left behind by a crash would make O_EXCL fail forever.
+            try:
+                os.unlink(temp_path)
+            except FileNotFoundError:
+                pass
+            # O_EXCL refuses to follow a planted symlink; 0o600 means the file
+            # holding API keys is never world-readable, not even momentarily.
+            fd = os.open(temp_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            try:
+                handle = os.fdopen(fd, "w", encoding="utf-8")
+            except BaseException:
+                os.close(fd)
+                raise
+            with handle as f:
                 json.dump(config_data, f, ensure_ascii=False, indent=2)
-        except (IOError, PermissionError, OSError) as e:
-            hint = " (sandbox/CI 下可设 SMART_SEARCH_CONFIG_DIR 指向可写目录)" if isinstance(e, PermissionError) else ""
-            raise ValueError(f"无法保存配置文件: {str(e)}{hint}")
+            os.replace(temp_path, path)
+        except (IOError, PermissionError, OSError, TypeError, ValueError) as e:
+            try:
+                os.unlink(temp_path)
+            except OSError:
+                pass
+            hint = tr(' (sandbox/CI 下可设 SMART_SEARCH_CONFIG_DIR 指向可写目录)') if isinstance(e, PermissionError) else ""
+            raise ValueError(tr('无法保存配置文件: {0}{1}', str(e), hint))
 
     def _get_config_value(self, key: str, default: str | None = None) -> str | None:
+        snapshot = _snapshot.get()
+        if snapshot is not None:
+            return snapshot["values"].get(key, default)
         env_value = os.getenv(key)
         if env_value is not None:
             return env_value
@@ -235,8 +409,13 @@ class Config:
             return default
         return str(value)
 
-    def get_saved_config(self, masked: bool = True) -> dict:
-        data = self._load_config_file()
+    def get_saved_config(self, masked: bool = True, *, data: dict | None = None) -> dict:
+        if data is None:
+            snapshot = _snapshot.get()
+            if snapshot is not None and "saved" in snapshot:
+                normalized = dict(snapshot["saved"])
+                return {key: self._mask_if_secret(key, value) for key, value in normalized.items()} if masked else normalized
+            data = self._load_config_file()
         normalized: dict[str, str] = {}
         for old_key, new_key in self._LEGACY_CONFIG_KEYS.items():
             if old_key in data and new_key not in data:
@@ -249,6 +428,9 @@ class Config:
         return {key: self._mask_if_secret(key, value) for key, value in normalized.items()}
 
     def get_config_source(self, key: str) -> str:
+        snapshot = _snapshot.get()
+        if snapshot is not None:
+            return snapshot["sources"].get(key, "default")
         if os.getenv(key) is not None:
             return "environment"
         data = self._load_config_file()
@@ -262,32 +444,78 @@ class Config:
     def get_config_sources(self) -> dict[str, str]:
         return {key: self.get_config_source(key) for key in sorted(self._CONFIG_KEYS)}
 
-    def set_config_value(self, key: str, value: str) -> None:
-        key = key.strip().upper()
-        if key not in self._CONFIG_KEYS:
-            raise ValueError(f"Unsupported config key: {key}")
-        self._validate_research_config_value(key, value)
-        self._validate_config_value(key, value)
-        config_data = self._load_config_file()
-        config_data[key] = value
-        self._save_config_file(config_data)
-        if key in {
-            "XAI_API_URL",
-            "XAI_API_KEY",
-            "XAI_MODEL",
-            "XAI_TOOLS",
-            "OPENAI_COMPATIBLE_API_URL",
-            "OPENAI_COMPATIBLE_API_KEY",
-            "OPENAI_COMPATIBLE_MODEL",
-            "OPENAI_COMPATIBLE_FALLBACK_MODELS",
-            "OPENAI_COMPATIBLE_API_MODE",
-            "OPENAI_COMPATIBLE_STREAM",
-            "SMART_SEARCH_VALIDATION_LEVEL",
-            "SMART_SEARCH_FALLBACK_MODE",
-            "SMART_SEARCH_MINIMUM_PROFILE",
-            "SMART_SEARCH_INTENT_ROUTER",
-        }:
+    def update_config_values(
+        self,
+        set_values: dict[str, str] | None = None,
+        unset_keys: list[str] | None = None,
+        *,
+        expected_revision: str | None = None,
+    ) -> dict:
+        """Apply many config changes in one validated, atomic write.
+
+        All-or-nothing: a single rejected key or value leaves the file untouched, so
+        a typo in one field cannot strand half a provider profile on disk. One read
+        and one atomic rename replace the per-key read-modify-write cycle, which the
+        setup wizard used to repeat once for every value it saved.
+        """
+        normalized_set: dict[str, str] = {}
+        normalized_unset: list[str] = []
+        errors: list[dict] = []
+
+        for raw_key, raw_value in (set_values or {}).items():
+            key = str(raw_key).strip().upper()
+            if key not in self._CONFIG_KEYS:
+                errors.append({"key": key, "error": tr('Unsupported config key: {0}', key)})
+                continue
+            value = "" if raw_value is None else str(raw_value)
+            try:
+                self._validate_research_config_value(key, value)
+                self._validate_config_value(key, value)
+            except ValueError as e:
+                errors.append({"key": key, "error": str(e)})
+                continue
+            normalized_set[key] = value
+
+        for raw_key in (unset_keys or []):
+            key = str(raw_key).strip().upper()
+            if key not in self._CONFIG_KEYS:
+                errors.append({"key": key, "error": tr('Unsupported config key: {0}', key)})
+                continue
+            normalized_unset.append(key)
+
+        if errors:
+            return {"ok": False, "errors": errors, "saved": [], "unset": []}
+
+        try:
+            with file_lock(self.config_file):
+                if expected_revision is not None and expected_revision != self.revision():
+                    return {"ok": False, "errors": [{"key": "config", "error": tr('配置已被其他进程修改，请刷新后重试。')}],
+                            "saved": [], "unset": [], "conflict": True}
+                config_data = self._load_config_file(strict=True)
+                for key, value in normalized_set.items():
+                    config_data[key] = value
+                for key in normalized_unset:
+                    config_data.pop(key, None)
+                    for old_key, new_key in self._LEGACY_CONFIG_KEYS.items():
+                        if new_key == key:
+                            config_data.pop(old_key, None)
+                self._save_config_file(config_data)
+        except OSError:
+            raise ValueError(tr('无法锁定或保存配置文件，请检查权限或稍后重试。')) from None
+
+        if (set(normalized_set) | set(normalized_unset)) & self._MODEL_CACHE_KEYS:
             self._cached_model = None
+        return {
+            "ok": True,
+            "errors": [],
+            "saved": sorted(normalized_set),
+            "unset": sorted(normalized_unset),
+        }
+
+    def set_config_value(self, key: str, value: str) -> None:
+        result = self.update_config_values({key: value})
+        if not result["ok"]:
+            raise ValueError(result["errors"][0]["error"])
 
     @classmethod
     def _validate_research_config_value(cls, key: str, value: str) -> None:
@@ -333,32 +561,9 @@ class Config:
             raise ValueError(f"Invalid {key}: {raw}. Expected an integer between {minimum} and {maximum}.")
 
     def unset_config_value(self, key: str) -> None:
-        key = key.strip().upper()
-        if key not in self._CONFIG_KEYS:
-            raise ValueError(f"Unsupported config key: {key}")
-        config_data = self._load_config_file()
-        config_data.pop(key, None)
-        for old_key, new_key in self._LEGACY_CONFIG_KEYS.items():
-            if new_key == key:
-                config_data.pop(old_key, None)
-        self._save_config_file(config_data)
-        if key in {
-            "XAI_API_URL",
-            "XAI_API_KEY",
-            "XAI_MODEL",
-            "XAI_TOOLS",
-            "OPENAI_COMPATIBLE_API_URL",
-            "OPENAI_COMPATIBLE_API_KEY",
-            "OPENAI_COMPATIBLE_MODEL",
-            "OPENAI_COMPATIBLE_FALLBACK_MODELS",
-            "OPENAI_COMPATIBLE_API_MODE",
-            "OPENAI_COMPATIBLE_STREAM",
-            "SMART_SEARCH_VALIDATION_LEVEL",
-            "SMART_SEARCH_FALLBACK_MODE",
-            "SMART_SEARCH_MINIMUM_PROFILE",
-            "SMART_SEARCH_INTENT_ROUTER",
-        }:
-            self._cached_model = None
+        result = self.update_config_values(unset_keys=[key])
+        if not result["ok"]:
+            raise ValueError(result["errors"][0]["error"])
 
     def config_path_info(self) -> dict:
         return {
@@ -479,7 +684,7 @@ class Config:
         if invalid:
             allowed = ", ".join(sorted(self._ALLOWED_XAI_TOOLS))
             invalid_text = ", ".join(invalid)
-            raise ValueError(f"Invalid XAI_TOOLS: {invalid_text}. Supported values: {allowed}")
+            raise ValueError(tr('Invalid XAI_TOOLS: {0}. Supported values: {1}', invalid_text, allowed))
         return tools
 
     def _validated_enum(self, key: str, default: str, allowed: set[str]) -> str:
@@ -490,7 +695,7 @@ class Config:
         value = str(raw_value or "").strip().lower()
         if value not in allowed:
             allowed_text = ", ".join(sorted(allowed))
-            raise ValueError(f"Invalid {key}: {value}. Supported values: {allowed_text}")
+            raise ValueError(tr('Invalid {0}: {1}. Supported values: {2}', key, value, allowed_text))
         return value
 
     def _enum_info(self, key: str, default: str, allowed: set[str]) -> tuple[str, str]:
@@ -505,9 +710,9 @@ class Config:
         try:
             number = float(value)
         except (TypeError, ValueError):
-            raise ValueError(f"Invalid {key}: {value}. Expected a number.")
+            raise ValueError(tr('Invalid {0}: {1}. Expected a number.', key, value))
         if not math.isfinite(number):
-            raise ValueError(f"Invalid {key}: {value}. Expected a finite number.")
+            raise ValueError(tr('Invalid {0}: {1}. Expected a finite number.', key, value))
         return number
 
     def _float_info(self, key: str, default: str) -> tuple[float, str]:
@@ -519,7 +724,7 @@ class Config:
     def _bounded_float_value(self, key: str, default: str, minimum: float, maximum: float) -> float:
         value = self._float_value(key, default)
         if value < minimum or value > maximum:
-            raise ValueError(f"Invalid {key}: {value}. Expected a number between {minimum:g} and {maximum:g}.")
+            raise ValueError(tr('Invalid {0}: {1}. Expected a number between {2:g} and {3:g}.', key, value, minimum, maximum))
         return value
 
     def _positive_float_value(self, key: str, default: str) -> float:
@@ -531,16 +736,116 @@ class Config:
         try:
             value = float(raw_value)
         except (TypeError, ValueError):
-            raise ValueError(f"Invalid {key}: {raw_value}. Expected a positive finite number.")
+            raise ValueError(tr('Invalid {0}: {1}. Expected a positive finite number.', key, raw_value))
         if not math.isfinite(value) or value <= 0:
-            raise ValueError(f"Invalid {key}: {raw_value}. Expected a positive finite number.")
+            raise ValueError(tr('Invalid {0}: {1}. Expected a positive finite number.', key, raw_value))
         return value
 
     def _validate_config_value(self, key: str, value: str) -> None:
-        if key == "SMART_SEARCH_TIMEOUT_SECONDS":
+        """Reject a bad value at write time instead of at the next read.
+
+        Without this, ``config set SMART_SEARCH_VALIDATION_LEVEL bogus`` succeeds and
+        only blows up on the next search, far from the mistake.
+        """
+        if key == "SMART_SEARCH_LANGUAGE":
+            from .i18n import normalize
+            normalize(value)
+            return
+        if key in JEV_DEFAULTS:
+            validate_jev_value(key, value)
+            return
+        if key in {"SMART_SEARCH_TIMEOUT_SECONDS", "TINYFISH_TIMEOUT_SECONDS"}:
             self._parse_positive_float_value(key, value)
-        elif key == "OPENAI_COMPATIBLE_API_MODE":
+            return
+        if key == "SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS":
+            self._parse_non_negative_float_value(key, value)
+            return
+        if key == "SMART_SEARCH_PROVIDER_FAILURE_THRESHOLD":
+            self._parse_positive_int_value(key, value)
+            return
+        if key == "OPENAI_COMPATIBLE_API_MODE":
             self._validate_enum_value(key, value, self._ALLOWED_OPENAI_COMPATIBLE_API_MODES)
+            return
+        if key == "XAI_TOOLS":
+            self.parse_xai_tools(value or self._DEFAULT_XAI_TOOLS)
+            return
+        # Every getter below falls back to its default on an empty value, so an
+        # empty string is how a key is cleared rather than a value to check.
+        if not str(value).strip():
+            return
+        enum_allowed = {
+            "SMART_SEARCH_VALIDATION_LEVEL": self._ALLOWED_VALIDATION_LEVELS,
+            "SMART_SEARCH_FALLBACK_MODE": self._ALLOWED_FALLBACK_MODES,
+            "SMART_SEARCH_MINIMUM_PROFILE": self._ALLOWED_MINIMUM_PROFILES,
+            "SMART_SEARCH_INTENT_ROUTER": self._ALLOWED_INTENT_ROUTER_MODES,
+        }.get(key)
+        if enum_allowed is not None:
+            self._validate_enum_value(key, value, enum_allowed)
+        elif key in self._UNIT_INTERVAL_KEYS:
+            parsed = self._parse_plain_float_value(key, value)
+            if parsed < 0.0 or parsed > 1.0:
+                raise ValueError(tr('Invalid {0}: {1}. Expected a number between 0 and 1.', key, value))
+        elif key in self._PLAIN_FLOAT_KEYS:
+            self._parse_plain_float_value(key, value)
+        elif key in self._PLAIN_INT_KEYS:
+            self._parse_plain_int_value(key, value)
+
+    @staticmethod
+    def _parse_plain_float_value(key: str, raw_value: object) -> float:
+        try:
+            value = float(str(raw_value).strip())
+        except (TypeError, ValueError):
+            raise ValueError(tr('Invalid {0}: {1}. Expected a number.', key, raw_value))
+        if not math.isfinite(value):
+            raise ValueError(tr('Invalid {0}: {1}. Expected a number.', key, raw_value))
+        return value
+
+    @staticmethod
+    def _parse_plain_int_value(key: str, raw_value: object) -> int:
+        try:
+            return int(str(raw_value).strip())
+        except (TypeError, ValueError):
+            raise ValueError(tr('Invalid {0}: {1}. Expected an integer.', key, raw_value))
+
+    def _non_negative_float_value(self, key: str, default: str) -> float:
+        value = self._get_config_value(key, default) or default
+        return self._parse_non_negative_float_value(key, value)
+
+    @staticmethod
+    def _parse_non_negative_float_value(key: str, raw_value: object) -> float:
+        try:
+            value = float(raw_value)
+        except (TypeError, ValueError):
+            raise ValueError(tr('Invalid {0}: {1}. Expected a non-negative finite number.', key, raw_value))
+        if not math.isfinite(value) or value < 0:
+            raise ValueError(tr('Invalid {0}: {1}. Expected a non-negative finite number.', key, raw_value))
+        return value
+
+    def _non_negative_float_info(self, key: str, default: str) -> tuple[float, str]:
+        try:
+            return self._non_negative_float_value(key, default), ""
+        except ValueError as e:
+            return float(default), str(e)
+
+    def _positive_int_value(self, key: str, default: str) -> int:
+        value = self._get_config_value(key, default) or default
+        return self._parse_positive_int_value(key, value)
+
+    @staticmethod
+    def _parse_positive_int_value(key: str, raw_value: object) -> int:
+        try:
+            value = int(str(raw_value).strip())
+        except (TypeError, ValueError):
+            raise ValueError(tr('Invalid {0}: {1}. Expected a positive integer.', key, raw_value))
+        if value < 1:
+            raise ValueError(tr('Invalid {0}: {1}. Expected a positive integer.', key, raw_value))
+        return value
+
+    def _positive_int_info(self, key: str, default: str) -> tuple[int, str]:
+        try:
+            return self._positive_int_value(key, default), ""
+        except ValueError as e:
+            return int(default), str(e)
 
     def _positive_float_info(self, key: str, default: str) -> tuple[float, str]:
         try:
@@ -585,6 +890,9 @@ class Config:
             self._DEFAULT_INTENT_ROUTER_MODE,
             self._ALLOWED_INTENT_ROUTER_MODES,
         )
+
+    def jev_settings(self) -> JevSettings:
+        return JevSettings.from_config(self)
 
     @property
     def intent_embedding_api_url(self) -> str:
@@ -723,6 +1031,35 @@ class Config:
             "configured": bool(source != "off" and api_url and api_key and model),
         }
 
+    def search_timeout_or_default(self) -> float:
+        """Search budget for callers that must not raise on an invalid saved value.
+
+        `search` validates the budget up front and reports `parameter_error`.
+        Provider-level read ceilings run outside that check, so they fall back to
+        the default rather than turning a bad config value into a transport error.
+        """
+        value, _error = self._positive_float_info(
+            "SMART_SEARCH_TIMEOUT_SECONDS",
+            self._DEFAULT_SEARCH_TIMEOUT_SECONDS,
+        )
+        return value
+
+    @property
+    def provider_cooldown_seconds(self) -> float:
+        """Seconds a repeatedly failing optional provider stays skipped. 0 disables cooldown."""
+        return self._non_negative_float_value(
+            "SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS",
+            self._DEFAULT_PROVIDER_COOLDOWN_SECONDS,
+        )
+
+    @property
+    def provider_failure_threshold(self) -> int:
+        """Consecutive soft failures before an optional provider is put on cooldown."""
+        return self._positive_int_value(
+            "SMART_SEARCH_PROVIDER_FAILURE_THRESHOLD",
+            self._DEFAULT_PROVIDER_FAILURE_THRESHOLD,
+        )
+
     def _csv_values(self, key: str) -> list[str]:
         raw = self._get_config_value(key, "") or ""
         values: list[str] = []
@@ -765,6 +1102,28 @@ class Config:
     @property
     def firecrawl_api_key(self) -> str | None:
         return self._get_config_value("FIRECRAWL_API_KEY")
+
+    @property
+    def tinyfish_api_key(self) -> str | None:
+        return self._get_config_value("TINYFISH_API_KEY")
+
+    @property
+    def tinyfish_search_api_url(self) -> str:
+        return (
+            self._get_config_value("TINYFISH_SEARCH_API_URL", "https://api.search.tinyfish.ai")
+            or "https://api.search.tinyfish.ai"
+        )
+
+    @property
+    def tinyfish_fetch_api_url(self) -> str:
+        return (
+            self._get_config_value("TINYFISH_FETCH_API_URL", "https://api.fetch.tinyfish.ai")
+            or "https://api.fetch.tinyfish.ai"
+        )
+
+    @property
+    def tinyfish_timeout(self) -> float:
+        return self._parse_positive_float_value("TINYFISH_TIMEOUT_SECONDS", self._get_config_value("TINYFISH_TIMEOUT_SECONDS", "150") or "150")
 
     @property
     def anysearch_api_url(self) -> str:
@@ -937,12 +1296,20 @@ class Config:
 
     def get_config_info(self) -> dict:
         config_parameter_errors: list[str] = []
+        jev_info = {}
+        for key, default in JEV_DEFAULTS.items():
+            value = self._get_config_value(key, default)
+            try:
+                value = validate_jev_value(key, value)
+            except ValueError as exc:
+                config_parameter_errors.append(str(exc))
+            jev_info[key] = self._mask_if_secret(key, str(value)) if "KEY" in key else value
         explicit_main_configured = bool(
             self.xai_api_key
             or (self.openai_compatible_api_url and self.openai_compatible_api_key)
         )
         if explicit_main_configured:
-            config_status = "ok: 配置完整"
+            config_status = tr('ok: 配置完整')
         else:
             config_status = f"config_error: {self._SETUP_COMMAND}"
 
@@ -966,6 +1333,8 @@ class Config:
             self._DEFAULT_INTENT_ROUTER_MODE,
             self._ALLOWED_INTENT_ROUTER_MODES,
         )
+        if intent_router_mode == "jev":
+            config_status = "ok: Jev routing configured" if self._get_config_value("TYPESAFE_API_KEY") else "config_error: TYPESAFE_API_KEY is not configured"
         openai_compatible_api_mode, openai_compatible_api_mode_error = self._enum_info(
             "OPENAI_COMPATIBLE_API_MODE",
             self._DEFAULT_OPENAI_COMPATIBLE_API_MODE,
@@ -978,6 +1347,14 @@ class Config:
         search_timeout, search_timeout_error = self._positive_float_info(
             "SMART_SEARCH_TIMEOUT_SECONDS",
             self._DEFAULT_SEARCH_TIMEOUT_SECONDS,
+        )
+        provider_cooldown_seconds, provider_cooldown_error = self._non_negative_float_info(
+            "SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS",
+            self._DEFAULT_PROVIDER_COOLDOWN_SECONDS,
+        )
+        provider_failure_threshold, provider_failure_threshold_error = self._positive_int_info(
+            "SMART_SEARCH_PROVIDER_FAILURE_THRESHOLD",
+            self._DEFAULT_PROVIDER_FAILURE_THRESHOLD,
         )
         intent_embedding_threshold, intent_embedding_threshold_error = self._bounded_float_info(
             "INTENT_EMBEDDING_THRESHOLD",
@@ -1044,6 +1421,8 @@ class Config:
                 openai_compatible_api_mode_error,
                 intent_router_timeout_error,
                 search_timeout_error,
+                provider_cooldown_error,
+                provider_failure_threshold_error,
                 intent_embedding_threshold_error,
                 intent_embedding_margin_error,
                 document_embedding_source_error,
@@ -1060,15 +1439,16 @@ class Config:
             config_status = f"config_error: {'; '.join(config_parameter_errors)}"
 
         return {
+            **jev_info,
             "XAI_API_URL": self.xai_api_url,
-            "XAI_API_KEY": self._mask_api_key(self.xai_api_key) if self.xai_api_key else "未配置",
+            "XAI_API_KEY": self._mask_api_key(self.xai_api_key) if self.xai_api_key else tr('未配置'),
             "XAI_MODEL": self.xai_model,
             "XAI_TOOLS": self.xai_tools_raw,
             "XAI_SOFT_TIMEOUT_SECONDS": self.xai_soft_timeout,
             "XAI_HARD_TIMEOUT_SECONDS": self.xai_hard_timeout,
             "XAI_STATUS_POLL_SECONDS": self.xai_status_poll,
-            "OPENAI_COMPATIBLE_API_URL": self.openai_compatible_api_url or "未配置",
-            "OPENAI_COMPATIBLE_API_KEY": self._mask_api_key(self.openai_compatible_api_key) if self.openai_compatible_api_key else "未配置",
+            "OPENAI_COMPATIBLE_API_URL": self.openai_compatible_api_url or tr('未配置'),
+            "OPENAI_COMPATIBLE_API_KEY": self._mask_api_key(self.openai_compatible_api_key) if self.openai_compatible_api_key else tr('未配置'),
             "OPENAI_COMPATIBLE_MODEL": self.openai_compatible_model,
             "OPENAI_COMPATIBLE_FALLBACK_MODELS": ",".join(self.openai_compatible_fallback_models),
             "OPENAI_COMPATIBLE_API_MODE": openai_compatible_api_mode,
@@ -1079,14 +1459,14 @@ class Config:
             "SMART_SEARCH_RESEARCH_PREFERRED_PROVIDERS": ",".join(self.research_preferred_providers),
             "SMART_SEARCH_RESEARCH_DISABLED_PROVIDERS": ",".join(self.research_disabled_providers),
             "SMART_SEARCH_INTENT_ROUTER": intent_router_mode,
-            "INTENT_EMBEDDING_API_URL": self.intent_embedding_api_url or "未配置",
-            "INTENT_EMBEDDING_API_KEY": self._mask_api_key(self.intent_embedding_api_key) if self.intent_embedding_api_key else "未配置",
-            "INTENT_EMBEDDING_MODEL": self.intent_embedding_model or "未配置",
+            "INTENT_EMBEDDING_API_URL": self.intent_embedding_api_url or tr('未配置'),
+            "INTENT_EMBEDDING_API_KEY": self._mask_api_key(self.intent_embedding_api_key) if self.intent_embedding_api_key else tr('未配置'),
+            "INTENT_EMBEDDING_MODEL": self.intent_embedding_model or tr('未配置'),
             "INTENT_EMBEDDING_THRESHOLD": intent_embedding_threshold,
             "INTENT_EMBEDDING_MARGIN": intent_embedding_margin,
-            "INTENT_CLASSIFIER_API_URL": self.intent_classifier_api_url or "未配置",
-            "INTENT_CLASSIFIER_API_KEY": self._mask_api_key(self.intent_classifier_api_key) if self.intent_classifier_api_key else "未配置",
-            "INTENT_CLASSIFIER_MODEL": self.intent_classifier_model or "未配置",
+            "INTENT_CLASSIFIER_API_URL": self.intent_classifier_api_url or tr('未配置'),
+            "INTENT_CLASSIFIER_API_KEY": self._mask_api_key(self.intent_classifier_api_key) if self.intent_classifier_api_key else tr('未配置'),
+            "INTENT_CLASSIFIER_MODEL": self.intent_classifier_model or tr('未配置'),
             "INTENT_ROUTER_TIMEOUT_SECONDS": intent_router_timeout,
             "SMART_SEARCH_TIMEOUT_SECONDS": search_timeout,
             "SMART_SEARCH_DOCUMENT_EMBEDDING_SOURCE": document_embedding_source,
@@ -1096,6 +1476,8 @@ class Config:
             "SMART_SEARCH_DOCUMENT_CHUNK_SIZE": document_chunk_size,
             "SMART_SEARCH_SIDECAR_PYTHON": self.sidecar_python,
             "SMART_SEARCH_SIDECAR_TIMEOUT_SECONDS": sidecar_timeout,
+            "SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS": provider_cooldown_seconds,
+            "SMART_SEARCH_PROVIDER_FAILURE_THRESHOLD": provider_failure_threshold,
             "SMART_SEARCH_DEBUG": self.debug_enabled,
             "SMART_SEARCH_LOG_LEVEL": self.log_level,
             "SMART_SEARCH_LOG_DIR": self.log_dir_config_value,
@@ -1104,41 +1486,45 @@ class Config:
             "SMART_SEARCH_RETRY_MAX_WAIT": self.retry_max_wait,
             "TAVILY_API_URL": self.tavily_api_url,
             "TAVILY_ENABLED": self.tavily_enabled,
-            "TAVILY_API_KEY": self._mask_api_key(self.tavily_api_key) if self.tavily_api_key else "未配置",
+            "TAVILY_API_KEY": self._mask_api_key(self.tavily_api_key) if self.tavily_api_key else tr('未配置'),
             "TAVILY_TIMEOUT_SECONDS": self.tavily_timeout,
             "FIRECRAWL_API_URL": self.firecrawl_api_url,
-            "FIRECRAWL_API_KEY": self._mask_api_key(self.firecrawl_api_key) if self.firecrawl_api_key else "未配置",
+            "FIRECRAWL_API_KEY": self._mask_api_key(self.firecrawl_api_key) if self.firecrawl_api_key else tr('未配置'),
+            "TINYFISH_SEARCH_API_URL": self.tinyfish_search_api_url,
+            "TINYFISH_FETCH_API_URL": self.tinyfish_fetch_api_url,
+            "TINYFISH_API_KEY": self._mask_api_key(self.tinyfish_api_key) if self.tinyfish_api_key else tr('未配置'),
+            "TINYFISH_TIMEOUT_SECONDS": self.tinyfish_timeout,
             "ANYSEARCH_API_URL": self.anysearch_api_url,
-            "ANYSEARCH_API_KEY": self._mask_api_key(self.anysearch_api_key) if self.anysearch_api_key else "未配置",
+            "ANYSEARCH_API_KEY": self._mask_api_key(self.anysearch_api_key) if self.anysearch_api_key else tr('未配置'),
             "ANYSEARCH_TIMEOUT_SECONDS": self.anysearch_timeout,
             "SCIVERSE_API_URL": self.sciverse_api_url,
-            "SCIVERSE_API_TOKEN": self._mask_api_key(self.sciverse_api_token) if self.sciverse_api_token else "未配置",
+            "SCIVERSE_API_TOKEN": self._mask_api_key(self.sciverse_api_token) if self.sciverse_api_token else tr('未配置'),
             "SCIVERSE_TIMEOUT_SECONDS": self.sciverse_timeout,
             "SMART_SEARCH_OUTPUT_CLEANUP": self.output_cleanup_enabled,
             "SMART_SEARCH_LOG_TO_FILE": self.log_to_file_enabled,
             "SSL_VERIFY": self.ssl_verify_enabled,
-            "EXA_API_KEY": self._mask_api_key(self.exa_api_key) if self.exa_api_key else "未配置",
+            "EXA_API_KEY": self._mask_api_key(self.exa_api_key) if self.exa_api_key else tr('未配置'),
             "EXA_BASE_URL": self.exa_base_url,
             "EXA_TIMEOUT_SECONDS": self.exa_timeout,
-            "CONTEXT7_API_KEY": self._mask_api_key(self.context7_api_key) if self.context7_api_key else "未配置",
+            "CONTEXT7_API_KEY": self._mask_api_key(self.context7_api_key) if self.context7_api_key else tr('未配置'),
             "CONTEXT7_BASE_URL": self.context7_base_url,
             "CONTEXT7_TIMEOUT_SECONDS": self.context7_timeout,
-            "ZHIPU_API_KEY": self._mask_api_key(self.zhipu_api_key) if self.zhipu_api_key else "未配置",
+            "ZHIPU_API_KEY": self._mask_api_key(self.zhipu_api_key) if self.zhipu_api_key else tr('未配置'),
             "ZHIPU_API_URL": self.zhipu_api_url,
             "ZHIPU_SEARCH_ENGINE": self.zhipu_search_engine,
             "ZHIPU_TIMEOUT_SECONDS": self.zhipu_timeout,
-            "ZHIPU_MCP_API_KEY": self._mask_api_key(self.zhipu_mcp_api_key) if self.zhipu_mcp_api_key else "未配置",
+            "ZHIPU_MCP_API_KEY": self._mask_api_key(self.zhipu_mcp_api_key) if self.zhipu_mcp_api_key else tr('未配置'),
             "ZHIPU_MCP_SEARCH_API_URL": self.zhipu_mcp_search_api_url,
             "ZHIPU_MCP_READER_API_URL": self.zhipu_mcp_reader_api_url,
             "ZHIPU_MCP_ZREAD_API_URL": self.zhipu_mcp_zread_api_url,
             "ZHIPU_MCP_TIMEOUT_SECONDS": self.zhipu_mcp_timeout,
-            "JINA_API_KEY": self._mask_api_key(self.jina_api_key) if self.jina_api_key else "未配置",
+            "JINA_API_KEY": self._mask_api_key(self.jina_api_key) if self.jina_api_key else tr('未配置'),
             "JINA_READER_API_URL": self.jina_reader_api_url,
             "JINA_SEARCH_API_URL": self.jina_search_api_url,
             "JINA_RERANK_API_URL": self.jina_rerank_api_url,
             "JINA_RESPOND_WITH": self.jina_respond_with,
             "JINA_TIMEOUT_SECONDS": self.jina_timeout,
-            "primary_api_mode": "xai-responses" if self.xai_api_key else (openai_compatible_api_mode if self.openai_compatible_api_url and self.openai_compatible_api_key else "未配置"),
+            "primary_api_mode": "xai-responses" if self.xai_api_key else (openai_compatible_api_mode if self.openai_compatible_api_url and self.openai_compatible_api_key else tr('未配置')),
             "primary_api_mode_source": "config_file" if explicit_main_configured else "default",
             "config_file": str(self.config_file),
             "config_dir": str(self.config_file.parent),

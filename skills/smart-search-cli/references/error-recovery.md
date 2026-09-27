@@ -106,6 +106,14 @@ maximum number of logical calls, including the first call. It is a bounded
 safety budget, not a general retry switch. A result records
 `logical_attempts`, `logical_retry_used`, and `logical_retry_max_attempts`.
 
+## Agent timeout handling contract
+
+When the returned `error_type` is `timeout`, the bounded recovery command is
+`smart-search search ... --timeout 300 --extra-sources 1 --format json --output PATH`.
+This is not a shell-level `timeout` wrapper. `SMART_SEARCH_RETRY_*` settings are not the contract. If the bounded search still times out, switch to source-first fallback: run `exa-search --include-domains` with the original
+query, fetch the top 1-2 relevant URLs, and label the degraded result with
+`source_mode: "fallback"`.
+
 ## CLI and local invocation channel
 
 | Observed signature | Built-in behavior | Required handling |

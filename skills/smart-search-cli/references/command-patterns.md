@@ -5,7 +5,7 @@
 - Evidence files
 - Common commands
 - Short aliases
-- Error handling
+- Timeout retry policy
 - Guardrails
 
 ## Evidence Files
@@ -23,10 +23,10 @@ Deep Research planner output uses an explicit `--evidence-dir` when supplied, ot
 ## Common Commands
 
 ```powershell
-smart-search search "query" --extra-sources 5 --timeout 180 --max-try 5 --format json --output result.json
+smart-search search "query" --extra-sources 5 --timeout 300 --format json --output result.json
 smart-search search "query" --stream --format json
 smart-search diagnose openai-compatible --format markdown
-smart-search search "query" --platform "Reuters" --model "model-id" --extra-sources 3 --timeout 180 --max-try 5 --format json
+smart-search search "query" --platform "Reuters" --model "model-id" --extra-sources 3 --timeout 300 --format json
 smart-search search "nba战报" --format content
 smart-search search "query" --validation strict --fallback auto --providers auto --format json
 smart-search exa-search "query" --num-results 5 --search-type neural --include-text --include-highlights --include-domains docs.example.com developer.mozilla.org --format json
@@ -34,6 +34,11 @@ smart-search exa-similar "https://example.com/article" --num-results 5 --format 
 smart-search context7-library "react" "hooks" --format json
 smart-search context7-docs "/reactjs/react.dev" "useEffect cleanup" --format json
 smart-search zhipu-search "today China AI news" --count 5 --format json
+smart-search anysearch-domains security --format json
+smart-search anysearch-search "CVE-2024-3094" --domain security --sub-domain vuln --param type=cve --param value=CVE-2024-3094 --max-results 3 --format json
+smart-search anysearch-search "CVE-2024-3094" --domain security.cve --sub-domain-params '{"type":"legacy","value":"old"}' --param type=cve --param value=CVE-2024-3094 --format json
+smart-search anysearch-extract "https://example.com/source" --max-length 12000 --format json
+smart-search anysearch-batch "AAPL" "RAG papers" --max-results 2 --format json
 smart-search sciverse-catalog --collection papers --format json
 smart-search sciverse-search "transformer retrieval" --year-from 2020 --page-size 5 --format json
 smart-search sciverse-semantic "attention mechanism" --top-k 3 --retrieval hybrid --source-types web,pdf --format json
@@ -55,6 +60,7 @@ smart-search setup --non-interactive --zhipu-api-url "https://open.bigmodel.cn/a
 smart-search setup --non-interactive --openai-compatible-api-mode responses
 smart-search setup --non-interactive --openai-compatible-stream true
 smart-search setup --non-interactive --openai-compatible-fallback-models "model-a,model-b"
+smart-search setup --non-interactive --anysearch-api-url "https://api.anysearch.com/mcp" --anysearch-key "key"
 smart-search setup --non-interactive --sciverse-token "key" --sciverse-api-url "https://api.sciverse.space"
 smart-search setup --non-interactive --tavily-api-url "https://api.tavily.com" --tavily-key "key"
 smart-search --version
@@ -73,6 +79,8 @@ smart-search config set OPENAI_COMPATIBLE_STREAM "true" --format json
 smart-search config set SMART_SEARCH_TIMEOUT_SECONDS "180" --format json
 smart-search config set ANYSEARCH_API_URL "https://api.anysearch.com/mcp" --format json
 smart-search config set SCIVERSE_API_TOKEN "key" --format json
+smart-search config set ANYSEARCH_API_KEY "key" --format json
+smart-search config set ANYSEARCH_TIMEOUT_SECONDS "30" --format json
 smart-search config set SMART_SEARCH_INTENT_ROUTER "hybrid" --format json
 smart-search config set INTENT_EMBEDDING_API_URL "https://api.siliconflow.cn/v1/embeddings" --format json
 smart-search config set INTENT_EMBEDDING_API_KEY "key" --format json
@@ -93,6 +101,9 @@ smart-search config set TAVILY_API_URL "https://api.tavily.com" --format json
 smart-search config set TAVILY_ENABLED "false" --format json
 smart-search config set TAVILY_TIMEOUT_SECONDS "45" --format json
 smart-search config set FIRECRAWL_API_URL "https://api.firecrawl.dev/v2" --format json
+smart-search config set TINYFISH_API_KEY "key" --format json
+smart-search config set TINYFISH_SEARCH_API_URL "https://api.search.tinyfish.ai" --format json
+smart-search config set TINYFISH_FETCH_API_URL "https://api.fetch.tinyfish.ai" --format json
 smart-search model current --format json
 smart-search doctor --format json
 smart-search doctor --format markdown
@@ -124,12 +135,32 @@ smart-search sm --format json
 smart-search reg
 ```
 
-## Error Handling
+## Degraded Provider Recovery
 
-For any failed command, read
-[`error-recovery.md`](error-recovery.md) before choosing a retry, replay,
-fallback, diagnostic, or stop action. Add new status-specific or
-provider-specific guidance to that catalog, not to this command example file.
+When a search succeeds but `provider_notices` reports a degraded optional provider, or a provider attempt has `status=skipped`, the channel is on a persisted failure cooldown rather than being retried on every call.
+
+1. Run `smart-search providers status --format json` to see the remembered `error_type`, `error`, and `cooldown_remaining_seconds`.
+2. For `auth_error` or `config_error`, fix the credential with `smart-search config set` or `smart-search setup`. Re-keying clears the cooldown automatically.
+3. For a transient failure, run `smart-search doctor --format json`; a successful probe clears the record.
+4. Use `smart-search providers reset PROVIDER` to force an immediate retry, or `smart-search providers reset` to clear every cooldown.
+5. Do not work around a cooled-down provider with a different-capability provider; same-capability fallback already covers the query.
+
+## Timeout Retry Policy
+
+When `smart-search search` returns `ok: false` with `error_type: "timeout"`, treat it as a retryable terminal main-search deadline, not as a terminal research failure. Inspect `timeout_phase` and `phase_attempts` first: optional-phase timeout with `partial_success=true` already retains usable primary content.
+
+1. Retry up to 3 total attempts with `--timeout 300`, waiting about 5 seconds between attempts.
+2. Use `--format json` and `--output PATH` for each attempt; after each attempt, inspect the saved JSON and stop on the first `"ok": true`.
+3. Use `--extra-sources 1` during retry attempts to keep Tavily/Firecrawl overhead small.
+4. `SMART_SEARCH_TIMEOUT_SECONDS` supplies the persistent 300-second default; use the CLI's `--timeout` only for an explicit one-call override. Do not wrap `smart-search` in a shell-level `timeout` command because shell termination can prevent structured failure JSON.
+5. Do not rely on `SMART_SEARCH_RETRY_*` settings; search command timeouts are surfaced by the CLI result contract and should be handled by the agent workflow.
+6. If all attempts time out, fall back to source-first evidence:
+   - Run `exa-search` with the original query.
+   - Run `exa-search --include-domains` when likely official domains are known.
+   - `fetch` the top 1-2 relevant URLs before making claim-level statements.
+   - Mark the final answer as `source_mode: "fallback"` or clearly state that the answer was assembled from fetched sources rather than generated by `search`.
+
+Agent timeout handling contract: `smart-search search ... --timeout 300 --extra-sources 1 --format json --output PATH` is the retry shape; it is not a shell-level `timeout` wrapper. `SMART_SEARCH_RETRY_*` settings are not the contract for this path. After repeated main-search timeout failures, switch to source-first fallback with `exa-search`, `exa-search --include-domains`, and fetched evidence. Final answers assembled through that fallback should explicitly label the evidence mode, for example `source_mode: "fallback"` or equivalent prose.
 
 ## Guardrails
 
@@ -140,5 +171,6 @@ provider-specific guidance to that catalog, not to this command example file.
 - Prefer `exa-search --include-domains` for official documentation when likely domains are known.
 - Do not expose API keys. Treat `doctor` output as safe only because it is expected to mask secrets.
 - In this CLI-first workflow, native `web_search` is disabled unless the user explicitly configures another approved route.
+- If `doctor` or a command fails, report the failure and recovery steps; do not silently fall back to another web-search route.
 - Do not use legacy MCP tool names in prompts, notes, or generated instructions for this workflow.
 - Treat key rotation as a hard safety gate when previous key values were pasted into chat or logs.

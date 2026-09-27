@@ -25,7 +25,11 @@ The router output keeps old fields such as `docs_intent`, `zh_current_intent`, `
 
 Intent router rules:
 
-- `SMART_SEARCH_INTENT_ROUTER=hybrid|rules|off`, default `hybrid`. `SMART_SEARCH_INTENT_ROUTER` accepts `hybrid`, `rules`, and `off`.
+- `SMART_SEARCH_INTENT_ROUTER=hybrid|rules|off|jev`, default `hybrid`. `SMART_SEARCH_INTENT_ROUTER` accepts `hybrid`, `rules`, `off`, and `jev`.
+- Jev is the recommended optional mode; users opt in with `TYPESAFE_API_KEY` and at least one configured retrieval channel. It selects allowed operations using capabilities and existing provider preferences, then judges evidence before a new query, another engine, or page reading. Missing/unavailable judgments use explicit fixed-capability fallback when allowed, without the legacy remote classifier. `SMART_SEARCH_RESEARCH_DISABLED_PROVIDERS` and `--providers` restrict its candidates; Sciverse remains explicit-only.
+- `SMART_SEARCH_JEV_FILTER_RESULTS=true` enables conservative binary passage filtering after retrieval. Failures retain original evidence; changed content is reassessed before claiming sufficiency. `SMART_SEARCH_JEV_SYNTHESIZE=false` is the default: no mandatory main-model synthesis. `SMART_SEARCH_JEV_MAX_ROUNDS=3` and `SMART_SEARCH_JEV_MAX_CHANNELS=3` bound execution within `--timeout`.
+- `SMART_SEARCH_JEV_SYNTHESIZE` accepts `true`, `false`, and `auto`. Auto asks Jev after optional filtering whether the retained evidence benefits from main-model synthesis. No allowed main model or a failed judgment returns evidence directly. `synthesis` reports the mode, decision probability, execution status and skip reason.
+- In Jev mode `search` and `research` return evidence with assessment/filter/usage telemetry. Research retains its offline plan, budget tiers, reports, and fetched/read-only citations. `route --router-mode jev` lists local candidates without TypeSafe; `--remote` explicitly enables a potentially billable judgment. `deep` stays an offline planner.
 - Optional semantic routing uses `INTENT_EMBEDDING_API_URL`, `INTENT_EMBEDDING_API_KEY`, `INTENT_EMBEDDING_MODEL`, `INTENT_EMBEDDING_THRESHOLD`, and `INTENT_EMBEDDING_MARGIN`.
 - Normal users should use the Qwen3-Embedding-8B preset: SiliconFlow endpoint `https://api.siliconflow.cn/v1/embeddings`, model `Qwen/Qwen3-Embedding-8B`, threshold `0.475`, and margin `0.053`.
 - `smart-search setup` auto-fills threshold/margin when Qwen3-Embedding-8B is selected and no explicit values are already configured.
@@ -58,14 +62,25 @@ Intent router rules:
 - Same-capability fallback is allowed; cross-capability fallback is not. Context7 is not used for unrelated broad web queries, and page extraction providers are not used as docs search providers.
 - `TAVILY_ENABLED=false` removes Tavily from registered `web_search` and `web_fetch` routes even when its key is present. Direct Tavily search/extract calls, `map`, `doctor`, and smoke must make no Tavily network request; `map` reports a local configuration error. Firecrawl remains independently configured and all fallback stays within its capability.
 - `main_search`: xAI Responses first for Grok/xAI, then OpenAI-compatible answer fallback when that peer provider is separately configured and `--fallback auto` is active.
-- `web_search`: Zhipu Web Search API first when routed in, then Zhipu Coding Plan MCP `web_search_prime`, then Tavily / Firecrawl source search when configured.
+- `web_search`: Zhipu Web Search API first when routed in, then Zhipu Coding Plan MCP `web_search_prime`, then Tavily / Firecrawl / TinyFish source search when configured.
 - `docs_search`: Context7 first for library/API/docs intent, then Exa for official-domain, paper, product-page, trusted-site, or low-noise supplemental discovery.
 - Automatic Context7 selection has no preferred library-id map. A candidate needs normalized query-subject overlap in its title or id; title/id exact and multi-token matches dominate, while description/trust/benchmark only break ties. When no candidate is eligible, Context7 is recorded as empty and can fall through to same-capability Exa. Explicit `context7-library` output and explicit `context7-docs LIBRARY_ID` remain unchanged.
-- Fetch capability: Tavily first, then Jina Reader with `JINA_API_KEY`, then Zhipu Coding Plan MCP `webReader`, then Firecrawl.
+- Fetch capability: Tavily first, then Jina Reader with `JINA_API_KEY`, then Zhipu Coding Plan MCP `webReader`, then Firecrawl, then TinyFish.
 - `search` calls Tavily and/or Firecrawl only when `--extra-sources N` is greater than 0.
 - With both Tavily and Firecrawl configured, `search --extra-sources N` splits extra sources between them, with Tavily receiving about 60% and Firecrawl the rest.
 - `fetch` and known-URL `search "https://..."` use the same fetch fallback chain.
-- `fetch` tries Tavily first, then Jina with `JINA_API_KEY`, then Zhipu Coding Plan MCP Reader, then Firecrawl.
+- `fetch` tries Tavily first, then Jina with `JINA_API_KEY`, then Zhipu Coding Plan MCP Reader, then Firecrawl, then TinyFish.
+
+TinyFish:
+
+- `TINYFISH_API_KEY` is optional and registers TinyFish for both `web_search` and `web_fetch`. It never satisfies `main_search` or `docs_search`, and it never reorders Tavily, Jina, Zhipu MCP Reader, or Firecrawl.
+- `TINYFISH_SEARCH_API_URL` defaults to `https://api.search.tinyfish.ai` and is called as `GET ?query=...`; `TINYFISH_FETCH_API_URL` defaults to `https://api.fetch.tinyfish.ai` and is called as `POST` with `{"urls": [url], "format": "markdown"}`.
+- Both endpoints send `X-API-Key`, not `Authorization: Bearer`. Never log or echo the key.
+- Search results normalize `snippet` to `description`, `site_name` to `source`, and `date` to `published_date`. An empty result set is a successful empty response, not a failure.
+- Fetch reads `results[0].text`; `errors[]` entries are surfaced as `provider_error` with the upstream message. A payload with neither results nor errors is `provider_error`, and a non-object payload is `parse_error`.
+- Challenge pages such as `Checking if the site connection is secure` are reported as `quality_error` so same-capability fallback can continue.
+- `401`/403 map to `auth_error`, `408` to `timeout`, `429` to `rate_limited`, `5xx` to `network_error`, and `400`/422 to `parameter_error`.
+- `--extra-sources N` reaches TinyFish only when neither Tavily nor Firecrawl is configured; with Tavily or Firecrawl present, TinyFish stays in the web_search fallback chain instead of splitting the extra-source budget.
 - `map` currently uses Tavily only.
 - `exa-search` and `exa-similar` use Exa only.
 - `context7-library` and `context7-docs` use Context7 only.
@@ -138,7 +153,7 @@ OpenAI-compatible streaming:
 - `OPENAI_COMPATIBLE_STREAM` defaults to `false` and accepts `true`, `1`, or `yes` as true.
 - `search --stream` means "prefer stream first"; stream empty/timeout/retryable protocol failures fall back to the same provider/model with `stream=false`.
 - `search --no-stream` forces `stream=false` for the current invocation.
-- `SMART_SEARCH_TIMEOUT_SECONDS` defines one 180-second default monotonic `search` budget. Hybrid remote routing shares a cap while reserving main-model capacity; explicit `search --timeout` overrides the saved value for one invocation.
+- `SMART_SEARCH_TIMEOUT_SECONDS` defines one 300-second default monotonic `search` budget, and the main-search provider uses the whole remaining budget as its read ceiling rather than a separate fixed cap. Hybrid remote routing shares a cap while reserving main-model capacity (two thirds of the budget, up to 240 seconds); explicit `search --timeout` overrides the saved value for one invocation.
 - `OPENAI_COMPATIBLE_FALLBACK_MODELS` is an optional comma-separated ordered list. It is fail-over after a hard primary-model failure, not a time slice. The current candidate keeps the remaining shared main-search budget; extra fallback models must not shrink that budget. `--fallback off` or `--model MODEL` disables this model fallback for the invocation.
 - `timeout_phase`, `phase_attempts`, elapsed/remaining deadline values, and `partial_success` are scheduler telemetry. Optional extra/supplemental timeout retains primary content and completed sources; strict evidence validation still reports insufficient evidence when no sources remain.
 - OpenAI-compatible attempts may include `model`, `transport`, `fallback_from_transport`, `fallback_from_model`, and `breaker_state`. `transport_fallback_used` records stream-to-non-stream recovery separately from provider/model `fallback_used`.
@@ -149,6 +164,14 @@ Exa domain filters:
 - `--include-domains` and `--exclude-domains` accept comma-separated or whitespace-separated domains.
 - Both `--include-domains docs.python.org,developer.mozilla.org` and `--include-domains docs.python.org developer.mozilla.org` normalize to the same Exa domain list.
 - This normalization is intentional for Windows PowerShell, where an unquoted comma expression can be forwarded through `.ps1` wrappers as a space-separated value.
+
+## Provider Failure Cooldown
+
+- Same-capability fallback assumes a failing provider is worth retrying. A provider whose key is revoked, quota is exhausted, or endpoint is down is not, so its failures are persisted in `provider_health.json` and the provider is skipped for `SMART_SEARCH_PROVIDER_COOLDOWN_SECONDS` instead of being called again on every invocation.
+- Hard failures (`auth_error`, `config_error`) open the cooldown immediately for four cooldown windows and are not probed. Soft failures need `SMART_SEARCH_PROVIDER_FAILURE_THRESHOLD` consecutive failures within one window, and remain probeable once per window when no healthy provider is left in the chain.
+- A skipped provider appears in `provider_attempts` with `status=skipped`, the remembered `error_type`, and a `provider_health` block. It is not a silent drop, and it does not change same-capability fallback order.
+- Zhipu reports several failures inside an HTTP `200` body. Those payloads are classified (`auth_error`, `rate_limited`, `provider_error`) instead of being reported as an empty result set, so a dead Zhipu channel is diagnosable and coolable.
+- Recovery paths: `smart-search providers reset PROVIDER`, a credential change through `smart-search config set`, a successful `smart-search doctor` probe, or waiting out the cooldown.
 
 ## Provider Output Details
 

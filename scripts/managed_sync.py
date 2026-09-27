@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -22,6 +23,8 @@ PACKAGED_SKILL = REPO_ROOT / "src" / "smart_search" / "assets" / "skills" / "sma
 EXCLUDED_SUFFIXES = {".pyc"}
 EXCLUDED_NAMES = {"__pycache__", "config.json", ".env"}
 MANAGED_BRANCH = "lwj_dev"
+DELIVERY_ARTIFACT_SCHEMA = "jason-agent-infra.delivery-artifacts.v1"
+COMMIT_OID = re.compile(r"[0-9a-f]{40}\Z")
 
 
 def _git(*args: str) -> str:
@@ -29,6 +32,7 @@ def _git(*args: str) -> str:
         ["git", "-C", str(REPO_ROOT), *args],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=True,
     )
     return result.stdout.strip()
@@ -90,6 +94,111 @@ def inspect() -> dict:
     }
 
 
+def downstream_handoff() -> dict:
+    """Ask the Skills owner to inspect its committed common package provenance."""
+    payload = {"schema": DELIVERY_ARTIFACT_SCHEMA, "status": "handoff_required",
+               "errors": ["SS_SYNC_DOWNSTREAM_HANDOFF_REQUIRED"], "artifacts": []}
+    workspace_value = os.environ.get("AGENT_INFRA_WORKSPACE_ROOT")
+    infra_value = os.environ.get("AGENT_INFRA_REPOSITORY_ROOT")
+    if not workspace_value or not infra_value:
+        payload["next_step_argv"] = ["agent-infra", "sync", "project", "smartsearch",
+                                     "--through", "downstream", "--workspace-root", "ABSOLUTE_PATH"]
+        return payload
+    workspace = Path(workspace_value)
+    infra = Path(infra_value)
+    consumer_root: Path | None = None
+    try:
+        registry = json.loads((infra / "manifests/workspace-repositories.json").read_text(encoding="utf-8"))
+        consumer = registry["skills"]
+        common = consumer["common"]
+        if common["branch"] != "main":
+            raise ValueError("Skills common registry branch is not main")
+        target = Path(common["target"])
+        if target.is_absolute() or ".." in target.parts:
+            raise ValueError("Skills common registry target is invalid")
+        consumer_root = workspace / target
+        helper = consumer_root / "scripts/inspect_upstream_delivery.py"
+        if not helper.is_file():
+            payload["next_step_argv"] = ["agent-infra", "sync", "repositories",
+                                         "--workspace-root", str(workspace)]
+            raise FileNotFoundError("Skills downstream inspection helper is missing")
+        argv = [sys.executable, str(helper), "smart-search-cli",
+                "--source-checkout", str(REPO_ROOT),
+                "--consumer-repo-root", str(consumer_root),
+                "--consumer-repository-url", consumer["repository"]]
+        completed = subprocess.run(argv, cwd=REPO_ROOT, capture_output=True, text=True,
+                                   encoding="utf-8", check=False, timeout=120)
+        if completed.returncode != 0:
+            try:
+                report = json.loads(completed.stdout)
+            except ValueError as error:
+                raise RuntimeError(
+                    "Skills inspection helper returned no valid JSON; check its Python/PyYAML runtime"
+                ) from error
+            if not isinstance(report, dict):
+                raise TypeError("Skills inspection helper returned a non-object report")
+            reason = str(report.get("error", "Skills inspection failed"))
+            if "selected source artifact is not adopted" in reason:
+                updater = consumer_root / "scripts/update_global_skill.py"
+                if not updater.is_file():
+                    raise FileNotFoundError("Skills package updater is missing")
+                payload["next_step_argv"] = [
+                    sys.executable, str(updater), "smart-search-cli",
+                    "--repo-root", str(consumer_root), "--source-checkout", str(REPO_ROOT),
+                    "--target", _git("rev-parse", "HEAD"),
+                ]
+            else:
+                payload["next_step_argv"] = ["git", "-C", str(consumer_root),
+                                             "status", "--short", "--branch"]
+            raise RuntimeError("Skills inspection: " + reason)
+        inspected = json.loads(completed.stdout)
+        if not isinstance(inspected, dict):
+            raise TypeError("Skills inspection helper returned a non-object report")
+        if inspected.get("status") != "committed" or inspected.get("producer_commit") != _git("rev-parse", "HEAD"):
+            raise ValueError("Skills inspection did not confirm this producer commit")
+        expected_path = SOURCE_SKILL.relative_to(REPO_ROOT).as_posix()
+        if inspected.get("artifact_path") != expected_path or inspected.get("artifact_name") != "smart-search-cli":
+            raise ValueError("Skills inspection selected a different source artifact")
+        consumer_commit = inspected.get("consumer_commit")
+        source_commit = inspected.get("consumer_source_commit")
+        relation = inspected.get("source_relation")
+        if (not isinstance(consumer_commit, str) or not COMMIT_OID.fullmatch(consumer_commit)
+                or not isinstance(source_commit, str) or not COMMIT_OID.fullmatch(source_commit)
+                or not isinstance(relation, str)
+                or relation not in {"exact_current_pin", "artifact_equivalent"}
+                or (relation == "exact_current_pin") != (source_commit == inspected["producer_commit"])):
+            raise ValueError("Skills inspection returned invalid committed consumer provenance")
+        version = json.loads(_git("show", "HEAD:package.json"))["version"]
+        if not isinstance(version, str) or not version:
+            raise ValueError("committed Smart Search package version is missing")
+        artifact = {
+            "producer_repository": "smartsearch",
+            "producer_commit": inspected["producer_commit"],
+            "artifact_path": inspected["artifact_path"],
+            "artifact_name": inspected["artifact_name"],
+            "artifact_version": version,
+            "consumer_repository": "skills-common",
+            "consumer_commit": inspected["consumer_commit"],
+            "consumer_source_commit": inspected["consumer_source_commit"],
+            "source_relation": inspected["source_relation"],
+            "verification_level": "committed",
+        }
+        payload["artifacts"] = [artifact]
+        payload["errors"] = []
+        payload["status"] = "completed"
+        return payload
+    except (OSError, ValueError, TypeError, KeyError, RuntimeError, UnicodeError,
+            subprocess.TimeoutExpired) as error:
+        payload["reason"] = str(error)[:300]
+        if "next_step_argv" not in payload:
+            payload["next_step_argv"] = (
+                ["git", "-C", str(consumer_root), "status", "--short", "--branch"]
+                if consumer_root is not None
+                else ["agent-infra", "sync", "repositories", "--workspace-root", str(workspace)]
+            )
+        return payload
+
+
 SEARCH_QUERY = "RFC 9110 HTTP Semantics"
 
 
@@ -133,6 +242,8 @@ def verify_live() -> dict:
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            check=False,
             timeout=240,
         )
         result["probe"] = "doctor_once"
@@ -161,6 +272,8 @@ def verify_live() -> dict:
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            check=False,
             timeout=180,
         )
         result["probe"] = "doctor_once+search_once"
@@ -181,12 +294,13 @@ def verify_live() -> dict:
 
 
 def main() -> int:
-    if len(sys.argv) < 2 or sys.argv[1] not in {"inspect", "verify-live"}:
-        print(json.dumps({"error": "usage: managed_sync.py inspect|verify-live"}))
+    if len(sys.argv) < 2 or sys.argv[1] not in {"inspect", "downstream-handoff", "verify-live"}:
+        print(json.dumps({"error": "usage: managed_sync.py inspect|downstream-handoff|verify-live"}))
         return 2
-    payload = inspect() if sys.argv[1] == "inspect" else verify_live()
+    payload = (inspect() if sys.argv[1] == "inspect" else
+               downstream_handoff() if sys.argv[1] == "downstream-handoff" else verify_live())
     print(json.dumps(payload, indent=2, sort_keys=True))
-    return 0 if payload.get("status") in {"ok", "live"} else 1
+    return 0 if payload.get("status") in {"ok", "completed", "live"} else 1
 
 
 if __name__ == "__main__":

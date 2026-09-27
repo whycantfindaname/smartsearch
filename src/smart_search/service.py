@@ -1,3 +1,4 @@
+from .i18n import source_message
 import asyncio
 import hashlib
 import inspect
@@ -12,7 +13,10 @@ from urllib.parse import urlparse
 
 import httpx
 
+from . import jev_search
 from .config import config
+from . import activity
+from .jev import JevClient, noul
 from .intent_router import (
     CAPABILITY_UTTERANCES,
     CURRENT_INTENT_KEYWORDS as ROUTER_CURRENT_INTENT_KEYWORDS,
@@ -45,6 +49,7 @@ from .providers.openai_compatible import (
     openai_compatible_endpoint,
 )
 from .providers.sciverse import SciverseProvider
+from .providers.tinyfish import TinyFishFetchProvider, TinyFishSearchProvider
 from .providers.xai_responses import XAIRequestHardTimeout, XAIRequestOutcomeUnknown, XAIResponsesSearchProvider
 from .providers.zhipu import ZhipuWebSearchProvider
 from .providers.zhipu_mcp import ZhipuMCPProvider
@@ -65,6 +70,14 @@ from .research_providers import (
     capability_inventory as provider_research_capability_inventory,
     run_deep_provider_agents,
 )
+from .provider_errors import (
+    APPROVED_PROVIDER_ERROR_TYPES,
+    ProviderCallError,
+    classify_provider_exception,
+    provider_call_error,
+    sanitize_provider_error_message,
+)
+from .provider_health import provider_fingerprint, provider_health
 from .sciverse_schema import (
     SciverseParameterError,
     build_sciverse_meta_search_payload,
@@ -80,11 +93,10 @@ from .utils import search_prompt
 _AVAILABLE_MODELS_CACHE: dict[tuple[str, str], list[str]] = {}
 _AVAILABLE_MODELS_LOCK = asyncio.Lock()
 SOURCE_PROVENANCE_WARNING = (
-    "extra_sources are retrieved in parallel and are not automatically used to verify generated content; "
-    "use fetch on key URLs for claim-level evidence."
+    source_message('extra_sources are retrieved in parallel and are not automatically used to verify generated content; use fetch on key URLs for claim-level evidence.')
 )
 MINIMUM_PROFILE_ERROR = (
-    "最低配置不满足：必须至少配置 main_search、docs_search、web_fetch 三类能力各一个 provider。"
+    source_message('最低配置不满足：必须至少配置 main_search、docs_search、web_fetch 三类能力各一个 provider。')
 )
 OPENAI_COMPATIBLE_DIAGNOSE_COMMAND = "smart-search diagnose openai-compatible --format markdown"
 DOCS_INTENT_KEYWORDS = ROUTER_DOCS_INTENT_KEYWORDS
@@ -191,10 +203,10 @@ RESEARCH_JS_HEAVY_KEYWORDS = {
 RESEARCH_PDF_KEYWORDS = {"pdf", "arxiv", "论文", "paper", ".pdf"}
 RESEARCH_PROFILE_ORDER = {
     "main_search": ["xai-responses", "openai-compatible"],
-    "web_search": ["zhipu", "zhipu-mcp", "tavily", "firecrawl"],
+    "web_search": ["zhipu", "zhipu-mcp", "tavily", "firecrawl", "tinyfish"],
     "docs_search": ["context7", "exa"],
-    "web_fetch": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl"],
-    "vertical_search": [],
+    "web_fetch": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl", "tinyfish"],
+    "vertical_search": ["anysearch"],
     "site_map": ["tavily"],
     "synthesis": ["main-search"],
 }
@@ -395,6 +407,16 @@ PROVIDER_PROFILES: dict[str, dict[str, Any]] = {
         "quality_filters": ["non-empty normalized result", "non-empty extracted content"],
         "route_reasons": ["JS-heavy fetch", "dynamic/browser-like extraction", "robust fetch fallback"],
     },
+    "tinyfish": {
+        "capability": "web_search",
+        "capabilities": ["web_search", "web_fetch"],
+        "strengths": ["broad web discovery", "clean markdown extraction", "news and locale hints", "research-paper domain type"],
+        "exclusions": ["docs semantic replacement", "browser automation"],
+        "fallback_group": "web_search/web_fetch",
+        "minimum_profile_role": "",
+        "quality_filters": ["non-empty normalized result", "non-empty extracted content", "challenge page rejection"],
+        "route_reasons": ["broad source discovery", "known URL extraction"],
+    },
     "sciverse": {
         "capability": "vertical_search",
         "strengths": ["academic literature", "semantic paper search", "citation relations", "paper content snippets"],
@@ -425,7 +447,7 @@ MAIN_SEARCH_PROVIDER_ALIASES = {
 MODEL_BREAKER_FAILURE_THRESHOLD = 2
 MODEL_BREAKER_COOLDOWN_SECONDS = 600.0
 _OPENAI_COMPATIBLE_MODEL_BREAKERS: dict[tuple[str, str, str], dict[str, Any]] = {}
-MAIN_SEARCH_RESERVE_CAP_SECONDS = 120.0
+MAIN_SEARCH_RESERVE_CAP_SECONDS = 240.0
 
 
 class SearchBudget:
@@ -433,7 +455,7 @@ class SearchBudget:
 
     def __init__(self, total_seconds: float, started_at: float | None = None):
         if not math.isfinite(total_seconds) or total_seconds <= 0:
-            raise ValueError("Search timeout must be a positive finite number.")
+            raise ValueError(source_message('Search timeout must be a positive finite number.'))
         self.total_seconds = float(total_seconds)
         self.started_at = time.monotonic() if started_at is None else float(started_at)
         self.deadline = self.started_at + self.total_seconds
@@ -487,6 +509,7 @@ class SearchExecutionState:
         if details:
             attempt.update(details)
         self.phase_attempts.append(attempt)
+        activity.progress(f"{phase}:{status}")
         if status == "timeout" and phase not in self._timed_out_phases:
             self._timed_out_phases.append(phase)
         return attempt
@@ -523,9 +546,9 @@ def _resolve_search_timeout(timeout_seconds: float | None) -> float:
     try:
         value = float(timeout_seconds)
     except (TypeError, ValueError):
-        raise ValueError(f"Invalid --timeout: {timeout_seconds}. Expected a positive finite number.")
+        raise ValueError(source_message('Invalid --timeout: {0}. Expected a positive finite number.', timeout_seconds))
     if not math.isfinite(value) or value <= 0:
-        raise ValueError(f"Invalid --timeout: {timeout_seconds}. Expected a positive finite number.")
+        raise ValueError(source_message('Invalid --timeout: {0}. Expected a positive finite number.', timeout_seconds))
     return value
 
 
@@ -548,6 +571,7 @@ async def _run_budgeted_phase(
         execution.record(phase, "skipped", phase_start, 0.0, timeout_reason, details)
         return False, None
     try:
+        activity.progress(phase)
         result = await asyncio.wait_for(operation(), timeout=available)
     except asyncio.TimeoutError:
         execution.record(phase, "timeout", phase_start, available, timeout_reason, details)
@@ -657,6 +681,7 @@ def _empty_search_result(
         "routing_decision": {},
         "providers_used": [],
         "provider_attempts": [],
+        "provider_notices": [],
         "fallback_used": False,
         "validation_level": "",
         "timeout_seconds": None,
@@ -684,6 +709,7 @@ def _attempt(
     error: str = "",
     extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    activity.progress(f"{capability}:{status}", provider, (extra or {}).get("model", ""), error_type)
     data = {
         "capability": capability,
         "provider": provider,
@@ -703,6 +729,13 @@ def _attempt_from_exception(capability: str, provider: str, start: float, exc: B
     return _attempt(capability, provider, "error", start, error_type=error_type, error=error)
 
 
+def _attempt_with_health(capability: str, provider: str, start: float, exc: BaseException) -> dict[str, Any]:
+    """Record a raised optional-provider failure in persisted health, then report it."""
+    error_type, error = classify_provider_exception(exc)
+    health_extra = _record_provider_result(provider, "error", error_type, error)
+    return _attempt(capability, provider, "error", start, error_type=error_type, error=error, extra=health_extra)
+
+
 def _attempt_status_for_result(data: dict[str, Any]) -> str:
     return "error" if data.get("error_type") else "empty"
 
@@ -712,7 +745,175 @@ def _tavily_is_enabled() -> bool:
 
 
 def _tavily_disabled_message() -> str:
-    return "Tavily is disabled by TAVILY_ENABLED=false. No Tavily network request was made."
+    return source_message('Tavily is disabled by TAVILY_ENABLED=false. No Tavily network request was made.')
+
+
+PROVIDER_CREDENTIAL_SOURCES: dict[str, Any] = {
+    "xai-responses": lambda: (config.xai_api_key, config.xai_api_url),
+    "openai-compatible": lambda: (config.openai_compatible_api_key, config.openai_compatible_api_url),
+    "zhipu": lambda: (config.zhipu_api_key, config.zhipu_api_url),
+    "zhipu-mcp": lambda: (config.zhipu_mcp_api_key, config.zhipu_mcp_search_api_url),
+    "zhipu-mcp-reader": lambda: (config.zhipu_mcp_api_key, config.zhipu_mcp_reader_api_url),
+    "tavily": lambda: (config.tavily_api_key, config.tavily_api_url),
+    "firecrawl": lambda: (config.firecrawl_api_key, config.firecrawl_api_url),
+    "tinyfish": lambda: (config.tinyfish_api_key, config.tinyfish_search_api_url, config.tinyfish_fetch_api_url),
+    "exa": lambda: (config.exa_api_key, config.exa_base_url),
+    "context7": lambda: (config.context7_api_key, config.context7_base_url),
+    "jina": lambda: (config.jina_api_key, config.jina_reader_api_url),
+    "anysearch": lambda: (config.anysearch_api_key, config.anysearch_api_url),
+    "sciverse": lambda: (config.sciverse_api_token, config.sciverse_api_url),
+}
+PROVIDER_COOLDOWN_HINT = (
+    source_message('Run `smart-search providers status` for detail. Fixing the credential or `smart-search providers reset PROVIDER` retries it immediately.')
+)
+
+
+def _provider_fingerprint(provider: str) -> str:
+    """Fingerprint a provider's credentials so re-keying clears its cooldown."""
+    source = PROVIDER_CREDENTIAL_SOURCES.get(provider)
+    if source is None:
+        return ""
+    return provider_fingerprint(*source())
+
+
+def _provider_health_status(provider: str) -> dict[str, Any]:
+    return provider_health.status(provider, _provider_fingerprint(provider))
+
+
+def _cooldown_attempt_extra(state: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "provider_health": {
+            "state": state.get("state", "closed"),
+            "consecutive_failures": state.get("consecutive_failures", 0),
+            "cooldown_remaining_seconds": state.get("cooldown_remaining_seconds", 0.0),
+            "hard_failure": bool(state.get("hard_failure")),
+            "probe": bool(state.get("probe")),
+        }
+    }
+
+
+def _plan_provider_health(capability: str, providers: list[str]) -> tuple[list[str], list[dict]]:
+    """Split a capability chain into providers worth calling and cooled-down skips.
+
+    A provider that keeps failing is skipped instead of being retried on every
+    run. When the whole chain is cooling, one soft failure is still probed so a
+    recovered provider returns on its own; a hard failure (bad key, bad config)
+    waits for a credential change or an explicit reset.
+    """
+    if not providers or not provider_health.enabled:
+        return providers, []
+
+    states = {provider: _provider_health_status(provider) for provider in providers}
+    runnable = [provider for provider in providers if states[provider]["state"] != "cooldown"]
+    if not runnable:
+        probe = next((provider for provider in providers if not states[provider]["hard_failure"]), "")
+        if probe:
+            states[probe] = {**states[probe], "probe": True}
+            runnable = [probe]
+
+    skipped = []
+    for provider in providers:
+        if provider in runnable:
+            continue
+        state = states[provider]
+        skipped.append(
+            _attempt(
+                capability,
+                provider,
+                "skipped",
+                time.time(),
+                error_type=state.get("error_type", ""),
+                error=state.get("error", "") or "provider is on failure cooldown",
+                extra=_cooldown_attempt_extra(state),
+            )
+        )
+    return runnable, skipped
+
+
+def _record_provider_result(
+    provider: str,
+    status: str,
+    error_type: str = "",
+    error: str = "",
+) -> dict[str, Any]:
+    """Update persisted health for one optional-provider call.
+
+    ``empty`` is not a failure: a provider that answers with no results is
+    working, it just had nothing to say about this query.
+    """
+    fingerprint = _provider_fingerprint(provider)
+    if status == "ok":
+        provider_health.record_success(provider, fingerprint)
+        return {}
+    if status != "error" and not error_type:
+        return {}
+    state = provider_health.record_failure(provider, fingerprint, error_type, error)
+    return _cooldown_attempt_extra(state) if state.get("state") == "cooldown" else {}
+
+
+def _provider_notices(attempts: list[dict]) -> list[dict[str, Any]]:
+    """Collapse optional-provider failures into one deduplicated notice each."""
+    notices: dict[str, dict[str, Any]] = {}
+    for attempt in attempts:
+        provider = str(attempt.get("provider") or "")
+        status = attempt.get("status")
+        capability = str(attempt.get("capability") or "")
+        if not provider or capability == "main_search" or status not in {"error", "skipped"}:
+            continue
+        health = attempt.get("provider_health") or {}
+        cooling = health.get("state") == "cooldown"
+        notice = {
+            "provider": provider,
+            "capability": capability,
+            "status": "cooldown" if cooling else "failed",
+            "error_type": str(attempt.get("error_type") or ""),
+            "error": str(attempt.get("error") or ""),
+            "cooldown_remaining_seconds": float(health.get("cooldown_remaining_seconds") or 0.0),
+            "hint": PROVIDER_COOLDOWN_HINT if cooling else "",
+        }
+        previous = notices.get(provider)
+        if previous is None or (notice["status"] == "cooldown" and previous["status"] != "cooldown"):
+            notices[provider] = notice
+    return list(notices.values())
+
+
+def reset_provider_health(providers: list[str] | None = None) -> dict[str, Any]:
+    """Clear persisted provider cooldowns so the next run retries them."""
+    known = sorted(PROVIDER_CREDENTIAL_SOURCES)
+    if providers:
+        unknown = [provider for provider in providers if provider not in known]
+        if unknown:
+            return {
+                "ok": False,
+                "error_type": "parameter_error",
+                "error": source_message('Unknown provider: {0}. Known providers: {1}', ", ".join(unknown), ", ".join(known)),
+                "known_providers": known,
+                "cleared": [],
+            }
+    cleared = provider_health.reset(providers)
+    return {"ok": True, "error_type": "", "error": "", "cleared": cleared, "known_providers": known}
+
+
+def provider_health_status() -> dict[str, Any]:
+    """Report the persisted cooldown state for every optional provider."""
+    configured = [provider for provider in sorted(PROVIDER_CREDENTIAL_SOURCES) if _provider_configured(provider)]
+    tracked = {state["provider"]: state for state in provider_health.snapshot()}
+    providers = []
+    for provider in configured:
+        state = tracked.pop(provider, None) or _provider_health_status(provider)
+        providers.append({**state, "configured": True})
+    for provider, state in tracked.items():
+        providers.append({**state, "configured": False})
+    cooling = [state["provider"] for state in providers if state["state"] == "cooldown"]
+    return {
+        "ok": True,
+        "enabled": provider_health.enabled,
+        "cooldown_seconds": provider_health.cooldown_seconds,
+        "failure_threshold": provider_health.failure_threshold,
+        "store_path": str(provider_health.path),
+        "providers": providers,
+        "cooldown_providers": cooling,
+    }
 
 
 def _openai_model_breaker_key(api_url: str, model: str, api_mode: str = "chat-completions") -> tuple[str, str, str]:
@@ -831,25 +1032,25 @@ def _openai_fallback_model_inventory(
     if not configured:
         return {
             "status": "not_configured",
-            "message": "未配置 OpenAI-compatible 兜底模型",
+            "message": source_message('未配置 OpenAI-compatible 兜底模型'),
             "fallback_models": [],
             "available_models": available,
             "unknown_fallback_models": [],
             "known_fallback_models": [],
             "timeout_policy": OPENAI_COMPATIBLE_TIMEOUT_POLICY,
-            "timeout_policy_message": "主模型使用剩余共享 main-search 预算；只有硬失败后才接力兜底模型",
+            "timeout_policy_message": source_message('主模型使用剩余共享 main-search 预算；只有硬失败后才接力兜底模型'),
             "primary_model": primary_model,
         }
     if not available:
         return {
             "status": "skipped",
-            "message": "无法对照 /models 清单，已跳过兜底模型检查",
+            "message": source_message('无法对照 /models 清单，已跳过兜底模型检查'),
             "fallback_models": configured,
             "available_models": [],
             "unknown_fallback_models": [],
             "known_fallback_models": configured,
             "timeout_policy": OPENAI_COMPATIBLE_TIMEOUT_POLICY,
-            "timeout_policy_message": "主模型使用剩余共享 main-search 预算；只有硬失败后才接力兜底模型",
+            "timeout_policy_message": source_message('主模型使用剩余共享 main-search 预算；只有硬失败后才接力兜底模型'),
             "primary_model": primary_model,
         }
 
@@ -857,10 +1058,10 @@ def _openai_fallback_model_inventory(
     known = [model for model in configured if model in available]
     if unknown:
         status = "warning"
-        message = "这些兜底模型不在上游 /models 列表中: " + ", ".join(unknown)
+        message = source_message('这些兜底模型不在上游 /models 列表中: {0}', ", ".join(unknown))
     else:
         status = "ok"
-        message = "已配置的兜底模型都在上游 /models 列表中"
+        message = source_message('已配置的兜底模型都在上游 /models 列表中')
     return {
         "status": status,
         "message": message,
@@ -869,7 +1070,7 @@ def _openai_fallback_model_inventory(
         "unknown_fallback_models": unknown,
         "known_fallback_models": known,
         "timeout_policy": OPENAI_COMPATIBLE_TIMEOUT_POLICY,
-        "timeout_policy_message": "主模型使用剩余共享 main-search 预算；只有硬失败后才接力兜底模型",
+        "timeout_policy_message": source_message('主模型使用剩余共享 main-search 预算；只有硬失败后才接力兜底模型'),
         "primary_model": primary_model,
     }
 
@@ -1083,6 +1284,19 @@ def provider_profiles() -> dict[str, dict[str, Any]]:
 
 
 def intent_router_status() -> dict[str, Any]:
+    if str(config._get_config_value("SMART_SEARCH_INTENT_ROUTER", "")).strip().lower() == "jev":
+        try:
+            settings = config.jev_settings()
+            return {
+                "mode": "jev", "ok": bool(settings.api_key), "configured": bool(settings.api_key),
+                "model": settings.model, "timeout_seconds": settings.timeout,
+                "max_rounds": settings.max_rounds, "max_channels": settings.max_channels,
+                "filter_results": settings.filter_results, "synthesize": settings.synthesis_mode,
+                "degrades_to_rules": False,
+                "error": "" if settings.api_key else source_message('TYPESAFE_API_KEY is not configured'),
+            }
+        except ValueError as exc:
+            return {"mode": "jev", "ok": False, "error": str(exc)}
     return IntentRouter(config).status()
 
 
@@ -1113,6 +1327,10 @@ def _provider_configured(provider: str) -> bool:
         return bool(config.zhipu_mcp_api_key)
     if provider == "firecrawl":
         return bool(config.firecrawl_api_key)
+    if provider == "tinyfish":
+        return bool(config.tinyfish_api_key)
+    if provider == "anysearch":
+        return bool(config.anysearch_api_key)
     if provider == "sciverse":
         return bool(config.sciverse_api_token)
     if provider == "main-search":
@@ -1230,12 +1448,12 @@ def _research_capability_routes(
 
     web_search = _configured_for_capability("web_search", capability_status)
     if signals["current_or_locale_intent"]:
-        ordered = [provider for provider in ["zhipu", "zhipu-mcp", "tavily", "firecrawl"] if provider in web_search]
+        ordered = [provider for provider in ["zhipu", "zhipu-mcp", "tavily", "firecrawl", "tinyfish"] if provider in web_search]
     else:
-        ordered = [provider for provider in ["tavily", "firecrawl", "zhipu", "zhipu-mcp"] if provider in web_search]
+        ordered = [provider for provider in ["tavily", "firecrawl", "zhipu", "zhipu-mcp", "tinyfish"] if provider in web_search]
     routes["capabilities"]["web_search"] = {
         "providers": _apply_research_overrides("web_search", ordered),
-        "reason": "current/locale evidence" if signals["current_or_locale_intent"] else "broad source discovery",
+        "reason": source_message('current/locale evidence') if signals["current_or_locale_intent"] else source_message('broad source discovery'),
     }
 
     docs = _configured_for_capability("docs_search", capability_status)
@@ -1244,18 +1462,19 @@ def _research_capability_routes(
         docs_order = [provider for provider in ["exa", "context7"] if provider in docs]
     routes["capabilities"]["docs_search"] = {
         "providers": _apply_research_overrides("docs_search", docs_order),
-        "reason": "docs/API evidence" if signals["docs_api_intent"] else "official low-noise discovery",
+        "reason": source_message('docs/API evidence') if signals["docs_api_intent"] else source_message('official low-noise discovery'),
     }
 
     fetch_order = _research_fetch_order(question, capability_status=capability_status)
     routes["capabilities"]["web_fetch"] = {
         "providers": fetch_order,
-        "reason": "JS-heavy fetch" if signals["js_heavy_intent"] else ("known URL/PDF extraction" if signals["known_url"] or signals["pdf_or_arxiv_intent"] else "evidence extraction"),
+        "reason": source_message('JS-heavy fetch') if signals["js_heavy_intent"] else (source_message('known URL/PDF extraction') if signals["known_url"] or signals["pdf_or_arxiv_intent"] else source_message('evidence extraction')),
     }
 
+    vertical = _configured_for_capability("vertical_search", capability_status)
     routes["capabilities"]["vertical_search"] = {
-        "providers": [],
-        "reason": "vertical intent matched" if signals["vertical_intent"] else "vertical intent absent",
+        "providers": _apply_research_overrides("vertical_search", vertical) if signals["vertical_intent"] else [],
+        "reason": source_message('vertical intent matched') if signals["vertical_intent"] else source_message('vertical intent absent'),
         "execution": "external_skill" if signals["vertical_intent"] else "not_selected",
         "delegated_skill": "anysearch" if signals["vertical_intent"] else "",
         "experimental": True,
@@ -1432,7 +1651,11 @@ def _deep_subquestion(sub_id: str, question: str, reason: str, required_capabili
 
 def _deep_budget(value: str) -> str:
     budget = (value or "standard").strip().lower()
-    return budget if budget in {"focused", "standard", "deep"} else "standard"
+    # ``quick`` remains accepted by the service API for older callers. The
+    # public CLI and ResearchFrame expose the current focused/standard/deep
+    # contract, but silently normalizing a direct service call would change
+    # its execution budget and returned trace.
+    return budget if budget in {"quick", "focused", "standard", "deep"} else "standard"
 
 
 def _is_deep_complex(query: str, budget: str) -> bool:
@@ -1720,12 +1943,21 @@ async def research(
         return {
             "ok": False,
             "error_type": "parameter_error",
-            "error": f"Invalid fallback mode: {fallback_mode}",
+            "error": source_message('Invalid fallback mode: {0}', fallback_mode),
             "question": question,
             "mode": "deep_research_execution",
             "route_policy_version": RESEARCH_ROUTE_POLICY_VERSION,
             "elapsed_ms": _elapsed_ms(start),
         }
+
+    if str(config._get_config_value("SMART_SEARCH_INTENT_ROUTER", "")).strip().lower() == "jev":
+        level = _deep_budget(budget or "deep")
+        plan = build_deep_research_plan(question, budget=level, evidence_dir=evidence_dir)
+        timeout = min(config.search_timeout, {"quick": 45, "standard": 120, "deep": config.search_timeout}[level])
+        return await jev_search.search(
+            question, validation="strict" if level == "deep" else "balanced", fallback=fallback_mode,
+            providers="auto", timeout_seconds=timeout, research_plan=plan,
+        )
 
     minimum = validate_minimum_profile()
     if not minimum.get("ok"):
@@ -1742,7 +1974,7 @@ async def research(
             "evidence_items": [],
             "gap_check": {
                 "status": "failed",
-                "gaps": [{"subquestion_id": "", "reason": "minimum profile is missing required capabilities"}],
+                "gaps": [{"subquestion_id": "", "reason": source_message('minimum profile is missing required capabilities')}],
             },
             "provider_attempts": [],
             "fallback_used": False,
@@ -1798,14 +2030,14 @@ async def research(
                 evidence_items.append(item)
                 _write_research_artifact(evidence_root, f"{index:02d}-fetch-{fetch_result['provider']}.md", fetch_result["content"])
             else:
-                gaps.append({"subquestion_id": "sq1", "reason": f"failed to fetch known URL: {url}", "url": url})
+                gaps.append({"subquestion_id": "sq1", "reason": source_message('failed to fetch known URL: {0}', url), "url": url})
 
     signals = routes["signals"]
     if signals["docs_api_intent"]:
         docs_providers = routes["capabilities"]["docs_search"]["providers"]
         selected_docs_providers = docs_providers[:1] if fallback_mode == "off" else docs_providers
         if not selected_docs_providers:
-            gaps.append({"subquestion_id": "sq2", "reason": "no configured docs_search provider for docs/API evidence"})
+            gaps.append({"subquestion_id": "sq2", "reason": source_message('no configured docs_search provider for docs/API evidence')})
         for provider in selected_docs_providers:
             step_start = time.time()
             if provider == "context7":
@@ -1881,7 +2113,7 @@ async def research(
             discovery_sources.extend(web_sources)
             stage_results.append({"stage": "web_discovery", "ok": bool(web_sources), "result_count": len(web_sources), "provider_attempts": attempts})
         else:
-            gaps.append({"subquestion_id": "", "reason": "no configured web_search provider for discovery"})
+            gaps.append({"subquestion_id": "", "reason": source_message('no configured web_search provider for discovery')})
 
     exa_in_selected_docs_route = "exa" in routes["capabilities"]["docs_search"]["providers"]
     if (
@@ -1925,12 +2157,12 @@ async def research(
             evidence_items.append(item)
             _write_research_artifact(evidence_root, f"fetch-{index:02d}-{fetch_result['provider']}.md", content)
         elif fallback_mode == "off":
-            gaps.append({"subquestion_id": "", "reason": f"fetch failed with fallback off: {url}", "url": url})
+            gaps.append({"subquestion_id": "", "reason": source_message('fetch failed with fallback off: {0}', url), "url": url})
 
     if not evidence_items:
-        gaps.append({"subquestion_id": "", "reason": "no fetched/read evidence items were produced"})
+        gaps.append({"subquestion_id": "", "reason": source_message('no fetched/read evidence items were produced')})
     elif no_new_evidence and not urls and candidates:
-        gaps.append({"subquestion_id": "", "reason": "discovery produced candidates but no new fetch evidence converged"})
+        gaps.append({"subquestion_id": "", "reason": source_message('discovery produced candidates but no new fetch evidence converged')})
 
     covered = bool(evidence_items)
     gap_status = "closed" if covered and not gaps else ("degraded" if evidence_items else "failed")
@@ -1939,7 +2171,7 @@ async def research(
     result = {
         "ok": bool(evidence_items),
         "error_type": "" if evidence_items else "evidence_error",
-        "error": "" if evidence_items else "research could not obtain fetched evidence",
+        "error": "" if evidence_items else source_message('research could not obtain fetched evidence'),
         "mode": "deep_research_execution",
         "query_mode": "research",
         "question": question,
@@ -1958,6 +2190,7 @@ async def research(
             "stop_reason": "evidence_converged" if gap_status == "closed" else ("degraded_with_gaps" if evidence_items else "provider_exhausted"),
         },
         "provider_attempts": provider_attempts,
+        "provider_notices": _provider_notices(provider_attempts),
         "providers_used": _provider_names_from_attempts(provider_attempts),
         "fallback_used": _fallback_used(provider_attempts),
         "degraded": bool(gaps),
@@ -2149,10 +2382,11 @@ def get_capability_status() -> dict[str, Any]:
                     ("zhipu-mcp", _provider_configured("zhipu-mcp")),
                     ("tavily", _provider_configured("tavily")),
                     ("firecrawl", _provider_configured("firecrawl")),
+                    ("tinyfish", _provider_configured("tinyfish")),
                 ]
                 if enabled
             ],
-            "fallback_chain": ["zhipu", "zhipu-mcp", "tavily", "firecrawl"],
+            "fallback_chain": ["zhipu", "zhipu-mcp", "tavily", "firecrawl", "tinyfish"],
         },
         "docs_search": {
             "configured": [
@@ -2173,10 +2407,11 @@ def get_capability_status() -> dict[str, Any]:
                     ("jina", _provider_configured("jina")),
                     ("zhipu-mcp-reader", _provider_configured("zhipu-mcp-reader")),
                     ("firecrawl", _provider_configured("firecrawl")),
+                    ("tinyfish", _provider_configured("tinyfish")),
                 ]
                 if enabled
             ],
-            "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl"],
+            "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl", "tinyfish"],
         },
         "vertical_search": {
             "configured": [
@@ -2246,7 +2481,7 @@ def _minimum_profile_result(profile: str, capability_status: dict[str, Any]) -> 
     return {
         "ok": not missing,
         "error_type": "config_error" if missing else "",
-        "error": f"{MINIMUM_PROFILE_ERROR} 缺失能力: {', '.join(missing)}" if missing else "",
+        "error": source_message('{0} 缺失能力: {1}', MINIMUM_PROFILE_ERROR, ', '.join(missing)) if missing else "",
         "profile": profile,
         "required": required,
         "missing": missing,
@@ -2256,6 +2491,20 @@ def _minimum_profile_result(profile: str, capability_status: dict[str, Any]) -> 
 
 def validate_minimum_profile() -> dict[str, Any]:
     try:
+        if config.intent_router_mode == "jev":
+            settings = config.jev_settings()
+            enabled = [
+                provider for provider, profile in PROVIDER_PROFILES.items()
+                if provider != "main-search" and not profile.get("explicit_only")
+                and provider not in config.research_disabled_providers and _provider_configured(provider)
+            ]
+            missing = ([] if settings.api_key else ["jev"]) + ([] if enabled else ["retrieval"])
+            return {
+                "ok": not missing, "profile": "jev", "required": ["jev", "retrieval"], "missing": missing,
+                "error_type": "config_error" if missing else "",
+                "error": source_message('Jev mode requires TYPESAFE_API_KEY and an enabled retrieval channel') if missing else "",
+                "capability_status": get_capability_status(),
+            }
         profile = config.minimum_profile
     except ValueError as e:
         return {"ok": False, "error_type": "parameter_error", "error": str(e), "missing": []}
@@ -2384,41 +2633,58 @@ async def get_available_models_cached(api_url: str, api_key: str) -> list[str]:
     return models
 
 
+EXTRA_SOURCE_PROVIDERS = ("tavily", "firecrawl", "tinyfish")
+
+
+def _allocate_extra_sources(total: int) -> dict[str, int]:
+    """Split the optional extra-source budget across configured web_search providers.
+
+    Tavily and Firecrawl keep their historical 60/40 split so existing setups see
+    no change. TinyFish picks up the budget only when neither of them is
+    configured, and otherwise stays additive through the web_search chain.
+    """
+    counts = {provider: 0 for provider in EXTRA_SOURCE_PROVIDERS}
+    if total <= 0:
+        return counts
+    has_tavily = _provider_configured("tavily")
+    has_firecrawl = _provider_configured("firecrawl")
+    if has_tavily and has_firecrawl:
+        counts["tavily"] = max(1, round(total * 0.6))
+        counts["firecrawl"] = total - counts["tavily"]
+    elif has_tavily:
+        counts["tavily"] = total
+    elif has_firecrawl:
+        counts["firecrawl"] = total
+    elif _provider_configured("tinyfish"):
+        counts["tinyfish"] = total
+    return counts
+
+
 def extra_results_to_sources(
     tavily_results: list[dict] | None,
     firecrawl_results: list[dict] | None,
+    tinyfish_results: list[dict] | None = None,
 ) -> list[dict]:
     sources: list[dict] = []
     seen: set[str] = set()
 
-    if firecrawl_results:
-        for r in firecrawl_results:
+    for provider, results, description_field in (
+        ("firecrawl", firecrawl_results, "description"),
+        ("tavily", tavily_results, "content"),
+        ("tinyfish", tinyfish_results, "description"),
+    ):
+        for r in results or []:
             url = (r.get("url") or "").strip()
             if not url or url in seen:
                 continue
             seen.add(url)
-            item: dict = {"url": url, "provider": "firecrawl"}
+            item: dict = {"url": url, "provider": provider}
             title = (r.get("title") or "").strip()
             if title:
                 item["title"] = title
-            desc = (r.get("description") or "").strip()
+            desc = (r.get(description_field) or "").strip()
             if desc:
                 item["description"] = desc
-            sources.append(item)
-
-    if tavily_results:
-        for r in tavily_results:
-            url = (r.get("url") or "").strip()
-            if not url or url in seen:
-                continue
-            seen.add(url)
-            item = {"url": url, "provider": "tavily"}
-            title = (r.get("title") or "").strip()
-            if title:
-                item["title"] = title
-            content = (r.get("content") or "").strip()
-            if content:
-                item["description"] = content
             sources.append(item)
 
     return sources
@@ -2439,6 +2705,8 @@ async def _run_web_fetch_fallback(
         providers.append("zhipu-mcp-reader")
     if _provider_configured("firecrawl"):
         providers.append("firecrawl")
+    if _provider_configured("tinyfish"):
+        providers.append("tinyfish")
     if preferred_order:
         allowed = {provider for provider in providers}
         ordered = [provider for provider in preferred_order if provider in allowed]
@@ -2447,8 +2715,12 @@ async def _run_web_fetch_fallback(
     if fallback == "off":
         providers = providers[:1]
 
+    providers, skipped = _plan_provider_health("web_fetch", providers)
+    attempts.extend(skipped)
+
     for provider in providers:
         start = time.time()
+        activity.progress("web_fetch", provider)
         try:
             if provider == "tavily":
                 content = await call_tavily_extract(url)
@@ -2457,18 +2729,29 @@ async def _run_web_fetch_fallback(
                 content = data.get("content") if data.get("ok") else None
                 if not data.get("ok"):
                     status = _attempt_status_for_result(data)
-                    attempts.append(_attempt("web_fetch", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", "")))
+                    health_extra = _record_provider_result(provider, status, data.get("error_type", ""), data.get("error", ""))
+                    attempts.append(_attempt("web_fetch", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", ""), extra=health_extra))
                     continue
             elif provider == "zhipu-mcp-reader":
                 data = await zhipu_mcp_reader(url)
                 content = data.get("content") if data.get("ok") else None
                 if not data.get("ok"):
                     status = _attempt_status_for_result(data)
-                    attempts.append(_attempt("web_fetch", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", "")))
+                    health_extra = _record_provider_result(provider, status, data.get("error_type", ""), data.get("error", ""))
+                    attempts.append(_attempt("web_fetch", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", ""), extra=health_extra))
+                    continue
+            elif provider == "tinyfish":
+                data = await call_tinyfish_fetch(url)
+                content = data.get("content") if data.get("ok") else None
+                if not data.get("ok"):
+                    status = _attempt_status_for_result(data)
+                    health_extra = _record_provider_result(provider, status, data.get("error_type", ""), data.get("error", ""))
+                    attempts.append(_attempt("web_fetch", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", ""), extra=health_extra))
                     continue
             else:
                 content = await call_firecrawl_scrape(url)
             if content and content.strip():
+                _record_provider_result(provider, "ok")
                 attempts.append(_attempt("web_fetch", provider, "ok", start, result_count=1))
                 return {
                     "ok": True,
@@ -2478,7 +2761,7 @@ async def _run_web_fetch_fallback(
                 }, attempts
             attempts.append(_attempt("web_fetch", provider, "empty", start))
         except Exception as e:
-            attempts.append(_attempt_from_exception("web_fetch", provider, start, e))
+            attempts.append(_attempt_with_health("web_fetch", provider, start, e))
     return None, attempts
 
 
@@ -2499,36 +2782,47 @@ async def _run_web_search_fallback(
         configured.append("tavily")
     if _provider_configured("firecrawl"):
         configured.append("firecrawl")
+    if _provider_configured("tinyfish"):
+        configured.append("tinyfish")
     if provider_filter is not None:
         configured = [p for p in configured if p in provider_filter]
     if fallback == "off":
         configured = configured[:1]
 
+    configured, skipped = _plan_provider_health("web_search", configured)
+    attempts.extend(skipped)
+
     for provider in configured:
         start = time.time()
+        activity.progress("web_search", provider)
         try:
             if provider == "zhipu":
                 data = await zhipu_search(query, count=count)
                 if data.get("ok"):
                     sources = _normalize_source_results(data.get("results"), "zhipu")
                     if sources:
+                        _record_provider_result(provider, "ok")
                         attempts.append(_attempt("web_search", provider, "ok", start, result_count=len(sources)))
                         return sources, attempts
                 status = _attempt_status_for_result(data)
-                attempts.append(_attempt("web_search", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", "")))
+                health_extra = _record_provider_result(provider, status, data.get("error_type", ""), data.get("error", ""))
+                attempts.append(_attempt("web_search", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", ""), extra=health_extra))
             elif provider == "zhipu-mcp":
                 data = await zhipu_mcp_search(query, count=count)
                 if data.get("ok"):
                     sources = _normalize_source_results(data.get("results"), "zhipu-mcp")
                     if sources:
+                        _record_provider_result(provider, "ok")
                         attempts.append(_attempt("web_search", provider, "ok", start, result_count=len(sources)))
                         return sources, attempts
                 status = _attempt_status_for_result(data)
-                attempts.append(_attempt("web_search", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", "")))
+                health_extra = _record_provider_result(provider, status, data.get("error_type", ""), data.get("error", ""))
+                attempts.append(_attempt("web_search", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", ""), extra=health_extra))
             elif provider == "tavily":
                 results = await call_tavily_search(query, count)
                 sources = _normalize_source_results(results, "tavily")
                 if sources:
+                    _record_provider_result(provider, "ok")
                     attempts.append(_attempt("web_search", provider, "ok", start, result_count=len(sources)))
                     return sources, attempts
                 attempts.append(_attempt("web_search", provider, "empty", start))
@@ -2536,11 +2830,20 @@ async def _run_web_search_fallback(
                 results = await call_firecrawl_search(query, count)
                 sources = _normalize_source_results(results, "firecrawl")
                 if sources:
+                    _record_provider_result(provider, "ok")
+                    attempts.append(_attempt("web_search", provider, "ok", start, result_count=len(sources)))
+                    return sources, attempts
+                attempts.append(_attempt("web_search", provider, "empty", start))
+            elif provider == "tinyfish":
+                results = await call_tinyfish_search(query, count)
+                sources = _normalize_source_results(results, "tinyfish")
+                if sources:
+                    _record_provider_result(provider, "ok")
                     attempts.append(_attempt("web_search", provider, "ok", start, result_count=len(sources)))
                     return sources, attempts
                 attempts.append(_attempt("web_search", provider, "empty", start))
         except Exception as e:
-            attempts.append(_attempt_from_exception("web_search", provider, start, e))
+            attempts.append(_attempt_with_health("web_search", provider, start, e))
     return [], attempts
 
 
@@ -2561,22 +2864,29 @@ async def _run_docs_search_fallback(
     if fallback == "off":
         configured = configured[:1]
 
+    configured, skipped = _plan_provider_health("docs_search", configured)
+    attempts.extend(skipped)
+
     for provider in configured:
         start = time.time()
+        activity.progress("docs_search", provider)
         try:
             if provider == "exa":
                 data = await exa_search(query, num_results=5, include_highlights=True)
                 if data.get("ok"):
                     sources = _normalize_source_results(data.get("results"), "exa")
                     if sources:
+                        _record_provider_result(provider, "ok")
                         attempts.append(_attempt("docs_search", provider, "ok", start, result_count=len(sources)))
                         return sources, attempts
                 status = _attempt_status_for_result(data)
-                attempts.append(_attempt("docs_search", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", "")))
+                health_extra = _record_provider_result(provider, status, data.get("error_type", ""), data.get("error", ""))
+                attempts.append(_attempt("docs_search", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", ""), extra=health_extra))
             elif provider == "context7":
                 data = await context7_library(query, query)
                 if data.get("ok"):
                     selected_library = _select_context7_library_candidate(data.get("results"), query)
+                    _record_provider_result(provider, "ok")
                     if selected_library:
                         source = {
                             "url": f"context7:{selected_library.get('id')}",
@@ -2589,9 +2899,10 @@ async def _run_docs_search_fallback(
                     attempts.append(_attempt("docs_search", provider, "empty", start))
                 else:
                     status = _attempt_status_for_result(data)
-                    attempts.append(_attempt("docs_search", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", "")))
+                    health_extra = _record_provider_result(provider, status, data.get("error_type", ""), data.get("error", ""))
+                    attempts.append(_attempt("docs_search", provider, status, start, error_type=data.get("error_type", ""), error=data.get("error", ""), extra=health_extra))
         except Exception as e:
-            attempts.append(_attempt_from_exception("docs_search", provider, start, e))
+            attempts.append(_attempt_with_health("docs_search", provider, start, e))
     return [], attempts
 
 
@@ -2608,6 +2919,9 @@ async def _run_vertical_search_fallback(
     if fallback == "off":
         configured = configured[:1]
 
+    configured, skipped = _plan_provider_health("vertical_search", configured)
+    attempts.extend(skipped)
+
     for provider in configured:
         start = time.time()
         try:
@@ -2615,6 +2929,7 @@ async def _run_vertical_search_fallback(
             if data.get("ok"):
                 sources = _normalize_source_results(data.get("results"), "anysearch")
                 if sources:
+                    _record_provider_result(provider, "ok")
                     attempts.append(_attempt("vertical_search", provider, "ok", start, result_count=len(sources)))
                     return sources, attempts
             attempts.append(
@@ -2625,16 +2940,22 @@ async def _run_vertical_search_fallback(
                     start,
                     error_type=data.get("error_type", ""),
                     error=data.get("error", ""),
+                    extra=_record_provider_result(
+                        provider,
+                        _attempt_status_for_result(data),
+                        data.get("error_type", ""),
+                        data.get("error", ""),
+                    ),
                 )
             )
         except Exception as exc:
-            attempts.append(_attempt_from_exception("vertical_search", provider, start, exc))
+            attempts.append(_attempt_with_health("vertical_search", provider, start, exc))
     return [], attempts
 
 
 def _provider_response_object(data: Any, provider: str) -> dict[str, Any]:
     if not isinstance(data, dict):
-        raise ProviderCallError("parse_error", f"{provider} response is not a JSON object")
+        raise ProviderCallError("parse_error", source_message('{0} response is not a JSON object', provider))
     return data
 
 
@@ -2670,15 +2991,15 @@ async def call_tavily_extract(url: str) -> str | None:
         raise tool_error
     results = data.get("results")
     if not isinstance(results, list):
-        raise ProviderCallError("parse_error", "Tavily extract response is missing results")
+        raise ProviderCallError("parse_error", source_message('Tavily extract response is missing results'))
     if not results:
         return None
     first = results[0]
     if not isinstance(first, dict):
-        raise ProviderCallError("parse_error", "Tavily extract result is not an object")
+        raise ProviderCallError("parse_error", source_message('Tavily extract result is not an object'))
     content = first.get("raw_content", "")
     if not isinstance(content, str):
-        raise ProviderCallError("parse_error", "Tavily extract content is not text")
+        raise ProviderCallError("parse_error", source_message('Tavily extract content is not text'))
     return content if content.strip() else None
 
 
@@ -2707,11 +3028,11 @@ async def call_tavily_search(query: str, max_results: int = 6) -> list[dict] | N
         raise tool_error
     results = data.get("results")
     if not isinstance(results, list):
-        raise ProviderCallError("parse_error", "Tavily search response is missing results")
+        raise ProviderCallError("parse_error", source_message('Tavily search response is missing results'))
     if not results:
         return None
     if not all(isinstance(item, dict) for item in results):
-        raise ProviderCallError("parse_error", "Tavily search result is not an object")
+        raise ProviderCallError("parse_error", source_message('Tavily search result is not an object'))
     return [
         {
             "title": item.get("title", ""),
@@ -2742,14 +3063,14 @@ async def call_firecrawl_search(query: str, limit: int = 14) -> list[dict] | Non
         raise tool_error
     payload = data.get("data")
     if not isinstance(payload, dict):
-        raise ProviderCallError("parse_error", "Firecrawl search response is missing data")
+        raise ProviderCallError("parse_error", source_message('Firecrawl search response is missing data'))
     results = payload.get("web")
     if not isinstance(results, list):
-        raise ProviderCallError("parse_error", "Firecrawl search response is missing web results")
+        raise ProviderCallError("parse_error", source_message('Firecrawl search response is missing web results'))
     if not results:
         return None
     if not all(isinstance(item, dict) for item in results):
-        raise ProviderCallError("parse_error", "Firecrawl search result is not an object")
+        raise ProviderCallError("parse_error", source_message('Firecrawl search result is not an object'))
     return [
         {
             "title": item.get("title", ""),
@@ -2785,14 +3106,63 @@ async def call_firecrawl_scrape(url: str, ctx=None) -> str | None:
             raise tool_error
         payload = data.get("data")
         if not isinstance(payload, dict):
-            raise ProviderCallError("parse_error", "Firecrawl scrape response is missing data")
+            raise ProviderCallError("parse_error", source_message('Firecrawl scrape response is missing data'))
         markdown = payload.get("markdown", "")
         if not isinstance(markdown, str):
-            raise ProviderCallError("parse_error", "Firecrawl scrape content is not text")
+            raise ProviderCallError("parse_error", source_message('Firecrawl scrape content is not text'))
         if markdown.strip():
             return markdown
         await log_info(ctx, f"Firecrawl: markdown empty, retry {attempt + 1}/{config.retry_max_attempts}", config.debug_enabled)
     return None
+
+
+async def call_tinyfish_search(query: str, max_results: int = 6) -> list[dict] | None:
+    """Return normalized TinyFish candidates, or None when the provider gave nothing.
+
+    A provider-side failure raises so the shared web_search boundary records the
+    attempt and falls through to the next configured provider.
+    """
+    api_key = config.tinyfish_api_key
+    if not api_key:
+        return None
+    data = await _decode_provider_json(
+        await TinyFishSearchProvider(
+            config.tinyfish_search_api_url,
+            api_key,
+            config.tinyfish_timeout,
+        ).search(query, max_results=max_results),
+        provider="tinyfish",
+    )
+    if not data.get("ok"):
+        raise ProviderCallError(
+            str(data.get("error_type") or "provider_error"),
+            str(data.get("error") or "TinyFish search failed"),
+            additional_secrets=(api_key,),
+        )
+    results = data.get("results")
+    if not isinstance(results, list):
+        raise ProviderCallError("parse_error", source_message('TinyFish search payload is missing results'))
+    return [item for item in results if isinstance(item, dict)]
+
+
+async def call_tinyfish_fetch(url: str) -> dict[str, Any]:
+    api_key = config.tinyfish_api_key
+    if not api_key:
+        return {
+            "ok": False,
+            "provider": "tinyfish",
+            "url": url,
+            "error_type": "config_error",
+            "error": (
+                source_message('TINYFISH_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set TINYFISH_API_KEY <key>`。')
+            ),
+        }
+    raw = await TinyFishFetchProvider(
+        config.tinyfish_fetch_api_url,
+        api_key,
+        config.tinyfish_timeout,
+    ).fetch(url)
+    return await _decode_provider_json(raw, provider="tinyfish")
 
 
 async def call_jina_reader(url: str) -> dict[str, Any]:
@@ -2825,7 +3195,7 @@ async def call_tavily_map(
         return {
             "ok": False,
             "error_type": "config_error",
-            "error": "TAVILY_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set TAVILY_API_KEY <key>`。",
+            "error": source_message('TAVILY_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set TAVILY_API_KEY <key>`。'),
         }
 
     endpoint = f"{config.tavily_api_url.rstrip('/')}/map"
@@ -2843,7 +3213,7 @@ async def call_tavily_map(
             raise tool_error
         results = data.get("results")
         if not isinstance(results, list):
-            raise ProviderCallError("parse_error", "Tavily map response is missing results")
+            raise ProviderCallError("parse_error", source_message('Tavily map response is missing results'))
         return {
             "ok": True,
             "base_url": data.get("base_url", ""),
@@ -2875,9 +3245,10 @@ async def search(
         validation_level = (validation or config.validation_level).strip().lower()
         fallback_mode = (fallback or config.fallback_mode).strip().lower()
         if validation_level not in config._ALLOWED_VALIDATION_LEVELS:
-            raise ValueError(f"Invalid validation level: {validation_level}")
+            raise ValueError(source_message('Invalid validation level: {0}', validation_level))
         if fallback_mode not in config._ALLOWED_FALLBACK_MODES:
-            raise ValueError(f"Invalid fallback mode: {fallback_mode}")
+            raise ValueError(source_message('Invalid fallback mode: {0}', fallback_mode))
+        router_mode = config.intent_router_mode
     except ValueError as e:
         return _empty_search_result(
             start,
@@ -2886,6 +3257,12 @@ async def search(
             "parameter_error",
             str(e),
             extra={"timeout_seconds": timeout_seconds},
+        )
+
+    if router_mode == "jev":
+        return await jev_search.search(
+            query, validation=validation_level, fallback=fallback_mode, providers=providers,
+            timeout_seconds=effective_timeout, platform=platform, model=model, stream=stream, extra_sources=extra_sources,
         )
 
     minimum = validate_minimum_profile()
@@ -2937,18 +3314,10 @@ async def search(
             if provider_config["provider"] == "openai-compatible":
                 provider_config["stream"] = stream
 
-    has_tavily = _provider_configured("tavily")
-    has_firecrawl = _provider_configured("firecrawl")
-    tavily_count = 0
-    firecrawl_count = 0
-    if extra_sources > 0:
-        if has_tavily and has_firecrawl:
-            tavily_count = max(1, round(extra_sources * 0.6))
-            firecrawl_count = extra_sources - tavily_count
-        elif has_tavily:
-            tavily_count = extra_sources
-        elif has_firecrawl:
-            firecrawl_count = extra_sources
+    extra_source_counts = _allocate_extra_sources(extra_sources)
+    tavily_count = extra_source_counts["tavily"]
+    firecrawl_count = extra_source_counts["firecrawl"]
+    tinyfish_count = extra_source_counts["tinyfish"]
 
     selected_main_provider_configs = main_provider_configs if fallback_mode != "off" else main_provider_configs[:1]
     router = IntentRouter(config)
@@ -3049,9 +3418,8 @@ async def search(
                 break
             primary_start = time.time()
             search_provider = _main_search_providers([candidate_config], fallback="auto")[0]
-            attempt_extra: dict[str, Any] = {}
+            attempt_extra: dict[str, Any] = {"model": candidate_config.get("model", "")}
             if candidate_config["provider"] == "openai-compatible":
-                attempt_extra["model"] = candidate_config["model"]
                 attempt_extra["model_role"] = candidate_config.get("model_role", "primary")
                 attempt_extra["stream"] = bool(candidate_config.get("stream", False))
                 attempt_extra["api_mode"] = candidate_config.get("api_mode", candidate_config.get("mode", "chat-completions"))
@@ -3086,6 +3454,7 @@ async def search(
             set_deadline = getattr(search_provider, "set_search_deadline", None)
             if callable(set_deadline):
                 set_deadline(budget.deadline)
+            activity.progress("main_search", candidate_config["provider"], candidate_config.get("model", ""))
             candidate_task: asyncio.Task[str] | None = None
             try:
                 if (
@@ -3216,6 +3585,7 @@ async def search(
                 "搜索失败或无结果",
             )
         result["provider_attempts"] = provider_attempts
+        result["provider_notices"] = _provider_notices(provider_attempts)
         result["providers_used"] = _provider_names_from_attempts(provider_attempts)
         result["fallback_used"] = _fallback_used(provider_attempts)
         result["transport_fallback_used"] = transport_fallback_used
@@ -3239,30 +3609,47 @@ async def search(
     effective_model = successful_main_config["model"]
 
     extra_calls: list[tuple[str, Any]] = []
-    if tavily_count:
+    extra_providers = [
+        provider
+        for provider, wanted in (
+            ("tavily", tavily_count),
+            ("firecrawl", firecrawl_count),
+            ("tinyfish", tinyfish_count),
+        )
+        if wanted
+    ]
+    extra_runnable, extra_skipped = _plan_provider_health("web_search", extra_providers)
+    provider_attempts.extend(extra_skipped)
+    if tavily_count and "tavily" in extra_runnable:
         extra_calls.append(("tavily", lambda: call_tavily_search(query, tavily_count)))
-    if firecrawl_count:
+    if firecrawl_count and "firecrawl" in extra_runnable:
         extra_calls.append(("firecrawl", lambda: call_firecrawl_search(query, firecrawl_count)))
+    if tinyfish_count and "tinyfish" in extra_runnable:
+        extra_calls.append(("tinyfish", lambda: call_tinyfish_search(query, tinyfish_count)))
 
     gathered = await _collect_extra_source_calls(extra_calls, budget, execution)
     primary_result = primary_result or ""
     tavily_results: list[dict] | None = None
     firecrawl_results: list[dict] | None = None
+    tinyfish_results: list[dict] | None = None
     for provider, attempt_start, result in gathered:
         if isinstance(result, BaseException):
-            provider_attempts.append(_attempt_from_exception("web_search", provider, attempt_start, result))
+            provider_attempts.append(_attempt_with_health("web_search", provider, attempt_start, result))
             continue
         if result:
-            if provider == "tavily":
+            if provider == "tinyfish":
+                tinyfish_results = result
+            elif provider == "tavily":
                 tavily_results = result
             else:
                 firecrawl_results = result
+            _record_provider_result(provider, "ok")
             provider_attempts.append(_attempt("web_search", provider, "ok", attempt_start, result_count=len(result)))
         else:
             provider_attempts.append(_attempt("web_search", provider, "empty", attempt_start))
 
     answer, primary_sources = split_answer_and_sources(primary_result)
-    extra_source_items = extra_results_to_sources(tavily_results, firecrawl_results)
+    extra_source_items = extra_results_to_sources(tavily_results, firecrawl_results, tinyfish_results)
 
     supplemental_sources: list[dict] = []
     if validation_level in {"balanced", "strict"}:
@@ -3338,10 +3725,11 @@ async def search(
     return {
         "ok": ok,
         "error_type": "" if ok else ("evidence_error" if validation_level == "strict" else "network_error"),
-        "error": "" if ok else ("strict 模式证据不足" if validation_level == "strict" else "搜索失败或无结果"),
+        "error": "" if ok else (source_message('strict 模式证据不足') if validation_level == "strict" else source_message('搜索失败或无结果')),
         "session_id": session_id,
         "query": query,
         "platform": platform,
+        "provider": successful_main_config["provider"] if successful_main_config else "",
         "model": effective_model,
         "primary_api_mode": primary_api_mode,
         "content": answer,
@@ -3355,6 +3743,7 @@ async def search(
         "routing_decision": routing_decision,
         "providers_used": _provider_names_from_attempts(provider_attempts),
         "provider_attempts": provider_attempts,
+        "provider_notices": _provider_notices(provider_attempts),
         "fallback_used": _fallback_used(provider_attempts),
         "transport_fallback_used": transport_fallback_used,
         "model_fallback_used": model_fallback_used,
@@ -3376,7 +3765,9 @@ async def route(
     try:
         validation_level = (validation or config.validation_level).strip().lower()
         if validation_level not in config._ALLOWED_VALIDATION_LEVELS:
-            raise ValueError(f"Invalid validation level: {validation_level}")
+            raise ValueError(source_message('Invalid validation level: {0}', validation_level))
+        if (mode or config.intent_router_mode).strip().lower() == "jev":
+            return await jev_search.plan(query, validation_level, allow_remote=allow_remote)
         route_result = await IntentRouter(config).route(
             query,
             validation_level=validation_level,
@@ -3933,13 +4324,14 @@ async def fetch(url: str) -> dict[str, Any]:
         return {
             **fetch_result,
             "provider_attempts": attempts,
+            "provider_notices": _provider_notices(attempts),
             "fallback_used": _fallback_used(attempts),
             "elapsed_ms": _elapsed_ms(start),
         }
 
     configured_fetch_providers = [
         provider
-        for provider in ("tavily", "jina", "zhipu-mcp-reader", "firecrawl")
+        for provider in ("tavily", "jina", "zhipu-mcp-reader", "firecrawl", "tinyfish")
         if _provider_configured(provider)
     ]
     if not configured_fetch_providers:
@@ -3948,10 +4340,12 @@ async def fetch(url: str) -> dict[str, Any]:
             error = f"{error}; {_tavily_disabled_message()}"
         error_type = "config_error"
     else:
+        # A cooled-down provider still carries the failure that opened it, so a
+        # fully skipped chain reports that cause instead of "returned empty".
         failed_attempts = [
             attempt
             for attempt in attempts
-            if attempt.get("status") == "error" and attempt.get("error_type")
+            if attempt.get("status") in {"error", "skipped"} and attempt.get("error_type")
         ]
         if failed_attempts:
             last_failure = failed_attempts[-1]
@@ -3968,6 +4362,7 @@ async def fetch(url: str) -> dict[str, Any]:
         "error_type": error_type,
         "error": error,
         "provider_attempts": attempts,
+        "provider_notices": _provider_notices(attempts),
         "fallback_used": _fallback_used(attempts),
         "elapsed_ms": _elapsed_ms(start),
     }
@@ -4004,13 +4399,14 @@ async def exa_search(
         return {
             "ok": False,
             "error_type": "config_error",
-            "error": "EXA_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set EXA_API_KEY <key>`。",
+            "error": source_message('EXA_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set EXA_API_KEY <key>`。'),
         }
 
     provider = ExaSearchProvider(config.exa_base_url, api_key, config.exa_timeout)
     include_domain_list = _normalize_domain_filter(include_domains)
     exclude_domain_list = _normalize_domain_filter(exclude_domains)
 
+    activity.progress("provider_request", "exa")
     raw = await provider.search(
         query=query,
         num_results=num_results,
@@ -4032,14 +4428,15 @@ async def exa_search(
 
 
 def _sciverse_provider() -> SciverseProvider:
+    activity.progress("provider_preparing", "sciverse")
     return SciverseProvider(config.sciverse_api_url, config.sciverse_api_token, config.sciverse_timeout)
 
 
-async def _decode_provider_json(raw: str, provider: str) -> dict[str, Any]:
+async def _decode_provider_json(raw: str, provider: str = "anysearch") -> dict[str, Any]:
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        return {"ok": False, "provider": provider, "error_type": "parse_error", "error": raw}
+        return {"ok": False, "provider": provider, "error_type": "parse_error", "error": sanitize_provider_error_message(raw)}
 
 
 def _sciverse_parameter_error(tool: str, error: str, **extra: Any) -> dict[str, Any]:
@@ -4056,6 +4453,7 @@ def _sciverse_parameter_error(tool: str, error: str, **extra: Any) -> dict[str, 
 
 
 def _anysearch_provider() -> AnySearchProvider:
+    activity.progress("provider_preparing", "anysearch")
     return AnySearchProvider(config.anysearch_api_url, config.anysearch_api_key, config.anysearch_timeout)
 
 
@@ -4214,6 +4612,7 @@ async def sciverse_relations(
 
 
 def _zhipu_mcp_search_provider() -> ZhipuMCPProvider:
+    activity.progress("provider_preparing", "zhipu-mcp")
     return ZhipuMCPProvider(
         config.zhipu_mcp_search_api_url,
         config.zhipu_mcp_api_key or "",
@@ -4223,6 +4622,7 @@ def _zhipu_mcp_search_provider() -> ZhipuMCPProvider:
 
 
 def _zhipu_mcp_reader_provider() -> ZhipuMCPProvider:
+    activity.progress("provider_preparing", "zhipu-mcp-reader")
     return ZhipuMCPProvider(
         config.zhipu_mcp_reader_api_url,
         config.zhipu_mcp_api_key or "",
@@ -4232,6 +4632,7 @@ def _zhipu_mcp_reader_provider() -> ZhipuMCPProvider:
 
 
 def _zhipu_mcp_zread_provider() -> ZhipuMCPProvider:
+    activity.progress("provider_preparing", "zhipu-mcp-zread")
     return ZhipuMCPProvider(
         config.zhipu_mcp_zread_api_url,
         config.zhipu_mcp_api_key or "",
@@ -4270,15 +4671,16 @@ async def exa_find_similar(url: str, num_results: int = 5) -> dict[str, Any]:
         return {
             "ok": False,
             "error_type": "config_error",
-            "error": "EXA_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set EXA_API_KEY <key>`。",
+            "error": source_message('EXA_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set EXA_API_KEY <key>`。'),
         }
 
     provider = ExaSearchProvider(config.exa_base_url, api_key, config.exa_timeout)
+    activity.progress("provider_request", "exa")
     raw = await provider.find_similar(url=url, num_results=num_results)
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
-        return {"ok": False, "error_type": "parse_error", "error": raw}
+        return {"ok": False, "error_type": "parse_error", "error": sanitize_provider_error_message(raw)}
     if not data.get("ok", False):
         data.setdefault("error_type", "network_error")
     return data
@@ -4297,7 +4699,7 @@ async def zhipu_search(
         return {
             "ok": False,
             "error_type": "config_error",
-            "error": "ZHIPU_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set ZHIPU_API_KEY <key>`。",
+            "error": source_message('ZHIPU_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set ZHIPU_API_KEY <key>`。'),
         }
     provider = ZhipuWebSearchProvider(
         config.zhipu_api_url,
@@ -4305,6 +4707,7 @@ async def zhipu_search(
         search_engine or config.zhipu_search_engine,
         config.zhipu_timeout,
     )
+    activity.progress("provider_request", "zhipu")
     raw = await provider.search(
         query=query,
         count=count,
@@ -4316,7 +4719,7 @@ async def zhipu_search(
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
-        return {"ok": False, "error_type": "parse_error", "error": raw}
+        return {"ok": False, "error_type": "parse_error", "error": sanitize_provider_error_message(raw)}
     if not data.get("ok", False):
         data.setdefault("error_type", "network_error")
     return data
@@ -4328,14 +4731,15 @@ async def context7_library(name: str, query: str = "") -> dict[str, Any]:
         return {
             "ok": False,
             "error_type": "config_error",
-            "error": "CONTEXT7_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set CONTEXT7_API_KEY <key>`。",
+            "error": source_message('CONTEXT7_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set CONTEXT7_API_KEY <key>`。'),
         }
     provider = Context7Provider(config.context7_base_url, api_key, config.context7_timeout)
+    activity.progress("provider_request", "context7")
     raw = await provider.library(name, query)
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
-        return {"ok": False, "error_type": "parse_error", "error": raw}
+        return {"ok": False, "error_type": "parse_error", "error": sanitize_provider_error_message(raw)}
     if not data.get("ok", False):
         data.setdefault("error_type", "network_error")
     return data
@@ -4347,14 +4751,15 @@ async def context7_docs(library_id: str, query: str) -> dict[str, Any]:
         return {
             "ok": False,
             "error_type": "config_error",
-            "error": "CONTEXT7_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set CONTEXT7_API_KEY <key>`。",
+            "error": source_message('CONTEXT7_API_KEY 未配置。请运行 `smart-search setup`，或使用 `smart-search config set CONTEXT7_API_KEY <key>`。'),
         }
     provider = Context7Provider(config.context7_base_url, api_key, config.context7_timeout)
+    activity.progress("provider_request", "context7")
     raw = await provider.docs(library_id, query)
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
-        return {"ok": False, "error_type": "parse_error", "error": raw}
+        return {"ok": False, "error_type": "parse_error", "error": sanitize_provider_error_message(raw)}
     if not data.get("ok", False):
         data.setdefault("error_type", "network_error")
     return data
@@ -4384,7 +4789,7 @@ async def _test_openai_compatible_primary(
         if response.status_code != 200:
             return {
                 "status": "warning",
-                "message": f"HTTP {response.status_code}: {sanitize_provider_error_message(response.text, limit=100)}",
+                "message": source_message('HTTP {0}: {1}', response.status_code, sanitize_provider_error_message(response.text, limit=100)),
                 "response_time_ms": response_time,
                 "http_status": response.status_code,
                 "content_type": content_type,
@@ -4394,7 +4799,7 @@ async def _test_openai_compatible_primary(
             }
         return {
             "status": "ok",
-            "message": f"{api_mode} endpoint available (HTTP {response.status_code})",
+            "message": source_message('{0} endpoint available (HTTP {1})', api_mode, response.status_code),
             "response_time_ms": response_time,
             "http_status": response.status_code,
             "content_type": content_type,
@@ -4440,37 +4845,37 @@ def _openai_compatible_diagnosis(quick: dict[str, Any], no_stream: dict[str, Any
     if no_stream_ok and stream_ok:
         return (
             True,
-            "OpenAI-compatible 主链路正常。",
-            "真实 search 形态的 stream=false 和 stream=true 都能返回。若用户仍卡住，更可能是调用方、PATH、超时设置或上游偶发波动。",
+            source_message('OpenAI-compatible 主链路正常。'),
+            source_message('真实 search 形态的 stream=false 和 stream=true 都能返回。若用户仍卡住，更可能是调用方、PATH、超时设置或上游偶发波动。'),
         )
     if stream_ok and not no_stream_ok:
         return (
             False,
-            "非流式请求不稳定，流式请求可用。",
-            "建议设置 `OPENAI_COMPATIBLE_STREAM=true`，或临时使用 `smart-search search ... --stream`。",
+            source_message('非流式请求不稳定，流式请求可用。'),
+            source_message('建议设置 `OPENAI_COMPATIBLE_STREAM=true`，或临时使用 `smart-search search ... --stream`。'),
         )
     if no_stream_ok and not stream_ok:
         return (
             False,
-            "流式请求不稳定，非流式请求可用。",
-            "建议设置 `OPENAI_COMPATIBLE_STREAM=false`，或临时使用 `smart-search search ... --no-stream`。",
+            source_message('流式请求不稳定，非流式请求可用。'),
+            source_message('建议设置 `OPENAI_COMPATIBLE_STREAM=false`，或临时使用 `smart-search search ... --no-stream`。'),
         )
     if quick_ok and search_timeout:
         return (
             False,
-            "小请求能通，但真实 search 形态超时。",
-            "这通常是上游模型或中转站在处理 smart-search 的完整 prompt 时卡住；建议换模型/中转，或把本诊断报告贴给维护者。",
+            source_message('小请求能通，但真实 search 形态超时。'),
+            source_message('这通常是上游模型或中转站在处理 smart-search 的完整 prompt 时卡住；建议换模型/中转，或把本诊断报告贴给维护者。'),
         )
     if quick_ok:
         return (
             False,
-            "小请求能通，但真实 search 形态失败。",
-            "这更像上游模型/中转站对 smart-search 请求形态不兼容；建议换模型/中转，或把本诊断报告贴给维护者。",
+            source_message('小请求能通，但真实 search 形态失败。'),
+            source_message('这更像上游模型/中转站对 smart-search 请求形态不兼容；建议换模型/中转，或把本诊断报告贴给维护者。'),
         )
     return (
         False,
-        "OpenAI-compatible 基础请求不可用。",
-        "请先检查 API URL、API key、模型名和网络；修好后再运行本诊断命令。",
+        source_message('OpenAI-compatible 基础请求不可用。'),
+        source_message('请先检查 API URL、API key、模型名和网络；修好后再运行本诊断命令。'),
     )
 
 
@@ -4602,8 +5007,8 @@ async def diagnose_openai_compatible(timeout_seconds: float = 30.0) -> dict[str,
             "next_command": OPENAI_COMPATIBLE_DIAGNOSE_COMMAND,
             "error_type": "parameter_error",
             "error": str(e),
-            "summary": "OpenAI-compatible API mode is invalid.",
-            "recommendation": "Set OPENAI_COMPATIBLE_API_MODE to chat-completions or responses.",
+            "summary": source_message('OpenAI-compatible API mode is invalid.'),
+            "recommendation": source_message('Set OPENAI_COMPATIBLE_API_MODE to chat-completions or responses.'),
             "elapsed_ms": _elapsed_ms(start),
         }
     endpoint = openai_compatible_endpoint(api_url or "", api_mode)
@@ -4631,9 +5036,9 @@ async def diagnose_openai_compatible(timeout_seconds: float = 30.0) -> dict[str,
         result.update(
             {
                 "error_type": "config_error",
-                "error": "缺少 OpenAI-compatible 配置: " + ", ".join(missing),
-                "summary": "OpenAI-compatible 配置不完整。",
-                "recommendation": "请先运行 `smart-search setup`，或用 `smart-search config set` 填好缺失项。",
+                "error": source_message('缺少 OpenAI-compatible 配置: {0}', ", ".join(missing)),
+                "summary": source_message('OpenAI-compatible 配置不完整。'),
+                "recommendation": source_message('请先运行 `smart-search setup`，或用 `smart-search config set` 填好缺失项。'),
                 "missing": missing,
                 "elapsed_ms": _elapsed_ms(start),
             }
@@ -4647,11 +5052,11 @@ async def diagnose_openai_compatible(timeout_seconds: float = 30.0) -> dict[str,
             else await _test_openai_compatible_primary(api_url, api_key, model, api_mode=api_mode)
         )
     except httpx.TimeoutException as e:
-        quick = {"status": "timeout", "message": f"轻量 {api_mode} 请求超时: {sanitize_provider_error_message(e)}"}
+        quick = {"status": "timeout", "message": source_message('轻量 {0} 请求超时: {1}', api_mode, sanitize_provider_error_message(e))}
     except httpx.RequestError as e:
-        quick = {"status": "error", "message": f"轻量 {api_mode} 网络错误: {sanitize_provider_error_message(e)}"}
+        quick = {"status": "error", "message": source_message('轻量 {0} 网络错误: {1}', api_mode, sanitize_provider_error_message(e))}
     except Exception as e:
-        quick = {"status": "error", "message": f"轻量 {api_mode} 运行错误: {sanitize_provider_error_message(e)}"}
+        quick = {"status": "error", "message": source_message('轻量 {0} 运行错误: {1}', api_mode, sanitize_provider_error_message(e))}
     quick_check = {
         "name": f"轻量 {api_mode} 请求",
         "status": quick.get("status", "error"),
@@ -4699,7 +5104,7 @@ async def diagnose_openai_compatible(timeout_seconds: float = 30.0) -> dict[str,
 
     ok, summary, recommendation = _openai_compatible_diagnosis(quick_check, no_stream, stream)
     if inventory.get("status") == "warning":
-        recommendation = f"{recommendation} 另外，{inventory['message']}。兜底只在主模型硬失败后接力，不会再把主模型砍成 30 秒。"
+        recommendation = source_message('{0} 另外，{1}。兜底只在主模型硬失败后接力，不会再把主模型砍成 30 秒。', recommendation, inventory['message'])
     result.update(
         {
             "ok": ok,
@@ -4736,11 +5141,11 @@ async def _test_primary_connection(
             if response.status_code != 200:
                 models_test = {
                     "status": "warning",
-                    "message": f"HTTP {response.status_code}: {sanitize_provider_error_message(response.text, limit=100)}",
+                    "message": source_message('HTTP {0}: {1}', response.status_code, sanitize_provider_error_message(response.text, limit=100)),
                     "response_time_ms": response_time,
                 }
             else:
-                models_test = {"status": "ok", "message": f"成功获取模型列表 (HTTP {response.status_code})", "response_time_ms": response_time}
+                models_test = {"status": "ok", "message": source_message('成功获取模型列表 (HTTP {0})', response.status_code), "response_time_ms": response_time}
                 try:
                     models_data = response.json()
                     model_names = [m["id"] for m in models_data.get("data", []) if isinstance(m, dict) and "id" in m]
@@ -4752,7 +5157,7 @@ async def _test_primary_connection(
     except httpx.HTTPError as e:
         models_test = {
             "status": "warning",
-            "message": f"模型列表接口请求失败: {sanitize_provider_error_message(e)}",
+            "message": source_message('模型列表接口请求失败: {0}', sanitize_provider_error_message(e)),
             "response_time_ms": _elapsed_ms(start),
         }
 
@@ -4760,7 +5165,7 @@ async def _test_primary_connection(
         models_state = "可用" if models_test.get("status") == "ok" else "不可用"
         result = {
             "status": "warning",
-            "message": f"{completion_label}不可用: {completion_test.get('message', '')}；模型列表接口{models_state}: {models_test['message']}",
+            "message": source_message('{0}不可用: {1}；模型列表接口{2}: {3}', completion_label, completion_test.get('message', ''), models_state, models_test['message']),
             "response_time_ms": completion_test.get("response_time_ms", models_test.get("response_time_ms")),
             "models_endpoint_test": models_test,
             "completion_test": completion_test,
@@ -4772,7 +5177,7 @@ async def _test_primary_connection(
     if models_test.get("status") != "ok":
         result = {
             "status": "ok",
-            "message": f"{completion_test['message']}；模型列表接口不可用: {models_test['message']}",
+            "message": source_message('{0}；模型列表接口不可用: {1}', completion_test['message'], models_test['message']),
             "response_time_ms": completion_test.get("response_time_ms"),
             "models_endpoint_test": models_test,
             "completion_test": completion_test,
@@ -4812,10 +5217,10 @@ async def _test_primary_responses(api_url: str, api_key: str, model: str) -> dic
         if response.status_code != 200:
             return {
                 "status": "warning",
-                "message": f"HTTP {response.status_code}: {sanitize_provider_error_message(response.text, limit=100)}",
+                "message": source_message('HTTP {0}: {1}', response.status_code, sanitize_provider_error_message(response.text, limit=100)),
                 "response_time_ms": response_time,
             }
-        return {"status": "ok", "message": f"xAI Responses API 可用 (HTTP {response.status_code})", "response_time_ms": response_time}
+        return {"status": "ok", "message": source_message('xAI Responses API 可用 (HTTP {0})', response.status_code), "response_time_ms": response_time}
 
 
 async def _test_main_provider_connection(provider_config: dict[str, Any]) -> dict[str, Any]:
@@ -4836,23 +5241,23 @@ async def _safe_test_main_provider_connection(provider_config: dict[str, Any]) -
     try:
         return await _test_main_provider_connection(provider_config)
     except httpx.TimeoutException:
-        return {"status": "timeout", "message": f"{provider_config['provider']} 请求超时，请检查网络连接或 API URL"}
+        return {"status": "timeout", "message": source_message('{0} 请求超时，请检查网络连接或 API URL', provider_config['provider'])}
     except httpx.RequestError as e:
         return {
             "status": "error",
-            "message": f"{provider_config['provider']} 网络错误: {sanitize_provider_error_message(e)}",
+            "message": source_message('{0} 网络错误: {1}', provider_config['provider'], sanitize_provider_error_message(e)),
         }
     except Exception as e:
         return {
             "status": "error",
-            "message": f"{provider_config['provider']} 未知错误: {sanitize_provider_error_message(e)}",
+            "message": source_message('{0} 未知错误: {1}', provider_config['provider'], sanitize_provider_error_message(e)),
         }
 
 
 async def _test_exa_connection() -> dict[str, Any]:
     exa_key = config.exa_api_key
     if not exa_key:
-        return {"status": "not_configured", "message": "EXA_API_KEY 未设置，Exa 搜索功能不可用"}
+        return {"status": "not_configured", "message": source_message('EXA_API_KEY 未设置，Exa 搜索功能不可用')}
     start = time.time()
     async with httpx.AsyncClient(timeout=10.0, verify=config.ssl_verify_enabled) as client:
         resp = await client.post(
@@ -4862,10 +5267,10 @@ async def _test_exa_connection() -> dict[str, Any]:
         )
         response_time = _elapsed_ms(start)
         if resp.status_code == 200:
-            return {"status": "ok", "message": "Exa API 可用 (HTTP 200)", "response_time_ms": response_time}
+            return {"status": "ok", "message": source_message('Exa API 可用 (HTTP 200)'), "response_time_ms": response_time}
         return {
             "status": "warning",
-            "message": f"HTTP {resp.status_code}: {sanitize_provider_error_message(resp.text, limit=100)}",
+            "message": source_message('HTTP {0}: {1}', resp.status_code, sanitize_provider_error_message(resp.text, limit=100)),
             "response_time_ms": response_time,
         }
 
@@ -4875,7 +5280,7 @@ async def _test_tavily_connection() -> dict[str, Any]:
         return {"status": "disabled", "message": _tavily_disabled_message()}
     tavily_key = config.tavily_api_key
     if not tavily_key:
-        return {"status": "not_configured", "message": "TAVILY_API_KEY 未设置，Tavily 功能不可用"}
+        return {"status": "not_configured", "message": source_message('TAVILY_API_KEY 未设置，Tavily 功能不可用')}
     start = time.time()
     timeout = httpx.Timeout(connect=6.0, read=config.tavily_timeout, write=10.0, pool=None)
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, verify=config.ssl_verify_enabled) as client:
@@ -4886,27 +5291,27 @@ async def _test_tavily_connection() -> dict[str, Any]:
         )
         response_time = _elapsed_ms(start)
         if resp.status_code == 200:
-            return {"status": "ok", "message": "Tavily API 可用 (HTTP 200)", "response_time_ms": response_time}
+            return {"status": "ok", "message": source_message('Tavily API 可用 (HTTP 200)'), "response_time_ms": response_time}
         return {
             "status": "warning",
-            "message": f"HTTP {resp.status_code}: {sanitize_provider_error_message(resp.text, limit=100)}",
+            "message": source_message('HTTP {0}: {1}', resp.status_code, sanitize_provider_error_message(resp.text, limit=100)),
             "response_time_ms": response_time,
         }
 
 
 async def _test_jina_connection() -> dict[str, Any]:
     if config.jina_respond_with and not config.jina_api_key:
-        return {"status": "config_error", "message": "JINA_RESPOND_WITH requires JINA_API_KEY"}
+        return {"status": "config_error", "message": source_message('JINA_RESPOND_WITH requires JINA_API_KEY')}
     if not config.jina_api_key:
-        return {"status": "not_configured", "message": "JINA_API_KEY 未设置，Jina 不满足 standard web_fetch；匿名 Reader 只能作为显式实验使用"}
+        return {"status": "not_configured", "message": source_message('JINA_API_KEY 未设置，Jina 不满足 standard web_fetch；匿名 Reader 只能作为显式实验使用')}
     start = time.time()
     data = await jina_fetch("https://example.com")
     response_time = _elapsed_ms(start)
     if data.get("ok"):
-        return {"status": "ok", "message": "Jina Reader 可用", "response_time_ms": response_time}
+        return {"status": "ok", "message": source_message('Jina Reader 可用'), "response_time_ms": response_time}
     error_type = data.get("error_type", "")
     status = error_type if error_type in {"auth_error", "config_error", "parameter_error", "rate_limited", "timeout"} else "warning"
-    return {"status": status, "message": data.get("error", "Jina Reader 不可用"), "response_time_ms": response_time}
+    return {"status": status, "message": data.get("error", source_message('Jina Reader 不可用')), "response_time_ms": response_time}
 
 
 async def _test_firecrawl_connection() -> dict[str, Any]:
@@ -4962,31 +5367,306 @@ async def _test_firecrawl_connection() -> dict[str, Any]:
 
 async def _test_zhipu_connection() -> dict[str, Any]:
     if not config.zhipu_api_key:
-        return {"status": "not_configured", "message": "ZHIPU_API_KEY 未设置，智谱搜索功能不可用"}
+        return {"status": "not_configured", "message": source_message('ZHIPU_API_KEY 未设置，智谱搜索功能不可用')}
     result = await zhipu_search("test", count=1)
     if result.get("ok"):
-        return {"status": "ok", "message": "智谱 Web Search 可用", "response_time_ms": result.get("elapsed_ms", 0)}
-    return {"status": "warning", "message": result.get("error", "智谱 Web Search 不可用"), "response_time_ms": result.get("elapsed_ms", 0)}
+        return {"status": "ok", "message": source_message('智谱 Web Search 可用'), "response_time_ms": result.get("elapsed_ms", 0)}
+    return {"status": "warning", "message": result.get("error", source_message('智谱 Web Search 不可用')), "response_time_ms": result.get("elapsed_ms", 0)}
 
 
 async def _test_zhipu_mcp_connection() -> dict[str, Any]:
     if not config.zhipu_mcp_api_key:
-        return {"status": "not_configured", "message": "ZHIPU_MCP_API_KEY 未设置，智谱 Coding Plan MCP 功能不可用"}
+        return {"status": "not_configured", "message": source_message('ZHIPU_MCP_API_KEY 未设置，智谱 Coding Plan MCP 功能不可用')}
     result = await zhipu_mcp_search("test", count=1)
     if result.get("ok"):
-        return {"status": "ok", "message": "智谱 Coding Plan MCP 可用", "response_time_ms": result.get("elapsed_ms", 0)}
+        return {"status": "ok", "message": source_message('智谱 Coding Plan MCP 可用'), "response_time_ms": result.get("elapsed_ms", 0)}
     error_type = result.get("error_type", "")
     status = error_type if error_type in {"auth_error", "config_error", "provider_error", "rate_limited", "timeout"} else "warning"
-    return {"status": status, "message": result.get("error", "智谱 Coding Plan MCP 不可用"), "response_time_ms": result.get("elapsed_ms", 0)}
+    return {"status": status, "message": result.get("error", source_message('智谱 Coding Plan MCP 不可用')), "response_time_ms": result.get("elapsed_ms", 0)}
 
 
 async def _test_context7_connection() -> dict[str, Any]:
     if not config.context7_api_key:
-        return {"status": "not_configured", "message": "CONTEXT7_API_KEY 未设置，Context7 功能不可用"}
+        return {"status": "not_configured", "message": source_message('CONTEXT7_API_KEY 未设置，Context7 功能不可用')}
     result = await context7_library("react", "hooks")
     if result.get("ok"):
-        return {"status": "ok", "message": "Context7 API 可用", "response_time_ms": result.get("elapsed_ms", 0)}
-    return {"status": "warning", "message": result.get("error", "Context7 API 不可用"), "response_time_ms": result.get("elapsed_ms", 0)}
+        return {"status": "ok", "message": source_message('Context7 API 可用'), "response_time_ms": result.get("elapsed_ms", 0)}
+    return {"status": "warning", "message": result.get("error", source_message('Context7 API 不可用')), "response_time_ms": result.get("elapsed_ms", 0)}
+
+
+async def _test_anysearch_connection() -> dict[str, Any]:
+    """Probe AnySearch with a domain listing, which costs no search quota."""
+    if not config.anysearch_api_key:
+        return {"status": "not_configured", "message": source_message('ANYSEARCH_API_KEY 未设置，AnySearch 垂直搜索不可用')}
+    start = time.time()
+    result = await anysearch_domains()
+    response_time = result.get("elapsed_ms") or _elapsed_ms(start)
+    if result.get("ok"):
+        return {"status": "ok", "message": source_message('AnySearch API 可用'), "response_time_ms": response_time}
+    error_type = str(result.get("error_type") or "")
+    status = error_type if error_type in APPROVED_PROVIDER_ERROR_TYPES else "warning"
+    return {"status": status, "message": result.get("error", source_message('AnySearch API 不可用')), "response_time_ms": response_time}
+
+
+async def _test_sciverse_connection() -> dict[str, Any]:
+    """Probe Sciverse with a catalog listing, which costs no search quota."""
+    if not config.sciverse_api_token:
+        return {"status": "not_configured", "message": source_message('SCIVERSE_API_TOKEN 未设置，Sciverse 学术检索不可用')}
+    start = time.time()
+    result = await sciverse_catalog()
+    response_time = result.get("elapsed_ms") or _elapsed_ms(start)
+    if result.get("ok"):
+        return {"status": "ok", "message": source_message('Sciverse API 可用'), "response_time_ms": response_time}
+    error_type = str(result.get("error_type") or "")
+    status = error_type if error_type in APPROVED_PROVIDER_ERROR_TYPES else "warning"
+    return {"status": status, "message": result.get("error", source_message('Sciverse API 不可用')), "response_time_ms": response_time}
+
+
+async def _test_firecrawl_presence() -> dict[str, Any]:
+    """The current Firecrawl probe checks presence, without authenticating the key.
+
+    Reported as `probe: presence` so callers can render "key present, unverified"
+    instead of a green tick they have not earned.
+    """
+    if not config.firecrawl_api_key:
+        return {"status": "not_configured", "message": source_message('FIRECRAWL_API_KEY 未设置，Firecrawl 功能不可用')}
+    return {"status": "configured", "message": source_message('FIRECRAWL_API_KEY 已配置（未发起真实请求验证）')}
+
+
+async def _test_tinyfish_connection() -> dict[str, Any]:
+    if not config.tinyfish_api_key:
+        return {"status": "not_configured", "message": source_message('TINYFISH_API_KEY 未设置，TinyFish 功能不可用')}
+    start = time.time()
+    raw_results = await asyncio.gather(
+        TinyFishSearchProvider(config.tinyfish_search_api_url, config.tinyfish_api_key, config.tinyfish_timeout)
+        .search("tinyfish connectivity check", max_results=1),
+        TinyFishFetchProvider(config.tinyfish_fetch_api_url, config.tinyfish_api_key, config.tinyfish_timeout)
+        .fetch("https://example.com"),
+    )
+    # Both endpoints share one health fingerprint; search alone cannot clear a
+    # fetch failure. The caller controls the total probe deadline and persistence.
+    for label, raw in zip(("搜索", "抓取"), raw_results):
+        data = json.loads(raw)
+        if not data.get("ok"):
+            error_type = str(data.get("error_type") or "")
+            status = error_type if error_type in APPROVED_PROVIDER_ERROR_TYPES else "warning"
+            return {"status": status, "message": source_message('TinyFish {0}：{1}', label, data.get('error', '请求未成功')),
+                    "response_time_ms": _elapsed_ms(start)}
+    return {"status": "ok", "message": source_message('TinyFish 搜索与抓取 API 均可用'), "response_time_ms": _elapsed_ms(start)}
+
+
+DOCTOR_PROBE_PROVIDERS = {
+    "exa_connection_test": "exa",
+    "tavily_connection_test": "tavily",
+    "jina_connection_test": "jina",
+    "zhipu_connection_test": "zhipu",
+    "zhipu_mcp_connection_test": "zhipu-mcp",
+    "context7_connection_test": "context7",
+    "tinyfish_connection_test": "tinyfish",
+}
+DOCTOR_PROBE_NEUTRAL_STATUSES = {"not_configured", "configured", "skipped", "disabled"}
+
+
+def _record_probe_result(provider: str, test: dict[str, Any]) -> None:
+    """Fold one connection-test result into the persistent cooldown store.
+
+    Shared by `doctor` and by the single-provider dispatcher, so testing a key
+    anywhere is a first-class recovery path for a cooled-down provider.
+    """
+    if not isinstance(test, dict):
+        return
+    status = str(test.get("status") or "")
+    if status in DOCTOR_PROBE_NEUTRAL_STATUSES:
+        return
+    if status == "ok":
+        _record_provider_result(provider, "ok")
+        return
+    error_type = status if status in APPROVED_PROVIDER_ERROR_TYPES or status == "config_error" else "provider_error"
+    _record_provider_result(provider, "error", error_type, str(test.get("message") or ""))
+
+
+def _record_doctor_probes(info: dict[str, Any]) -> None:
+    """Let `doctor` double as the recovery path for a cooled-down provider."""
+    for key, provider in DOCTOR_PROBE_PROVIDERS.items():
+        _record_probe_result(provider, info.get(key))
+
+
+PROBE_TIMEOUT_CEILING = 20.0
+# How each provider id can be checked. "main" goes through the main-search provider
+# configs (which accept a dict, so unsaved candidate credentials work); "live" is a
+# real request; "shared:<id>" reuses another provider's probe because they share a
+# credential; "presence" only reports that a key is set.
+PROBE_KIND: dict[str, str] = {
+    "xai-responses": "main",
+    "openai-compatible": "main",
+    "exa": "live",
+    "tavily": "live",
+    "jina": "live",
+    "zhipu": "live",
+    "zhipu-mcp": "live",
+    "context7": "live",
+    "tinyfish": "live",
+    "sciverse": "live",
+    "zhipu-mcp-reader": "shared:zhipu-mcp",
+    "firecrawl": "presence",
+}
+# AnySearch remains a directly testable bundled Skill adapter, but it is not
+# part of the Smart Search provider registry or the provider metadata catalog.
+EXTERNAL_PROBE_KIND: dict[str, str] = {"anysearch": "live"}
+_LIVE_PROBES: dict[str, Any] = {
+    "exa": _test_exa_connection,
+    "tavily": _test_tavily_connection,
+    "jina": _test_jina_connection,
+    "zhipu": _test_zhipu_connection,
+    "zhipu-mcp": _test_zhipu_mcp_connection,
+    "context7": _test_context7_connection,
+    "tinyfish": _test_tinyfish_connection,
+    "anysearch": _test_anysearch_connection,
+    "sciverse": _test_sciverse_connection,
+    "firecrawl": _test_firecrawl_presence,
+}
+
+
+async def test_provider_connection(
+    provider: str,
+    *,
+    overrides: dict[str, str] | None = None,
+    record_health: bool | None = None,
+    timeout_seconds: float | None = None,
+) -> dict[str, Any]:
+    """Check one provider's credentials without firing every probe `doctor` runs.
+
+    `overrides` tests candidate settings in an isolated snapshot for any provider. Health is
+    not recorded for an override run: a success would clear a real cooldown under a
+    fingerprint that does not match what is stored, and a failure would cool down a
+    key that is actually fine.
+    """
+    if overrides is not None:
+        try:
+            normalized = {str(key).strip().upper(): str(value) for key, value in overrides.items()}
+            for key, value in normalized.items():
+                if key not in config._CONFIG_KEYS:
+                    raise ValueError(source_message('Unsupported config key: {0}', key))
+                config._validate_config_value(key, value)
+            with config.snapshot(normalized):
+                return await test_provider_connection(provider, record_health=False, timeout_seconds=timeout_seconds)
+        except ValueError as error:
+            return {"ok": False, "provider": provider, "status": "parameter_error", "error_type": "parameter_error",
+                    "message": str(error), "error": str(error), "recorded_as": "", "probe": "none"}
+    provider = (provider or "").strip().lower()
+    kind = PROBE_KIND.get(provider) or EXTERNAL_PROBE_KIND.get(provider)
+    if kind is None:
+        known = ", ".join(sorted({*PROBE_KIND, *EXTERNAL_PROBE_KIND}))
+        message = source_message('Unknown provider: {0}. Known providers: {1}', provider, known)
+        return {
+            "ok": False,
+            "provider": provider,
+            "status": "parameter_error",
+            "message": message,
+            "response_time_ms": 0,
+            "probe": "none",
+            "recorded_as": "",
+            "error_type": "parameter_error",
+            "error": message,
+            "known_providers": sorted({*PROBE_KIND, *EXTERNAL_PROBE_KIND}),
+        }
+    if record_health is None:
+        record_health = not overrides
+    ceiling = timeout_seconds if timeout_seconds and timeout_seconds > 0 else PROBE_TIMEOUT_CEILING
+
+    recorded_as = provider
+    probe_label = kind
+    probe_model = ""
+    if kind.startswith("shared:"):
+        recorded_as = kind.split(":", 1)[1]
+        probe_label = "shared"
+
+    async def _run() -> dict[str, Any]:
+        nonlocal probe_model
+        if kind == "main":
+            if overrides:
+                provider_config = _main_search_override_config(provider, overrides)
+                if provider_config is None:
+                    return {"status": "config_error", "message": source_message('{0} 覆盖参数不完整', provider)}
+            else:
+                configs = _main_search_provider_configs(providers=provider)
+                if not configs:
+                    return {"status": "not_configured", "message": source_message('{0} 未配置', provider)}
+                provider_config = configs[0]
+            probe_model = str(provider_config.get("model", ""))
+            activity.progress("provider.test", provider, probe_model)
+            return await _safe_test_main_provider_connection(provider_config)
+        probe = _LIVE_PROBES.get(recorded_as)
+        if probe is None:
+            return {"status": "not_configured", "message": source_message('{0} 无可用探针', provider)}
+        return await probe()
+
+    start = time.time()
+    try:
+        test = await asyncio.wait_for(_run(), timeout=ceiling)
+    except asyncio.TimeoutError:
+        test = {
+            "status": "timeout",
+            "message": source_message('{0} 探测超过 {1:g}s 上限', provider, ceiling),
+            "response_time_ms": _elapsed_ms(start),
+        }
+    except Exception as e:
+        test = {
+            "status": "error",
+            "message": source_message('{0} 探测失败: {1}', provider, sanitize_provider_error_message(e)),
+            "response_time_ms": _elapsed_ms(start),
+        }
+
+    if record_health and recorded_as in PROVIDER_CREDENTIAL_SOURCES:
+        _record_probe_result(recorded_as, test)
+
+    status = str(test.get("status") or "")
+    result = {
+        "ok": status == "ok",
+        "provider": provider,
+        "model": probe_model,
+        "status": status,
+        "message": str(test.get("message") or ""),
+        "response_time_ms": test.get("response_time_ms", _elapsed_ms(start)),
+        "probe": probe_label,
+        "recorded_as": recorded_as if record_health else "",
+        "error_type": "" if status == "ok" else (status if status in APPROVED_PROVIDER_ERROR_TYPES else ""),
+        "error": "" if status == "ok" else str(test.get("message") or ""),
+        "health": _provider_health_status(recorded_as),
+    }
+    if probe_label == "shared":
+        result["message"] = (
+            f"{result['message']} (与 {recorded_as} 共用同一组凭据)" if result["message"] else f"与 {recorded_as} 共用同一组凭据"
+        )
+    return result
+
+
+def _main_search_override_config(provider: str, overrides: dict[str, str]) -> dict[str, Any] | None:
+    """Build a main-search provider config from unsaved form values."""
+    get = lambda key, fallback="": str(overrides.get(key) or fallback).strip()  # noqa: E731
+    if provider == "xai-responses":
+        api_key = get("XAI_API_KEY", config.xai_api_key)
+        if not api_key:
+            return None
+        return {
+            "provider": "xai-responses",
+            "mode": "xai-responses",
+            "api_url": get("XAI_API_URL", config.xai_api_url),
+            "api_key": api_key,
+            "model": get("XAI_MODEL", config.xai_model),
+        }
+    api_url = get("OPENAI_COMPATIBLE_API_URL", config.openai_compatible_api_url)
+    api_key = get("OPENAI_COMPATIBLE_API_KEY", config.openai_compatible_api_key)
+    if not api_url or not api_key:
+        return None
+    return {
+        "provider": "openai-compatible",
+        "mode": "openai-compatible",
+        "api_url": api_url,
+        "api_key": api_key,
+        "model": get("OPENAI_COMPATIBLE_MODEL", config.openai_compatible_model),
+        "api_mode": get("OPENAI_COMPATIBLE_API_MODE", config.openai_compatible_api_mode),
+    }
 
 
 async def doctor() -> dict[str, Any]:
@@ -5018,59 +5698,61 @@ async def doctor() -> dict[str, Any]:
         info["primary_connection_test"] = {"status": "config_error", "message": sanitize_provider_error_message(e)}
     except Exception as e:
         info["main_search_connection_tests"] = {}
-        info["primary_connection_test"] = {"status": "error", "message": f"未知错误: {sanitize_provider_error_message(e)}"}
+        info["primary_connection_test"] = {"status": "error", "message": source_message('未知错误: {0}', sanitize_provider_error_message(e))}
 
     try:
         info["exa_connection_test"] = await _test_exa_connection()
     except httpx.TimeoutException:
-        info["exa_connection_test"] = {"status": "timeout", "message": "Exa API 请求超时"}
+        info["exa_connection_test"] = {"status": "timeout", "message": source_message('Exa API 请求超时')}
     except Exception as e:
         info["exa_connection_test"] = {"status": "error", "message": sanitize_provider_error_message(e)}
 
     try:
         info["tavily_connection_test"] = await _test_tavily_connection()
     except httpx.TimeoutException:
-        info["tavily_connection_test"] = {"status": "timeout", "message": "Tavily API 请求超时"}
+        info["tavily_connection_test"] = {"status": "timeout", "message": source_message('Tavily API 请求超时')}
     except Exception as e:
         info["tavily_connection_test"] = {"status": "error", "message": sanitize_provider_error_message(e)}
 
     try:
         info["jina_connection_test"] = await _test_jina_connection()
     except httpx.TimeoutException:
-        info["jina_connection_test"] = {"status": "timeout", "message": "Jina Reader 请求超时"}
+        info["jina_connection_test"] = {"status": "timeout", "message": source_message('Jina Reader 请求超时')}
     except Exception as e:
         info["jina_connection_test"] = {"status": "error", "message": sanitize_provider_error_message(e)}
 
-    try:
-        info["firecrawl_connection_test"] = await _test_firecrawl_connection()
-    except httpx.TimeoutException:
-        info["firecrawl_connection_test"] = {"status": "timeout", "message": "Firecrawl API 请求超时"}
-    except Exception as e:
-        info["firecrawl_connection_test"] = {
-            "status": "error",
-            "message": sanitize_provider_error_message(e),
-        }
+    info["firecrawl_connection_test"] = {**await _test_firecrawl_presence(), "probe": "presence"}
 
     try:
         info["zhipu_connection_test"] = await _test_zhipu_connection()
     except httpx.TimeoutException:
-        info["zhipu_connection_test"] = {"status": "timeout", "message": "智谱 API 请求超时"}
+        info["zhipu_connection_test"] = {"status": "timeout", "message": source_message('智谱 API 请求超时')}
     except Exception as e:
         info["zhipu_connection_test"] = {"status": "error", "message": sanitize_provider_error_message(e)}
 
     try:
         info["zhipu_mcp_connection_test"] = await _test_zhipu_mcp_connection()
     except httpx.TimeoutException:
-        info["zhipu_mcp_connection_test"] = {"status": "timeout", "message": "智谱 Coding Plan MCP 请求超时"}
+        info["zhipu_mcp_connection_test"] = {"status": "timeout", "message": source_message('智谱 Coding Plan MCP 请求超时')}
     except Exception as e:
         info["zhipu_mcp_connection_test"] = {"status": "error", "message": sanitize_provider_error_message(e)}
 
     try:
         info["context7_connection_test"] = await _test_context7_connection()
     except httpx.TimeoutException:
-        info["context7_connection_test"] = {"status": "timeout", "message": "Context7 API 请求超时"}
+        info["context7_connection_test"] = {"status": "timeout", "message": source_message('Context7 API 请求超时')}
     except Exception as e:
         info["context7_connection_test"] = {"status": "error", "message": sanitize_provider_error_message(e)}
+
+    try:
+        info["tinyfish_connection_test"] = await _test_tinyfish_connection()
+    except httpx.TimeoutException:
+        info["tinyfish_connection_test"] = {"status": "timeout", "message": source_message('TinyFish API 请求超时')}
+    except Exception as e:
+        info["tinyfish_connection_test"] = {"status": "error", "message": sanitize_provider_error_message(e)}
+
+    _record_doctor_probes(info)
+    info["provider_health"] = provider_health_status()
 
     minimum = validate_minimum_profile()
     info["capability_status"] = minimum.get("capability_status", get_capability_status())
@@ -5091,6 +5773,25 @@ async def doctor() -> dict[str, Any]:
     primary_test = info.get("primary_connection_test", {})
     primary_status = primary_test.get("status")
     main_search_ok = any(status == "ok" for status in main_search_statuses) if main_connection_tests else primary_status == "ok"
+    if info["intent_router_status"].get("mode") == "jev":
+        try:
+            settings = config.jev_settings()
+            client = JevClient(settings, time.monotonic() + settings.timeout, verify=config.ssl_verify_enabled)
+            await client.evaluate(
+                {"diagnostic": "Smart Search connection check"},
+                {"connection": noul("Is this state a connection check?", "It is a diagnostic connection check.", "It is not a connection check.")},
+                "diagnostic",
+            )
+            info["jev_connection_test"] = {"status": "ok", "model": settings.model, "usage": client.usage()}
+            main_search_ok = main_search_ok if settings.synthesis_mode == "true" else True
+            if not main_provider_configs and settings.synthesis_mode != "true":
+                info["primary_connection_test"] = {"status": "not_required", "message": source_message('Jev evidence mode does not require a main model')}
+        except (ValueError, ProviderCallError) as exc:
+            error_type, error = classify_provider_exception(exc)
+            info["jev_connection_test"] = {"status": "error", "error_type": error_type, "message": error}
+            primary_test = info["jev_connection_test"]
+            primary_status = "error"
+            main_search_ok = False
     info["ok"] = main_search_ok and minimum.get("ok", False)
     if info["ok"]:
         info["error_type"] = ""
@@ -5101,6 +5802,9 @@ async def doctor() -> dict[str, Any]:
     elif not minimum.get("ok", False):
         info["error"] = minimum.get("error", MINIMUM_PROFILE_ERROR)
         info["error_type"] = minimum.get("error_type", "config_error")
+    elif info.get("jev_connection_test", {}).get("status") == "error":
+        info["error"] = info["jev_connection_test"]["message"]
+        info["error_type"] = info["jev_connection_test"]["error_type"]
     else:
         info["error"] = primary_test.get("message", "Primary connection check failed")
         if primary_status == "config_error":
@@ -5137,8 +5841,7 @@ def set_model(model: str) -> dict[str, Any]:
         "ok": False,
         "error_type": "parameter_error",
         "error": (
-            "The legacy default model command was removed. Use `smart-search config set XAI_MODEL <model>` "
-            "or `smart-search config set OPENAI_COMPATIBLE_MODEL <model>`."
+            source_message('The legacy default model command was removed. Use `smart-search config set XAI_MODEL <model>` or `smart-search config set OPENAI_COMPATIBLE_MODEL <model>`.')
         ),
         "config_file": str(config.config_file),
     }
@@ -5161,13 +5864,60 @@ def config_set(key: str, value: str) -> dict[str, Any]:
         config.set_config_value(key, value)
     except ValueError as e:
         return {"ok": False, "error_type": "parameter_error", "error": str(e), "config_file": str(config.config_file)}
-    saved = config.get_saved_config(masked=True)
+    saved = config.get_saved_config(masked=True, data=config._load_config_file())
     return {
         "ok": True,
         "config_file": str(config.config_file),
         "key": key.strip().upper(),
         "value": saved.get(key.strip().upper(), ""),
     }
+
+
+def config_update(
+    set_values: dict[str, str] | None = None,
+    unset_keys: list[str] | None = None,
+    *,
+    expected_revision: str | None = None,
+) -> dict[str, Any]:
+    """Apply a batch of config changes in one validated, atomic write."""
+    try:
+        result = config.update_config_values(set_values, unset_keys, expected_revision=expected_revision)
+    except ValueError as e:
+        return {
+            "ok": False,
+            "error_type": "parameter_error",
+            "error": str(e),
+            "config_file": str(config.config_file),
+            "errors": [],
+            "saved": {},
+            "unset": [],
+        }
+    if not result["ok"]:
+        return {
+            "ok": False,
+            "error_type": "config_conflict" if result.get("conflict") else "parameter_error",
+            "error": "; ".join(f"{item['key']}: {item['error']}" for item in result["errors"]),
+            "config_file": str(config.config_file),
+            "errors": result["errors"],
+            "saved": {},
+            "unset": [],
+        }
+    saved = config.get_saved_config(masked=True, data=config._load_config_file())
+    return {
+        "ok": True,
+        "error_type": "",
+        "error": "",
+        "config_file": str(config.config_file),
+        "errors": [],
+        "saved": {key: saved.get(key, "") for key in result["saved"]},
+        "unset": result["unset"],
+    }
+
+
+def capability_status_from_values(values: dict[str, str]) -> dict[str, Any]:
+    """Use the runtime capability rules for unsaved configuration too."""
+    with config.snapshot(values, merge=False):
+        return get_capability_status()
 
 
 def config_unset(key: str) -> dict[str, Any]:
@@ -5182,7 +5932,7 @@ async def smoke(mode: str = "mock") -> dict[str, Any]:
     start = time.time()
     mode = (mode or "mock").strip().lower()
     if mode not in {"mock", "live"}:
-        return {"ok": False, "error_type": "parameter_error", "error": "mode must be mock or live"}
+        return {"ok": False, "error_type": "parameter_error", "error": source_message('mode must be mock or live')}
     if mode == "live":
         return await _smoke_live(start)
     return await _smoke_mock(start)
@@ -5221,9 +5971,9 @@ async def _smoke_mock(start: float) -> dict[str, Any]:
             "fallback_chain": MAIN_SEARCH_FALLBACK_CHAIN,
             "ok": True,
         },
-        "web_search": {"configured": ["zhipu"], "fallback_chain": ["zhipu", "zhipu-mcp", "tavily", "firecrawl"], "ok": True},
+        "web_search": {"configured": ["zhipu"], "fallback_chain": ["zhipu", "zhipu-mcp", "tavily", "firecrawl", "tinyfish"], "ok": True},
         "docs_search": {"configured": ["context7"], "fallback_chain": ["context7", "exa"], "ok": True},
-        "web_fetch": {"configured": ["tavily"], "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl"], "ok": True},
+        "web_fetch": {"configured": ["tavily"], "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl", "tinyfish"], "ok": True},
         "vertical_search": {
             "configured": [],
             "fallback_chain": [],
@@ -5442,7 +6192,7 @@ async def _smoke_mock(start: float) -> dict[str, Any]:
         {
             **minimum_status,
             "docs_search": {"configured": [], "fallback_chain": ["context7", "exa"], "ok": False},
-            "web_fetch": {"configured": [], "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl"], "ok": False},
+            "web_fetch": {"configured": [], "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl", "tinyfish"], "ok": False},
         },
     )
     cases.append(
@@ -5465,14 +6215,14 @@ async def _smoke_mock(start: float) -> dict[str, Any]:
     mock_research_status = {
         **minimum_status,
         "web_search": {
-            "configured": ["zhipu", "zhipu-mcp", "tavily", "firecrawl"],
-            "fallback_chain": ["zhipu", "zhipu-mcp", "tavily", "firecrawl"],
+            "configured": ["zhipu", "zhipu-mcp", "tavily", "firecrawl", "tinyfish"],
+            "fallback_chain": ["zhipu", "zhipu-mcp", "tavily", "firecrawl", "tinyfish"],
             "ok": True,
         },
         "docs_search": {"configured": ["context7", "exa"], "fallback_chain": ["context7", "exa"], "ok": True},
         "web_fetch": {
-            "configured": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl"],
-            "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl"],
+            "configured": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl", "tinyfish"],
+            "fallback_chain": ["tavily", "jina", "zhipu-mcp-reader", "firecrawl", "tinyfish"],
             "ok": True,
         },
         "vertical_search": {

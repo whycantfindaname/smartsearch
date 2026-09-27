@@ -1,3 +1,4 @@
+from ..i18n import source_message
 import json
 import time
 from typing import Any
@@ -8,10 +9,16 @@ from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt, wait
 from .base import BaseSearchProvider
 from ..config import config
 from ..logger import log_info
-from ..provider_errors import classify_provider_exception
+from ..provider_errors import ProviderCallError, classify_provider_exception, sanitize_provider_error_message
 
 
 RETRYABLE_STATUS_CODES = {408, 500, 502, 503, 504}
+# Zhipu reports several failures inside an HTTP 200 body, so the payload has to
+# be classified as well; otherwise a dead key looks like an empty result set.
+AUTH_ERROR_CODES = {"1000", "1001", "1002", "1003", "1004", "1110", "401"}
+RATE_LIMITED_ERROR_CODES = {"1113", "1301", "1302", "1303", "1304", "1305", "429"}
+AUTH_ERROR_KEYWORDS = ("api key", "apikey", "token", "鉴权", "认证", "未授权", "unauthorized", "invalid key")
+RATE_LIMITED_ERROR_KEYWORDS = ("余额", "欠费", "quota", "rate limit", "限流", "频率", "并发", "too many requests")
 
 
 def _is_retryable_exception(exc) -> bool:
@@ -33,6 +40,38 @@ def _normalize_result(item: dict[str, Any]) -> dict[str, Any]:
         "icon": item.get("icon") or "",
         "refer": item.get("refer") or "",
     }
+
+
+def _classify_payload_error(code: str, message: str) -> str:
+    normalized_code = str(code or "").strip()
+    lowered = (message or "").lower()
+    if normalized_code in AUTH_ERROR_CODES or any(keyword in lowered for keyword in AUTH_ERROR_KEYWORDS):
+        return "auth_error"
+    if normalized_code in RATE_LIMITED_ERROR_CODES or any(keyword in lowered for keyword in RATE_LIMITED_ERROR_KEYWORDS):
+        return "rate_limited"
+    return "provider_error"
+
+
+def _raise_for_payload_error(data: dict[str, Any], api_key: str = "") -> None:
+    """Raise when Zhipu reports a failure inside an HTTP 200 response body."""
+    error = data.get("error")
+    if isinstance(error, dict):
+        code = str(error.get("code") or "")
+        message = str(error.get("message") or error.get("msg") or "")
+    elif isinstance(error, str) and error:
+        code = str(data.get("code") or "")
+        message = error
+    elif data.get("code") not in (None, 0, "0", 200, "200") and "search_result" not in data:
+        code = str(data.get("code") or "")
+        message = str(data.get("message") or data.get("msg") or "")
+    else:
+        return
+    detail = sanitize_provider_error_message(message or "Zhipu reported a request failure", additional_secrets=(api_key,))
+    raise ProviderCallError(
+        _classify_payload_error(code, message),
+        source_message('Zhipu error {0}: {1}', code, detail) if code else detail,
+        additional_secrets=(api_key,),
+    )
 
 
 def _error_payload(exc: Exception, api_key: str = "") -> dict[str, Any]:
@@ -90,6 +129,7 @@ class ZhipuWebSearchProvider(BaseSearchProvider):
         start_time = time.time()
         try:
             data = await self._request_with_retry(endpoint, headers, payload)
+            _raise_for_payload_error(data, self.api_key)
             elapsed_ms = round((time.time() - start_time) * 1000, 2)
             results = [_normalize_result(item) for item in data.get("search_result", []) or []]
             output = {
@@ -118,7 +158,7 @@ class ZhipuWebSearchProvider(BaseSearchProvider):
 
     async def _request_with_retry(self, endpoint: str, headers: dict, payload: dict) -> dict[str, Any]:
         timeout = httpx.Timeout(connect=6.0, read=self.timeout, write=10.0, pool=None)
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, verify=config.ssl_verify_enabled) as client:
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
             async for attempt in AsyncRetrying(
                 stop=stop_after_attempt(config.retry_max_attempts + 1),
                 wait=wait_random_exponential(multiplier=config.retry_multiplier, max=config.retry_max_wait),

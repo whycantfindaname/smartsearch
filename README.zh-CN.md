@@ -12,6 +12,10 @@
 
 ![Star History Chart](https://api.star-history.com/svg?repos=konbakuyomu/smartsearch&type=Date)
 
+## 桌面 App
+
+当前发布线（`0.1.23`）已经包含上游桌面 App：可管理 provider 配置、查看搜索与研究活动，并更新选定 Agent 的 Skills；App 关闭后，独立 CLI 仍可继续使用。可从[发行页](https://github.com/konbakuyomu/smartsearch/releases/latest)下载，或查看[桌面 App 指南](docs/guide/zh-CN/app.md)。macOS 包仍未签名、未公证；桌面端和 CLI 共用同一套 provider/configuration 契约。
+
 ## 它到底是什么
 
 它不是 MCP Server，而是一个普通命令行工具。AI 工具通过 `smart-search-cli` skill 调它，脚本和终端用户也可以直接调它：

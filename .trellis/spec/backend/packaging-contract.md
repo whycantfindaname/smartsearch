@@ -87,6 +87,9 @@ readiness commands are `python3 scripts/managed_sync.py inspect`,
 `npm run --silent check:skill-parity`, and
 `npm run --silent smoke:tarball`; explicit live acceptance is
 `python3 scripts/managed_sync.py verify-live`.
+`python3 scripts/managed_sync.py downstream-handoff` is a read-only Skills
+`main` provenance gate after packed smoke; it uses Infra's registered workspace
+and repository roots. It does not adopt a package or activate a platform.
 
 ### 3. Contracts
 
@@ -98,6 +101,15 @@ readiness commands are `python3 scripts/managed_sync.py inspect`,
   activate a host runtime, or perform a provider request.
 - Skills propagation and platform activation remain owned by their Infra/Skills
   profiles. Provider/request recovery remains in the Skill reference catalog.
+- The downstream gate accepts committed Skills `main` catalog/package provenance
+  without overlapping dirty inputs; unrelated dirty paths remain untouched. The
+  catalog pin and
+  README snapshot whose pinned source Skill tree matches the selected producer
+  tree. Local package adaptations remain valid under that provenance. A different
+  commit with the same tree is artifact-equivalent, not an exact-current pin.
+  No `platform_activation` command is declared in this slice.
+- Smart Search owns the artifact version from its committed `package.json`;
+  the Skills inspector returns only package/catalog provenance and Git identity.
 
 ### 4. Validation & Error Matrix
 

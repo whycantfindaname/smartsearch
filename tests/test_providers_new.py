@@ -206,3 +206,56 @@ async def test_exa_provider_reports_bad_request_as_parameter_error(monkeypatch):
     assert data["error_type"] == "parameter_error"
     assert "HTTP 400" in data["error"]
     assert "invalid includeDomains" in data["error"]
+
+
+def _zhipu_client_returning(payload):
+    class FakeAsyncClient:
+        def __init__(self, timeout, follow_redirects=True):
+            self.timeout = timeout
+            self.follow_redirects = follow_redirects
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
+        async def post(self, endpoint, headers, json):
+            return httpx.Response(200, json=payload, request=httpx.Request("POST", endpoint))
+
+    return FakeAsyncClient
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected_type"),
+    [
+        ({"error": {"code": "1002", "message": "Authorization Token 非法"}}, "auth_error"),
+        ({"error": {"code": "1113", "message": "账户余额不足，请充值"}}, "rate_limited"),
+        ({"error": {"code": "1210", "message": "参数不合法"}}, "provider_error"),
+        ({"code": 1002, "message": "invalid api key"}, "auth_error"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_zhipu_provider_classifies_errors_returned_with_http_200(monkeypatch, payload, expected_type):
+    monkeypatch.setattr("smart_search.providers.zhipu.httpx.AsyncClient", _zhipu_client_returning(payload))
+    provider = ZhipuWebSearchProvider("https://open.bigmodel.cn/api", "secret-key")
+
+    data = json.loads(await provider.search("hello"))
+
+    assert data["ok"] is False
+    assert data["error_type"] == expected_type
+    assert "secret-key" not in data["error"]
+
+
+@pytest.mark.asyncio
+async def test_zhipu_provider_keeps_an_empty_result_set_successful(monkeypatch):
+    monkeypatch.setattr(
+        "smart_search.providers.zhipu.httpx.AsyncClient",
+        _zhipu_client_returning({"request_id": "r1", "code": 200, "search_result": []}),
+    )
+    provider = ZhipuWebSearchProvider("https://open.bigmodel.cn/api", "key")
+
+    data = json.loads(await provider.search("hello"))
+
+    assert data["ok"] is True
+    assert data["results"] == []

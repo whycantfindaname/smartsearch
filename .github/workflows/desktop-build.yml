@@ -1,0 +1,303 @@
+name: Desktop packages
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/desktop-build.yml"
+      - "desktop/**"
+      - "pyproject.toml"
+      - "src/smart_search/**"
+  workflow_dispatch:
+    inputs:
+      sign_windows:
+        description: "Build self-signed Windows candidates without publishing (release_tag always requires signing)"
+        type: boolean
+        required: false
+        default: false
+      release_tag:
+        description: "Optional existing stable vX.Y.Z tag: build all packages and attach them with SHA256SUMS to that release"
+        required: false
+        default: ""
+      replace_existing_assets:
+        description: "Explicitly replace existing packages and checksums when repairing release packaging"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    name: Windows ${{ matrix.architecture }} test package
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            runner: windows-latest
+            python_architecture: x64
+          - architecture: arm64
+            runner: windows-11-arm
+            python_architecture: arm64
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
+
+      - name: Set up Python
+        id: python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          architecture: ${{ matrix.python_architecture }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install build dependencies
+        run: python -m pip install --disable-pip-version-check . "pyinstaller==6.22.3"
+
+      - name: Load release tooling from the workflow revision
+        # Product source stays pinned to the tag; packaging and test fixes
+        # come from this workflow's immutable commit.
+        if: inputs.release_tag != ''
+        shell: pwsh
+        env:
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$env:WORKFLOW_SHA"
+          if ($LASTEXITCODE -ne 0) { throw "Unable to fetch the workflow revision" }
+          git restore --source="$env:WORKFLOW_SHA" -- desktop/tests/BackendLifecycleCheck desktop/scripts desktop/packaging/windows
+          if ($LASTEXITCODE -ne 0) { throw "Unable to load the release tooling" }
+
+      - name: Verify backend stop and reconnect without a window
+        shell: pwsh
+        run: >-
+          dotnet run --project desktop/tests/BackendLifecycleCheck --configuration Release --
+          "${{ steps.python.outputs.python-path }}"
+          "$env:RUNNER_TEMP/smartsearch-client-lifecycle"
+
+      - name: Install Inno Setup on the disposable release runner
+        if: inputs.sign_windows || inputs.release_tag != ''
+        run: choco install innosetup --yes --no-progress
+
+      - name: Import pinned Windows signing identity
+        if: github.event_name == 'workflow_dispatch' && (inputs.sign_windows || inputs.release_tag != '')
+        shell: pwsh
+        env:
+          SMART_SEARCH_WINDOWS_PFX_BASE64: ${{ secrets.SMART_SEARCH_WINDOWS_PFX_BASE64 }}
+          SMART_SEARCH_WINDOWS_PFX_PASSWORD: ${{ secrets.SMART_SEARCH_WINDOWS_PFX_PASSWORD }}
+        run: ./desktop/scripts/Import-WindowsSigningIdentity.ps1
+
+      - name: Check signing failures and tamper rejection
+        if: github.event_name == 'workflow_dispatch' && (inputs.sign_windows || inputs.release_tag != '')
+        shell: pwsh
+        env:
+          SMART_SEARCH_WINDOWS_PFX_BASE64: ${{ secrets.SMART_SEARCH_WINDOWS_PFX_BASE64 }}
+          SMART_SEARCH_WINDOWS_PFX_PASSWORD: ${{ secrets.SMART_SEARCH_WINDOWS_PFX_PASSWORD }}
+        run: ./desktop/scripts/Test-WindowsSigning.ps1
+
+      - name: Build self-contained test package
+        shell: pwsh
+        run: >-
+          .\desktop\scripts\Build-Windows.ps1
+          -Architecture ${{ matrix.architecture }}
+          -PythonPath "${{ steps.python.outputs.python-path }}"
+          -InstallerMode ${{ (inputs.sign_windows || inputs.release_tag != '') && 'Required' || 'Skip' }}
+          -SigningMode ${{ (inputs.sign_windows || inputs.release_tag != '') && 'Required' || 'Skip' }}
+
+      - name: Remove the runner signing key
+        if: always() && github.event_name == 'workflow_dispatch' && (inputs.sign_windows || inputs.release_tag != '')
+        shell: pwsh
+        run: |
+          $public = [Security.Cryptography.X509Certificates.X509Certificate2]::new(
+            [IO.File]::ReadAllBytes((Join-Path $PWD 'desktop/packaging/windows/smart-search.cer')))
+          $identity = "Cert:/CurrentUser/My/$($public.Thumbprint)"
+          if (Test-Path -LiteralPath $identity) { Remove-Item -LiteralPath $identity -DeleteKey }
+          $public.Dispose()
+
+      - name: Verify installed programs and uninstaller on the disposable runner
+        if: success() && (inputs.sign_windows || inputs.release_tag != '')
+        shell: pwsh
+        env:
+          TARGET_ARCH: ${{ matrix.architecture }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./desktop/scripts/Windows-Signing.ps1
+          $results = @(Get-ChildItem ".desktop-artifacts/windows-$env:TARGET_ARCH-*/result.json")
+          if ($results.Count -ne 1) { throw 'Expected one fresh Windows build result' }
+          $build = Get-Content -Raw -LiteralPath $results[0].FullName | ConvertFrom-Json
+          $install = Join-Path $env:RUNNER_TEMP 'SmartSearch-signing-install'
+          if (Test-Path -LiteralPath $install) { throw 'Refusing to reuse an installation directory' }
+          $process = Start-Process -FilePath $build.installer.path -WindowStyle Hidden -Wait -PassThru -ArgumentList @(
+            '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/NOICONS', ('/DIR="{0}"' -f $install))
+          if ($process.ExitCode -ne 0) { throw 'Silent candidate installation failed' }
+          $certificate = Get-ExpectedSigningCertificate ./desktop/packaging/windows/smart-search.cer
+          $verified = foreach ($relative in @('SmartSearch.Desktop.exe', 'SmartSearch.Desktop.dll', 'backend/smart-search.exe', 'unins000.exe')) {
+            Test-WindowsSignature (Join-Path $install $relative) $certificate
+          }
+          $certificate.Dispose()
+          $verified | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $build.run_directory 'installed-signatures.json') -Encoding utf8
+
+      - name: Stage release installer
+        if: inputs.release_tag != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package-windows-${{ matrix.architecture }}
+          path: .desktop-artifacts/windows-${{ matrix.architecture }}-*/installer/*.exe
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-search-windows-${{ matrix.architecture }}-${{ (inputs.sign_windows || inputs.release_tag != '') && 'self-signed' || 'unsigned-test' }}
+          path: .desktop-artifacts/windows-${{ matrix.architecture }}-*/publish/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload signing evidence and candidate installer
+        if: inputs.sign_windows || inputs.release_tag != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-search-windows-${{ matrix.architecture }}-signing-evidence
+          path: |
+            .desktop-artifacts/windows-${{ matrix.architecture }}-*/result.json
+            .desktop-artifacts/windows-${{ matrix.architecture }}-*/installed-signatures.json
+            .desktop-artifacts/windows-${{ matrix.architecture }}-*/installer/*.exe
+            .desktop-artifacts/windows-${{ matrix.architecture }}-*/signed-uninstaller/*
+            .desktop-artifacts/signing-check-*/result.json
+            desktop/packaging/windows/smart-search.cer
+            desktop/packaging/windows/smart-search.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  macos:
+    name: macOS ${{ matrix.architecture }} test package
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x86_64
+            runner: macos-15-intel
+            python_architecture: x64
+          - architecture: arm64
+            runner: macos-15
+            python_architecture: arm64
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
+
+      - name: Set up Python
+        id: python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          architecture: ${{ matrix.python_architecture }}
+
+      - name: Install build dependencies
+        env:
+          PYTHON_BIN: ${{ steps.python.outputs.python-path }}
+        run: '"$PYTHON_BIN" -m pip install --disable-pip-version-check . "pyinstaller==6.22.3"'
+
+      - name: Load backend packaging from the workflow revision
+        if: inputs.release_tag != ''
+        env:
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$WORKFLOW_SHA"
+          git restore --source="$WORKFLOW_SHA" -- desktop/scripts/build_backend.py
+
+      - name: Build unsigned test app and DMG
+        run: >-
+          bash desktop/scripts/build-macos.sh
+          --architecture ${{ matrix.architecture }}
+          --python "${{ steps.python.outputs.python-path }}"
+
+      - name: Upload unsigned test package
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-search-macos-${{ matrix.architecture }}-unsigned-test
+          path: .desktop-artifacts/macos-${{ matrix.architecture }}-*/*.dmg
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Stage release DMG
+        if: inputs.release_tag != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package-macos-${{ matrix.architecture }}
+          path: .desktop-artifacts/macos-${{ matrix.architecture }}-*/*.dmg
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Test macOS protocol models
+        run: >-
+          swift test --package-path desktop/macos --configuration release
+          --arch ${{ matrix.architecture }}
+          --scratch-path .desktop-artifacts/macos-model-tests
+
+  release-assets:
+    if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_tag }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-package-*
+          path: release-packages
+          merge-multiple: true
+      - name: Validate version, platforms and checksums
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, pathlib, re
+          tag = os.environ['RELEASE_TAG']
+          assert re.fullmatch(r'v\d+\.\d+\.\d+', tag), 'Only stable version tags are accepted'
+          version = json.loads(pathlib.Path('package.json').read_text())['version']
+          assert tag == 'v' + version, 'Tag and source package version differ'
+          expected = {f'SmartSearch-{version}-win-{a}-Setup-signed.exe' for a in ('x64', 'arm64')}
+          expected |= {f'SmartSearch-{version}-macos-{a}-unsigned-test.dmg' for a in ('x86_64', 'arm64')}
+          root = pathlib.Path('release-packages')
+          files = sorted(p for p in root.rglob('*') if p.is_file())
+          assert len(files) == len(expected) and {p.name for p in files} == expected, 'Missing or unexpected platform packages'
+          for p in files:
+              if p.parent != root:
+                  p.rename(root / p.name)
+          files = sorted(root / name for name in expected)
+          rows = [hashlib.file_digest(p.open('rb'), 'sha256').hexdigest() + '  ' + p.name for p in files]
+          (root / 'SHA256SUMS.txt').write_text('\n'.join(rows) + '\n')
+          PY
+      - name: Attach complete packages to the existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          REPLACE_EXISTING_ASSETS: ${{ inputs.replace_existing_assets }}
+        run: |
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"
+          upload_args=()
+          if [[ "$REPLACE_EXISTING_ASSETS" == "true" ]]; then
+            upload_args+=(--clobber)
+          fi
+          gh release upload "$RELEASE_TAG" release-packages/*.exe release-packages/*.dmg release-packages/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" "${upload_args[@]}"

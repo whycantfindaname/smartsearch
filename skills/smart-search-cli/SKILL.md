@@ -52,6 +52,14 @@ For every Smart Search retrieval workflow, read [`bundled-skills/anysearch/CONTR
 
 AnySearch remains outside the Smart Search provider registry. Its adapter reads only Smart Search's private dual-key configuration and does not use project `.env` files, process credentials, or anonymous access. If the bundle, adapter, credentials, quota, or service is unavailable, record the gap and continue with other authorized routes when possible.
 
+## Timeout Retry Policy
+
+For `error_type: "timeout"`, Retry up to 3 total attempts with `--timeout 300` and `--extra-sources 1` when the user has not supplied an explicit one-call override. That means use `--extra-sources 1` during retry attempts and `--timeout` only for an explicit one-call override. Do not wrap `smart-search` in a shell-level `timeout` command. Do not rely on `SMART_SEARCH_RETRY_*` settings as the contract. If the main search still times out, fall back to source-first evidence: Run `exa-search` with the original query, then `fetch` the top 1-2 relevant URLs and label the result with `source_mode: "fallback"`.
+
+## Sciverse boundary
+
+Sciverse is explicit experimental academic search only; do not use Sciverse as `docs_search`; do not insert Sciverse into default Deep Research fallback. Use its dedicated `sciverse-*` commands only when the user or research plan explicitly selects academic retrieval.
+
 ## Reference Router
 
 | Need | Read |

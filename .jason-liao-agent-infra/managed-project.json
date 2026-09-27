@@ -23,6 +23,13 @@
       "mutates": [],
       "receipt_schema": "jason-smartsearch.managed-sync-packed-smoke.v1"
     },
+    "downstream_handoff": {
+      "argv": ["python3", "scripts/managed_sync.py", "downstream-handoff"],
+      "cwd": ".",
+      "timeout_seconds": 180,
+      "mutates": [],
+      "receipt_schema": "jason-agent-infra.delivery-artifacts.v1"
+    },
     "verify_live": {
       "argv": ["python3", "scripts/managed_sync.py", "verify-live"],
       "cwd": ".",
@@ -61,6 +68,16 @@
       "failure_policy": "stop_project",
       "verification_level": "committed",
       "error_catalog": ["SS_SYNC_PACKED_SMOKE_FAILED"]
+    },
+    {
+      "id": "downstream_handoff",
+      "stage": "downstream_propagation",
+      "command": "downstream_handoff",
+      "depends_on": ["release_packed_smoke"],
+      "allowed_mutations": [],
+      "failure_policy": "stop_project",
+      "verification_level": "committed",
+      "error_catalog": ["SS_SYNC_DOWNSTREAM_HANDOFF_REQUIRED"]
     },
     {
       "id": "functional_verification",
