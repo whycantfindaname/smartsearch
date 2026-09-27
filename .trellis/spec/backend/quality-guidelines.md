@@ -64,5 +64,8 @@ gate actually protects.
   directly inside `async def` paths — wrap with `asyncio.to_thread`.
 - POSIX-only assertions (e.g. file mode `0o600`) need
   `@pytest.mark.skipif(os.name == "nt", ...)`; CI runs Windows.
+- Compare symlink target identity with `Path.samefile()`; Windows `readlink()`
+  may return an extended-length path prefix. Virtual environment assertions must
+  use `Scripts/python.exe` on Windows and `bin/python` on POSIX.
 - Lint: `ruff` with the repo default ruleset; changed files must not add new
   findings versus `HEAD` (the existing codebase has a baseline).

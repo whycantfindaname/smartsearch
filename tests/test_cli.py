@@ -3097,7 +3097,7 @@ def test_qoder_status_reads_managed_link_but_update_preserves_it(tmp_path, tool_
     assert "symbolic link" in result["failed"][0]["error"]
     assert result["failed"][0]["path"] == str(link)
     assert link.is_symlink()
-    assert link.readlink() == owner
+    assert link.samefile(owner)
     assert (owner / "SKILL.md").read_text(encoding="utf-8") == "owner adaptation"
     if tool_root == ".qoder-cn":
         assert not (root / ".qoder").exists()
