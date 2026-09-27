@@ -3,7 +3,7 @@ id: "evidence_miner"
 display_name: "Evidence Miner"
 description: "Extract locator-backed evidence from Root-selected registered artifacts."
 deployment_defaults:
-  model: "gpt-5.6-luna"
+  model: "gpt-6-luna"
   reasoning_effort: "max"
   service_tier: "priority"
 contracts:
