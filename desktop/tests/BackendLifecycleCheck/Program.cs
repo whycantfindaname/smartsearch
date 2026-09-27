@@ -8,15 +8,44 @@ if (ActivityPresentation.ProviderModel("firecrawl", "") != "服务商：firecraw
 
 // The same real client must reconnect after stopping for a failed installer
 // launch. No UI, installer, package manager, or provider is invoked here.
-if (args.Length != 2) throw new ArgumentException("Pass Python executable and an isolated config directory.");
-await using var client = new BackendClient(args[0], ["-m", "smart_search.desktop_entry"]);
+var standalone = args.Length == 3 && args[0] == "--standalone";
+if (!standalone && args.Length != 2) throw new ArgumentException("Pass Python executable and an isolated config directory, or --standalone CLI config-directory.");
+var configDirectory = Path.GetFullPath(args[^1]);
+await using (var missing = new BackendClient(Path.Combine(configDirectory, "missing-smart-search.exe")))
+{
+    try
+    {
+        await missing.StartAsync(configDirectory, CancellationToken.None);
+        throw new Exception("Missing executable should fail before starting a process.");
+    }
+    catch (BackendDisconnectedException error)
+    {
+        if (!error.Message.Contains("概览的本地环境")) throw new Exception("Missing CLI recovery must point to Overview.");
+    }
+}
+await using var client = standalone ? new BackendClient() : new BackendClient(args[0], ["-m", "smart_search.desktop_entry"]);
+if (standalone)
+{
+    var manager = new CLIInstallationManager(Path.Combine(configDirectory, "detection-state"), searchPath: "");
+    manager.SetCliPath(Path.GetFullPath(args[1]));
+    await manager.DiscoverAsync();
+    if (manager.Selected is not { Compatible: true, Source: "manual", CanManage: false } selected)
+        throw new Exception("Standalone discovery failed: " + manager.Message);
+    // Isolate background Skill maintenance as well as provider configuration.
+    selected.Environment["LOCALAPPDATA"] = Path.Combine(configDirectory, "local");
+    selected.Environment["APPDATA"] = Path.Combine(configDirectory, "roaming");
+    selected.Environment["USERPROFILE"] = configDirectory;
+    selected.Environment["HOME"] = configDirectory;
+    selected.Environment["SMART_SEARCH_ACTIVITY_ENABLED"] = "false";
+    client.Installation = selected;
+}
 for (var attempt = 0; attempt < 2; attempt++)
 {
-    var state = await client.StartAsync(args[1], CancellationToken.None);
+    var state = await client.StartAsync(configDirectory, CancellationToken.None);
     if (state.GetProperty("protocol_version").GetInt32() != 1) throw new Exception("Handshake failed.");
     var pong = await client.CallAsync("ping", new { }, CancellationToken.None);
     if (pong.GetProperty("protocol_version").GetInt32() != 1) throw new Exception("Reconnect failed.");
     await client.StopAsync();
     if (client.IsConnected) throw new Exception("Stopped backend is still connected.");
 }
-Console.WriteLine("PASS: stop and reconnect preserve the private RPC client.");
+Console.WriteLine("PASS: " + (standalone ? "standalone discovery without Node/npm and " : "") + "stop/reconnect preserve the private RPC client.");

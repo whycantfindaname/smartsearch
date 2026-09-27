@@ -15506,5 +15506,2193 @@
   "独立 CLI 已就绪。可返回上方检查并更新 Skills。": [
     "独立 CLI 已就绪。可返回上方检查并更新 Skills。",
     "The independent CLI is ready. Check and update Skills above."
+  ],
+  "连接后会读取当前配置、工具目录和活动记录。": [
+    "连接后会读取当前配置、工具目录和活动记录。",
+    "Your configuration, tools and activity will appear once connected."
+  ],
+  "查看配置状态": [
+    "查看配置状态",
+    "Review configuration"
+  ],
+  "有未保存修改": [
+    "有未保存修改",
+    "Unsaved changes"
+  ],
+  "开发选项": [
+    "开发选项",
+    "Developer options"
+  ],
+  "偏好设置": [
+    "偏好设置",
+    "Preferences"
+  ],
+  "安装位置": [
+    "安装位置",
+    "Installation paths"
+  ],
+  "工具说明": [
+    "工具说明",
+    "Tool details"
+  ],
+  "已选择 {0} 个 Agent": [
+    "已选择 {0} 个 Agent",
+    "{0} agents selected"
+  ],
+  "文件详情": [
+    "文件详情",
+    "File details"
+  ],
+  "更多能力": [
+    "更多能力",
+    "More capabilities"
+  ],
+  "最近记录": [
+    "最近记录",
+    "Recent activity"
+  ],
+  "检查详情与偏好": [
+    "检查详情与偏好",
+    "Check details and preferences"
+  ],
+  "管理记录": [
+    "管理记录",
+    "Manage activity"
+  ],
+  "管理语言、配置目录和软件更新。": [
+    "管理语言、配置目录和软件更新。",
+    "Manage language, configuration folders and software updates."
+  ],
+  "进行中的任务": [
+    "进行中的任务",
+    "Running tasks"
+  ],
+  "选择工具，输入问题或链接，查看结果与来源。": [
+    "选择工具，输入问题或链接，查看结果与来源。",
+    "Choose a tool, enter a question or URL, and read the results and sources."
+  ],
+  "项目主页": [
+    "项目主页",
+    "Project website"
+  ],
+  "App 内置 CLI": [
+    "App 内置 CLI",
+    "Bundled CLI"
+  ],
+  "App 更新": [
+    "App 更新",
+    "App Updates"
+  ],
+  "任务正在运行": [
+    "任务正在运行",
+    "Task in progress"
+  ],
+  "修改先保留为草稿；测试使用当前填写的值。": [
+    "修改先保留为草稿；测试使用当前填写的值。",
+    "Changes stay in your draft until saved. Tests use the values entered here."
+  ],
+  "先选择工具并运行一次请求。": [
+    "先选择工具并运行一次请求。",
+    "Choose a tool and run a request first."
+  ],
+  "内置入口随 App 卸载失效。独立 CLI 接入不使用此入口；已有同名命令不会被覆盖。": [
+    "内置入口随 App 卸载失效。独立 CLI 接入不使用此入口；已有同名命令不会被覆盖。",
+    "The bundled entry point stops working when the App is removed. The independent CLI uses its own installation. Existing commands with the same name are preserved."
+  ],
+  "准备运行环境…": [
+    "准备运行环境…",
+    "Set Up Runtime…"
+  ],
+  "备份：{0}": [
+    "备份：{0}",
+    "Backup: {0}"
+  ],
+  "字段说明": [
+    "字段说明",
+    "Field Information"
+  ],
+  "工作区": [
+    "工作区",
+    "Workspace"
+  ],
+  "已展开": [
+    "已展开",
+    "Expanded"
+  ],
+  "已收起": [
+    "已收起",
+    "Collapsed"
+  ],
+  "当前：{0}": [
+    "当前：{0}",
+    "Current: {0}"
+  ],
+  "所有修改已保存": [
+    "所有修改已保存",
+    "All changes saved"
+  ],
+  "扩展能力": [
+    "扩展能力",
+    "Additional capabilities"
+  ],
+  "技能来源": [
+    "技能来源",
+    "Skills source"
+  ],
+  "按类别管理应用偏好和更新。": [
+    "按类别管理应用偏好和更新。",
+    "Manage preferences and updates by category."
+  ],
+  "搜索选项": [
+    "搜索选项",
+    "Search Options"
+  ],
+  "搜索选项…": [
+    "搜索选项…",
+    "Search Options…"
+  ],
+  "查找服务商": [
+    "查找服务商",
+    "Find a provider"
+  ],
+  "查看 {0} 的文件详情": [
+    "查看 {0} 的文件详情",
+    "View file details for {0}"
+  ],
+  "查看活动": [
+    "查看活动",
+    "View Activity"
+  ],
+  "查看设置": [
+    "查看设置",
+    "View Settings"
+  ],
+  "查看路由顺序和最近请求状态。": [
+    "查看路由顺序和最近请求状态。",
+    "Review routing order and recent request status."
+  ],
+  "检查使用当前草稿，不会保存或发起服务商请求。": [
+    "检查使用当前草稿，不会保存或发起服务商请求。",
+    "This checks your current draft without saving it or contacting providers."
+  ],
+  "检查偏好": [
+    "检查偏好",
+    "Check Preferences"
+  ],
+  "每类能力选择一个服务商，填写连接信息后测试并保存。": [
+    "每类能力选择一个服务商，填写连接信息后测试并保存。",
+    "Choose a provider for each capability, enter connection details, then test and save."
+  ],
+  "没有匹配的服务商": [
+    "没有匹配的服务商",
+    "No matching providers"
+  ],
+  "没有记录不代表外部 CLI 一定空闲。": [
+    "没有记录不代表外部 CLI 一定空闲。",
+    "No records does not mean an external CLI is idle."
+  ],
+  "活动筛选": [
+    "活动筛选",
+    "Filter Activity"
+  ],
+  "活动记录已暂停": [
+    "活动记录已暂停",
+    "Activity recording is paused"
+  ],
+  "活动选项": [
+    "活动选项",
+    "Activity Options"
+  ],
+  "管理连接信息和检索服务。": [
+    "管理连接信息和检索服务。",
+    "Manage connections and search providers."
+  ],
+  "结果会显示在这里": [
+    "结果会显示在这里",
+    "Results appear here"
+  ],
+  "观察设置": [
+    "观察设置",
+    "Observation Settings"
+  ],
+  "观察设置…": [
+    "观察设置…",
+    "Observation Settings…"
+  ],
+  "设置类别": [
+    "设置类别",
+    "Settings Category"
+  ],
+  "输入": [
+    "输入",
+    "Input"
+  ],
+  "运行环境…": [
+    "运行环境…",
+    "Runtime…"
+  ],
+  "返回输入": [
+    "返回输入",
+    "Back to Input"
+  ],
+  "这里显示当前观察范围内的任务。": [
+    "这里显示当前观察范围内的任务。",
+    "Tasks from the current observation scope appear here."
+  ],
+  "连接设置": [
+    "连接设置",
+    "Connection"
+  ],
+  "选择一条活动查看详情": [
+    "选择一条活动查看详情",
+    "Select an activity to view details"
+  ],
+  "选择工具并输入内容。完成后在结果中阅读和导出。": [
+    "选择工具并输入内容。完成后在结果中阅读和导出。",
+    "Choose a tool and enter your request. Read and export the result when it finishes."
+  ],
+  "选择要接入的 Agent，再更新对应的技能文件。": [
+    "选择要接入的 Agent，再更新对应的技能文件。",
+    "Choose your agents, then update their skill files."
+  ],
+  "通用": [
+    "通用",
+    "General"
+  ],
+  "部分活动目录无法读取": [
+    "部分活动目录无法读取",
+    "Some activity directories could not be read"
+  ],
+  "配置服务商": [
+    "配置服务商",
+    "Configure Providers"
+  ],
+  "配置范围": [
+    "配置范围",
+    "Configuration Scope"
+  ],
+  "配置详情…": [
+    "配置详情…",
+    "Configuration Details…"
+  ],
+  "高级": [
+    "高级",
+    "Advanced"
+  ],
+  "高级配置": [
+    "高级配置",
+    "Advanced Configuration"
+  ],
+  "当前阶段": [
+    "当前阶段",
+    "Current phase"
+  ],
+  "服务商与模型": [
+    "服务商与模型",
+    "Provider and model"
+  ],
+  "从左侧选择服务商或配置项目。": [
+    "从左侧选择服务商或配置项目。",
+    "Select a provider or configuration section on the left."
+  ],
+  "更新 App 和内置引擎。": [
+    "更新 App 和内置引擎。",
+    "Update the App and its bundled engine."
+  ],
+  "版本 {0}": [
+    "版本 {0}",
+    "Version {0}"
+  ],
+  "管理独立安装的命令行工具。": [
+    "管理独立安装的命令行工具。",
+    "Manage the independently installed command-line tools."
+  ],
+  "管理语言和配置目录。": [
+    "管理语言和配置目录。",
+    "Manage language and configuration folders."
+  ],
+  "选择工具并填写请求，结果会显示在右侧。": [
+    "选择工具并填写请求，结果会显示在右侧。",
+    "Choose a tool and enter a request. Results appear on the right."
+  ],
+  "配置连接参数和内置 CLI。": [
+    "配置连接参数和内置 CLI。",
+    "Configure backend connections and the bundled CLI."
+  ],
+  "研究数据源": [
+    "研究数据源",
+    "Research sources"
+  ],
+  "先选择路由方式，再填写该模式使用的参数。": [
+    "先选择路由方式，再填写该模式使用的参数。",
+    "Choose a routing mode, then configure the parameters it uses."
+  ],
+  "请求设置": [
+    "请求设置",
+    "Request settings"
+  ],
+  "JEV 连接": [
+    "JEV 连接",
+    "JEV connection"
+  ],
+  "检索与判断": [
+    "检索与判断",
+    "Retrieval and judgments"
+  ],
+  "结果处理": [
+    "结果处理",
+    "Result processing"
+  ],
+  "以规则为基础，可按需配置向量模型和分类模型增强判断。未配置的模型不会被调用。": [
+    "以规则为基础，可按需配置向量模型和分类模型增强判断。未配置的模型不会被调用。",
+    "Start with rules and optionally add an embedding model and a classifier. Only configured models are used."
+  ],
+  "使用 JEV 选择检索渠道并判断证据是否充分，需要单独配置 TypeSafe 凭据。": [
+    "使用 JEV 选择检索渠道并判断证据是否充分，需要单独配置 TypeSafe 凭据。",
+    "Use JEV to select search channels and judge evidence sufficiency. Separate TypeSafe credentials are required."
+  ],
+  "仅使用本地规则判断意图，无需填写模型接口或密钥。": [
+    "仅使用本地规则判断意图，无需填写模型接口或密钥。",
+    "Use local rules to identify intent. No model endpoints or keys are needed."
+  ],
+  "关闭自动意图路由，无需填写路由参数。": [
+    "关闭自动意图路由，无需填写路由参数。",
+    "Automatic intent routing is off. No routing parameters are needed."
+  ],
+  "请选择一种路由模式。": [
+    "请选择一种路由模式。",
+    "Choose a routing mode."
+  ],
+  "混合路由": [
+    "混合路由",
+    "Hybrid routing"
+  ],
+  "JEV 语义路由": [
+    "JEV 语义路由",
+    "JEV semantic routing"
+  ],
+  "规则路由": [
+    "规则路由",
+    "Rule-based routing"
+  ],
+  "关闭路由": [
+    "关闭路由",
+    "Routing off"
+  ],
+  "直接返回证据": [
+    "直接返回证据",
+    "Return evidence directly"
+  ],
+  "按需汇总": [
+    "按需汇总",
+    "Summarize when needed"
+  ],
+  "始终汇总": [
+    "始终汇总",
+    "Always summarize"
+  ],
+  "输入 API Key": [
+    "输入 API Key",
+    "Enter an API key"
+  ],
+  "、": [
+    "、",
+    ", "
+  ],
+  "结果汇总": [
+    "结果汇总",
+    "Result synthesis"
+  ],
+  "其他能力": [
+    "其他能力",
+    "Other capabilities"
+  ],
+  "用于{0}。": [
+    "用于{0}。",
+    "Provides {0}."
+  ],
+  "用于{0}，侧重{1}。": [
+    "用于{0}，侧重{1}。",
+    "Provides {0}, specializing in {1}."
+  ],
+  "实验性能力。": [
+    "实验性能力。",
+    "Experimental capability."
+  ],
+  "仅在明确指定时调用。": [
+    "仅在明确指定时调用。",
+    "Used only when explicitly requested."
+  ],
+  "不参与自动路由。": [
+    "不参与自动路由。",
+    "Excluded from automatic routing."
+  ],
+  "broad synthesis": [
+    "多来源综合回答",
+    "multi-source synthesis"
+  ],
+  "web_search": [
+    "网页搜索",
+    "web search"
+  ],
+  "x_search": [
+    "X 平台搜索",
+    "searching X"
+  ],
+  "relay compatibility": [
+    "兼容 OpenAI 协议的中转服务",
+    "OpenAI-compatible relays"
+  ],
+  "library docs": [
+    "类库文档",
+    "library documentation"
+  ],
+  "API docs": [
+    "API 文档",
+    "API documentation"
+  ],
+  "framework docs": [
+    "框架文档",
+    "framework documentation"
+  ],
+  "versioned snippets": [
+    "指定版本的代码示例",
+    "version-specific code examples"
+  ],
+  "official domains": [
+    "官方网站",
+    "official websites"
+  ],
+  "papers": [
+    "论文",
+    "research papers"
+  ],
+  "product pages": [
+    "产品页面",
+    "product pages"
+  ],
+  "trusted low-noise discovery": [
+    "可信来源检索",
+    "trusted, low-noise source discovery"
+  ],
+  "similar pages": [
+    "相似页面",
+    "similar pages"
+  ],
+  "Chinese": [
+    "中文内容",
+    "Chinese-language content"
+  ],
+  "domestic China": [
+    "国内信息",
+    "information from China"
+  ],
+  "current": [
+    "时效信息",
+    "current information"
+  ],
+  "policy": [
+    "政策",
+    "policies"
+  ],
+  "announcements": [
+    "公告",
+    "announcements"
+  ],
+  "recency filters": [
+    "按时间筛选",
+    "recency filtering"
+  ],
+  "Coding Plan quota": [
+    "使用 Coding Plan 配额",
+    "Coding Plan quota"
+  ],
+  "remote MCP web_search_prime": [
+    "通过 MCP 搜索网页",
+    "web search through MCP"
+  ],
+  "site map": [
+    "站点地图",
+    "site maps"
+  ],
+  "URL extract": [
+    "网页正文提取",
+    "web page content extraction"
+  ],
+  "known public URL": [
+    "指定公开网页",
+    "known public URLs"
+  ],
+  "PDF": [
+    "PDF 文档",
+    "PDF documents"
+  ],
+  "arXiv": [
+    "arXiv 论文",
+    "arXiv papers"
+  ],
+  "clean markdown": [
+    "干净的 Markdown 正文",
+    "clean Markdown content"
+  ],
+  "ReaderLM-v2 with key": [
+    "需 Key 的 ReaderLM-v2 提取",
+    "ReaderLM-v2 extraction with an API key"
+  ],
+  "remote MCP webReader": [
+    "通过 MCP 提取网页正文",
+    "web page reading through MCP"
+  ],
+  "robust scrape fallback": [
+    "抓取失败时的备用提取",
+    "resilient scraping fallback"
+  ],
+  "JS-heavy pages": [
+    "依赖 JavaScript 的页面",
+    "JavaScript-heavy pages"
+  ],
+  "dynamic pages": [
+    "动态页面",
+    "dynamic pages"
+  ],
+  "OCR/PDF/structured extraction": [
+    "OCR、PDF 和结构化提取",
+    "OCR, PDF, and structured extraction"
+  ],
+  "broad web discovery": [
+    "广泛查找网页来源",
+    "broad web discovery"
+  ],
+  "clean markdown extraction": [
+    "提取干净的 Markdown 正文",
+    "clean Markdown extraction"
+  ],
+  "news and locale hints": [
+    "新闻与地区偏好",
+    "news and locale hints"
+  ],
+  "research-paper domain type": [
+    "论文类站点检索",
+    "research-paper domains"
+  ],
+  "CVE": [
+    "CVE 漏洞信息",
+    "CVE vulnerabilities"
+  ],
+  "finance": [
+    "金融",
+    "finance"
+  ],
+  "legal": [
+    "法律",
+    "legal information"
+  ],
+  "academic": [
+    "学术",
+    "academic research"
+  ],
+  "code/docs": [
+    "代码与文档",
+    "code and documentation"
+  ],
+  "structured vertical domains": [
+    "垂直领域的结构化检索",
+    "structured vertical-domain search"
+  ],
+  "academic literature": [
+    "学术文献",
+    "academic literature"
+  ],
+  "semantic paper search": [
+    "论文语义检索",
+    "semantic paper search"
+  ],
+  "citation relations": [
+    "引用与被引关系",
+    "citation relationships"
+  ],
+  "paper content snippets": [
+    "论文内容片段",
+    "paper content snippets"
+  ],
+  "evidence-only final synthesis": [
+    "仅依据已有证据生成结论",
+    "evidence-only final synthesis"
+  ],
+  "操作提示": [
+    "操作提示",
+    "Operation messages"
+  ],
+  "查看操作提示": [
+    "查看操作提示",
+    "Show operation messages"
+  ],
+  "清除提示": [
+    "清除提示",
+    "Clear messages"
+  ],
+  "调整分栏宽度": [
+    "调整分栏宽度",
+    "Resize panes"
+  ],
+  "拖动调整宽度；方向键微调": [
+    "拖动调整宽度；方向键微调",
+    "Drag to resize; use arrow keys for fine adjustments"
+  ],
+  "保存更改后生效。": [
+    "保存更改后生效。",
+    "Takes effect after saving changes."
+  ],
+  "参数": [
+    "参数",
+    "Parameters"
+  ],
+  "字段说明：{0}": [
+    "字段说明：{0}",
+    "Field details: {0}"
+  ],
+  "当前生效": [
+    "当前生效",
+    "Effective value"
+  ],
+  "路由与回退": [
+    "路由与回退",
+    "Routing and fallback"
+  ],
+  "配置已保存": [
+    "配置已保存",
+    "Configuration saved"
+  ],
+  "配置已保存，但暂未读回最新状态。请刷新后继续编辑。": [
+    "配置已保存，但暂未读回最新状态。请刷新后继续编辑。",
+    "Configuration was saved, but the latest state could not be read. Refresh before editing again."
+  ],
+  "Activity history": [
+    "活动记录",
+    "Activity history"
+  ],
+  "Existing history is retained when recording is turned off.": [
+    "关闭后保留已有历史。",
+    "Existing history is retained when recording is turned off."
+  ],
+  "Filter activity": [
+    "筛选活动",
+    "Filter activity"
+  ],
+  "Loading run details…": [
+    "正在读取运行详情…",
+    "Loading run details…"
+  ],
+  "Manage runtime…": [
+    "管理运行环境…",
+    "Manage runtime…"
+  ],
+  "More": [
+    "更多",
+    "More"
+  ],
+  "No activity matches this filter.": [
+    "没有符合筛选条件的记录。",
+    "No activity matches this filter."
+  ],
+  "Select a task on the left to view its status, events, and results.": [
+    "在左侧选择任务，查看状态、阶段事件和结果。",
+    "Select a task on the left to view its status, events, and results."
+  ],
+  "Select an activity": [
+    "选择一条活动记录",
+    "Select an activity"
+  ],
+  "Some activity directories could not be read. Check observation settings.": [
+    "部分活动目录不可读取。请检查观察设置。",
+    "Some activity directories could not be read. Check observation settings."
+  ],
+  "Synced {0}; failed {1}.": [
+    "已同步 {0} 个，失败 {1} 个。",
+    "Synced {0}; failed {1}."
+  ],
+  "npm {0}": [
+    "npm {0}",
+    "npm {0}"
+  ],
+  "关闭后保留已有历史。": [
+    "关闭后保留已有历史。",
+    "Existing history is retained when recording is turned off."
+  ],
+  "在左侧选择任务，查看状态、阶段事件和结果。": [
+    "在左侧选择任务，查看状态、阶段事件和结果。",
+    "Select a task on the left to view its status, events, and results."
+  ],
+  "已同步 {0} 个，失败 {1} 个。": [
+    "已同步 {0} 个，失败 {1} 个。",
+    "Synced {0}; failed {1}."
+  ],
+  "开始": [
+    "开始",
+    "Started"
+  ],
+  "更多": [
+    "更多",
+    "More"
+  ],
+  "正在读取运行详情…": [
+    "正在读取运行详情…",
+    "Loading run details…"
+  ],
+  "没有符合筛选条件的记录。": [
+    "没有符合筛选条件的记录。",
+    "No activity matches this filter."
+  ],
+  "活动记录": [
+    "活动记录",
+    "Activity history"
+  ],
+  "筛选活动": [
+    "筛选活动",
+    "Filter activity"
+  ],
+  "管理运行环境…": [
+    "管理运行环境…",
+    "Manage runtime…"
+  ],
+  "选择一条活动记录": [
+    "选择一条活动记录",
+    "Select an activity"
+  ],
+  "部分活动目录不可读取。请检查观察设置。": [
+    "部分活动目录不可读取。请检查观察设置。",
+    "Some activity directories could not be read. Check observation settings."
+  ],
+  "恢复默认配置目录": [
+    "恢复默认配置目录",
+    "Restore Default Folder"
+  ],
+  "待安装的文件": [
+    "待安装的文件",
+    "Files to install"
+  ],
+  "Files to install": [
+    "待安装的文件",
+    "Files to install"
+  ],
+  "内容不同的文件": [
+    "内容不同的文件",
+    "Files with different content"
+  ],
+  "Files with different content": [
+    "内容不同的文件",
+    "Files with different content"
+  ],
+  "文件内容与来源不同": [
+    "文件内容与来源不同",
+    "Files differ from the source"
+  ],
+  "Files differ from the source": [
+    "文件内容与来源不同",
+    "Files differ from the source"
+  ],
+  "这里只查看文件状态。点击“更新所选 Skills”后才会安装或更新文件。": [
+    "这里只查看文件状态。点击“更新所选 Skills”后才会安装或更新文件。",
+    "This view only shows file status. Files are installed or updated when you choose Update selected Skills."
+  ],
+  "This view only shows file status. Files are installed or updated when you choose Update selected Skills.": [
+    "这里只查看文件状态。点击“更新所选 Skills”后才会安装或更新文件。",
+    "This view only shows file status. Files are installed or updated when you choose Update selected Skills."
+  ],
+  "跟随系统外观，或单独选择浅色、深色模式。": [
+    "跟随系统外观，或单独选择浅色、深色模式。",
+    "Follow the system appearance, or choose light or dark mode for this app."
+  ],
+  "管理语言、外观和配置目录。": [
+    "管理语言、外观和配置目录。",
+    "Manage language, appearance, and configuration folders."
+  ],
+  "所有 Agent 共用独立 CLI。准备完成后，选择需要更新 Skills 的 Agent。": [
+    "所有 Agent 共用独立 CLI。准备完成后，选择需要更新 Skills 的 Agent。",
+    "All Agents share the independent CLI. Prepare it first, then choose the Agents whose Skills you want to update."
+  ],
+  "Provider {0} is disabled by {1}=false. No network request was made.": [
+    "服务商 {0} 已通过 {1}=false 禁用，未发起网络请求。",
+    "Provider {0} is disabled by {1}=false. No network request was made."
+  ],
+  "服务商 {0} 已通过 {1}=false 禁用，未发起网络请求。": [
+    "服务商 {0} 已通过 {1}=false 禁用，未发起网络请求。",
+    "Provider {0} is disabled by {1}=false. No network request was made."
+  ],
+  "App update available": [
+    "发现 App 新版本",
+    "App update available"
+  ],
+  "App 与独立 CLI 分别检查和更新。": [
+    "App 与独立 CLI 分别检查和更新。",
+    "The App and independent CLI are checked and updated separately."
+  ],
+  "App 更新未完成，请重新检查或使用完整安装包。": [
+    "App 更新未完成，请重新检查或使用完整安装包。",
+    "The App update did not finish. Check again or use the full installer."
+  ],
+  "App 更新配置无效，请使用完整安装包。": [
+    "App 更新配置无效，请使用完整安装包。",
+    "The App update configuration is invalid. Use the full installer."
+  ],
+  "App 正在准备更新，请等待重启。": [
+    "App 正在准备更新，请等待重启。",
+    "The App is preparing an update. Wait for it to restart."
+  ],
+  "CLI 包已更新，但 Python 运行环境准备失败；请查看日志并重试。": [
+    "CLI 包已更新，但 Python 运行环境准备失败；请查看日志并重试。",
+    "The CLI package was updated, but Python runtime setup failed. Review the log and retry."
+  ],
+  "CLI 包已更新，但缺少可用的独立 Python；请在“共用独立 CLI 环境”完成准备后重试。": [
+    "CLI 包已更新，但缺少可用的独立 Python；请在“共用独立 CLI 环境”完成准备后重试。",
+    "The CLI package was updated, but no independent Python is available. Complete Shared independent CLI environment setup, then retry."
+  ],
+  "CLI 包的位置或版本已变化，未准备运行环境；请重新检查。": [
+    "CLI 包的位置或版本已变化，未准备运行环境；请重新检查。",
+    "The CLI package location or version changed. Runtime setup was not started; check again."
+  ],
+  "CLI 更新或运行环境准备未完成，请查看日志并重试。": [
+    "CLI 更新或运行环境准备未完成，请查看日志并重试。",
+    "CLI update or runtime setup did not complete. Review the log and retry."
+  ],
+  "CLI 检查无法启动或读取（{0}）；请检查原安装后刷新。": [
+    "CLI 检查无法启动或读取（{0}）；请检查原安装后刷新。",
+    "CLI detection could not start or read its input ({0}). Check the original installation, then refresh."
+  ],
+  "CLI 检查未通过（{0}）；请点击“刷新已安装版本”重试。": [
+    "CLI 检查未通过（{0}）；请点击“刷新已安装版本”重试。",
+    "CLI detection failed ({0}). Select Refresh installed versions to retry."
+  ],
+  "CLI 检查超时（{0}）；请点击“刷新已安装版本”重试。": [
+    "CLI 检查超时（{0}）；请点击“刷新已安装版本”重试。",
+    "CLI detection timed out ({0}). Select Refresh installed versions to retry."
+  ],
+  "CLI 版本已是最新，但运行环境尚未就绪；点击“更新 CLI”完成准备。": [
+    "CLI 版本已是最新，但运行环境尚未就绪；点击“更新 CLI”完成准备。",
+    "The CLI version is current, but its runtime is not ready. Select Update CLI to finish setup."
+  ],
+  "Cancel the update download or wait for it to finish before quitting.": [
+    "请先取消更新下载或等待完成，再退出。",
+    "Cancel the update download or wait for it to finish before quitting."
+  ],
+  "Could not check App updates. Try again later.": [
+    "无法检查 App 更新，请稍后重试。",
+    "Could not check App updates. Try again later."
+  ],
+  "Download cancelled. Check again to retry the update.": [
+    "下载已取消，可重试更新。",
+    "Download cancelled. Check again to retry the update."
+  ],
+  "Download update and restart": [
+    "下载更新并重启",
+    "Download update and restart"
+  ],
+  "Downloading update: {0}%": [
+    "正在下载更新：{0}%",
+    "Downloading update: {0}%"
+  ],
+  "Finish active work or handle unsaved changes, then select Update and restart.": [
+    "请先处理正在进行的任务或未保存修改，再点击更新重启。",
+    "Finish active work or handle unsaved changes, then select Update and restart."
+  ],
+  "First installation with the new updater": [
+    "首次迁移到新更新方式",
+    "First installation with the new updater"
+  ],
+  "Got it": [
+    "知道了",
+    "Got it"
+  ],
+  "Later": [
+    "稍后",
+    "Later"
+  ],
+  "Migrate an older installation": [
+    "旧版迁移说明",
+    "Migrate an older installation"
+  ],
+  "Older installation detected: {0}": [
+    "检测到旧安装：{0}",
+    "Older installation detected: {0}"
+  ],
+  "Open App updater": [
+    "打开 App 更新",
+    "Open App updater"
+  ],
+  "Quit the older App and migrate once using the full installer. Subsequent updates are handled in the App. If Windows still lists an older copy, identify it by its installation path before uninstalling it manually. Configuration, results, independent CLI and Skills are preserved.": [
+    "旧版需要先退出并通过完整安装包迁移一次；之后可在 App 内更新。若系统仍列出旧版，请按安装位置辨认后手动卸载旧版。配置、结果、独立 CLI 和 Skills 保留。",
+    "Quit the older App and migrate once using the full installer. Subsequent updates are handled in the App. If Windows still lists an older copy, identify it by its installation path before uninstalling it manually. Configuration, results, independent CLI and Skills are preserved."
+  ],
+  "Save or discard configuration changes before quitting or installing an update.": [
+    "请先保存或放弃未保存的配置，再退出或安装更新。",
+    "Save or discard configuration changes before quitting or installing an update."
+  ],
+  "Sparkle downloads, verifies and updates the whole App. Older versions require one full installation first. Configuration, independent CLI and Skills are preserved.": [
+    "由 Sparkle 下载、校验并更新整个 App。旧版需先完整安装一次；用户配置、独立 CLI 和 Skills 保留。",
+    "Sparkle downloads, verifies and updates the whole App. Older versions require one full installation first. Configuration, independent CLI and Skills are preserved."
+  ],
+  "The App and independent CLI are checked and updated separately.": [
+    "App 与独立 CLI 分别检查和更新。",
+    "The App and independent CLI are checked and updated separately."
+  ],
+  "The App connection was restored. Check for updates again.": [
+    "已恢复 App 连接，请重新检查更新。",
+    "The App connection was restored. Check for updates again."
+  ],
+  "The App is preparing an update. Wait for it to restart.": [
+    "App 正在准备更新，请等待重启。",
+    "The App is preparing an update. Wait for it to restart."
+  ],
+  "The App update configuration is invalid. Use the full installer.": [
+    "App 更新配置无效，请使用完整安装包。",
+    "The App update configuration is invalid. Use the full installer."
+  ],
+  "The App update did not finish. Check again or use the full installer.": [
+    "App 更新未完成，请重新检查或使用完整安装包。",
+    "The App update did not finish. Check again or use the full installer."
+  ],
+  "The update is downloaded and verified, awaiting a safe restart.": [
+    "更新已下载并校验，等待安全重启。",
+    "The update is downloaded and verified, awaiting a safe restart."
+  ],
+  "This copy is not a framework installation. Install it once using the full installer.": [
+    "此副本尚未通过新安装器安装；请先完成一次完整安装。",
+    "This copy is not a framework installation. Install it once using the full installer."
+  ],
+  "This test build has no update signing configuration. App updates are unavailable.": [
+    "此测试包尚未配置更新签名，App 自动更新不可用。",
+    "This test build has no update signing configuration. App updates are unavailable."
+  ],
+  "Update and restart": [
+    "更新并重启",
+    "Update and restart"
+  ],
+  "Update download or verification failed. The installed App is unchanged; check again.": [
+    "更新下载或校验失败，原安装保持不变；请重新检查。",
+    "Update download or verification failed. The installed App is unchanged; check again."
+  ],
+  "Update downloading": [
+    "更新下载中",
+    "Update downloading"
+  ],
+  "Update not completed": [
+    "更新未完成",
+    "Update not completed"
+  ],
+  "Update now": [
+    "现在更新",
+    "Update now"
+  ],
+  "Update ready": [
+    "更新已就绪",
+    "Update ready"
+  ],
+  "Velopack verifies and updates the whole App, using a full package when a delta is unavailable. Configuration, independent CLI and Skills are preserved.": [
+    "由 Velopack 校验并更新整个 App；差分不可用时下载完整包。用户配置、独立 CLI 和 Skills 保留。",
+    "Velopack verifies and updates the whole App, using a full package when a delta is unavailable. Configuration, independent CLI and Skills are preserved."
+  ],
+  "You can update later in Settings.": [
+    "稍后可在设置中更新。",
+    "You can update later in Settings."
+  ],
+  "{0} → {1}. Download and restart now, or update later in Settings.": [
+    "{0} → {1}。现在下载更新并重启，或稍后在设置中更新。",
+    "{0} → {1}. Download and restart now, or update later in Settings."
+  ],
+  "{0} → {1}。现在下载更新并重启，或稍后在设置中更新。": [
+    "{0} → {1}。现在下载更新并重启，或稍后在设置中更新。",
+    "{0} → {1}. Download and restart now, or update later in Settings."
+  ],
+  "下载更新并重启": [
+    "下载更新并重启",
+    "Download update and restart"
+  ],
+  "历史检查结果，请重新检查更新。": [
+    "历史检查结果，请重新检查更新。",
+    "Previous check results; check for updates again."
+  ],
+  "发现 App 新版本": [
+    "发现 App 新版本",
+    "App update available"
+  ],
+  "已恢复 App 连接，请重新检查更新。": [
+    "已恢复 App 连接，请重新检查更新。",
+    "The App connection was restored. Check for updates again."
+  ],
+  "已找到 mise 的 CLI 入口，但当前 App 环境找不到 mise；请重新打开 App 后检查。": [
+    "已找到 mise 的 CLI 入口，但当前 App 环境找不到 mise；请重新打开 App 后检查。",
+    "A mise CLI shim was found, but mise is unavailable in this App environment. Reopen the App and check again."
+  ],
+  "打开 App 更新": [
+    "打开 App 更新",
+    "Open App updater"
+  ],
+  "无法检查 App 更新，请稍后重试。": [
+    "无法检查 App 更新，请稍后重试。",
+    "Could not check App updates. Try again later."
+  ],
+  "旧版迁移说明": [
+    "旧版迁移说明",
+    "Migrate an older installation"
+  ],
+  "旧版需要先退出并通过完整安装包迁移一次；之后可在 App 内更新。若系统仍列出旧版，请按安装位置辨认后手动卸载旧版。配置、结果、独立 CLI 和 Skills 保留。": [
+    "旧版需要先退出并通过完整安装包迁移一次；之后可在 App 内更新。若系统仍列出旧版，请按安装位置辨认后手动卸载旧版。配置、结果、独立 CLI 和 Skills 保留。",
+    "Quit the older App and migrate once using the full installer. Subsequent updates are handled in the App. If Windows still lists an older copy, identify it by its installation path before uninstalling it manually. Configuration, results, independent CLI and Skills are preserved."
+  ],
+  "更新下载中": [
+    "更新下载中",
+    "Update downloading"
+  ],
+  "更新下载或校验失败，原安装保持不变；请重新检查。": [
+    "更新下载或校验失败，原安装保持不变；请重新检查。",
+    "Update download or verification failed. The installed App is unchanged; check again."
+  ],
+  "更新已下载并校验，等待安全重启。": [
+    "更新已下载并校验，等待安全重启。",
+    "The update is downloaded and verified, awaiting a safe restart."
+  ],
+  "更新已就绪": [
+    "更新已就绪",
+    "Update ready"
+  ],
+  "更新并重启": [
+    "更新并重启",
+    "Update and restart"
+  ],
+  "更新未完成": [
+    "更新未完成",
+    "Update not completed"
+  ],
+  "未能核对 CLI 入口对应的安装包；请检查原安装后刷新。": [
+    "未能核对 CLI 入口对应的安装包；请检查原安装后刷新。",
+    "The package behind the CLI entry point could not be verified. Check the original installation, then refresh."
+  ],
+  "本机 CLI 调用信息需要刷新。": [
+    "本机 CLI 调用信息需要刷新。",
+    "The local CLI invocation details need refreshing."
+  ],
+  "核对 mise 全局安装": [
+    "核对 mise 全局安装",
+    "checking the global mise installation"
+  ],
+  "核对 npm 全局安装": [
+    "核对 npm 全局安装",
+    "checking the global npm installation"
+  ],
+  "检测到旧安装：{0}": [
+    "检测到旧安装：{0}",
+    "Older installation detected: {0}"
+  ],
+  "正在下载更新：{0}%": [
+    "正在下载更新：{0}%",
+    "Downloading update: {0}%"
+  ],
+  "此副本尚未通过新安装器安装；请先完成一次完整安装。": [
+    "此副本尚未通过新安装器安装；请先完成一次完整安装。",
+    "This copy is not a framework installation. Install it once using the full installer."
+  ],
+  "此测试包尚未配置更新签名，App 自动更新不可用。": [
+    "此测试包尚未配置更新签名，App 自动更新不可用。",
+    "This test build has no update signing configuration. App updates are unavailable."
+  ],
+  "独立 CLI 尚未验证；可更新 Skills 内容，原有本机调用信息会保留。": [
+    "独立 CLI 尚未验证；可更新 Skills 内容，原有本机调用信息会保留。",
+    "The independent CLI has not been verified. Skill content can still be updated; existing local invocation details are preserved."
+  ],
+  "现在更新": [
+    "现在更新",
+    "Update now"
+  ],
+  "由 Sparkle 下载、校验并更新整个 App。旧版需先完整安装一次；用户配置、独立 CLI 和 Skills 保留。": [
+    "由 Sparkle 下载、校验并更新整个 App。旧版需先完整安装一次；用户配置、独立 CLI 和 Skills 保留。",
+    "Sparkle downloads, verifies and updates the whole App. Older versions require one full installation first. Configuration, independent CLI and Skills are preserved."
+  ],
+  "由 Velopack 校验并更新整个 App；差分不可用时下载完整包。用户配置、独立 CLI 和 Skills 保留。": [
+    "由 Velopack 校验并更新整个 App；差分不可用时下载完整包。用户配置、独立 CLI 和 Skills 保留。",
+    "Velopack verifies and updates the whole App, using a full package when a delta is unavailable. Configuration, independent CLI and Skills are preserved."
+  ],
+  "知道了": [
+    "知道了",
+    "Got it"
+  ],
+  "稍后": [
+    "稍后",
+    "Later"
+  ],
+  "稍后可在设置中更新。": [
+    "稍后可在设置中更新。",
+    "You can update later in Settings."
+  ],
+  "管理器执行失败，或 CLI 实际版本/运行环境未通过验证；请查看日志并重新检查。": [
+    "管理器执行失败，或 CLI 实际版本/运行环境未通过验证；请查看日志并重新检查。",
+    "The manager failed, or the actual CLI version or runtime could not be verified. Review the log and check again."
+  ],
+  "解析 CLI 入口": [
+    "解析 CLI 入口",
+    "resolving the CLI entry point"
+  ],
+  "请先保存或放弃未保存的配置，再退出或安装更新。": [
+    "请先保存或放弃未保存的配置，再退出或安装更新。",
+    "Save or discard configuration changes before quitting or installing an update."
+  ],
+  "请先取消更新下载或等待完成，再退出。": [
+    "请先取消更新下载或等待完成，再退出。",
+    "Cancel the update download or wait for it to finish before quitting."
+  ],
+  "请先处理正在进行的任务或未保存修改，再点击更新重启。": [
+    "请先处理正在进行的任务或未保存修改，再点击更新重启。",
+    "Finish active work or handle unsaved changes, then select Update and restart."
+  ],
+  "读取 mise 安装配置": [
+    "读取 mise 安装配置",
+    "reading the mise installation configuration"
+  ],
+  "调用信息需刷新": [
+    "调用信息需刷新",
+    "Local invocation needs refreshing"
+  ],
+  "首次迁移到新更新方式": [
+    "首次迁移到新更新方式",
+    "First installation with the new updater"
+  ],
+  "下载已取消，请重新检查更新。": [
+    "下载已取消，请重新检查更新。",
+    "Download cancelled. Check for updates again to retry."
+  ],
+  "1. Install and connect the CLI": [
+    "1. 安装并连接 CLI",
+    "1. Install and connect the CLI"
+  ],
+  "1. Install the CLI": [
+    "1. 安装 CLI",
+    "1. Install the CLI"
+  ],
+  "1. 安装 CLI": [
+    "1. 安装 CLI",
+    "1. Install the CLI"
+  ],
+  "1. 安装并连接 CLI": [
+    "1. 安装并连接 CLI",
+    "1. Install and connect the CLI"
+  ],
+  "2. Configure providers": [
+    "2. 配置服务商",
+    "2. Configure providers"
+  ],
+  "2. 配置服务商": [
+    "2. 配置服务商",
+    "2. Configure providers"
+  ],
+  "3. Connect Skills": [
+    "3. 接入 Skills",
+    "3. Connect Skills"
+  ],
+  "3. 接入 Skills": [
+    "3. 接入 Skills",
+    "3. Connect Skills"
+  ],
+  "Add Skills so your Agent can search.": [
+    "添加 Skills，让 Agent 使用搜索。",
+    "Add Skills so your Agent can search."
+  ],
+  "After configuration, connect search to your Agent.": [
+    "完成配置后，将搜索能力接入你的 Agent。",
+    "After configuration, connect search to your Agent."
+  ],
+  "After connecting the CLI, configure search providers and API keys here.": [
+    "CLI 连接后，在这里配置搜索服务与 API Key。",
+    "After connecting the CLI, configure search providers and API keys here."
+  ],
+  "App 与 CLI 协议版本不兼容，请更新 CLI 或 App。": [
+    "App 与 CLI 协议版本不兼容，请更新 CLI 或 App。",
+    "The App and CLI protocols are incompatible. Update the CLI or App."
+  ],
+  "App 与所选 CLI 的协议不兼容，请更新 CLI 或 App。": [
+    "App 与所选 CLI 的协议不兼容，请更新 CLI 或 App。",
+    "The selected CLI uses an incompatible protocol. Update the CLI or App."
+  ],
+  "App 更新未完成，请重试。": [
+    "App 更新未完成，请重试。",
+    "The App update could not be completed. Try again."
+  ],
+  "App 更新配置无效，请安装正式版后重试。": [
+    "App 更新配置无效，请安装正式版后重试。",
+    "App updates are not configured correctly. Install the official release and try again."
+  ],
+  "App 管理独立安装的 CLI；关闭或卸载 App 后，CLI 和 Skills 仍可使用。": [
+    "App 管理独立安装的 CLI；关闭或卸载 App 后，CLI 和 Skills 仍可使用。",
+    "The App manages a separate CLI installation. The CLI and Skills remain available when the App is closed or removed."
+  ],
+  "Apply path": [
+    "应用路径",
+    "Apply path"
+  ],
+  "Automatically check for CLI updates": [
+    "自动检查 CLI 更新",
+    "Automatically check for CLI updates"
+  ],
+  "CLI Settings…": [
+    "CLI 设置…",
+    "CLI Settings…"
+  ],
+  "CLI installation is not yet available": [
+    "CLI 尚不可安装",
+    "CLI installation is not yet available"
+  ],
+  "CLI installation metadata is damaged. Update or repair it.": [
+    "CLI 安装信息损坏，请更新或修复。",
+    "CLI installation metadata is damaged. Update or repair it."
+  ],
+  "CLI settings": [
+    "CLI 设置",
+    "CLI settings"
+  ],
+  "CLI update available: {0} → {1}": [
+    "CLI 有新版本：{0} → {1}",
+    "CLI update available: {0} → {1}"
+  ],
+  "CLI version": [
+    "CLI 版本",
+    "CLI version"
+  ],
+  "CLI {0}": [
+    "CLI {0}",
+    "CLI {0}"
+  ],
+  "CLI {0} is connected; continue with configuration": [
+    "CLI {0} 已连接，可以继续配置",
+    "CLI {0} is connected; continue with configuration"
+  ],
+  "CLI {0} is installed; waiting to connect": [
+    "CLI {0} 已安装，等待连接",
+    "CLI {0} is installed; waiting to connect"
+  ],
+  "CLI {0} needs an update or repair": [
+    "CLI {0} 需要更新或修复",
+    "CLI {0} needs an update or repair"
+  ],
+  "CLI {0} 已安装，等待连接": [
+    "CLI {0} 已安装，等待连接",
+    "CLI {0} is installed; waiting to connect"
+  ],
+  "CLI {0} 已连接，可以继续配置": [
+    "CLI {0} 已连接，可以继续配置",
+    "CLI {0} is connected; continue with configuration"
+  ],
+  "CLI {0} 需要更新或修复": [
+    "CLI {0} 需要更新或修复",
+    "CLI {0} needs an update or repair"
+  ],
+  "CLI 下载失败，请重试。": [
+    "CLI 下载失败，请重试。",
+    "CLI download failed. Try again."
+  ],
+  "CLI 安装信息损坏，请更新或修复。": [
+    "CLI 安装信息损坏，请更新或修复。",
+    "CLI installation metadata is damaged. Update or repair it."
+  ],
+  "CLI 安装包包含无效路径。": [
+    "CLI 安装包包含无效路径。",
+    "The CLI package contains an invalid path."
+  ],
+  "CLI 安装包校验失败。": [
+    "CLI 安装包校验失败。",
+    "CLI package verification failed."
+  ],
+  "CLI 安装完成，正在重新连接。": [
+    "CLI 安装完成，正在重新连接。",
+    "CLI installation finished. Reconnecting…"
+  ],
+  "CLI 安装由 App 的独立安装管理器处理。": [
+    "CLI 安装由 App 的独立安装管理器处理。",
+    "The App's independent installation manager handles CLI installations."
+  ],
+  "CLI 尚不可安装": [
+    "CLI 尚不可安装",
+    "CLI installation is not yet available"
+  ],
+  "CLI 尚不可用或协议不兼容，请修复或更新。": [
+    "CLI 尚不可用或协议不兼容，请修复或更新。",
+    "The CLI is unavailable or incompatible. Repair or update it."
+  ],
+  "CLI 已卸载，配置和 Skills 已保留。": [
+    "CLI 已卸载，配置和 Skills 已保留。",
+    "CLI uninstalled. Configuration and Skills were retained."
+  ],
+  "CLI 已安装，但运行验证未通过，请更新或修复。": [
+    "CLI 已安装，但运行验证未通过，请更新或修复。",
+    "The CLI was installed but failed runtime verification. Update or repair it."
+  ],
+  "CLI 操作未完成": [
+    "CLI 操作未完成",
+    "CLI operation incomplete"
+  ],
+  "CLI 操作未完成，请检查 npm 或重试。": [
+    "CLI 操作未完成，请检查 npm 或重试。",
+    "The CLI operation failed. Check npm or retry."
+  ],
+  "CLI 操作未完成，请检查原安装或重试。": [
+    "CLI 操作未完成，请检查原安装或重试。",
+    "The CLI operation failed. Check the original installation or retry."
+  ],
+  "CLI 操作进行中": [
+    "CLI 操作进行中",
+    "CLI operation in progress"
+  ],
+  "CLI 是搜索与配置的运行基础。通过你的 npm 安装，自带运行时，无需安装 Python。": [
+    "CLI 是搜索与配置的运行基础。通过你的 npm 安装，自带运行时，无需安装 Python。",
+    "The CLI powers search and configuration. Install it with your npm; its runtime is included, so Python is not required."
+  ],
+  "CLI 最新版本：{0}": [
+    "CLI 最新版本：{0}",
+    "Latest CLI version: {0}"
+  ],
+  "CLI 有新版本：{0} → {1}": [
+    "CLI 有新版本：{0} → {1}",
+    "CLI update available: {0} → {1}"
+  ],
+  "CLI 未通过协议兼容性检查。": [
+    "CLI 未通过协议兼容性检查。",
+    "The CLI did not pass the protocol compatibility check."
+  ],
+  "CLI 版本": [
+    "CLI 版本",
+    "CLI version"
+  ],
+  "CLI 设置": [
+    "CLI 设置",
+    "CLI settings"
+  ],
+  "CLI 设置…": [
+    "CLI 设置…",
+    "CLI Settings…"
+  ],
+  "CLI 连接后，在这里配置搜索服务与 API Key。": [
+    "CLI 连接后，在这里配置搜索服务与 API Key。",
+    "After connecting the CLI, configure search providers and API keys here."
+  ],
+  "Cannot determine the actual Node.js path.": [
+    "无法确认 Node.js 的实际路径。",
+    "Cannot determine the actual Node.js path."
+  ],
+  "Cannot find npm for this Node.js installation. Choose another npm path.": [
+    "无法找到与 Node.js 配套的 npm，请重新选择 npm 路径。",
+    "Cannot find npm for this Node.js installation. Choose another npm path."
+  ],
+  "Check at startup and every 24 hours.": [
+    "启动时及每 24 小时检查。",
+    "Check at startup and every 24 hours."
+  ],
+  "Check for CLI updates at startup and every 24 hours": [
+    "启动时和每 24 小时检查 CLI 更新",
+    "Check for CLI updates at startup and every 24 hours"
+  ],
+  "Choose a search provider and enter your API key.": [
+    "选择搜索服务，填写 API Key。",
+    "Choose a search provider and enter your API key."
+  ],
+  "Choose the npm executable supplied with your Node.js installation.": [
+    "选择与你的 Node.js 配套的 npm 文件。",
+    "Choose the npm executable supplied with your Node.js installation."
+  ],
+  "Configure {0}": [
+    "配置{0}",
+    "Configure {0}"
+  ],
+  "Could not check for updates. Try again later.": [
+    "检查更新失败，请稍后重试。",
+    "Could not check for updates. Try again later."
+  ],
+  "Detect again": [
+    "重新检测",
+    "Detect again"
+  ],
+  "Detect automatically": [
+    "自动查找",
+    "Detect automatically"
+  ],
+  "Detect or specify npm first.": [
+    "请先检测或指定 npm。",
+    "Detect or specify npm first."
+  ],
+  "Detecting or managing the CLI…": [
+    "正在检测或处理 CLI…",
+    "Detecting or managing the CLI…"
+  ],
+  "Install Node.js": [
+    "安装 Node.js",
+    "Install Node.js"
+  ],
+  "Install directory: {0}": [
+    "安装目录：{0}",
+    "Install directory: {0}"
+  ],
+  "Installation is currently unavailable. Try again later.": [
+    "暂时无法安装，请稍后重试。",
+    "Installation is currently unavailable. Try again later."
+  ],
+  "Installing the CLI with npm…": [
+    "正在通过 npm 安装 CLI…",
+    "Installing the CLI with npm…"
+  ],
+  "Invalid npm path. Choose an npm executable.": [
+    "npm 路径无效，请选择可执行的 npm 文件。",
+    "Invalid npm path. Choose an npm executable."
+  ],
+  "Manage Skills": [
+    "管理 Skills",
+    "Manage Skills"
+  ],
+  "Next: configure providers": [
+    "下一步：配置服务商",
+    "Next: configure providers"
+  ],
+  "No usable npm was found. Install Node.js or specify the npm path.": [
+    "未找到可用的 npm。请先安装 Node.js，或手动指定 npm 路径。",
+    "No usable npm was found. Install Node.js or specify the npm path."
+  ],
+  "Node.js was not found beside npm. Choose a complete Node.js installation.": [
+    "npm 同目录下未找到 Node.js，请选择完整的 Node.js 安装。",
+    "Node.js was not found beside npm. Choose a complete Node.js installation."
+  ],
+  "Read the current CLI instructions for Agents.": [
+    "读取当前 CLI 提供给 Agent 的使用说明。",
+    "Read the current CLI instructions for Agents."
+  ],
+  "Remove selected Skills, keeping a backup of their files.": [
+    "移除所选 Skills 并保留文件备份。",
+    "Remove selected Skills, keeping a backup of their files."
+  ],
+  "Repair CLI": [
+    "修复 CLI",
+    "Repair CLI"
+  ],
+  "Set up Smart Search to get started.": [
+    "完成以下设置，开始使用 Smart Search。",
+    "Set up Smart Search to get started."
+  ],
+  "Set up npm first": [
+    "先准备 npm 环境",
+    "Set up npm first"
+  ],
+  "Setup is complete. You can start searching.": [
+    "基础配置已完成，可以开始搜索。",
+    "Setup is complete. You can start searching."
+  ],
+  "Show all": [
+    "显示全部",
+    "Show all"
+  ],
+  "Skills 由当前 CLI 提供；自动维护已接入目标，保留个人修改。": [
+    "Skills 由当前 CLI 提供；自动维护已接入目标，保留个人修改。",
+    "The current CLI supplies Skills and maintains connected targets while preserving personal edits."
+  ],
+  "Start with the CLI to set up search on this computer.": [
+    "从 CLI 开始，完成这台电脑的搜索配置。",
+    "Start with the CLI to set up search on this computer."
+  ],
+  "Successfully check for CLI updates first.": [
+    "请先成功检查 CLI 更新。",
+    "Successfully check for CLI updates first."
+  ],
+  "The CLI and Skills remain usable after closing or uninstalling the App. Switching npm does not move or remove the previous installation.": [
+    "关闭或卸载 App 后，CLI 和 Skills 仍可使用。更换 npm 环境不会搬移或删除原安装。",
+    "The CLI and Skills remain usable after closing or uninstalling the App. Switching npm does not move or remove the previous installation."
+  ],
+  "The CLI operation failed. Check npm or retry.": [
+    "CLI 操作未完成，请检查 npm 或重试。",
+    "The CLI operation failed. Check npm or retry."
+  ],
+  "The CLI powers search and configuration. Install it with your npm; its runtime is included, so Python is not required.": [
+    "CLI 是搜索与配置的运行基础。通过你的 npm 安装，自带运行时，无需安装 Python。",
+    "The CLI powers search and configuration. Install it with your npm; its runtime is included, so Python is not required."
+  ],
+  "The CLI was installed but failed runtime verification. Update or repair it.": [
+    "CLI 已安装，但运行验证未通过，请更新或修复。",
+    "The CLI was installed but failed runtime verification. Update or repair it."
+  ],
+  "The self-contained CLI is not yet published on npm. Install it after the new release is available.": [
+    "npm 上尚未发布自带运行时的 CLI，请等待新版发布后再安装。",
+    "The self-contained CLI is not yet published on npm. Install it after the new release is available."
+  ],
+  "To configure: {0}": [
+    "待配置：{0}",
+    "To configure: {0}"
+  ],
+  "Update available: {0}": [
+    "可更新至 {0}",
+    "Update available: {0}"
+  ],
+  "Update check failed: {0}": [
+    "检查更新失败：{0}",
+    "Update check failed: {0}"
+  ],
+  "Updates are notifications only; you choose when to install. App updates are managed separately.": [
+    "仅提示更新，由你决定何时安装。App 更新单独管理。",
+    "Updates are notifications only; you choose when to install. App updates are managed separately."
+  ],
+  "Use Node.js 18 or later.": [
+    "请使用 Node.js 18 或更新版本。",
+    "Use Node.js 18 or later."
+  ],
+  "Using npm {0} · {1}": [
+    "使用 npm {0} · {1}",
+    "Using npm {0} · {1}"
+  ],
+  "npm Environment": [
+    "npm 环境",
+    "npm Environment"
+  ],
+  "npm environment and update settings": [
+    "npm 环境与更新设置",
+    "npm environment and update settings"
+  ],
+  "npm is ready; the CLI is not installed": [
+    "npm 已就绪，尚未安装 CLI",
+    "npm is ready; the CLI is not installed"
+  ],
+  "npm not found": [
+    "未找到 npm",
+    "npm not found"
+  ],
+  "npm path (leave empty to detect automatically)": [
+    "npm 路径（留空自动查找）",
+    "npm path (leave empty to detect automatically)"
+  ],
+  "npm returned an invalid version or install directory.": [
+    "npm 返回了无效的版本或安装目录。",
+    "npm returned an invalid version or install directory."
+  ],
+  "npm {0} · {1}": [
+    "npm {0} · {1}",
+    "npm {0} · {1}"
+  ],
+  "npm 上尚未发布自带运行时的 CLI，请等待新版发布后再安装。": [
+    "npm 上尚未发布自带运行时的 CLI，请等待新版发布后再安装。",
+    "The self-contained CLI is not yet published on npm. Install it after the new release is available."
+  ],
+  "npm 同目录下未找到 Node.js，请选择完整的 Node.js 安装。": [
+    "npm 同目录下未找到 Node.js，请选择完整的 Node.js 安装。",
+    "Node.js was not found beside npm. Choose a complete Node.js installation."
+  ],
+  "npm 已就绪，尚未安装 CLI": [
+    "npm 已就绪，尚未安装 CLI",
+    "npm is ready; the CLI is not installed"
+  ],
+  "npm 环境": [
+    "npm 环境",
+    "npm Environment"
+  ],
+  "npm 环境与更新设置": [
+    "npm 环境与更新设置",
+    "npm environment and update settings"
+  ],
+  "npm 路径无效，请选择可执行的 npm 文件。": [
+    "npm 路径无效，请选择可执行的 npm 文件。",
+    "Invalid npm path. Choose an npm executable."
+  ],
+  "npm 路径（留空自动查找）": [
+    "npm 路径（留空自动查找）",
+    "npm path (leave empty to detect automatically)"
+  ],
+  "npm 返回了无效的版本或安装目录。": [
+    "npm 返回了无效的版本或安装目录。",
+    "npm returned an invalid version or install directory."
+  ],
+  "{0} · Needs repair": [
+    "{0} · 需要修复",
+    "{0} · Needs repair"
+  ],
+  "{0} · Not connected": [
+    "{0} · 尚未连接",
+    "{0} · Not connected"
+  ],
+  "{0} · Ready": [
+    "{0} · 已就绪",
+    "{0} · Ready"
+  ],
+  "{0} · Update available: {1}": [
+    "{0} · 可更新至 {1}",
+    "{0} · Update available: {1}"
+  ],
+  "{0} · 可更新至 {1}": [
+    "{0} · 可更新至 {1}",
+    "{0} · Update available: {1}"
+  ],
+  "{0} · 尚未连接": [
+    "{0} · 尚未连接",
+    "{0} · Not connected"
+  ],
+  "{0} · 已就绪": [
+    "{0} · 已就绪",
+    "{0} · Ready"
+  ],
+  "{0} · 需要修复": [
+    "{0} · 需要修复",
+    "{0} · Needs repair"
+  ],
+  "{0}：保留个人修改或缺失文件，请查看文件详情。": [
+    "{0}：保留个人修改或缺失文件，请查看文件详情。",
+    "{0}: Personal edits or missing files were preserved. Review file details."
+  ],
+  "{0}：已移除": [
+    "{0}：已移除",
+    "{0}: Removed"
+  ],
+  "上次检查": [
+    "上次检查",
+    "Last checked"
+  ],
+  "下一步：配置服务商": [
+    "下一步：配置服务商",
+    "Next: configure providers"
+  ],
+  "下载正式版": [
+    "下载正式版",
+    "Download official release"
+  ],
+  "仅提示更新，由你决定何时安装。App 更新单独管理。": [
+    "仅提示更新，由你决定何时安装。App 更新单独管理。",
+    "Updates are notifications only; you choose when to install. App updates are managed separately."
+  ],
+  "从 CLI 开始，完成这台电脑的搜索配置。": [
+    "从 CLI 开始，完成这台电脑的搜索配置。",
+    "Start with the CLI to set up search on this computer."
+  ],
+  "使用 npm {0} · {1}": [
+    "使用 npm {0} · {1}",
+    "Using npm {0} · {1}"
+  ],
+  "使用的 CLI": [
+    "使用的 CLI",
+    "CLI installation"
+  ],
+  "修复 CLI": [
+    "修复 CLI",
+    "Repair CLI"
+  ],
+  "先准备 npm 环境": [
+    "先准备 npm 环境",
+    "Set up npm first"
+  ],
+  "关闭或卸载 App 后，CLI 和 Skills 仍可使用。更换 npm 环境不会搬移或删除原安装。": [
+    "关闭或卸载 App 后，CLI 和 Skills 仍可使用。更换 npm 环境不会搬移或删除原安装。",
+    "The CLI and Skills remain usable after closing or uninstalling the App. Switching npm does not move or remove the previous installation."
+  ],
+  "刷新 CLI 提供的 Skills": [
+    "刷新 CLI 提供的 Skills",
+    "Refresh CLI Skills"
+  ],
+  "卸载 CLI": [
+    "卸载 CLI",
+    "Uninstall CLI"
+  ],
+  "卸载所选 CLI？": [
+    "卸载所选 CLI？",
+    "Uninstall the selected CLI?"
+  ],
+  "发现新版本 {0}": [
+    "发现新版本 {0}",
+    "Version {0} is available"
+  ],
+  "只处理所选 CLI；配置和 Skills 保留。App 自身不会更新。": [
+    "只处理所选 CLI；配置和 Skills 保留。App 自身不会更新。",
+    "This affects the selected CLI. Configuration and Skills are retained. The App version stays the same."
+  ],
+  "可安装版本": [
+    "可安装版本",
+    "Available version"
+  ],
+  "可更新至 {0}": [
+    "可更新至 {0}",
+    "Update available: {0}"
+  ],
+  "启动时及每 24 小时检查。": [
+    "启动时及每 24 小时检查。",
+    "Check at startup and every 24 hours."
+  ],
+  "启动时和每 24 小时检查 CLI 更新": [
+    "启动时和每 24 小时检查 CLI 更新",
+    "Check for CLI updates at startup and every 24 hours"
+  ],
+  "启动时检查新版本，之后每 24 小时检查。确认后才下载。": [
+    "启动时检查新版本，之后每 24 小时检查。确认后才下载。",
+    "Check at launch and every 24 hours afterward. Downloads start after confirmation."
+  ],
+  "在 App 内完成下载和安装，重启后生效。配置、独立 CLI 和 Skills 保留。": [
+    "在 App 内完成下载和安装，重启后生效。配置、独立 CLI 和 Skills 保留。",
+    "Download and install within the App, then restart to finish. Configuration, the independent CLI and Skills are preserved."
+  ],
+  "基础配置已完成，可以开始搜索。": [
+    "基础配置已完成，可以开始搜索。",
+    "Setup is complete. You can start searching."
+  ],
+  "安装 CLI": [
+    "安装 CLI",
+    "Install CLI"
+  ],
+  "安装 Node.js": [
+    "安装 Node.js",
+    "Install Node.js"
+  ],
+  "安装或更新独立 CLI？": [
+    "安装或更新独立 CLI？",
+    "Install or update the separate CLI?"
+  ],
+  "安装目录：{0}": [
+    "安装目录：{0}",
+    "Install directory: {0}"
+  ],
+  "完成以下设置，开始使用 Smart Search。": [
+    "完成以下设置，开始使用 Smart Search。",
+    "Set up Smart Search to get started."
+  ],
+  "完成配置后，将搜索能力接入你的 Agent。": [
+    "完成配置后，将搜索能力接入你的 Agent。",
+    "After configuration, connect search to your Agent."
+  ],
+  "尚未安装 CLI": [
+    "尚未安装 CLI",
+    "CLI not installed"
+  ],
+  "尚未选择 CLI": [
+    "尚未选择 CLI",
+    "No CLI selected"
+  ],
+  "已移除 {0} 个，失败 {1} 个。": [
+    "已移除 {0} 个，失败 {1} 个。",
+    "Removed {0}; failed {1}."
+  ],
+  "已跳过版本 {0}": [
+    "已跳过版本 {0}",
+    "Version {0} skipped"
+  ],
+  "应用路径": [
+    "应用路径",
+    "Apply path"
+  ],
+  "当前 CLI 提供的 Skills": [
+    "当前 CLI 提供的 Skills",
+    "Skills from the current CLI"
+  ],
+  "当前 CLI 版本": [
+    "当前 CLI 版本",
+    "Current CLI version"
+  ],
+  "当前版本": [
+    "当前版本",
+    "Current version"
+  ],
+  "待配置：{0}": [
+    "待配置：{0}",
+    "To configure: {0}"
+  ],
+  "恢复 CLI 自动检测": [
+    "恢复 CLI 自动检测",
+    "Restore CLI auto-detection"
+  ],
+  "所选 Skill 文件会移入备份目录，CLI 和配置保留。": [
+    "所选 Skill 文件会移入备份目录，CLI 和配置保留。",
+    "Selected Skill files will move to a backup folder. The CLI and configuration are retained."
+  ],
+  "找不到所选 CLI：{0}。请在设置中安装或修复 CLI。": [
+    "找不到所选 CLI：{0}。请在设置中安装或修复 CLI。",
+    "Selected CLI not found: {0}. Install or repair the CLI in Settings."
+  ],
+  "无法找到与 Node.js 配套的 npm，请重新选择 npm 路径。": [
+    "无法找到与 Node.js 配套的 npm，请重新选择 npm 路径。",
+    "Cannot find npm for this Node.js installation. Choose another npm path."
+  ],
+  "无法确认 CLI 的最新版本。": [
+    "无法确认 CLI 的最新版本。",
+    "Could not determine the latest CLI version."
+  ],
+  "无法确认 Node.js 的实际路径。": [
+    "无法确认 Node.js 的实际路径。",
+    "Cannot determine the actual Node.js path."
+  ],
+  "无法读取 CLI 发行信息，请稍后重试。": [
+    "无法读取 CLI 发行信息，请稍后重试。",
+    "Could not read CLI release information. Try again later."
+  ],
+  "显示全部": [
+    "显示全部",
+    "Show all"
+  ],
+  "暂无可安装的更新": [
+    "暂无可安装的更新",
+    "No installable updates available"
+  ],
+  "暂时无法安装，请稍后重试。": [
+    "暂时无法安装，请稍后重试。",
+    "Installation is currently unavailable. Try again later."
+  ],
+  "更新到 {0}": [
+    "更新到 {0}",
+    "Update to {0}"
+  ],
+  "更新或修复 CLI": [
+    "更新或修复 CLI",
+    "Update or repair CLI"
+  ],
+  "未找到 npm": [
+    "未找到 npm",
+    "npm not found"
+  ],
+  "未找到可用的 npm。请先安装 Node.js，或手动指定 npm 路径。": [
+    "未找到可用的 npm。请先安装 Node.js，或手动指定 npm 路径。",
+    "No usable npm was found. Install Node.js or specify the npm path."
+  ],
+  "查看更新进度": [
+    "查看更新进度",
+    "Show update progress"
+  ],
+  "检查 CLI 更新": [
+    "检查 CLI 更新",
+    "Check for CLI updates"
+  ],
+  "检查更新失败，请稍后重试。": [
+    "检查更新失败，请稍后重试。",
+    "Could not check for updates. Try again later."
+  ],
+  "检查更新失败：{0}": [
+    "检查更新失败：{0}",
+    "Update check failed: {0}"
+  ],
+  "检测 CLI": [
+    "检测 CLI",
+    "Detect CLI"
+  ],
+  "检测到多份 CLI，请选择要使用和管理的安装。": [
+    "检测到多份 CLI，请选择要使用和管理的安装。",
+    "Multiple CLI installations found. Choose the installation to use and manage."
+  ],
+  "正在下载并准备更新…": [
+    "正在下载并准备更新…",
+    "Downloading and preparing the update…"
+  ],
+  "正在处理 CLI…": [
+    "正在处理 CLI…",
+    "Working on CLI…"
+  ],
+  "正在检查 App 更新…": [
+    "正在检查 App 更新…",
+    "Checking for App updates…"
+  ],
+  "正在检测或处理 CLI…": [
+    "正在检测或处理 CLI…",
+    "Detecting or managing the CLI…"
+  ],
+  "正在通过 npm 安装 CLI…": [
+    "正在通过 npm 安装 CLI…",
+    "Installing the CLI with npm…"
+  ],
+  "此副本尚未配置自动更新，请安装正式版。": [
+    "此副本尚未配置自动更新，请安装正式版。",
+    "Automatic updates are not configured for this copy. Install the official release."
+  ],
+  "此版本不再自动提醒。手动检查仍可查看并安装。": [
+    "此版本不再自动提醒。手动检查仍可查看并安装。",
+    "This version will no longer trigger automatic reminders. Check manually to view or install it."
+  ],
+  "此版本尚未提供可验证的独立 CLI 安装包。": [
+    "此版本尚未提供可验证的独立 CLI 安装包。",
+    "This release does not include a verifiable standalone CLI package yet."
+  ],
+  "添加 Skills，让 Agent 使用搜索。": [
+    "添加 Skills，让 Agent 使用搜索。",
+    "Add Skills so your Agent can search."
+  ],
+  "独立更新 App，不改变 CLI 安装。": [
+    "独立更新 App，不改变 CLI 安装。",
+    "Update the App independently, keeping the CLI installation."
+  ],
+  "移除 Skills": [
+    "移除 Skills",
+    "Remove Skills"
+  ],
+  "移除所选 Skills？": [
+    "移除所选 Skills？",
+    "Remove selected Skills?"
+  ],
+  "管理 CLI…": [
+    "管理 CLI…",
+    "Manage CLI…"
+  ],
+  "管理 Skills": [
+    "管理 Skills",
+    "Manage Skills"
+  ],
+  "终端和 Agent 可使用上述完整路径；如需短命令，将该目录加入 PATH。": [
+    "终端和 Agent 可使用上述完整路径；如需短命令，将该目录加入 PATH。",
+    "Terminals and Agents can use the full path above. Add its directory to PATH to use the short command."
+  ],
+  "继续": [
+    "继续",
+    "Continue"
+  ],
+  "自动查找": [
+    "自动查找",
+    "Detect automatically"
+  ],
+  "自动检查 CLI 更新": [
+    "自动检查 CLI 更新",
+    "Automatically check for CLI updates"
+  ],
+  "自动维护已接入的 Skills，保留个人修改": [
+    "自动维护已接入的 Skills，保留个人修改",
+    "Maintain connected Skills, preserving personal edits"
+  ],
+  "自动维护登记失败；Skill 文件已保留，请重试。": [
+    "自动维护登记失败；Skill 文件已保留，请重试。",
+    "Could not register automatic maintenance. Skill files were retained; try again."
+  ],
+  "请使用 Node.js 18 或更新版本。": [
+    "请使用 Node.js 18 或更新版本。",
+    "Use Node.js 18 or later."
+  ],
+  "请保持 App 打开，等待 CLI 操作完成。": [
+    "请保持 App 打开，等待 CLI 操作完成。",
+    "Keep the App open until the CLI operation completes."
+  ],
+  "请先成功检查 CLI 更新。": [
+    "请先成功检查 CLI 更新。",
+    "Successfully check for CLI updates first."
+  ],
+  "请先检测或指定 npm。": [
+    "请先检测或指定 npm。",
+    "Detect or specify npm first."
+  ],
+  "请选择安装": [
+    "请选择安装",
+    "Choose an installation"
+  ],
+  "请通过原安装管理器处理这份 CLI。": [
+    "请通过原安装管理器处理这份 CLI。",
+    "Use the original package manager to manage this CLI installation."
+  ],
+  "跳过此版本": [
+    "跳过此版本",
+    "Skip this version"
+  ],
+  "选择 CLI 安装": [
+    "选择 CLI 安装",
+    "Choose CLI installation"
+  ],
+  "选择与你的 Node.js 配套的 npm 文件。": [
+    "选择与你的 Node.js 配套的 npm 文件。",
+    "Choose the npm executable supplied with your Node.js installation."
+  ],
+  "选择搜索服务，填写 API Key。": [
+    "选择搜索服务，填写 API Key。",
+    "Choose a search provider and enter your API key."
+  ],
+  "配置{0}": [
+    "配置{0}",
+    "Configure {0}"
+  ],
+  "配置连接参数和诊断选项。": [
+    "配置连接参数和诊断选项。",
+    "Configure connection parameters and diagnostics."
+  ],
+  "重启并完成更新": [
+    "重启并完成更新",
+    "Restart to finish updating"
+  ],
+  "重新检查": [
+    "重新检查",
+    "Check again"
+  ],
+  "重新检测": [
+    "重新检测",
+    "Detect again"
+  ],
+  "默认连接所选独立 CLI。开发路径只在明确选择后使用。": [
+    "默认连接所选独立 CLI。开发路径只在明确选择后使用。",
+    "Connect to the selected independent CLI by default. A development path is used only when explicitly selected."
+  ],
+  "示例：{0}": [
+    "示例：{0}",
+    "e.g. {0}"
+  ],
+  "e.g. {0}": [
+    "示例：{0}",
+    "e.g. {0}"
+  ],
+  "1. 准备本地环境": [
+    "1. 准备本地环境",
+    "1. Prepare local environment"
+  ],
+  "3. 测试连接": [
+    "3. 测试连接",
+    "3. Test the connection"
+  ],
+  "4. 接入 Skills（可选）": [
+    "4. 接入 Skills（可选）",
+    "4. Connect Skills (optional)"
+  ],
+  "App 通过本机独立安装的 Smart Search CLI 读取配置并运行搜索，两者分别安装和更新。检测会复用已有的 mise 或 npm 安装。": [
+    "App 通过本机独立安装的 Smart Search CLI 读取配置并运行搜索，两者分别安装和更新。检测会复用已有的 mise 或 npm 安装。",
+    "The App uses a separately installed Smart Search CLI to read configuration and run searches. They are installed and updated separately. Detection reuses existing mise or npm installations."
+  ],
+  "CLI 来源或版本刚刚发生变化，请重新检查后再更新。": [
+    "CLI 来源或版本刚刚发生变化，请重新检查后再更新。",
+    "The CLI source or version just changed. Check again before updating."
+  ],
+  "Node.js/npm 已就绪，等待准备 Smart Search CLI": [
+    "Node.js/npm 已就绪，等待准备 Smart Search CLI",
+    "Node.js/npm is ready. Prepare Smart Search CLI next."
+  ],
+  "Smart Search CLI": [
+    "Smart Search CLI",
+    "Smart Search CLI"
+  ],
+  "Smart Search CLI 已找到，但连接失败。请重新检测；错误详情显示在上方。": [
+    "Smart Search CLI 已找到，但连接失败。请重新检测；错误详情显示在上方。",
+    "Smart Search CLI was found, but the connection failed. Detect again; see the error notification for details."
+  ],
+  "mise 环境检测未完成，请重新检测或手动选择 CLI。": [
+    "mise 环境检测未完成，请重新检测或手动选择 CLI。",
+    "mise detection did not finish. Detect again or select a CLI manually."
+  ],
+  "npm 上尚未发布兼容版本。可手动下载独立 CLI，或稍后重新检查。": [
+    "npm 上尚未发布兼容版本。可手动下载独立 CLI，或稍后重新检查。",
+    "A compatible version is not available on npm yet. Download a standalone CLI manually, or check again later."
+  ],
+  "{0} · {1} · 需要更新或修复": [
+    "{0} · {1} · 需要更新或修复",
+    "{0} · {1} · Update or repair required"
+  ],
+  "上次检查：{0}": [
+    "上次检查：{0}",
+    "Last checked: {0}"
+  ],
+  "下载更新": [
+    "下载更新",
+    "Download update"
+  ],
+  "使用所选安装": [
+    "使用所选安装",
+    "Use selected installation"
+  ],
+  "保存服务商配置和本地记录的文件夹；移动 App 不会改变此目录。": [
+    "保存服务商配置和本地记录的文件夹；移动 App 不会改变此目录。",
+    "Folder for provider settings and local records. Moving the App does not change this folder."
+  ],
+  "先准备本地环境": [
+    "先准备本地环境",
+    "Prepare your local environment first"
+  ],
+  "准备环境": [
+    "准备环境",
+    "Prepare environment"
+  ],
+  "去测试服务商": [
+    "去测试服务商",
+    "Go to provider tests"
+  ],
+  "可在设置与关于中下载更新。": [
+    "可在设置与关于中下载更新。",
+    "Download the update from Settings & About."
+  ],
+  "在服务商页面点击“测试”，确认地址和密钥可用后开始搜索。": [
+    "在服务商页面点击“测试”，确认地址和密钥可用后开始搜索。",
+    "Click Test on the provider page to verify its URL and key before searching."
+  ],
+  "尚未找到 Node.js/npm 或可用的 Smart Search CLI": [
+    "尚未找到 Node.js/npm 或可用的 Smart Search CLI",
+    "Node.js/npm or a usable Smart Search CLI has not been found."
+  ],
+  "已发现的安装": [
+    "已发现的安装",
+    "Detected installations"
+  ],
+  "已找到 Smart Search CLI，但此版本不支持当前 App。请更新 CLI，或选择兼容的独立下载版。": [
+    "已找到 Smart Search CLI，但此版本不支持当前 App。请更新 CLI，或选择兼容的独立下载版。",
+    "Smart Search CLI was found, but this version does not support the current App. Update the CLI or select a compatible standalone download."
+  ],
+  "当前运行的是独立副本。请下载完整安装包；已有配置、CLI 和 Skills 会保留。": [
+    "当前运行的是独立副本。请下载完整安装包；已有配置、CLI 和 Skills 会保留。",
+    "This is a portable copy. Download the full installer; existing configuration, CLI and Skills are preserved."
+  ],
+  "所选 CLI 与当前 App 不兼容。": [
+    "所选 CLI 与当前 App 不兼容。",
+    "The selected CLI is incompatible with this App."
+  ],
+  "所选安装已不可用，请重新检测。": [
+    "所选安装已不可用，请重新检测。",
+    "The selected installation is unavailable. Detect again."
+  ],
+  "所选安装已不可用，请重新检测或选择其他安装。": [
+    "所选安装已不可用，请重新检测或选择其他安装。",
+    "The selected installation is unavailable. Detect again or select another installation."
+  ],
+  "手动下载 CLI": [
+    "手动下载 CLI",
+    "Download CLI manually"
+  ],
+  "找不到所选 CLI：{0}。请打开概览的本地环境，重新检测或选择已有 CLI。": [
+    "找不到所选 CLI：{0}。请打开概览的本地环境，重新检测或选择已有 CLI。",
+    "The selected CLI was not found: {0}. Open Overview → Local environment to detect again or select an existing CLI."
+  ],
+  "本地环境": [
+    "本地环境",
+    "Local environment"
+  ],
+  "正在检测本地环境…": [
+    "正在检测本地环境…",
+    "Detecting local environment…"
+  ],
+  "正在通过原管理器安装或更新 CLI…": [
+    "正在通过原管理器安装或更新 CLI…",
+    "Installing or updating CLI with its original manager…"
+  ],
+  "此 mise 安装有环境覆盖或复杂版本约束，请在原终端更新。": [
+    "此 mise 安装有环境覆盖或复杂版本约束，请在原终端更新。",
+    "This mise installation has environment overrides or complex version constraints. Update it in its original terminal."
+  ],
+  "每次打开 App 时检查，确认后才下载。": [
+    "每次打开 App 时检查，确认后才下载。",
+    "Check each time the App opens. Download only after confirmation."
+  ],
+  "独立下载包解压后选择 smart-search 可执行文件，并保留同目录的运行文件。手动安装由你自行更新。": [
+    "独立下载包解压后选择 smart-search 可执行文件，并保留同目录的运行文件。手动安装由你自行更新。",
+    "Extract the standalone download, then select its smart-search executable. Keep its runtime files in the same folder. You manage updates for manual installations."
+  ],
+  "环境详情…": [
+    "环境详情…",
+    "Environment details…"
+  ],
+  "诊断与维护": [
+    "诊断与维护",
+    "Diagnostics and maintenance"
+  ],
+  "请在原管理器中更新，或选择其他安装。": [
+    "请在原管理器中更新，或选择其他安装。",
+    "Update through the original manager, or select another installation."
+  ],
+  "请选择完整独立下载包中的 CLI，不要选择全局 shim 或脚本。": [
+    "请选择完整独立下载包中的 CLI，不要选择全局 shim 或脚本。",
+    "Select the CLI from a complete standalone download, not a global shim or script."
+  ],
+  "请选择独立下载包中的 smart-search 可执行文件。": [
+    "请选择独立下载包中的 smart-search 可执行文件。",
+    "Select the smart-search executable from the standalone download."
+  ],
+  "请选择独立下载包中的 smart-search.exe。": [
+    "请选择独立下载包中的 smart-search.exe。",
+    "Select smart-search.exe from the standalone download."
+  ],
+  "选择已有 CLI…": [
+    "选择已有 CLI…",
+    "Select existing CLI…"
+  ],
+  "选择文件…": [
+    "选择文件…",
+    "Choose file…"
+  ],
+  "错误详情": [
+    "错误详情",
+    "Error details"
   ]
 }

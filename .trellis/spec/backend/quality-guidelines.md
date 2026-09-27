@@ -49,7 +49,7 @@ lists* — the `TypeError` was swallowed by provider error handling. See
 | --- | --- |
 | Full suite | `python -m pytest tests/ -q` |
 | Skill mirror parity | `npm run check:skill-parity` |
-| Tarball content | `npm run pack:dry` (and `npm run smoke:tarball` for release) |
+| Tarball content | `npm run pack:dry` (and `npm run smoke:tarball -- .desktop-artifacts/npm-platform` after a native build for release) |
 | Regression contracts | included in the suite (`tests/test_regression.py`) |
 
 See [packaging-contract.md](./packaging-contract.md) for what each packaging

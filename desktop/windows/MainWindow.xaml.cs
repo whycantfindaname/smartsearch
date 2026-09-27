@@ -22,7 +22,10 @@ public sealed partial class MainWindow : Window
     private const int SwRestore = 9;
 
     private readonly BackendClient _backend;
+    private readonly CLIInstallationManager _cliManager = new();
+    private bool _managingCLI;
     private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _activityTimer;
+    private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _cliUpdateTimer;
     private readonly NativeTray _tray;
     private readonly Dictionary<string, FieldEditor> _fieldEditors = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Control> _commandControls = new(StringComparer.Ordinal);
@@ -42,23 +45,27 @@ public sealed partial class MainWindow : Window
     private readonly Dictionary<string, Dictionary<string, CommandValue>> _commandDrafts = [];
     private string? _renderedCommandId;
     private Dictionary<string, FieldDraft> _providerDraft = [];
-    private ScrollViewer? _pageScroll;
-    private string _renderedPage = "overview";
     private TextBlock? _saveSummary;
     private bool _connecting;
     private JsonElement? _state;
     private JsonElement? _updates;
+    private readonly AppUpdater _appUpdater = new();
+    private CancellationTokenSource? _appDownloadCancellation;
+    private bool _installingApp;
+    private bool AppAutoCheck => ReadSetting("appAutoCheck") != "false";
+    private bool AppUpdateOffered => _appUpdater.Available;
+    private bool AppInstallBlocked => _connecting || _managingCLI || _dialogOpen || EnvironmentBusy || Bool(_skills, "busy") ||
+        _providerDraft.Count > 0 || ConfigOperationBusy || HasActiveOwnedRuns ||
+        Text(Property(_updates, "cli_update"), "status") == "running";
     private JsonElement? _environment;
     private JsonElement? _skills;
     private TextBlock? _skillSummary, _skillResult;
     private ToggleSwitch? _autoSkillsSwitch;
     private bool _settingAutoSkills, _skillSelectionInitialized;
     private readonly HashSet<string> _selectedSkillTargets = [];
-    private StackPanel? _environmentSteps;
-    private TextBlock? _environmentSummary, _environmentDetails, _environmentPlan;
-    private ProgressBar? _environmentProgress;
     private bool EnvironmentBusy => Bool(_environment, "busy") || _operations.IsBusy("environment-request");
-    private TextBlock? _appUpdateSummary, _cliUpdateSummary, _downloadSummary, _updateCheckSummary, _cliUpdateLog;
+    private TextBlock? _appUpdateSummary, _appUpdateDetail;
+    private Button? _appUpdateCancel;
     private ProgressBar? _downloadProgress;
     private ToggleSwitch? _autoUpdateSwitch;
     private bool _settingAutoUpdate;
@@ -66,17 +73,16 @@ public sealed partial class MainWindow : Window
     private nint _windowHandle;
     private string _currentPage = "overview";
     private bool _started;
+    private bool _connectionFailed;
     private bool _preferenceReadFailed;
     private bool _activityRefreshing;
     private bool _settingActivityEnabled;
     private bool _allowClose;
     private bool _shuttingDown;
-    private StackPanel? _activityRows;
     private readonly Dictionary<string, ActivityRowView> _activityViews = [];
     private TextBlock? _activityHint;
     private ToggleSwitch? _activityEnabledSwitch;
     private StackPanel? _skillRows;
-    private TextBlock? _cliSummary;
     private ComboBox? _commandPicker;
     private StackPanel? _commandFieldPanel;
     private TextBox? _resultText;
@@ -96,8 +102,14 @@ public sealed partial class MainWindow : Window
         _backend.Disconnected += OnBackendDisconnected;
         _activityTimer = DispatcherQueue.CreateTimer();
         _activityTimer.Interval = TimeSpan.FromSeconds(2);
-        _activityTimer.Tick += async (_, _) => await RefreshActivityAsync(silent: true);
+        _activityTimer.Tick += async (_, _) =>
+        {
+            await RefreshActivityAsync(silent: true);
+        };
         LoadLocalPreferences();
+        _cliUpdateTimer = DispatcherQueue.CreateTimer();
+        _cliUpdateTimer.Interval = TimeSpan.FromMinutes(1);
+        _cliUpdateTimer.Tick += async (_, _) => await CheckCliAutomaticallyAsync();
         Localization.Preference = ReadSetting("language") ?? "auto";
         if (Localization.Preference is not ("auto" or "zh" or "en"))
         {
@@ -125,39 +137,61 @@ public sealed partial class MainWindow : Window
         if (_started)
             return;
         _started = true;
+        _cliUpdateTimer.Start();
+        var updateCheck = CheckAppAutomaticallyAsync(onLaunch: true);
         await RunOperationAsync("connect", ConnectAsync);
+        await CheckCliAutomaticallyAsync(onLaunch: true);
+        await updateCheck;
         if (_preferenceReadFailed && _backend.IsConnected)
             ShowNotice(L("本机偏好"), L("无法读取已保存的显示偏好，已使用默认设置。原配置文件未修改。"), InfoBarSeverity.Warning);
     }
 
     private async Task ConnectAsync()
     {
-        if (EnvironmentBusy || _operations.IsBusy("updates-cli") || Text(Property(_updates, "cli_update"), "status") == "running") return;
+        if (_connecting || _managingCLI || EnvironmentBusy || _operations.IsBusy("updates-cli") || Text(Property(_updates, "cli_update"), "status") == "running") return;
         _connecting = true;
+        _connectionFailed = false;
         RenderCurrentPage();
         try
         {
+            if (!_backend.UsesExplicitBackend)
+            {
+                await _cliManager.DiscoverAsync();
+                _backend.Installation = _cliManager.Selected;
+                if (_backend.Installation?.Compatible != true)
+                {
+                    _activityTimer.Stop();
+                    await _backend.StopAsync();
+                    _state = null;
+                    return;
+                }
+            }
             var state = await _backend.StartAsync(configDirectory: null, CancellationToken.None);
             ApplyState(state);
             _activityTimer.Start();
-            NoticeBar.IsOpen = false;
+            ClearNotice();
         }
         catch (Exception error)
         {
+            _connectionFailed = true;
             ShowNotice(L("后端不可用"), SafeMessage(error), InfoBarSeverity.Error);
         }
-        _connecting = false;
-        RenderCurrentPage();
+        finally
+        {
+            _connecting = false;
+            RenderCurrentPage();
+        }
     }
 
-    private async Task RefreshStateAsync(bool preserveDraft = true)
+    private async Task<bool> RefreshStateAsync(bool preserveDraft = true)
     {
         var result = await RequestAsync("get_state", new { }, L("无法刷新本机状态。"));
         if (result is null)
-            return;
+            return false;
         ApplyState(result.Value);
-        if (!preserveDraft) _providerDraft.Clear();
+        if (!preserveDraft) { _providerDraft.Clear(); _fieldEditors.Clear(); }
         RenderCurrentPage();
+        return true;
     }
 
     private async Task<JsonElement?> RequestAsync(string method, object parameters, string failure)
@@ -184,6 +218,7 @@ public sealed partial class MainWindow : Window
         _updates = Property(state, "updates").Clone();
         _environment = Property(state, "environment").Clone();
         _skills = Property(state, "skills").Clone();
+        _configSnapshotStale = false;
     }
 
     private void OnNavigationSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
@@ -198,9 +233,8 @@ public sealed partial class MainWindow : Window
     private void RenderCurrentPage(Dictionary<string, FieldDraft>? preservedDraft = null)
     {
         CaptureCommandInputs();
-        if (_pageScroll is not null)
-            _pageOffsets[_renderedPage] = _pageScroll.VerticalOffset;
-        _renderedPage = _currentPage;
+        UpdateWorkspaceHeader();
+        _nativeCliState = null;
         _actionButtons.Clear();
         _providerStatusPanels.Clear();
         if (preservedDraft is not null) _providerDraft = preservedDraft;
@@ -221,201 +255,97 @@ public sealed partial class MainWindow : Window
     private UIElement BuildOverviewPage()
     {
         var panel = PagePanel();
-        panel.Children.Add(PageTitle(L("概览")));
-        if (_state is not { } state)
+        panel.Children.Add(new StackPanel { Spacing = 8, Children =
+            { PageTitle(L("概览")), Secondary(L("配置、运行与结果，都在这台电脑上管理。")) } });
+        var steps = new StackPanel { Spacing = 16 };
+        steps.Children.Add(BuildNativeCliPanel(firstStep: true));
+        var providers = new StackPanel { Spacing = 12 };
+        var summary = L("选择搜索服务，填写 API Key。");
+        var actions = new List<UIElement>
         {
-            panel.Children.Add(Card(Section(_connecting ? L("正在读取本机配置…") : L("连接本地引擎"),
-                [Body(_connecting ? L("读取配置不会调用外部服务商。") : L("本地引擎尚未连接，请重新连接或检查安装是否完整。")),
-                 ActionButton(L("重新连接"), ConnectAsync, primary: true, operationKey: "connect", busyText: L("连接中…"))])));
-            return Scroll(panel);
+            ActionButton(L("配置服务商"), () => NavigateToProvidersAsync(), enabled: () => _state is not null)
+        };
+        if (_state is { } state)
+        {
+            var minimum = Property(state, "minimum_profile");
+            if (Bool(minimum, "ok"))
+            {
+                summary = L("基础配置已完成，可以开始搜索。");
+                actions.Add(ActionButton(L("开始搜索"), () => NavigateToAsync("search"), primary: true));
+            }
+            else if (Items(minimum, "missing").Any()) summary = L("待配置：{0}", MissingText(minimum));
         }
-
-        var minimum = Property(state, "minimum_profile");
-        var profileOk = Bool(minimum, "ok");
-        panel.Children.Add(Secondary(L("配置、运行与结果，都在这台电脑上管理。")));
-        var next = new StackPanel { Spacing = 12 };
-        next.Children.Add(HeadingWithStatus(profileOk ? L("可以开始搜索了") : L("先完成基础配置"),
-            profileOk ? L("配置齐全") : L("待配置"), profileOk ? "Success" : "Warning"));
-        next.Children.Add(Body(profileOk ? L("主搜索、文档检索和网页抓取已满足使用条件。") : L("还需要配置：{0}。每类任选一个服务商即可。", MissingText(minimum))));
-        next.Children.Add(ActionButton(profileOk ? L("开始搜索") : L("去配置"), () => NavigateToAsync(profileOk ? "search" : "providers"), primary: true));
-        next.Children.Add(Secondary(L("配置齐全表示可以发起请求；连接是否正常，以你主动测试的结果为准。")));
-        panel.Children.Add(Card(next));
-        var capabilityRows = CapabilityRows(state).ToList();
-        if (capabilityRows.Count > 0)
-            panel.Children.Add(Card(Section(L("当前能力"), capabilityRows)));
-        panel.Children.Add(ActionButton(L("刷新本机状态"), () => RefreshStateAsync(), operationKey: "state"));
-        panel.Children.Add(Disclosure("overview-details", L("配置与路由详情"), Section(L("本机配置"),
-            [KeyValue(L("配置目录"), Text(state, "config_dir", Text(state, "config_path", L("未返回")))),
-             KeyValue(L("配置版本"), Text(state, "revision", L("未返回"))), .. CapabilityChains(state)])));
+        providers.Children.Add(StepHeader(L("2. 配置服务商"), summary, actions.ToArray()));
+        if (_state is { } configuredState)
+        {
+            foreach (var row in CapabilityRows(configuredState, primary: true))
+            {
+                providers.Children.Add(OverviewDivider());
+                providers.Children.Add(row);
+            }
+            var additional = CapabilityRows(configuredState, primary: false).ToList();
+            var footer = new Grid();
+            footer.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            footer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var extraRows = new StackPanel { Spacing = 12 };
+            if (additional.Count > 0)
+            {
+                const string key = "overview-additional";
+                var expanded = _disclosures.GetValueOrDefault(key);
+                extraRows.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+                foreach (var row in additional)
+                {
+                    extraRows.Children.Add(OverviewDivider());
+                    extraRows.Children.Add(row);
+                }
+                var icon = new FontIcon { Glyph = expanded ? "\uE70E" : "\uE70D", FontSize = 12 };
+                var more = new Button { MinHeight = 36, HorizontalAlignment = HorizontalAlignment.Left,
+                    Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8,
+                        Children = { Body(L("更多能力")), icon } } };
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(more, L("更多能力"));
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetHelpText(more, expanded ? L("已展开") : L("已收起"));
+                more.Click += (_, _) =>
+                {
+                    expanded = !expanded;
+                    _disclosures[key] = expanded;
+                    extraRows.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+                    icon.Glyph = expanded ? "\uE70E" : "\uE70D";
+                    Microsoft.UI.Xaml.Automation.AutomationProperties.SetHelpText(more, expanded ? L("已展开") : L("已收起"));
+                };
+                footer.Children.Add(more);
+            }
+            var details = DetailsButton(L("配置详情…"), () => ShowDetailsAsync(L("配置与路由详情"), Section(L("本机配置"),
+                [KeyValue(L("配置目录"), Text(configuredState, "config_dir", Text(configuredState, "config_path", L("未返回")))),
+                 KeyValue(L("配置版本"), Text(configuredState, "revision", L("未返回"))), .. CapabilityChains(configuredState)])));
+            Grid.SetColumn(details, 1);
+            footer.Children.Add(details);
+            providers.Children.Add(footer);
+            if (additional.Count > 0) providers.Children.Add(extraRows);
+        }
+        steps.Children.Add(Card(providers));
+        steps.Children.Add(Card(StepHeader(L("3. 测试连接"), L("在服务商页面点击“测试”，确认地址和密钥可用后开始搜索。"),
+            ActionButton(L("去测试服务商"), () => NavigateToProvidersAsync(), enabled: () => _state is not null))));
+        steps.Children.Add(Card(StepHeader(L("4. 接入 Skills（可选）"), L("添加 Skills，让 Agent 使用搜索。"),
+            ActionButton(L("管理 Skills"), () => NavigateToAsync("ai"), enabled: () => _state is not null))));
+        panel.Children.Add(steps);
         return Scroll(panel);
     }
 
-    private UIElement BuildProvidersPage(Dictionary<string, FieldDraft>? preservedDraft)
+    private static Border OverviewDivider() => new()
     {
-        _fieldEditors.Clear();
-        var panel = PagePanel();
-        panel.Children.Add(PageTitle(L("配置与服务商")));
-        panel.Children.Add(Secondary(L("先配齐三类能力，其余按需展开。修改后可先测试，再保存。")));
-        if (_state is not { } state)
-        {
-            panel.Children.Add(OfflineHint());
-            return Scroll(panel);
-        }
+        Height = 1, Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["DividerStrokeColorDefaultBrush"]
+    };
 
-        var fields = Items(Property(Property(state, "metadata"), "fields")).ToList();
-        if (fields.Count == 0)
-        {
-            panel.Children.Add(Body(L("后端没有返回可编辑字段。请刷新状态或检查协议版本。")));
-            return Scroll(panel);
-        }
-
-        var providerGroups = fields.Where(field => !string.IsNullOrWhiteSpace(Text(field, "provider")))
-            .GroupBy(field => Text(field, "provider")).ToList();
-        var shown = new HashSet<string>();
-        var step = 0;
-        foreach (var capability in new[] { "main_search", "docs_search", "web_fetch" })
-        {
-            var groups = providerGroups.Where(group => !shown.Contains(group.Key) && group.Any(field =>
-                Text(field, "tier") == "essential" && Items(field, "capabilities").Any(value => value.GetString() == capability))).ToList();
-            var content = new StackPanel { Spacing = 20 };
-            var ready = Bool(Property(Property(state, "capability_status"), capability), "ok");
-            content.Children.Add(HeadingWithStatus($"{++step}. {CapabilityLabel(capability)}", ready ? L("已配置") : L("待配置"), ready ? "Success" : "Warning"));
-            content.Children.Add(Secondary(L("下面的服务商任选一个即可。")));
-            bool Configured(IGrouping<string, JsonElement> group) => group.Any(field => IsSecret(field) && !string.IsNullOrWhiteSpace(DisplayValue(Property(state, "values"), Text(field, "key"))));
-            foreach (var group in groups.OrderByDescending(Configured))
-            {
-                shown.Add(group.Key);
-                var providerForm = BuildProviderGroup(state, group.Key, group.ToList(), preservedDraft);
-                content.Children.Add(Configured(group) || !groups.Any(Configured)
-                    ? providerForm
-                    : Disclosure("alternative:" + group.Key, ProviderLabel(group.Key) + L(" · 可选"), providerForm));
-            }
-            panel.Children.Add(Card(content));
-        }
-        panel.Children.Add(SectionHeading(L("更多服务商")));
-        panel.Children.Add(Secondary(L("按需启用网页搜索和实验性检索。测试会发送真实请求，可能计费。")));
-        foreach (var group in providerGroups.Where(group => !shown.Contains(group.Key)))
-            panel.Children.Add(Disclosure("provider:" + group.Key, ProviderLabel(group.Key),
-                BuildProviderGroup(state, group.Key, group.ToList(), preservedDraft)));
-
-        var metadata = Property(state, "metadata");
-        foreach (var section in Items(metadata, "sections").OrderBy(section => Number(section, "order")))
-        {
-            var id = Text(section, "id");
-            var sectionFields = fields.Where(field => string.IsNullOrWhiteSpace(Text(field, "provider")) && Text(field, "section") == id).ToList();
-            if (sectionFields.Count == 0) continue;
-            var content = new StackPanel { Spacing = 16 };
-            content.Children.Add(Secondary(Text(section, "blurb_" + Localization.Language)));
-            foreach (var field in sectionFields) content.Children.Add(BuildFieldEditor(field, preservedDraft));
-            panel.Children.Add(Disclosure("section:" + id, Text(section, "label_" + Localization.Language, id), content));
-        }
-        _saveSummary = Secondary("");
-        var footer = new StackPanel { Spacing = 8 };
-        footer.Children.Add(_saveSummary);
-        footer.Children.Add(ActionRow(
-            ActionButton(L("保存更改"), SaveDraftAsync, primary: true, operationKey: "config-save", busyText: L("保存中…")),
-            ActionButton(L("预览"), PreviewDraftAsync, operationKey: "config-preview", busyText: L("预览中…")),
-            ActionButton(L("刷新"), () => RefreshStateAsync(), operationKey: "state", busyText: L("刷新中…"))));
-        var layout = new Grid();
-        layout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        layout.Children.Add(Scroll(panel));
-        var footerCard = Card(footer);
-        footerCard.Margin = new Thickness(24, 8, 24, 12);
-        Grid.SetRow(footerCard, 1);
-        layout.Children.Add(footerCard);
-        return layout;
-    }
-
-    private UIElement BuildProviderGroup(JsonElement state, string provider, List<JsonElement> fields, Dictionary<string, FieldDraft>? draft)
-    {
-        var content = new StackPanel { Spacing = 12 };
-        content.Children.Add(new TextBlock { Text = ProviderLabel(provider), FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 16 });
-        foreach (var field in fields.Where(field => !IsAdvanced(field))) content.Children.Add(BuildFieldEditor(field, draft));
-        var advanced = fields.Where(IsAdvanced).ToList();
-        if (advanced.Count > 0)
-        {
-            var options = new StackPanel { Spacing = 16 };
-            foreach (var field in advanced) options.Children.Add(BuildFieldEditor(field, draft));
-            content.Children.Add(Disclosure("advanced:" + provider, L("更多设置（{0}）", advanced.Count), options));
-        }
-        var status = BuildProviderStatus(state, provider);
-        _providerStatusPanels[provider] = status;
-        content.Children.Add(status);
-        content.Children.Add(ActionButton(L("测试"), () => TestProviderDraftAsync(provider), operationKey: "test:" + provider,
-            busyText: Text(Property(state, "probe_kinds"), provider) == "presence" ? L("检查中…") : L("测试中…"), label: () => ProviderTestLabel(provider)));
-        return content;
-    }
-
-    private UIElement BuildFieldEditor(JsonElement field, Dictionary<string, FieldDraft>? preservedDraft)
-    {
-        var key = Text(field, "key");
-        var source = Text(Property(_state!.Value, "sources"), key, "default");
-        var value = DisplayValue(Property(_state!.Value, "values"), key);
-        var initialValue = string.IsNullOrWhiteSpace(value) ? Text(field, "default") : value;
-        var isSecret = IsSecret(field);
-        var isLocked = source.Equals("environment", StringComparison.OrdinalIgnoreCase);
-        var label = new StackPanel { Spacing = 6 };
-        label.Children.Add(new TextBlock { Text = Label(field), FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
-        var help = Text(field, "help_" + Localization.Language, Text(field, "help_en"));
-        if (!string.IsNullOrWhiteSpace(help))
-            label.Children.Add(Secondary(help));
-        var links = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        foreach (var (property, text) in new[] { ("key_url", L("申请 Key")), ("docs_url", L("文档")) })
-            if (Uri.TryCreate(Text(field, property), UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http")
-                links.Children.Add(new HyperlinkButton { Content = text, NavigateUri = uri, Padding = new Thickness(0), FontSize = 12 });
-        if (links.Children.Count > 0) label.Children.Add(links);
-        var box = new StackPanel { Spacing = 8 };
-        var saved = DisplayValue(Property(_state!.Value, "saved_values"), key);
-
-        var input = CreateFieldInput(field, isSecret, initialValue, isLocked);
-        AutomationProperties.SetName(input, Label(field));
-        input.HorizontalAlignment = HorizontalAlignment.Stretch;
-        box.Children.Add(input);
-        var detail = new StackPanel { Spacing = 6 };
-        detail.Children.Add(DataText(key));
-        detail.Children.Add(DataText(L("当前生效：{0}", (string.IsNullOrWhiteSpace(initialValue) ? L("未设置") : initialValue))));
-        if (saved != initialValue) detail.Children.Add(DataText(L("配置文件：{0}", (string.IsNullOrWhiteSpace(saved) ? L("未设置") : saved))));
-        box.Children.Add(Badge(SourceLabel(source), "Neutral"));
-        if (isSecret && !string.IsNullOrWhiteSpace(value)) box.Children.Add(DataText(L("当前密钥：") + value));
-        CheckBox? clear = null;
-        if (!isLocked)
-        {
-            clear = new CheckBox
-            {
-                Content = isSecret ? L("清除已保存的密钥") : L("恢复默认值"),
-                IsEnabled = true
-            };
-            detail.Children.Add(clear);
-        }
-        else
-        {
-            box.Children.Add(Secondary(L("由环境变量提供，在此处只读。")));
-        }
-        box.Children.Add(Disclosure("field:" + key, L("来源与重置"), detail));
-
-        var editor = new FieldEditor(field.Clone(), input, clear, ReadControl(input), isSecret, isLocked);
-        _fieldEditors[key] = editor;
-        if (preservedDraft is not null && preservedDraft.TryGetValue(key, out var draft))
-            RestoreDraft(editor, draft);
-        void Changed() { _providerDraft = CaptureDraft(); RefreshActionButtons(); }
-        switch (input)
-        {
-            case TextBox textBox: textBox.TextChanged += (_, _) => Changed(); break;
-            case PasswordBox passwordBox: passwordBox.PasswordChanged += (_, _) => Changed(); break;
-            case ComboBox comboBox: comboBox.SelectionChanged += (_, _) => Changed(); break;
-            case ToggleSwitch toggle: toggle.Toggled += (_, _) => Changed(); break;
-        }
-        if (clear is not null) { clear.Checked += (_, _) => Changed(); clear.Unchecked += (_, _) => Changed(); }
-        return FieldRow(label, box);
-    }
-
-    private static IEnumerable<UIElement> CapabilityRows(JsonElement state)
+    private IEnumerable<UIElement> CapabilityRows(JsonElement state, bool primary)
     {
         var capabilities = Property(state, "capability_status");
         if (capabilities.ValueKind != JsonValueKind.Object)
             yield break;
-        foreach (var capability in capabilities.EnumerateObject().OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase))
+        string[] primaryCapabilities = ["main_search", "docs_search", "web_fetch"];
+        foreach (var capability in capabilities.EnumerateObject()
+            .Where(item => primaryCapabilities.Contains(item.Name) == primary)
+            .OrderBy(item => Array.IndexOf(primaryCapabilities, item.Name))
+            .ThenBy(item => item.Name, StringComparer.OrdinalIgnoreCase))
         {
             var configured = Items(capability.Value, "configured")
                 .Where(item => item.ValueKind == JsonValueKind.String)
@@ -423,12 +353,20 @@ public sealed partial class MainWindow : Window
                 .Where(item => !string.IsNullOrWhiteSpace(item))
                 .ToArray();
             var available = Bool(capability.Value, "ok");
-            var status = available ? L("已配置") : configured.Length > 0 ? L("需要调整") : L("未配置");
+            var status = L("未配置");
+            if (available) status = L("已配置");
+            else if (configured.Length > 0) status = L("需要调整");
             var experimental = Bool(capability.Value, "experimental") ? L("（实验性）") : string.Empty;
-            var row = new StackPanel { Spacing = 6, Margin = new Thickness(0, 4, 0, 8) };
-            row.Children.Add(HeadingWithStatus(CapabilityLabel(capability.Name) + experimental, status, available ? "Success" : "Neutral"));
-            row.Children.Add(Secondary(configured.Length == 0 ? L("选择一个服务商开始配置。") : string.Join(" · ", configured.Select(value => ProviderLabel(value!)))));
-            yield return row;
+            UIElement control = Secondary(status);
+            if (!available)
+            {
+                var configure = new HyperlinkButton { Content = status, Padding = new Thickness(0), MinHeight = 28 };
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(configure, L("配置{0}", CapabilityLabel(capability.Name)));
+                configure.Click += async (_, _) => await NavigateToProvidersAsync(capability.Name);
+                control = configure;
+            }
+            yield return SettingRow(CapabilityLabel(capability.Name) + experimental,
+                configured.Length == 0 ? L("选择一个服务商开始配置。") : string.Join(" · ", configured.Select(value => ProviderLabel(value!))), control);
         }
     }
 
@@ -461,314 +399,6 @@ public sealed partial class MainWindow : Window
         return panel;
     }
 
-    private UIElement BuildSearchPage()
-    {
-        _commandControls.Clear();
-        _commandArguments.Clear();
-        var panel = PagePanel();
-        panel.Children.Add(PageTitle(L("搜索与研究")));
-        panel.Children.Add(Secondary(L("选择工具、填写问题，完成后在这里查看结果与来源。")));
-        if (_state is not { } state)
-        {
-            panel.Children.Add(OfflineHint());
-            return Scroll(panel);
-        }
-
-        _commandPicker = new ComboBox { Header = L("工具"), HorizontalAlignment = HorizontalAlignment.Stretch };
-        foreach (var command in Items(state, "commands"))
-        {
-            var id = Text(command, "id");
-            if (!string.IsNullOrWhiteSpace(id))
-                _commandPicker.Items.Add(new CommandOption(id, Text(command, "label", id), Text(command, "description"), Bool(command, "experimental"), command.Clone()));
-        }
-        _commandPicker.SelectionChanged += (_, _) => RenderCommandFields();
-        var form = new StackPanel { Spacing = 16 };
-        form.Children.Add(_commandPicker);
-        _commandFieldPanel = new StackPanel { Spacing = 10 };
-        form.Children.Add(_commandFieldPanel);
-        form.Children.Add(ActionButton(L("运行"), StartSelectedCommandAsync, primary: true, busyText: L("运行中…"),
-            dynamicKey: () => "run:" + _selectedCommandId));
-        panel.Children.Add(Card(form));
-
-        panel.Children.Add(new TextBlock { Text = L("结果"), FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0, 16, 0, 0) });
-        _resultText = new TextBox
-        {
-            IsReadOnly = true,
-            TextWrapping = TextWrapping.Wrap,
-            AcceptsReturn = true,
-            MinHeight = 160,
-            PlaceholderText = L("运行后会在这里显示可读结果和下一步。")
-        };
-        _sourceRows = new StackPanel { Spacing = 4 };
-        _sourceDisclosure = Disclosure("result-sources", L("来源链接"), _sourceRows);
-        _sourceDisclosure.Visibility = Visibility.Collapsed;
-        var resultActions = ActionRow(ActionButton(L("复制结果"), CopyResult), ActionButton(L("导出结果"), ExportResultAsync, busyText: L("导出中…")));
-        _rawResult = new TextBox { IsReadOnly = true, TextWrapping = TextWrapping.Wrap, AcceptsReturn = true, MinHeight = 120 };
-        panel.Children.Add(Card(new StackPanel { Spacing = 12, Children =
-        {
-            _resultText, _sourceDisclosure, resultActions, Disclosure("result-json", L("高级 JSON"), _rawResult)
-        } }));
-        if (_commandPicker.Items.Count > 0)
-        {
-            _commandPicker.SelectedItem = _commandPicker.Items.OfType<CommandOption>()
-                .FirstOrDefault(command => command.Id == _selectedCommandId) ?? _commandPicker.Items[0];
-        }
-        if (_selectedResultRunId is not null && _ownedRunResults.TryGetValue(_selectedResultRunId, out var cachedResult))
-            RenderResult(cachedResult);
-        return Scroll(panel);
-    }
-
-    private UIElement BuildActivityPage()
-    {
-        var panel = PagePanel();
-        panel.Children.Add(PageTitle(L("实时活动")));
-        panel.Children.Add(Secondary(L("查看 App、终端与 AI 的运行记录。App 发起的任务可在这里取消。")));
-        _activityEnabledSwitch = new ToggleSwitch { Header = L("记录活动"), IsOn = Bool(Property(_state, "activity"), "enabled", true) };
-        _activityEnabledSwitch.Toggled += async (_, _) =>
-        {
-            if (!_settingActivityEnabled)
-                await RunOperationAsync("activity-setting", () => SetActivityEnabledAsync(_activityEnabledSwitch.IsOn));
-        };
-        panel.Children.Add(_activityEnabledSwitch);
-        var actions = ActionRow(ActionButton(L("立即刷新"), () => RefreshActivityAsync(silent: false), busyText: L("刷新中…")),
-            ActionButton(L("清除已结束记录"), ClearActivityAsync, busyText: L("清除中…")));
-        panel.Children.Add(actions);
-        _activityViews.Clear();
-        _activityHint = Body("");
-        _activityHint.Visibility = Visibility.Collapsed;
-        panel.Children.Add(_activityHint);
-        _activityRows = new StackPanel { Spacing = 12, HorizontalAlignment = HorizontalAlignment.Stretch };
-        panel.Children.Add(_activityRows);
-        _ = RefreshActivityAsync(silent: true);
-        return Scroll(panel);
-    }
-
-    private UIElement BuildAiPage()
-    {
-        var panel = PagePanel();
-        panel.Children.Add(PageTitle(L("更新 Skills")));
-        panel.Children.Add(Secondary(L("为编程 Agent 安装或更新 Smart Search Skill。软件更新不会自动同步这些文件。")));
-        _skillSummary = Body("");
-        _skillResult = Body("");
-        _skillRows = new StackPanel { Spacing = 12 };
-        _autoSkillsSwitch = new ToggleSwitch { Header = L("每天自动检查 Skills，只提示，不写入"), IsOn = Bool(_skills, "auto_check", true) };
-        _autoSkillsSwitch.Toggled += async (_, _) =>
-        {
-            if (!_settingAutoSkills) await SkillsRequestAsync("skills.auto", new { enabled = _autoSkillsSwitch.IsOn });
-        };
-        panel.Children.Add(Card(Section(L("最新正式版 Skills"), [_skillSummary, _autoSkillsSwitch,
-            ActionRow(ActionButton(L("检查最新 Skills"), () => SkillsRequestAsync("skills.check"), operationKey: "skills-check", busyText: L("检查中…")),
-                ActionButton(L("刷新本机状态"), LoadSkillsAsync, operationKey: "skills-status", busyText: L("刷新中…")))])));
-        panel.Children.Add(Card(Section(L("选择 Agent"), [Secondary(L("状态只表示 Smart Search Skill 内容。Codex 使用的 .agents/skills 也可能被其他兼容 Agent 读取。")), _skillRows,
-            ActionRow(ActionButton(L("更新所选 Skills"), InstallSelectedSkillsAsync, primary: true, operationKey: "skills-install", busyText: L("更新中…"))), _skillResult,
-            Secondary(L("不同内容会先备份；额外文件与未选目标保持原样。更新后重新打开 Agent 会话；Gemini 可运行 /skills reload。实际调用仍需在 Agent 中验证。"))])));
-        _environmentSummary = Body("");
-        _environmentPlan = Body("");
-        _environmentSteps = new StackPanel { Spacing = 12 };
-        _environmentProgress = new ProgressBar { Minimum = 0, Maximum = 100, Visibility = Visibility.Collapsed };
-        var environmentActions = ActionRow(
-            ActionButton(L("检测环境"), () => EnvironmentRequestAsync("environment.check"), operationKey: "environment-check", busyText: L("检测中…")),
-            ActionButton(L("安装缺少的组件"), PrepareEnvironmentAsync, primary: true, operationKey: "environment-install", busyText: L("准备中…"), label: EnvironmentActionLabel),
-            ActionButton(L("验证可用性"), () => EnvironmentRequestAsync("environment.verify"), operationKey: "environment-verify", busyText: L("验证中…")),
-            ActionButton(L("取消下载"), () => EnvironmentRequestAsync("environment.cancel"), operationKey: "environment-cancel"));
-        var nextActions = ActionRow(ActionButton(L("去配置服务商"), () => NavigateToAsync("providers")),
-            ActionButton(L("复制 AI 测试指引"), CopyEnvironmentTestAsync, operationKey: "environment-copy"));
-        panel.Children.Add(Disclosure("shared-cli", L("共用独立 CLI 环境"), Section(L("准备独立 CLI"),
-            [Secondary(L("所有 Agent 共用独立 CLI。此处只准备运行环境，Skills 在上方单独更新。")), _environmentSummary, _environmentProgress, _environmentSteps, _environmentPlan, environmentActions, nextActions,
-                ActionRow(ActionButton(L("去设置更新 CLI"), () => NavigateToAsync("settings")))])));
-        _environmentDetails = Body("");
-        _environmentDetails.Style = UiStyle("DataCopyStyle");
-        panel.Children.Add(Disclosure("environment-details", L("安装位置与检查详情"), _environmentDetails));
-        RenderEnvironmentState();
-        _cliSummary = Body(L("正在读取本机 CLI 状态…"));
-        _cliSummary.Style = UiStyle("DataCopyStyle");
-        var cliActions = ActionRow(ActionButton(L("复制内置 CLI 调用"), CopyBundledCli),
-            ActionButton(L("启用内置命令"), EnableBundledCliAsync, operationKey: "cli-enable", busyText: L("启用中…")));
-        panel.Children.Add(Disclosure("legacy-cli", L("高级：App 内置入口（依赖 App）"), Section(L("内置入口"),
-            [Secondary(L("内置入口随 App 卸载失效。上方的独立 CLI 接入不使用此入口。")), _cliSummary, cliActions])));
-        RenderSkillState();
-        _ = RunOperationAsync("cli-status", LoadCliStatusAsync);
-        _ = RunOperationAsync("skills-status", LoadSkillsAsync);
-        return Scroll(panel);
-    }
-
-    private void RenderEnvironmentState()
-    {
-        if (_currentPage != "ai" || _environmentSummary is null) { RefreshActionButtons(); return; }
-        _environmentSummary.Text = Text(_environment, "message", L("先检测环境，再安装缺少的组件。"));
-        _environmentSteps!.Children.Clear();
-        foreach (var step in Items(Property(_environment, "steps")))
-        {
-            var ready = Text(step, "status") == "ready";
-            _environmentSteps.Children.Add(new StackPanel { Spacing = 4, Children = {
-                HeadingWithStatus(Text(step, "name"), Text(step, "status_label", ready ? L("已检查") : L("待处理")), ready ? "Success" : "Warning"),
-                Body(Text(step, "message")) } });
-        }
-        var total = Number(_environment ?? default, "total");
-        var actions = EnvironmentActions();
-        _environmentPlan!.Text = Text(_environment, "plan_id").Length == 0 ? L("检测后会在这里列出将要安装或配置的内容。") :
-            actions.Count == 0 ? L("独立 CLI 已就绪。可返回上方检查并更新 Skills。") :
-            L("本次将执行：\n") + string.Join("\n", actions.Select(action => "• " + action));
-        _environmentProgress!.Visibility = EnvironmentBusy && total > 0 ? Visibility.Visible : Visibility.Collapsed;
-        _environmentProgress.Value = total > 0 ? 100 * Number(_environment ?? default, "received") / total : 0;
-        _environmentDetails!.Text = L("独立安装目录：{0}\n", Text(_environment, "tools_dir", L("检测后显示"))) +
-            L("检查时间：{0}\n", Timestamp(_environment ?? default, "checked_at")) +
-            $"Node：{Text(Property(_environment, "node"), "path")}\nPython：{Text(Property(_environment, "python"), "path")}\n" +
-            L("独立调用：{0}\n配置目录：{1}\n", Text(_environment, "invocation"), Text(_environment, "config_dir")) +
-            L("缺失的 Python 使用 Astral CPython；App 只负责管理，独立 CLI 不依赖 App。\n") + Text(_environment, "log") + "\n" + Text(_environment, "error");
-        RefreshActionButtons();
-    }
-
-    private List<string> EnvironmentActions()
-    {
-        var actions = Items(Property(_environment, "plan")).Select(item => item.GetString() ?? "").Where(item => item.Length > 0).ToList();
-        return actions;
-    }
-
-    private string EnvironmentActionLabel()
-    {
-        if (Text(_environment, "plan_id").Length == 0) return L("安装缺少的组件");
-        if (EnvironmentActions().Count == 0) return L("环境已就绪");
-        return Items(Property(_environment, "plan")).Any() ? L("按清单准备环境") : L("配置所选 AI 接入");
-    }
-
-    private async Task EnvironmentRequestAsync(string method, object? parameters = null)
-    {
-        if (!_operations.Begin("environment-request")) return;
-        RefreshActionButtons();
-        try
-        {
-            var result = await RequestAsync(method, parameters ?? new { }, L("环境操作未完成。"));
-            if (result is not null) _environment = result.Value.Clone();
-        }
-        finally { _operations.EndRequest("environment-request"); RenderEnvironmentState(); }
-    }
-
-    private async Task PrepareEnvironmentAsync()
-    {
-        if (EnvironmentBusy || !Bool(_environment, "can_install")) return;
-        var plan = string.Join("\n", EnvironmentActions());
-        var selected = Array.Empty<string>();
-        var planId = Text(_environment, "plan_id");
-        var replace = false;
-        var message = plan + L("\n接入目标：") + (selected.Length == 0 ? L("只准备独立 CLI") : string.Join("、", selected)) +
-            L("\n独立安装目录：") + Text(_environment, "tools_dir") + "\n" +
-            (replace ? L("内容不同的接入文件将先备份再替换。") : L("已有个人修改将保留。")) + L("\n关闭或卸载 App 后，独立 CLI 仍可使用。");
-        if (!await ConfirmAsync(L("准备独立 CLI"), message, L("开始准备"))) return;
-        await EnvironmentRequestAsync("environment.install", new { confirm = true, targets = selected, plan_id = planId, replace_modified = replace });
-    }
-
-    private Task CopyEnvironmentTestAsync()
-    {
-        CopyText(L("请使用 Smart Search 技能，先运行以下命令并告诉我实际版本，不要仅检查文件，也先不要发起联网搜索：\n") +
-            Text(_environment, "invocation") + L(" --version\n如果技能没有出现，请重新打开 AI 再试。配置目录：") + Text(_environment, "config_dir"));
-        ShowNotice(L("已复制测试指引"), L("粘贴到所选 AI 中执行；App 的本机检查不代表 AI 已调用成功。"), InfoBarSeverity.Informational);
-        return Task.CompletedTask;
-    }
-
-    private UIElement BuildSettingsPage()
-    {
-        var panel = PagePanel();
-        panel.Children.Add(PageTitle(L("设置与关于")));
-        panel.Children.Add(Secondary(L("管理本机配置目录、显示方式和更新。")));
-        var theme = new ComboBox { Header = L("外观"), HorizontalAlignment = HorizontalAlignment.Stretch };
-        foreach (var label in new[] { L("跟随系统"), L("浅色"), L("深色") }) theme.Items.Add(label);
-        theme.SelectedIndex = (ReadSetting("theme") ?? "auto") switch { "light" => 1, "dark" => 2, _ => 0 };
-        theme.SelectionChanged += (_, _) =>
-        {
-            var value = theme.SelectedIndex switch { 1 => "light", 2 => "dark", _ => "auto" };
-            SaveSetting("theme", value);
-            ApplyTheme(value);
-        };
-        var language = new ComboBox { Header = L("语言"), HorizontalAlignment = HorizontalAlignment.Stretch,
-            IsEnabled = !_operations.IsBusy("language") && !EnvironmentBusy && Text(Property(_updates, "cli_update"), "status") != "running" };
-        foreach (var label in new[] { L("跟随系统"), L("简体中文"), "English" }) language.Items.Add(label);
-        language.SelectedIndex = Localization.Preference switch { "zh" => 1, "en" => 2, _ => 0 };
-        language.SelectionChanged += async (_, _) =>
-        {
-            if (_operations.IsBusy("language")) return;
-            _operations.Begin("language");
-            language.IsEnabled = false;
-            try
-            {
-                var preference = language.SelectedIndex switch { 1 => "zh", 2 => "en", _ => "auto" };
-                var previous = Localization.Preference;
-                Localization.Preference = preference;
-                if (_backend.IsConnected)
-                {
-                    var state = await RequestAsync("language.set", new { lang = Localization.Language }, L("无法切换界面语言。"));
-                    if (state is null) { Localization.Preference = previous; return; }
-                    _state = state;
-                    _environment = Property(state, "environment");
-                    _updates = Property(state, "updates");
-                }
-                NoticeBar.IsOpen = false;
-                if (!SaveSetting("language", preference))
-                    ShowNotice(L("语言"), L("本次语言切换已生效，但无法保存；重新打开 App 后可能恢复原选择。"), InfoBarSeverity.Warning);
-                ApplyNavigationLanguage();
-                RenderCurrentPage();
-            }
-            finally
-            {
-                _operations.EndRequest("language");
-                if (_currentPage == "settings") RenderCurrentPage();
-            }
-        };
-        panel.Children.Add(Card(Section(L("本机偏好"),
-            [KeyValue(L("配置目录"), Text(_state, "config_dir", Text(_state, "config_path", L("未连接")))),
-             ActionButton(L("选择配置目录"), SelectConfigDirectoryAsync, operationKey: "profile", busyText: L("切换中…")), theme, language,
-             Secondary(L("App 与独立 CLI 分别保存语言选择。环境写入期间请等待操作完成。"))])));
-        var directoryRows = new StackPanel { Spacing = 8 };
-        RenderExtraDirectories(directoryRows);
-        panel.Children.Add(Card(Section(L("活动观察范围"),
-            [Secondary(L("默认观察当前配置目录。可以添加其他目录，不会自动扫描你的文件。")), directoryRows,
-             ActionButton(L("添加活动目录"), async () =>
-             {
-                 var folder = await PickFolderAsync();
-                 if (folder is not null && !_extraActivityDirectories.Contains(folder.Path, StringComparer.OrdinalIgnoreCase))
-                 {
-                     _extraActivityDirectories.Add(folder.Path);
-                     SaveExtraDirectories();
-                     RenderCurrentPage();
-                 }
-             })])));
-        _autoUpdateSwitch = new ToggleSwitch { Header = L("自动检查更新"), OnContent = L("每 24 小时检查，点击才下载"), OffContent = L("已关闭") };
-        _autoUpdateSwitch.IsOn = Bool(_updates, "auto_check", true);
-        _autoUpdateSwitch.Toggled += async (_, _) =>
-        {
-            if (_settingAutoUpdate) return;
-            await UpdateRequestAsync("updates.auto", new { enabled = _autoUpdateSwitch.IsOn });
-        };
-        _updateCheckSummary = Secondary("");
-        _appUpdateSummary = Body("");
-        _cliUpdateSummary = Body("");
-        _downloadSummary = Secondary("");
-        _cliUpdateLog = DataText("");
-        _downloadProgress = new ProgressBar { Minimum = 0, Maximum = 100 };
-        panel.Children.Add(Card(Section(L("版本与更新"),
-            [_autoUpdateSwitch, _updateCheckSummary,
-             ActionRow(ActionButton(L("检查更新"), CheckForUpdateAsync, operationKey: "updates-check", busyText: L("检查中…")),
-                       ActionButton(L("刷新已安装版本"), () => RefreshStateAsync(), operationKey: "state", busyText: L("刷新中…"))),
-             Secondary(L("App 和内置引擎一起更新；独立 CLI 使用原管理器单独更新。"))])));
-        panel.Children.Add(Card(Section(L("App 与内置引擎"), [_appUpdateSummary, _downloadSummary, _downloadProgress,
-             ActionRow(ActionButton(L("下载安装包"), () => UpdateRequestAsync("updates.download"), primary: true, operationKey: "updates-download", busyText: L("下载中…")),
-                       ActionButton(L("取消下载"), () => UpdateRequestAsync("updates.cancel"), operationKey: "updates-cancel", busyText: L("正在取消…")),
-                       ActionButton(L("退出并打开安装器"), InstallUpdateAsync, operationKey: "updates-install")),
-             ActionRow(ActionButton(L("打开下载目录"), OpenUpdateDirectoryAsync, operationKey: "updates-folder"),
-                       ActionButton(L("查看版本说明"), async () => { await Launcher.LaunchUriAsync(new Uri("https://github.com/konbakuyomu/smartsearch/releases")); })),
-             Secondary(L("安装包会校验 SHA256，尚未验证系统代码签名。安装器启动后按提示完成安装，重新打开 App 核对版本。"))])));
-        panel.Children.Add(Card(Section(L("独立 CLI"), [_cliUpdateSummary,
-             ActionRow(ActionButton(L("更新 CLI"), UpdateCliAsync, primary: true, operationKey: "updates-cli", busyText: L("更新中…")),
-                       ActionButton(L("复制更新命令"), () => { CopyText(Text(Property(_updates, "cli"), "command")); return Task.CompletedTask; }, operationKey: "updates-copy")),
-             Disclosure("update-cli-log", L("更新日志与命令"), _cliUpdateLog)])));
-        panel.Children.Add(Card(Section(L("引擎与诊断"),
-            [Disclosure("diagnostics", L("查看诊断信息"), Section(L("本地引擎"),
-                 [KeyValue(L("协议"), Text(_state, "protocol_version", "1")), KeyValue(L("路径"), _backend.BackendPath ?? L("未启动")),
-                  ActionButton(L("重置服务商健康记录"), ResetProvidersAsync, busyText: L("重置中…"))]))])));
-        RenderUpdateState();
-        return Scroll(panel);
-    }
-
     private void RenderCommandFields()
     {
         if (_commandFieldPanel is null || _commandPicker?.SelectedItem is not CommandOption command)
@@ -778,6 +408,7 @@ public sealed partial class MainWindow : Window
         _commandControls.Clear();
         _commandArguments.Clear();
         _commandFieldPanel.Children.Clear();
+        _commandOptions = null;
         _commandFieldPanel.Children.Add(Body(command.Experimental
             ? L("{0}（实验性：只会在你点击运行后执行。）", command.Description)
             : command.Description));
@@ -787,11 +418,11 @@ public sealed partial class MainWindow : Window
         var advanced = fields.Where(IsCommandAdvanced).ToList();
         if (advanced.Count > 0)
         {
-            var advancedPanel = new StackPanel { Spacing = 10 };
-            foreach (var field in advanced)
-                AddCommandField(field, advancedPanel);
-            _commandFieldPanel.Children.Add(new Expander { Header = L("高级参数"), Content = advancedPanel });
+            _commandOptions = new StackPanel { Spacing = 16 };
+            foreach (var field in advanced) AddCommandField(field, _commandOptions);
         }
+        if (_commandOptionsButton is not null)
+            _commandOptionsButton.Visibility = advanced.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         RefreshActionButtons();
     }
 
@@ -846,7 +477,7 @@ public sealed partial class MainWindow : Window
             _rawResult.Text = string.Empty;
         _sourceRows?.Children.Clear();
         if (_sourceDisclosure is not null) _sourceDisclosure.Visibility = Visibility.Collapsed;
-        ShowNotice(L("正在运行"), L("结果完成后会显示在本页，也可到活动页查看或取消。"), InfoBarSeverity.Informational);
+        ShowSearchState(L("任务正在运行。完成后会显示可读结果和来源。"), true);
     }
 
     private async Task PreviewDraftAsync()
@@ -882,8 +513,13 @@ public sealed partial class MainWindow : Window
             return;
         }
         _providerDraft.Clear();
-        await RefreshStateAsync(preserveDraft: false);
-        ShowNotice(L("已保存"), L("新配置会用于下一次任务；已经开始的任务继续使用它自己的配置快照。"), InfoBarSeverity.Success);
+        _fieldEditors.Clear();
+        _configSnapshotStale = true;
+        RenderProviderDetail();
+        if (await RefreshStateAsync(preserveDraft: false))
+            ShowNotice(L("已保存"), L("新配置会用于下一次任务；已经开始的任务继续使用它自己的配置快照。"), InfoBarSeverity.Success);
+        else
+            ShowNotice(L("配置已保存"), L("配置已保存，但暂未读回最新状态。请刷新后继续编辑。"), InfoBarSeverity.Warning);
     }
 
     private async Task TestProviderDraftAsync(string provider)
@@ -911,6 +547,7 @@ public sealed partial class MainWindow : Window
             foreach (var runId in _ownedRunStatus.Where(item => !IsTerminal(item.Value)).Select(item => item.Key).ToArray())
                 await RecoverRunAsync(runId);
             RenderActivity(result);
+            await RefreshSelectedActivityAsync(silent);
         }
         catch (Exception error)
         {
@@ -923,154 +560,24 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void RenderActivity(JsonElement result)
+    private async Task SetActivityEnabledAsync(bool enabled)
     {
-        if (_currentPage != "activity" || _activityRows is null) return;
+        var previous = Bool(_activitySnapshot, "enabled", true);
+        if (_activityEnabledSwitch is not null) _activityEnabledSwitch.IsEnabled = false;
+        var result = await RequestAsync("activity.enabled", new { enabled }, L("无法更新活动记录设置。"));
+        var succeeded = result is { } data && Bool(data, "ok");
+        if (succeeded)
+        {
+            ShowNotice(L("活动记录设置已更新"), enabled ? L("新的可观测任务会记录活动元数据。") : L("后端会停止新的活动记录；现有历史不受本操作删除。"), InfoBarSeverity.Success);
+            await RefreshActivityAsync(silent: true);
+        }
         if (_activityEnabledSwitch is not null)
         {
             _settingActivityEnabled = true;
-            _activityEnabledSwitch.IsOn = Bool(result, "enabled", true);
+            _activityEnabledSwitch.IsOn = succeeded ? enabled : previous;
+            _activityEnabledSwitch.IsEnabled = true;
             _settingActivityEnabled = false;
         }
-        // A heartbeat changes elapsed time, not row identity or chronological order.
-        var runs = Items(result, "runs").OrderByDescending(run => Number(run, "started_at"))
-            .ThenBy(run => Text(run, "run_id"), StringComparer.Ordinal).ToList();
-        var ids = runs.Select(run => Text(run, "run_id")).ToHashSet();
-        foreach (var id in _activityViews.Keys.Where(id => !ids.Contains(id)).ToArray())
-        {
-            _activityRows.Children.Remove(_activityViews[id].Row);
-            _activityViews.Remove(id);
-            foreach (var (button, binding) in _actionButtons.ToArray())
-                if (new[] { "details:", "cancel:", "result:" }.Any(prefix => binding.Key() == prefix + id))
-                    _actionButtons.Remove(button);
-        }
-        for (var index = 0; index < runs.Count; index++)
-        {
-            var run = runs[index];
-            var id = Text(run, "run_id");
-            if (!_activityViews.TryGetValue(id, out var view))
-                _activityViews[id] = view = BuildActivityRow(run);
-            view.Update(run);
-            var position = _activityRows.Children.IndexOf(view.Row);
-            if (position == index) continue;
-            if (position >= 0) _activityRows.Children.RemoveAt(position);
-            _activityRows.Children.Insert(index, view.Row);
-        }
-        var messages = new List<string>();
-        if (Items(result, "errors").Any()) messages.Add(L("部分活动目录不可读取。请在设置中检查已添加的目录；这不表示没有活动。"));
-        if (runs.Count == 0) messages.Add(L("目前没有可见记录。旧 CLI、未启用观测或未添加的配置目录不会被伪造为“空闲”。"));
-        _activityHint!.Text = string.Join("\n", messages);
-        _activityHint.Visibility = messages.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
-    }
-
-    private ActivityRowView BuildActivityRow(JsonElement initial)
-    {
-        var runId = Text(initial, "run_id");
-        var current = initial;
-        var summary = new StackPanel { Spacing = 3 };
-        var progress = Secondary("");
-        var providerLine = Body("");
-        var location = DataText("");
-        var revision = DataText("");
-        var error = Secondary("");
-        var details = ActionButton(L("运行详情"), () => ShowActivityDetailsAsync(current), operationKey: "details:" + runId);
-        var cancel = ActionButton(L("取消任务"), () => CancelOwnedRunAsync(runId), operationKey: "cancel:" + runId, busyText: L("取消中…"));
-        var result = ActionButton(L("查看结果"), () => ShowRunResultAsync(runId), operationKey: "result:" + runId);
-        foreach (var child in new UIElement[] { progress, providerLine, location, revision, error, details, cancel, result })
-            summary.Children.Add(child);
-        var row = Disclosure("activity:" + runId, "", summary);
-        row.Tag = runId;
-        var header = "";
-        return new ActivityRowView(row, run =>
-        {
-            current = run;
-            var status = Text(run, "status", "unknown");
-            var owned = _ownedRuns.Contains(runId);
-            if (owned) _ownedRunStatus[runId] = status;
-            var nextHeader = Text(run, "command") + ":" + status;
-            if (header != nextHeader)
-            {
-                row.Header = HeadingWithStatus(CommandLabel(Text(run, "command")), StatusLabel(status), StatusTone(status));
-                header = nextHeader;
-            }
-            progress.Text = L("{0} · {1} · 用时 {2}", (Text(run, "origin") == "app" ? L("桌面 App") : L("终端 / AI")), PhaseLabel(Text(run, "phase")), Elapsed(run));
-            var provider = Text(run, "provider");
-            var model = Text(run, "model");
-            providerLine.Text = ActivityPresentation.ProviderModel(provider, model);
-            providerLine.Visibility = string.IsNullOrWhiteSpace(provider) && string.IsNullOrWhiteSpace(model) ? Visibility.Collapsed : Visibility.Visible;
-            location.Text = L("开始：{0}\n{1}", Timestamp(run, "started_at"), Text(run, "config_dir", L("未返回")));
-            revision.Text = L("配置版本：{0}", Text(run, "config_revision"));
-            revision.Visibility = string.IsNullOrWhiteSpace(Text(run, "config_revision")) ? Visibility.Collapsed : Visibility.Visible;
-            error.Text = L("错误：{0}", ProviderCheckLabel(Text(run, "error_type")));
-            error.Visibility = string.IsNullOrWhiteSpace(Text(run, "error_type")) ? Visibility.Collapsed : Visibility.Visible;
-            cancel.Visibility = owned && !IsTerminal(status) ? Visibility.Visible : Visibility.Collapsed;
-            result.Visibility = owned && IsTerminal(status) ? Visibility.Visible : Visibility.Collapsed;
-        });
-    }
-
-    private async Task ShowActivityDetailsAsync(JsonElement run)
-    {
-        var runId = Text(run, "run_id");
-        var configDirectory = Text(run, "config_dir", Text(_state, "config_dir"));
-        if (string.IsNullOrWhiteSpace(runId) || string.IsNullOrWhiteSpace(configDirectory))
-        {
-            ShowNotice(L("无法读取详情"), L("该活动记录缺少运行标识或配置目录。"), InfoBarSeverity.Warning);
-            return;
-        }
-        var details = await RequestAsync("activity.details", new { run_id = runId, config_dir = configDirectory }, L("无法读取活动详情。"));
-        if (details is null)
-            return;
-        if (!Bool(details.Value, "ok"))
-        {
-            ShowNotice(L("活动详情不可用"), Text(details.Value, "error", L("后端没有保存这条活动记录。")), InfoBarSeverity.Warning);
-            return;
-        }
-
-        var content = new StackPanel { Spacing = 8 };
-        content.Children.Add(Body(L("这里只显示本地活动元数据和阶段事件，不包含查询、回答正文、请求头或密钥。")));
-        var detailedRun = Property(details.Value, "run");
-        content.Children.Add(Body(L("状态：{0}  阶段：{1}", StatusLabel(Text(detailedRun, "status", "unknown")), PhaseLabel(Text(detailedRun, "phase")))));
-        var detailProvider = Text(detailedRun, "provider");
-        var detailModel = Text(detailedRun, "model");
-        if (!string.IsNullOrWhiteSpace(detailProvider) || !string.IsNullOrWhiteSpace(detailModel))
-            content.Children.Add(Body(ActivityPresentation.ProviderModel(detailProvider, detailModel)));
-        if (!string.IsNullOrWhiteSpace(Text(detailedRun, "config_revision")))
-            content.Children.Add(Body(L("配置版本：{0}", Text(detailedRun, "config_revision"))));
-        if (!string.IsNullOrWhiteSpace(Text(details.Value, "note")))
-            content.Children.Add(Body(Text(details.Value, "note")));
-
-        content.Children.Add(new TextBlock { Text = L("阶段事件"), FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-        var events = Items(details.Value, "events").ToList();
-        if (events.Count == 0)
-            content.Children.Add(Body(L("没有可持久读取的事件；当前 App 自有任务仍可保留其内存状态。")));
-        foreach (var activityEvent in events)
-        {
-            var eventProvider = Text(activityEvent, "provider");
-            var eventModel = Text(activityEvent, "model");
-            var suffix = string.IsNullOrWhiteSpace(eventProvider) && string.IsNullOrWhiteSpace(eventModel)
-                ? string.Empty
-                : $" · {eventProvider}{(string.IsNullOrWhiteSpace(eventModel) ? string.Empty : $" / {eventModel}")}";
-            var error = Text(activityEvent, "error_type");
-            content.Children.Add(Body($"{Timestamp(activityEvent, "timestamp")} · {PhaseLabel(Text(activityEvent, "phase"))} · {StatusLabel(Text(activityEvent, "status", "unknown"))}{suffix}{(string.IsNullOrWhiteSpace(error) ? string.Empty : $" · {ProviderCheckLabel(error)}")}"));
-        }
-        var raw = new TextBox { IsReadOnly = true, TextWrapping = TextWrapping.Wrap, AcceptsReturn = true, MinHeight = 120, Text = JsonSerializer.Serialize(details.Value, new JsonSerializerOptions { WriteIndented = true }) };
-        content.Children.Add(new Expander { Header = L("高级 JSON（仅活动元数据）"), Content = raw });
-        var dialog = new ContentDialog
-        {
-            XamlRoot = DialogRoot,
-            RequestedTheme = ((FrameworkElement)Content).ActualTheme,
-            Title = L("运行详情：{0}", CommandLabel(Text(run, "command"))),
-            Content = new ScrollViewer { Content = content, MaxHeight = 620, VerticalScrollBarVisibility = ScrollBarVisibility.Auto },
-            CloseButtonText = L("关闭")
-        };
-        await dialog.ShowAsync();
-    }
-
-    private async Task SetActivityEnabledAsync(bool enabled)
-    {
-        var result = await RequestAsync("activity.enabled", new { enabled }, L("无法更新活动记录设置。"));
-        if (result is not null)
-            ShowNotice(L("活动记录设置已更新"), enabled ? L("新的可观测任务会记录活动元数据。") : L("后端会停止新的活动记录；现有历史不受本操作删除。"), InfoBarSeverity.Success);
     }
 
     private async Task ClearActivityAsync()
@@ -1098,19 +605,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async Task LoadCliStatusAsync()
-    {
-        var result = await RequestAsync("cli.status", new { }, L("无法读取 CLI 状态。"));
-        if (result is null || _cliSummary is null)
-            return;
-        var externalProtocol = Text(result.Value, "external_activity_protocol_version", L("未返回"));
-        var observation = externalProtocol == "1" ? L("已接入实时活动") : L("尚未接入实时活动；升级后才能在活动页看到新的外部调用。");
-        _cliSummary.Text = L("内置：{0}（{1}）\n", Text(result.Value, "bundled_path", L("未返回")), Text(result.Value, "version", L("版本未知"))) +
-                           L("外部：{0}（{1}）\n", Text(result.Value, "external_path", L("未发现")), Text(result.Value, "external_version", L("版本未知"))) +
-                           L("外部 CLI：{0}\n", Text(result.Value, "external_status", L("观测能力未知"))) +
-                           L("活动观测：{0}（协议：{1}）", observation, externalProtocol);
-    }
-
     private async Task LoadSkillsAsync()
     {
         await SkillsRequestAsync("skills.catalog");
@@ -1122,57 +616,9 @@ public sealed partial class MainWindow : Window
         if (result is not null) { _skills = result.Value.Clone(); RenderSkillState(); }
     }
 
-    private void RenderSkillState()
-    {
-        if (_currentPage != "ai" || _skillRows is null || _skillSummary is null) { RefreshActionButtons(); return; }
-        var source = Property(_skills, "source");
-        _skillSummary.Text = Bool(_skills, "checking") ? L("正在检查官方稳定版 Skills…") :
-            Text(source, "version").Length > 0 ? L("Skills 来源：官方 npm 正式版 {0}\n最近成功检查：{1}\n独立 CLI：{2}", Text(source, "version"), Timestamp(source, "checked_at"), Text(_skills, "cli_version", L("未发现"))) :
-            L("尚未获取正式版 Skills；当前文件仅与 App 内置副本比较。");
-        if (Bool(_skills, "cached") && Text(source, "version").Length > 0) _skillSummary.Text += "\n" + L("显示上次缓存；请检查最新 Skills 后再更新。");
-        _skillSummary.Text += "\n" + Text(_skills, "error") + "\n" + Text(_skills, "compatibility");
-        _settingAutoSkills = true;
-        if (_autoSkillsSwitch is not null) _autoSkillsSwitch.IsOn = Bool(_skills, "auto_check", true);
-        _settingAutoSkills = false;
-        if (!_skillSelectionInitialized && Items(Property(_skills, "targets")).Any())
-        {
-            foreach (var definition in Items(Property(_state, "skill_targets")))
-                if (Bool(definition, "default")) _selectedSkillTargets.Add(Text(definition, "id"));
-            _skillSelectionInitialized = true;
-        }
-        _skillRows.Children.Clear();
-        foreach (var target in Items(Property(_skills, "targets")))
-        {
-            var id = Text(target, "target", Text(target, "id"));
-            if (string.IsNullOrWhiteSpace(id)) continue;
-            var check = new CheckBox
-            {
-                Content = Body($"{Text(target, "label", id)} · {SkillStatusLabel(Text(target, "status"))}"),
-                IsChecked = _selectedSkillTargets.Contains(id), IsEnabled = !Bool(_skills, "busy")
-            };
-            check.Checked += (_, _) => { _selectedSkillTargets.Add(id); RefreshActionButtons(); };
-            check.Unchecked += (_, _) => { _selectedSkillTargets.Remove(id); RefreshActionButtons(); };
-            _skillRows.Children.Add(check);
-            var detail = Text(target, "path");
-            var changed = Items(target, "stale_files").Concat(Items(target, "missing_files")).Select(item => item.GetString());
-            if (changed.Any()) detail += "\n" + L("将同步：{0}", string.Join(", ", changed));
-            foreach (var legacy in Items(target, "legacy_locations")) detail += "\n" + L("历史副本，保留：{0}", Text(legacy, "path"));
-            if (Text(target, "error").Length > 0) detail += "\n" + Text(target, "error");
-            _skillRows.Children.Add(Secondary(detail));
-        }
-        if (_skillRows.Children.Count == 0)
-            _skillRows.Children.Add(Body(L("后端没有返回可管理的 Skill 目标。")));
-        var result = Property(_skills, "result");
-        var receipts = Items(result, "installed").Select(item => Text(item, "target") + L("：已同步") +
-            (Text(item, "backup").Length > 0 ? L("\n备份：{0}", Text(item, "backup")) : ""));
-        var failures = Items(result, "failed").Select(item => Text(item, "target") + ": " + Text(item, "error"));
-        _skillResult!.Text = Bool(_skills, "busy") ? L("正在更新所选 Skills…") : string.Join("\n", receipts.Concat(failures));
-        RefreshActionButtons();
-    }
-
     private async Task InstallSelectedSkillsAsync()
     {
-        var targets = _selectedSkillTargets.ToArray();
+        var targets = SkillTargetsToUpdate();
         if (targets.Length == 0)
         {
             ShowNotice(L("请选择目标"), L("至少选择一个 Skill 后才能安装或更新。"), InfoBarSeverity.Warning);
@@ -1185,43 +631,23 @@ public sealed partial class MainWindow : Window
         await SkillsRequestAsync("skills.sync", new { targets, confirm = true, plan_id = planId });
     }
 
-    private async Task CopyBundledCli()
-    {
-        var result = await RequestAsync("cli.status", new { }, L("无法读取内置 CLI 路径。"));
-        if (result is null)
-            return;
-        var path = Text(result.Value, "bundled_path");
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            ShowNotice(L("没有可复制的路径"), L("后端没有报告内置 CLI 路径。"), InfoBarSeverity.Warning);
-            return;
-        }
-        CopyText($"& \"{path}\" --help");
-        ShowNotice(L("已复制"), L("已复制不含密钥的 PowerShell 调用示例。"), InfoBarSeverity.Success);
-    }
-
-    private async Task EnableBundledCliAsync()
-    {
-        if (!await ConfirmAsync(L("启用 App 内置命令"), L("此操作会让当前用户显式启用 App 内置命令。若发现同名外部 CLI，后端会拒绝覆盖；App 不会静默修改 PATH。"), L("启用")))
-            return;
-        var result = await RequestAsync("cli.enable", new { confirm = true }, L("无法启用内置命令。"));
-        if (result is not null)
-        {
-            if (Bool(result.Value, "ok"))
-                ShowNotice(L("已启用"), Text(result.Value, "message", L("请重新打开终端。")), InfoBarSeverity.Success);
-            else
-                ShowNotice(L("未启用"), Text(result.Value, "error", L("后端拒绝了该操作，外部 CLI 未被覆盖。")), InfoBarSeverity.Warning);
-            await LoadCliStatusAsync();
-        }
-    }
-
     private async Task SelectConfigDirectoryAsync()
     {
         var folder = await PickFolderAsync();
-        if (folder is null)
-            return;
+        if (folder is not null) await SwitchConfigDirectoryAsync(folder.Path);
+    }
+
+    private Task RestoreDefaultConfigDirectoryAsync()
+    {
+        var directory = Text(_state, "default_config_dir");
+        return directory.Length > 0 && !Bool(_state, "is_default_config_dir")
+            ? SwitchConfigDirectoryAsync(directory) : Task.CompletedTask;
+    }
+
+    private async Task SwitchConfigDirectoryAsync(string directory)
+    {
         if (_providerDraft.Count > 0 && !await ConfirmAsync(L("切换配置目录"), L("当前还有未保存的修改。切换目录将放弃这些修改。"), L("放弃并切换"))) return;
-        var result = await RequestAsync("profile.select", new { config_dir = folder.Path }, L("无法切换配置目录。"));
+        var result = await RequestAsync("profile.select", new { config_dir = directory }, L("无法切换配置目录。"));
         if (result is not null)
         {
             _providerDraft.Clear();
@@ -1232,104 +658,115 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async Task CheckForUpdateAsync()
+    private async Task CheckNativeAppAsync()
     {
-        await UpdateRequestAsync("app.update-check");
+        if (!_appUpdater.CanCheck || _installingApp) return;
+        var check = _appUpdater.CheckAsync();
+        RenderUpdateState();
+        await check;
+        RenderUpdateState();
     }
 
-    private async Task UpdateRequestAsync(string method, object? parameters = null)
+    private async Task CheckAppAutomaticallyAsync(bool onLaunch = false)
     {
-        var result = await RequestAsync(method, parameters ?? new { }, L("更新操作未完成。"));
-        if (result is not null) { _updates = result.Value.Clone(); RenderUpdateState(); }
+        if (!onLaunch || _shuttingDown || !_appUpdater.Installed || _appUpdater.Ready || !AppAutoCheck) return;
+        await CheckNativeAppAsync();
+        if (_appUpdater.Available)
+            ShowNotice(L("发现 App 新版本"), L("可在设置与关于中下载更新。"), InfoBarSeverity.Informational);
     }
 
     private void RenderUpdateState()
     {
         if (_currentPage != "settings" || _appUpdateSummary is null) return;
-        var app = Property(_updates, "app");
-        var cli = Property(_updates, "cli");
-        var installed = Property(_state, "cli");
-        var download = Property(_updates, "download");
-        var cliUpdate = Property(_updates, "cli_update");
         _settingAutoUpdate = true;
-        if (_autoUpdateSwitch is not null) _autoUpdateSwitch.IsOn = Bool(_updates, "auto_check", true);
-        _settingAutoUpdate = false;
-        _updateCheckSummary!.Text = Bool(_updates, "checking") ? L("正在检查官方稳定版本…") :
-            Text(_updates, "error") is { Length: > 0 } error ? error :
-            Number(Property(_updates, "app"), "checked_at") > 0 ? L("App 检查时间：{0} · CLI：{1}", Timestamp(app, "checked_at"), Timestamp(cli, "checked_at")) : L("尚未检查更新。");
-        var appStatus = Number(app, "checked_at") <= 0 ? L("尚未检查") : Bool(app, "available") ? L("有新版可下载") : Bool(app, "version_known") ? L("没有更高的可安装版本") : L("当前为开发版或版本未知");
-        _appUpdateSummary.Text = L("App：{0} · 内置引擎：{1}\n", Text(app, "current_version", L("未知")), Text(_state, "version", L("未知"))) +
-            L("可安装稳定版：{0} · {1}", Text(app, "latest_version", L("未就绪")), appStatus) +
-            (Bool(app, "package_pending") ? L("\n较新的发行版尚未提供本平台完整安装包。") : "");
-        _cliUpdateSummary!.Text = L("实际版本：{0} · npm 稳定版：{1}\n", Text(installed, "external_version", L("未安装或未知")), Text(cli, "latest_version", L("尚未检查"))) +
-            L("来源：{0}\n生效路径：{1}\n入口：{2}\n{3}", Text(installed, "manager_label", L("未确认")), Text(installed, "resolved_path", Text(installed, "external_path", L("未发现"))), Text(installed, "external_path", L("未发现")), Text(installed, "update_note"));
-        var downloadStatus = Text(download, "status");
-        _downloadSummary!.Text = downloadStatus switch
+        if (_autoUpdateSwitch is not null)
         {
-            "downloading" => L("正在下载：{0:F1} / {1:F1} MiB", Number(download, "received") / 1048576, Number(download, "total") / 1048576),
-            "cancelling" => L("正在取消下载…"),
-            "ready" => L("已下载并校验：{0}；尚未安装。", Text(Property(download, "asset"), "version")),
-            "failed" or "cancelled" => Text(download, "error"), _ => L("点击后下载，不会自动安装。")
-        };
-        _downloadProgress!.Visibility = downloadStatus is "downloading" or "cancelling" ? Visibility.Visible : Visibility.Collapsed;
-        _downloadProgress.Value = Number(download, "total") > 0 ? 100 * Number(download, "received") / Number(download, "total") : 0;
-        _cliUpdateLog!.Text = Text(cli, "command") + "\n" + Text(cliUpdate, "log") + "\n" + Text(cliUpdate, "error");
-        if (Text(cliUpdate, "status") == "running") _cliUpdateSummary.Text += L("\n正在更新，请保持 App 打开。");
-        if (Text(cliUpdate, "status") == "finished") _cliUpdateSummary.Text += L("\n已更新并验证实际版本。");
-        if (Text(cliUpdate, "status") == "failed") _cliUpdateSummary.Text += L("\n更新未完成，请查看日志。");
+            _autoUpdateSwitch.IsOn = AppAutoCheck;
+            _autoUpdateSwitch.IsEnabled = _appUpdater.Installed;
+        }
+        _settingAutoUpdate = false;
+        _appUpdateSummary.Text = AppUpdateStatus();
+        _appUpdateCancel!.Visibility = _appUpdater.Downloading ? Visibility.Visible : Visibility.Collapsed;
+        _appUpdateDetail!.Text = !_appUpdater.Installed
+            ? L("当前运行的是独立副本。请下载完整安装包；已有配置、CLI 和 Skills 会保留。")
+            : AppUpdateOffered && AppInstallBlocked
+                ? L("请先处理正在进行的任务或未保存修改，再点击更新重启。")
+                : L("在 App 内完成下载和安装，重启后生效。配置、独立 CLI 和 Skills 保留。");
+        _downloadProgress!.Visibility = _appUpdater.Downloading ? Visibility.Visible : Visibility.Collapsed;
+        _downloadProgress.Value = _appUpdater.Progress;
         RefreshActionButtons();
     }
 
-    private async Task OpenUpdateDirectoryAsync()
+    private string AppUpdateStatus()
     {
-        var path = Text(Property(_updates, "download"), "path");
-        if (!string.IsNullOrWhiteSpace(path) && Path.GetDirectoryName(path) is { } directory)
-            await Launcher.LaunchFolderAsync(await StorageFolder.GetFolderFromPathAsync(directory));
+        if (!_appUpdater.Installed) return L("此副本尚未配置自动更新，请安装正式版。");
+        if (_appUpdater.Checking) return L("正在检查 App 更新…");
+        if (_appUpdater.Downloading) return L("正在下载更新：{0}%", _appUpdater.Progress);
+        if (_appUpdater.Ready) return L("更新已就绪");
+        if (_appUpdater.Error.Length > 0) return _appUpdater.Error;
+        if (AppUpdateOffered) return L("发现新版本 {0}", _appUpdater.LatestVersion);
+        return _appUpdater.CheckedAt is null ? L("尚未检查") : L("暂无可安装的更新");
     }
 
-    private async Task UpdateCliAsync()
+    private string AppUpdateActionTitle()
     {
-        if (EnvironmentBusy) return;
-        var version = Text(Property(_updates, "cli"), "latest_version");
-        var installed = Property(_state, "cli");
-        if (!await ConfirmAsync(L("更新独立 CLI"), L("来源：{0}\n生效路径：{1}\n{2} → {3}\n\n只更新 Smart Search。请先结束其他终端中的 CLI 调用；更新期间请保持 App 打开。", Text(installed, "manager_label"), Text(installed, "resolved_path", Text(installed, "external_path")), Text(installed, "external_version"), version), L("更新 CLI"))) return;
-        await UpdateRequestAsync("cli.update", new { confirm = true, version });
+        if (!_appUpdater.Installed) return L("下载正式版");
+        if (_appUpdater.Ready) return L("重启并完成更新");
+        if (AppUpdateOffered) return L("下载更新");
+        return L("检查更新");
     }
 
     private async Task InstallUpdateAsync()
     {
-        if (EnvironmentBusy || _providerDraft.Count > 0 || ConfigOperationBusy || HasActiveOwnedRuns || Text(Property(_updates, "cli_update"), "status") == "running")
+        if (_shuttingDown || _installingApp || _appUpdater.Downloading || !_appUpdater.Available) return;
+        if (AppInstallBlocked)
         {
             ShowNotice(L("暂不能安装"), L("请先保存或处理配置修改，并等待或取消 App 自有任务。"), InfoBarSeverity.Warning);
             return;
         }
-        if (!await ConfirmAsync(L("打开安装器并退出 App"), L("安装包已校验 SHA256，但系统代码签名尚未验证。继续会关闭本 App 并启动当前用户安装器；按安装器提示完成后重新打开核对版本。"), L("继续安装"))) return;
-        var result = await RequestAsync("updates.installer", new { }, L("安装包未就绪。"));
-        if (result is null) return;
-        var path = Text(result.Value, "path");
-        if (!Path.IsPathFullyQualified(path) || !path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) return;
-        // Release the installer presence handle only after our backend is stopped.
+        if (!_appUpdater.Ready)
+        {
+            using var cancellation = new CancellationTokenSource();
+            _appDownloadCancellation = cancellation;
+            try
+            {
+                await _appUpdater.DownloadAsync(() => DispatcherQueue.TryEnqueue(RenderUpdateState), cancellation.Token);
+            }
+            finally { _appDownloadCancellation = null; }
+            RenderUpdateState();
+        }
+        if (!_appUpdater.Ready) return;
+        if (AppInstallBlocked)
+        {
+            ShowNotice(L("更新已就绪"), L("请先处理正在进行的任务或未保存修改，再点击更新重启。"), InfoBarSeverity.Informational);
+            return;
+        }
+        _installingApp = true;
+        RefreshActionButtons();
+        if (_backend.IsConnected)
+        {
+            var ready = await RequestAsync("app.update-prepare", new { }, L("暂不能安装"));
+            if (ready is null) { _installingApp = false; RefreshActionButtons(); return; }
+        }
         _shuttingDown = true;
         _activityTimer.Stop();
-        await _backend.StopAsync();
-        App.ReleaseInstallerMutex();
+        _cliUpdateTimer.Stop();
         try
         {
-            using var installer = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
-            if (installer is null) throw new IOException("Installer did not start.");
+            if (_providerDraft.Count > 0) throw new InvalidOperationException(L("请先处理正在进行的任务或未保存修改，再点击更新重启。"));
+            await _backend.StopAsync();
+            App.ReleaseInstallerMutex();
+            _appUpdater.ApplyAndRestart();
         }
         catch
         {
             App.RestoreInstallerMutex();
             _shuttingDown = false;
+            _installingApp = false;
+            _cliUpdateTimer.Start();
             await ConnectAsync();
-            ShowNotice(L("安装器未启动"), L("已恢复 App 连接。请稍后重试，或从下载目录手动打开安装器。"), InfoBarSeverity.Error);
-            return;
+            ShowNotice(L("更新未完成"), L("已恢复 App 连接，请重新检查更新。"), InfoBarSeverity.Error);
         }
-        await _backend.DisposeAsync();
-        _tray.Dispose();
-        _allowClose = true;
-        Close();
     }
 
     private async Task ResetProvidersAsync()
@@ -1365,12 +802,12 @@ public sealed partial class MainWindow : Window
                     snapshot["cli"] = Property(_environment, "cli").Clone();
                     _state = JsonSerializer.SerializeToElement(snapshot);
                 }
-                RenderEnvironmentState();
+                RefreshActionButtons();
             }
             if (backendEvent.Name == "updates")
             {
                 _updates = backendEvent.Data.Clone();
-                var installed = Property(Property(_updates, "cli_update"), "cli");
+                var installed = Property(_updates, "installed_cli");
                 if (_state is { } state && installed.ValueKind == JsonValueKind.Object)
                 {
                     var snapshot = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(state.GetRawText())!;
@@ -1396,9 +833,9 @@ public sealed partial class MainWindow : Window
             if (!IsTerminal(status)) return;
             await LoadRunResultAsync(runId, data);
             _operations.EndRun(runId);
-            if (NoticeBar.Title?.ToString() == L("正在测试未保存的修改") &&
+            if (_noticeTitle == L("正在测试未保存的修改") &&
                 !_ownedRunStatus.Any(item => _ownedRunKinds.GetValueOrDefault(item.Key) == "provider.test" && !IsTerminal(item.Value)))
-                NoticeBar.IsOpen = false;
+                ClearNotice();
             if (_ownedRunKinds.GetValueOrDefault(runId) == "provider.test")
                 await RefreshProviderStateAfterTestAsync();
             else if (_ownedRunKinds.GetValueOrDefault(runId) == "skills.install" && _currentPage == "ai")
@@ -1426,6 +863,8 @@ public sealed partial class MainWindow : Window
     private void OnBackendDisconnected(object? sender, string message) =>
         DispatcherQueue.TryEnqueue(() =>
         {
+            if (_shuttingDown || _managingCLI || _connecting) return;
+            _connectionFailed = true;
             _activityTimer.Stop();
             _operations.Clear();
             _environment = JsonSerializer.SerializeToElement(new { status = "failed", busy = false, can_cancel = false,
@@ -1477,8 +916,9 @@ public sealed partial class MainWindow : Window
 
     private void RenderResult(JsonElement result)
     {
-        if (_resultText is null || _rawResult is null || _sourceRows is null)
+        if (_currentPage != "search" || _resultText is null || _rawResult is null || _sourceRows is null)
             return;
+        if (_searchResultHost is not null) _searchResultHost.Content = _searchResultContent;
         _resultText.Text = ReadableResult(result);
         _rawResult.Text = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
         _lastResultExport = _resultText.Text;
@@ -1501,6 +941,7 @@ public sealed partial class MainWindow : Window
         }
         _sourceDisclosure!.Header = L("来源链接（{0}）", _sourceRows.Children.Count);
         _sourceDisclosure.Visibility = _sourceRows.Children.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        RefreshActionButtons();
     }
 
     private Task CopyResult()
@@ -1582,8 +1023,18 @@ public sealed partial class MainWindow : Window
 
     private async Task RequestCloseAsync()
     {
-        if (_shuttingDown)
+        if (_managingCLI)
+        {
+            ShowNotice(L("CLI 操作进行中"), L("请保持 App 打开，等待 CLI 操作完成。"), InfoBarSeverity.Warning);
             return;
+        }
+        if (_shuttingDown || _installingApp || _dialogOpen)
+            return;
+        if (_appUpdater.Downloading)
+        {
+            ShowNotice(L("更新下载中"), L("请先取消更新下载或等待完成，再退出。"), InfoBarSeverity.Warning);
+            return;
+        }
         if (EnvironmentBusy || Bool(_skills, "busy") || _operations.IsBusy("updates-cli") || Text(Property(_updates, "cli_update"), "status") == "running")
         {
             ShowNotice(L("安装或检查正在进行"), L("环境或 Skills 操作正在进行，请等待完成后退出。"), InfoBarSeverity.Warning);
@@ -1601,7 +1052,11 @@ public sealed partial class MainWindow : Window
                 SecondaryButtonText = L("取消任务并退出"),
                 CloseButtonText = L("返回")
             };
-            switch (await dialog.ShowAsync())
+            _dialogOpen = true;
+            ContentDialogResult choice;
+            try { choice = await dialog.ShowAsync(); }
+            finally { _dialogOpen = false; }
+            switch (choice)
             {
                 case ContentDialogResult.Primary:
                     HideToTray();
@@ -1645,6 +1100,7 @@ public sealed partial class MainWindow : Window
             return;
         _shuttingDown = true;
         _activityTimer.Stop();
+        _cliUpdateTimer.Stop();
         _tray.Hide();
         await _backend.DisposeAsync();
         _tray.Dispose();
@@ -1652,8 +1108,9 @@ public sealed partial class MainWindow : Window
         Close();
     }
 
-    private async Task<bool> ConfirmAsync(string title, string content, string confirm)
+    private async Task<bool> ConfirmAsync(string title, string content, string confirm, string? cancel = null)
     {
+        if (_dialogOpen) return false;
         var dialog = new ContentDialog
         {
             XamlRoot = DialogRoot,
@@ -1661,37 +1118,17 @@ public sealed partial class MainWindow : Window
             Title = title,
             Content = content,
             PrimaryButtonText = confirm,
-            CloseButtonText = L("取消"),
+            CloseButtonText = cancel ?? L("取消"),
             DefaultButton = ContentDialogButton.Close
         };
-        return await dialog.ShowAsync() == ContentDialogResult.Primary;
+        _dialogOpen = true;
+        try { return await dialog.ShowAsync() == ContentDialogResult.Primary; }
+        finally { _dialogOpen = false; }
     }
 
     private XamlRoot DialogRoot => ((FrameworkElement)Content).XamlRoot;
 
     private static Style UiStyle(string key) => (Style)Application.Current.Resources[key];
-
-    private static StackPanel PagePanel() => new() { Spacing = 20, MaxWidth = 1120, HorizontalAlignment = HorizontalAlignment.Left };
-
-    private ScrollViewer Scroll(UIElement content)
-    {
-        var host = new Grid { HorizontalAlignment = HorizontalAlignment.Stretch };
-        host.Children.Add(content);
-        host.SizeChanged += (_, args) =>
-        {
-            if (content is FrameworkElement element && args.NewSize.Width > 0)
-                element.Width = Math.Min(1120, args.NewSize.Width);
-        };
-        var scroll = new ScrollViewer
-        {
-            Content = host, Padding = new Thickness(24), HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto
-        };
-        var page = _currentPage;
-        scroll.Loaded += (_, _) => scroll.ChangeView(null, _pageOffsets.GetValueOrDefault(page), null, true);
-        _pageScroll = scroll;
-        return scroll;
-    }
 
     private static TextBlock PageTitle(string text) => new() { Text = text, Style = UiStyle("PageHeadingStyle") };
     private static TextBlock SectionHeading(string text) => new() { Text = text, Style = UiStyle("SectionHeadingStyle") };
@@ -1740,7 +1177,7 @@ public sealed partial class MainWindow : Window
 
     private static UIElement FieldRow(UIElement label, UIElement input)
     {
-        var row = new Grid { ColumnSpacing = 20, RowSpacing = 8 };
+        var row = new Grid { ColumnSpacing = 20 };
         row.ColumnDefinitions.Add(new ColumnDefinition());
         row.ColumnDefinitions.Add(new ColumnDefinition());
         row.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -1750,6 +1187,7 @@ public sealed partial class MainWindow : Window
         row.SizeChanged += (_, args) =>
         {
             var wide = args.NewSize.Width >= 640;
+            row.RowSpacing = wide ? 0 : 8;
             row.ColumnDefinitions[0].Width = wide ? new GridLength(220) : new GridLength(1, GridUnitType.Star);
             row.ColumnDefinitions[1].Width = wide ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
             Grid.SetColumn((FrameworkElement)input, wide ? 1 : 0);
@@ -1758,11 +1196,10 @@ public sealed partial class MainWindow : Window
         return row;
     }
 
-    private static StackPanel ActionRow(params UIElement[] children)
+    private static Panel ActionRow(params UIElement[] children)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var row = new ActionPanel();
         foreach (var child in children) row.Children.Add(child);
-        row.SizeChanged += (_, args) => row.Orientation = args.NewSize.Width < 540 ? Orientation.Vertical : Orientation.Horizontal;
         return row;
     }
 
@@ -1774,16 +1211,23 @@ public sealed partial class MainWindow : Window
             yield return KeyValue(CapabilityLabel(chain.Name) + L("回退顺序"), string.Join(" → ", Items(chain.Value).Select(value => ProviderLabel(value.GetString() ?? ""))));
     }
 
-    private static TextBlock OfflineHint() => Secondary(L("本地引擎未连接。请先重新连接，再读取配置和运行任务。"));
+    private UIElement OfflineHint() => Card(new StackPanel { Spacing = 12, Children =
+    {
+        SectionHeading(L("先准备本地环境")), Body(CliStatus()), Secondary(CliExplanation()),
+        ActionButton(L("准备环境"), () => NavigateToAsync("overview"), primary: true)
+    } });
 
     private Button ActionButton(string text, Func<Task> action, bool primary = false, string? operationKey = null,
-        string? busyText = null, Func<string>? label = null, Func<string>? dynamicKey = null)
+        string? busyText = null, Func<string>? label = null, Func<string>? dynamicKey = null, Func<bool>? enabled = null)
     {
         busyText ??= L("处理中…");
         var button = new Button { MinHeight = 36, HorizontalAlignment = HorizontalAlignment.Left };
         if (primary) button.Style = UiStyle("AccentButtonStyle");
-        var binding = new ActionBinding(dynamicKey ?? (() => operationKey ?? text), label ?? (() => text), busyText);
+        var actionKey = operationKey ?? "ui:" + Guid.NewGuid().ToString("N");
+        var binding = new ActionBinding(dynamicKey ?? (() => actionKey), label ?? (() => text), busyText, enabled);
         _actionButtons[button] = binding;
+        button.Loaded += (_, _) => { _actionButtons[button] = binding; UpdateActionButton(button, binding); };
+        button.Unloaded += (_, _) => _actionButtons.Remove(button);
         UpdateActionButton(button, binding);
         button.Click += async (_, _) => await RunOperationAsync(binding.Key(), action);
         return button;
@@ -1791,7 +1235,8 @@ public sealed partial class MainWindow : Window
 
     private async Task RunOperationAsync(string key, Func<Task> action)
     {
-        if (new[] { "state", "config-save", "config-preview", "profile" }.Contains(key) && ConfigOperationBusy) return;
+        if (_installingApp || _shuttingDown) return;
+        if (new[] { "state", "config-save", "config-preview", "config-discard", "profile" }.Contains(key) && ConfigOperationBusy) return;
         if (!_operations.Begin(key)) return;
         RefreshActionButtons();
         try { await action(); }
@@ -1799,36 +1244,44 @@ public sealed partial class MainWindow : Window
         finally { _operations.EndRequest(key); RefreshActionButtons(); }
     }
 
-    private bool ConfigOperationBusy => new[] { "state", "config-save", "config-preview", "profile" }.Any(_operations.IsBusy);
+    private bool ConfigOperationBusy => new[] { "state", "config-save", "config-preview", "config-discard", "profile" }.Any(_operations.IsBusy);
+
+    private string[] SkillTargetsToUpdate() => Items(Property(_skills, "targets"))
+        .Where(item => Bool(item, "needs_update") && _selectedSkillTargets.Contains(Text(item, "target")))
+        .Select(item => Text(item, "target")).ToArray();
 
     private void UpdateActionButton(Button button, ActionBinding binding)
     {
         var key = binding.Key();
-        var downloadStatus = Text(Property(_updates, "download"), "status");
-        var downloading = downloadStatus is "downloading" or "cancelling";
+        var downloading = _appUpdater.Downloading;
         var updatingCli = Text(Property(_updates, "cli_update"), "status") == "running";
-        var busy = _operations.IsBusy(key) || key == "updates-check" && Bool(_updates, "checking") ||
+        var busy = _operations.IsBusy(key) || key == "updates-check" && _appUpdater.Checking ||
+            key == "updates-cli-check" && Bool(_updates, "checking") ||
             key == "skills-check" && Bool(_skills, "checking") || key == "skills-install" && Bool(_skills, "busy") ||
-            key == "updates-download" && downloading || key == "updates-cancel" && downloadStatus == "cancelling" || key == "updates-cli" && updatingCli ||
+            key == "updates-install" && downloading || key == "updates-cli" && updatingCli ||
             Bool(_environment, "busy") && key == "environment-" + Text(_environment, "operation");
         var allowed = key switch
         {
-            "skills-install" => _state is not null && Bool(_skills, "can_sync") && !Bool(_skills, "checking") && !EnvironmentBusy && !updatingCli && _selectedSkillTargets.Count > 0,
+            "profile" => _backend.IsConnected,
+            "config-save" or "config-discard" => _backend.IsConnected && !_configSnapshotStale && _providerDraft.Count > 0,
+            "config-preview" => _backend.IsConnected && !_configSnapshotStale,
+            "result-copy" or "result-export" => !string.IsNullOrWhiteSpace(_lastResultExport),
+            "skills-install" => _state is not null && Bool(_skills, "can_sync") && !Bool(_skills, "checking") && !EnvironmentBusy && !updatingCli && SkillTargetsToUpdate().Length > 0,
             "skills-check" or "skills-status" => _state is not null && !Bool(_skills, "busy") && !Bool(_skills, "checking") && !EnvironmentBusy && !updatingCli,
             "environment-check" or "environment-verify" => _state is not null && !EnvironmentBusy && !updatingCli,
-            "environment-install" => _state is not null && !EnvironmentBusy && !updatingCli && Bool(_environment, "can_install") && Text(_environment, "plan_id").Length > 0 && EnvironmentActions().Count > 0,
             "environment-cancel" => Bool(_environment, "can_cancel"),
             "environment-copy" => Text(_environment, "invocation").Length > 0,
-            "updates-download" => Bool(Property(_updates, "app"), "available") && Text(Property(_updates, "app"), "error").Length == 0,
-            "updates-cancel" => downloadStatus == "downloading",
-            "updates-install" or "updates-folder" => Text(Property(_updates, "download"), "status") == "ready",
-            "updates-cli" => Bool(Property(_state, "cli"), "can_update") && Bool(Property(_updates, "cli"), "available") && !Bool(_updates, "checking") && Text(Property(_updates, "cli"), "error").Length == 0,
+            "updates-check" => _appUpdater.CanCheck,
+            "updates-cli-check" => _backend.IsConnected && !Bool(_updates, "checking") && !updatingCli,
+            "updates-cancel" => downloading,
+            "updates-install" => AppUpdateOffered && !AppInstallBlocked,
+            "updates-cli" => Bool(Property(_updates, "installed_cli"), "can_update") && Bool(Property(_updates, "cli"), "available") && !Bool(_updates, "checking") && Text(Property(_updates, "cli"), "error").Length == 0,
             "updates-copy" => Text(Property(_updates, "cli"), "command").Length > 0,
             _ => true
         };
         if (EnvironmentBusy && new[] { "updates-cli", "updates-install", "connect", "profile", "skills-install", "cli-enable" }.Contains(key)) allowed = false;
         if (Bool(_skills, "busy") && new[] { "updates-cli", "updates-install", "connect", "profile", "environment-check", "environment-verify", "environment-install", "cli-enable" }.Contains(key)) allowed = false;
-        button.IsEnabled = allowed && !busy && !(new[] { "state", "config-save", "config-preview", "profile" }.Contains(key) && ConfigOperationBusy);
+        button.IsEnabled = !_installingApp && allowed && (binding.Enabled?.Invoke() ?? true) && !busy && !(new[] { "state", "config-save", "config-preview", "config-discard", "profile" }.Contains(key) && ConfigOperationBusy);
         var label = busy ? binding.BusyText : binding.Label();
         if (busy)
             button.Content = new StackPanel
@@ -1842,6 +1295,7 @@ public sealed partial class MainWindow : Window
 
     private void RefreshActionButtons()
     {
+        RootNavigation.IsEnabled = !_installingApp && !_shuttingDown;
         foreach (var (button, binding) in _actionButtons.ToArray()) UpdateActionButton(button, binding);
         if (_currentPage == "providers")
         {
@@ -1849,9 +1303,13 @@ public sealed partial class MainWindow : Window
             var count = changes.Set.Count + changes.Unset.Count;
             if (_saveSummary is not null)
                 _saveSummary.Text = count > 0 ? L("有 {0} 项未保存修改 · 密钥留空会保留原值", count) : L("没有未保存的修改 · 测试不会自动保存配置");
+            foreach (var group in ConfigurationFields.Where(field => Text(field, "provider").Length > 0).GroupBy(field => Text(field, "provider")))
+                if (_providerRowStatus.TryGetValue("provider:" + group.Key, out var status)) status.Text = ProviderListStatus(group.Key, group);
+            if (_providerRowStatus.TryGetValue("section:routing", out var routingStatus))
+                routingStatus.Text = ChoiceLabel("SMART_SEARCH_INTENT_ROUTER", EffectiveConfigurationValue("SMART_SEARCH_INTENT_ROUTER"));
             foreach (var editor in _fieldEditors.Values)
             {
-                editor.Input.IsEnabled = !_operations.IsBusy("config-save");
+                editor.Input.IsEnabled = !_operations.IsBusy("config-save") && !(editor.Locked && editor.Input is ToggleSwitch);
                 if (editor.Clear is not null) editor.Clear.IsEnabled = !_operations.IsBusy("config-save");
             }
             if (_state is { } state)
@@ -1878,9 +1336,9 @@ public sealed partial class MainWindow : Window
     private Control CreateFieldInput(JsonElement field, bool secret, string value, bool isLocked)
     {
         if (isLocked)
-            return new TextBox { Text = value, IsReadOnly = true, TextWrapping = TextWrapping.Wrap, FontFamily = new FontFamily("Consolas") };
+            return new TextBox { Text = secret ? (HasSavedSecret(field) ? "••••••••" : L("未设置")) : value, IsReadOnly = true, TextWrapping = TextWrapping.Wrap, FontFamily = new FontFamily("Consolas") };
         if (secret)
-            return new PasswordBox { PlaceholderText = L("留空将保留当前密钥"), IsEnabled = true };
+            return new PasswordBox { PlaceholderText = ConfigurationPlaceholder(field), IsEnabled = true };
         if (Text(field, "kind").Equals("bool", StringComparison.OrdinalIgnoreCase))
             return new ToggleSwitch { IsOn = value.Equals("true", StringComparison.OrdinalIgnoreCase) || value.Equals(L("是"), StringComparison.OrdinalIgnoreCase) };
         var choices = Items(field, "choices").Where(choice => choice.ValueKind == JsonValueKind.String).Select(choice => choice.GetString()!).ToList();
@@ -1888,11 +1346,11 @@ public sealed partial class MainWindow : Window
         {
             var combo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
             foreach (var choice in choices)
-                combo.Items.Add(choice);
-            combo.SelectedItem = choices.FirstOrDefault(choice => choice.Equals(value, StringComparison.OrdinalIgnoreCase)) ?? choices.FirstOrDefault();
+                combo.Items.Add(new ConfigurationChoice(choice, ChoiceLabel(Text(field, "key"), choice)));
+            combo.SelectedItem = combo.Items.OfType<ConfigurationChoice>().FirstOrDefault(choice => choice.Value.Equals(value, StringComparison.OrdinalIgnoreCase)) ?? combo.Items.FirstOrDefault();
             return combo;
         }
-        return new TextBox { Text = value, PlaceholderText = Text(field, "placeholder", Text(field, "default")), TextWrapping = TextWrapping.Wrap, FontFamily = new FontFamily("Consolas") };
+        return new TextBox { Text = value, PlaceholderText = ConfigurationPlaceholder(field), TextWrapping = TextWrapping.Wrap, FontFamily = new FontFamily("Consolas") };
     }
 
     private Control CreateCommandInput(JsonElement field)
@@ -1921,46 +1379,45 @@ public sealed partial class MainWindow : Window
 
     private DraftChange CollectDraft(string? provider = null)
     {
+        _providerDraft = CaptureDraft();
         var set = new Dictionary<string, object?>();
         var unset = new List<string>();
-        foreach (var (key, editor) in _fieldEditors)
+        foreach (var field in ConfigurationFields)
         {
-            if (editor.Locked || (provider is not null && !Text(editor.Field, "provider").Equals(provider, StringComparison.OrdinalIgnoreCase)))
-                continue;
-            var value = ReadEditorValue(editor);
-            if (!HasDraftChange(editor, value))
-                continue;
-            if (editor.Clear?.IsChecked == true)
-            {
-                unset.Add(key);
-                continue;
-            }
-            set[key] = ConvertValue(editor, value);
+            var key = Text(field, "key");
+            if (!_providerDraft.TryGetValue(key, out var draft) ||
+                Text(Property(_state, "sources"), key).Equals("environment", StringComparison.OrdinalIgnoreCase) ||
+                (provider is not null && Text(field, "provider") != provider)) continue;
+            if (draft.Clear) unset.Add(key);
+            else set[key] = ConvertValue(field, new CommandValue(draft.Text, draft.IsChecked));
         }
         return new DraftChange(set, unset);
     }
 
     private Dictionary<string, FieldDraft> CaptureDraft()
     {
-        var captured = new Dictionary<string, FieldDraft>(StringComparer.Ordinal);
+        // Editors represent only the selected detail. Other drafts belong to the page model.
+        var captured = new Dictionary<string, FieldDraft>(_providerDraft, StringComparer.Ordinal);
         foreach (var (key, editor) in _fieldEditors)
         {
             var value = ReadEditorValue(editor);
-            if (!HasDraftChange(editor, value))
-                continue;
-            captured[key] = new FieldDraft(value.Text, value.IsChecked, editor.Clear?.IsChecked == true);
+            if (HasDraftChange(editor, value)) captured[key] = new FieldDraft(value.Text, value.IsChecked, editor.Clear?.IsOn == true);
+            else captured.Remove(key);
         }
         return captured;
     }
 
     private static bool HasDraftChange(FieldEditor editor, CommandValue value) =>
-        !editor.Locked && (editor.Clear?.IsChecked == true ||
+        !editor.Locked && (editor.Clear?.IsOn == true ||
                            (editor.Secret ? !string.IsNullOrWhiteSpace(value.Text) : !ControlValueComparer.Equal(value, editor.Initial)));
 
     private static void RestoreDraft(FieldEditor editor, FieldDraft draft)
     {
-        RestoreControl(editor.Input, new CommandValue(draft.Text, draft.IsChecked));
-        if (editor.Clear is not null) editor.Clear.IsChecked = draft.Clear;
+        var value = draft.Clear && !editor.Secret
+            ? new CommandValue(Text(editor.Field, "default"), ConfigurationBoolean(Text(editor.Field, "default")))
+            : new CommandValue(draft.Text, draft.IsChecked);
+        RestoreControl(editor.Input, value);
+        if (editor.Clear is not null) editor.Clear.IsOn = draft.Clear;
     }
 
     private void CaptureCommandInputs()
@@ -1975,7 +1432,9 @@ public sealed partial class MainWindow : Window
         {
             case TextBox textBox: textBox.Text = value.Text ?? string.Empty; break;
             case PasswordBox passwordBox: passwordBox.Password = value.Text ?? string.Empty; break;
-            case ComboBox comboBox: comboBox.SelectedItem = value.Text; break;
+            case ComboBox comboBox:
+                comboBox.SelectedItem = comboBox.Items.OfType<ConfigurationChoice>().FirstOrDefault(choice => choice.Value == value.Text) ?? (object?)value.Text;
+                break;
             case ToggleSwitch toggle: toggle.IsOn = value.IsChecked; break;
         }
     }
@@ -1988,14 +1447,14 @@ public sealed partial class MainWindow : Window
     {
         TextBox textBox => new CommandValue(textBox.Text),
         PasswordBox passwordBox => new CommandValue(passwordBox.Password),
-        ComboBox comboBox => new CommandValue(comboBox.SelectedItem?.ToString()),
+        ComboBox comboBox => new CommandValue(comboBox.SelectedItem is ConfigurationChoice choice ? choice.Value : comboBox.SelectedItem?.ToString()),
         ToggleSwitch toggle => new CommandValue(null, toggle.IsOn),
         _ => new CommandValue(null)
     };
 
-    private static object? ConvertValue(FieldEditor editor, CommandValue value)
+    private static object? ConvertValue(JsonElement field, CommandValue value)
     {
-        var kind = Text(editor.Field, "kind").ToLowerInvariant();
+        var kind = Text(field, "kind").ToLowerInvariant();
         return kind switch
         {
             "bool" => value.IsChecked,
@@ -2050,8 +1509,9 @@ public sealed partial class MainWindow : Window
         "main_search" => L("主搜索"),
         "web_search" => L("网页搜索"),
         "docs_search" => L("文档检索"),
-        "web_fetch" => L("网页读取"),
-        "vertical_search" => L("垂直搜索"),
+        "web_fetch" => L("网页抓取"),
+        "vertical_search" => L("垂直检索"),
+        "site_map" => L("站点地图"), "synthesis" => L("结果汇总"), "other" => L("其他能力"),
         _ => capability
     };
 
@@ -2133,7 +1593,7 @@ public sealed partial class MainWindow : Window
     private static string SkillStatusLabel(string status) => status.ToLowerInvariant() switch
     {
         "missing" => L("未安装"),
-        "stale" => L("内容不同，可同步"),
+        "stale" => L("文件内容与来源不同"),
         "up_to_date" or "extra_files" => L("与来源一致"),
         "error" => L("读取失败"),
         _ => L("状态未知")
@@ -2219,6 +1679,7 @@ public sealed partial class MainWindow : Window
 
     private void RenderExtraDirectories(StackPanel rows)
     {
+        rows.Children.Clear();
         if (_extraActivityDirectories.Count == 0)
         {
             rows.Children.Add(Body(L("没有额外目录。")));
@@ -2226,16 +1687,14 @@ public sealed partial class MainWindow : Window
         }
         foreach (var directory in _extraActivityDirectories.ToArray())
         {
-            var item = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-            item.Children.Add(new TextBlock { Text = directory, TextWrapping = TextWrapping.Wrap, MaxWidth = 620, VerticalAlignment = VerticalAlignment.Center });
-            item.Children.Add(ActionButton(L("移除"), () =>
+            var remove = ActionButton(L("移除"), async () =>
             {
                 _extraActivityDirectories.Remove(directory);
                 SaveExtraDirectories();
-                RenderCurrentPage();
-                return Task.CompletedTask;
-            }));
-            rows.Children.Add(item);
+                RenderExtraDirectories(rows);
+                await RefreshActivityAsync(silent: true);
+            });
+            rows.Children.Add(SettingRow(directory, string.Empty, remove));
         }
     }
 
@@ -2299,6 +1758,7 @@ public sealed partial class MainWindow : Window
 
     private void ApplyNavigationLanguage()
     {
+        RootNavigation.Language = Localization.Language == "zh" ? "zh-CN" : "en-US";
         AutomationProperties.SetName(AppLogo, L("Smart Search 图标"));
         var titles = new Dictionary<string, string>
         {
@@ -2334,14 +1794,6 @@ public sealed partial class MainWindow : Window
         _ => L("操作未完成。请检查连接或文件权限后重试。")
     };
 
-    private void ShowNotice(string title, string message, InfoBarSeverity severity)
-    {
-        NoticeBar.Title = title;
-        NoticeBar.Message = message;
-        NoticeBar.Severity = severity;
-        NoticeBar.IsOpen = true;
-    }
-
     private static void CopyText(string text)
     {
         var package = new DataPackage();
@@ -2358,12 +1810,12 @@ public sealed partial class MainWindow : Window
     }
 
     private sealed record FieldDraft(string? Text, bool IsChecked, bool Clear);
-    private sealed record ActionBinding(Func<string> Key, Func<string> Label, string BusyText);
-    private sealed record ActivityRowView(Expander Row, Action<JsonElement> Update);
+    private sealed record ActionBinding(Func<string> Key, Func<string> Label, string BusyText, Func<bool>? Enabled);
+    private sealed record ActivityRowView(ListViewItem Row, Action<JsonElement> Update);
 
     private sealed record DraftChange(Dictionary<string, object?> Set, List<string> Unset);
 
-    private sealed record FieldEditor(JsonElement Field, Control Input, CheckBox? Clear, CommandValue Initial, bool Secret, bool Locked);
+    private sealed record FieldEditor(JsonElement Field, Control Input, ToggleSwitch? Clear, CommandValue Initial, bool Secret, bool Locked);
 
     private sealed record BackendLaunch(string? Path, IReadOnlyList<string> Arguments);
 }

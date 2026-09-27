@@ -22,8 +22,6 @@ def file_lock(path: Path, timeout: float = 5.0):
         path.parent.mkdir(parents=True, exist_ok=True)
         fd = os.open(path.with_name(path.name + ".lock"), os.O_RDWR | os.O_CREAT, 0o600)
         with os.fdopen(fd, "r+b", buffering=0) as stream:
-            if not os.fstat(stream.fileno()).st_size:
-                stream.write(b"\0")
             deadline = time.monotonic() + timeout
             while True:
                 try:
@@ -40,6 +38,8 @@ def file_lock(path: Path, timeout: float = 5.0):
                         raise TimeoutError(source_message('State file is busy; retry the operation.')) from None
                     time.sleep(0.02)
             try:
+                if not os.fstat(stream.fileno()).st_size:
+                    stream.write(b"\0")
                 yield
             finally:
                 stream.seek(0)

@@ -70,7 +70,7 @@ def package_root(entry):
 
 
 def npm_command(env, mise):
-    entry = shutil.which("npm")
+    entry = shutil.which("npm", path=env.get("PATH"))
     if not entry:
         return None
     path = Path(entry)
@@ -84,10 +84,10 @@ def npm_command(env, mise):
     return [str(node), str(script)] if node.is_file() and script.is_file() else None
 
 
-def path_entries():
+def path_entries(env=None):
     entries = []
     suffixes = (".exe", ".cmd", ".bat", "") if os.name == "nt" else ("",)
-    for directory in os.get_exec_path():
+    for directory in os.get_exec_path(env):
         for suffix in suffixes:
             path = Path(directory) / ("smart-search" + suffix)
             if path.is_file():
@@ -102,21 +102,26 @@ def discover(entry, env):
     data = {"manager": "unknown", "manager_label": tr('来源尚未确认'), "can_update": False,
             "resolved_path": str(Path(entry).resolve()), "manager_command": [], "manager_options": [],
             "update_note": tr('请使用原安装方式更新，然后刷新状态。')}
-    mise = shutil.which("mise")
+    mise = shutil.which("mise", path=env.get("PATH"))
     path = Path(entry)
+    stage = tr('解析 CLI 入口')
     try:
-        if path.parent.name == "shims" and "mise" in str(path).lower() and mise:
+        if path.parent.name == "shims" and "mise" in str(path).lower():
+            if not mise:
+                data.update(probe_error="manager_missing", update_note=tr('已找到 mise 的 CLI 入口，但当前 App 环境找不到 mise；请重新打开 App 后检查。'))
+                return data
             path = Path(run_read([mise, "which", "smart-search"], env))
             data["resolved_path"] = str(path.resolve())
         root, package = package_root(path)
         if root is None:
+            data.update(probe_error="package_unrecognized", update_note=tr('未能核对 CLI 入口对应的安装包；请检查原安装后刷新。'))
             return data
         data.update(package_root=str(root), external_version=package.get("version"))
         managed = managed_cli_info(env)
         if managed and root == Path(managed["package_root"]):
             data.update(managed)
             data["external_path"] = entry
-            data["other_paths"] = [str(other) for other in path_entries()
+            data["other_paths"] = [str(other) for other in path_entries(env)
                                    if package_root(other)[0] != root]
             if data["other_paths"]:
                 data.update(can_update=False, update_note=tr('PATH 中有其他同名 CLI，请先处理冲突。'))
@@ -125,6 +130,7 @@ def discover(entry, env):
             data["update_note"] = tr('这是项目内安装；请在所属项目更新。')
             return data
         if mise and "mise" in str(path).lower():
+            stage = tr('核对 mise 全局安装')
             rows = json.loads(run_read([mise, "ls", "--global", "--json", MISE_TOOL], env))
             if isinstance(rows, dict):
                 rows = rows.get(MISE_TOOL, [])
@@ -133,13 +139,14 @@ def discover(entry, env):
                 return data
             row = rows[0]
             source = Path(row.get("source", {}).get("path", "")).resolve()
-            global_path = Path(os.environ.get("MISE_GLOBAL_CONFIG_FILE", Path.home() / ".config/mise/config.toml")).resolve()
+            global_path = Path(env.get("MISE_GLOBAL_CONFIG_FILE", Path.home() / ".config/mise/config.toml")).resolve()
             if source != global_path or row.get("source", {}).get("type") != "mise.toml":
                 return data
             data.update(manager="mise", manager_label=tr('mise 全局 npm'), manager_command=[mise], manager_config=str(source))
-            if any(os.environ.get(k) for k in ("MISE_CONFIG_FILE", "MISE_ENV")) or not tomllib:
+            if any(env.get(k) for k in ("MISE_CONFIG_FILE", "MISE_ENV")) or not tomllib:
                 data["update_note"] = tr('当前有 mise 环境覆盖或运行时无法解析配置，请在原终端更新。')
                 return data
+            stage = tr('读取 mise 安装配置')
             table = tomllib.loads(source.read_text(encoding="utf-8"))["tools"][MISE_TOOL]
             if isinstance(table, str):
                 requested, options = table, {}
@@ -162,6 +169,7 @@ def discover(entry, env):
                 data["update_note"] = tr('当前 mise 有版本范围约束，请在原终端确认更新范围。')
                 return data
         else:
+            stage = tr('核对 npm 全局安装')
             npm = npm_command(env, mise)
             if not npm:
                 return data
@@ -171,7 +179,7 @@ def discover(entry, env):
                 return data
             data.update(manager="npm", manager_label=tr('npm 全局安装'), manager_command=npm)
         alternatives = []
-        for other in path_entries():
+        for other in path_entries(env):
             if other.parent.resolve() in {Path(entry).parent.resolve(), path.parent.resolve()}:
                 continue
             other_root, _ = package_root(other)
@@ -182,8 +190,12 @@ def discover(entry, env):
             data["update_note"] = tr('PATH 中有其他来源的同名 CLI，请先在终端明确要更新的安装。')
             return data
         data.update(can_update=True, update_note=tr('只更新此全局 Smart Search 安装；保留原管理器，完成后重新读取实际版本。'))
-    except (OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired):
-        data["update_note"] = tr('未能完整核实 CLI 来源；请在原终端更新后刷新。')
+    except subprocess.TimeoutExpired:
+        data.update(probe_error="timeout", update_note=tr('CLI 检查超时（{0}）；请点击“刷新已安装版本”重试。', stage))
+    except OSError:
+        data.update(probe_error="launch_failed", update_note=tr('CLI 检查无法启动或读取（{0}）；请检查原安装后刷新。', stage))
+    except (ValueError, KeyError, TypeError):
+        data.update(probe_error="invalid_result", update_note=tr('CLI 检查未通过（{0}）；请点击“刷新已安装版本”重试。', stage))
     return data
 
 

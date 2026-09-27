@@ -12,6 +12,8 @@ public static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Hooks must exit before single-instance redirection or a backend is started.
+        Velopack.VelopackApp.Build().SetAutoApplyOnStartup(false).Run();
         WinRT.ComWrappersSupport.InitializeComWrappers();
         var current = AppInstance.GetCurrent();
         var main = AppInstance.FindOrRegisterForKey(InstanceKey);

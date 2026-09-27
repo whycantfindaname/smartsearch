@@ -8,14 +8,15 @@ Generated from the current command parser. See the [CLI guide](cli.md) for examp
 
 ```text
 usage: smart-search [-h] [--lang {auto,zh,en}] [-v]
-                    {modes,search,s,route,rt,route-calibrate,route-cal,rcal,fetch,f,map,m,exa-search,exa,x,exa-similar,xs,zhipu-search,z,zp,zhipu-mcp-search,zmcp-search,zhipu-mcp-reader,zmcp-reader,zhipu-mcp-search-doc,zmcp-doc,zhipu-mcp-repo-structure,zmcp-tree,zhipu-mcp-read-file,zmcp-file,anysearch-domains,as-domains,anysearch-search,as-search,as,anysearch-extract,as-extract,anysearch-batch,as-batch,sciverse-catalog,sv-catalog,sciverse-search,sv-search,sv,sciverse-semantic,sv-semantic,sciverse-read,sv-read,sciverse-relations,sv-relations,context7-library,c7,ctx7,context7-docs,c7d,c7docs,ctx7-docs,deep,dr,research,rs,research-run,rr,research-view,rv,research-environment,research-env,renv,smoke,sm,doctor,d,diagnose,diag,model,mdl,skills,skill,providers,prov,ui,web,setup,init,config,cfg,regression,reg} ...
+                    {modes,agent-guide,search,s,route,rt,route-calibrate,route-cal,rcal,fetch,f,map,m,exa-search,exa,x,exa-similar,xs,zhipu-search,z,zp,zhipu-mcp-search,zmcp-search,zhipu-mcp-reader,zmcp-reader,zhipu-mcp-search-doc,zmcp-doc,zhipu-mcp-repo-structure,zmcp-tree,zhipu-mcp-read-file,zmcp-file,anysearch-domains,as-domains,anysearch-search,as-search,as,anysearch-extract,as-extract,anysearch-batch,as-batch,sciverse-catalog,sv-catalog,sciverse-search,sv-search,sv,sciverse-semantic,sv-semantic,sciverse-read,sv-read,sciverse-relations,sv-relations,context7-library,c7,ctx7,context7-docs,c7d,c7docs,ctx7-docs,deep,dr,research,rs,research-run,rr,research-view,rv,research-environment,research-env,renv,smoke,sm,doctor,d,diagnose,diag,model,mdl,skills,skill,providers,prov,ui,web,setup,init,config,cfg,regression,reg} ...
 
 Smart Search CLI for AI-agent web research.
 
 positional arguments:
-  {modes,search,s,route,rt,route-calibrate,route-cal,rcal,fetch,f,map,m,exa-search,exa,x,exa-similar,xs,zhipu-search,z,zp,zhipu-mcp-search,zmcp-search,zhipu-mcp-reader,zmcp-reader,zhipu-mcp-search-doc,zmcp-doc,zhipu-mcp-repo-structure,zmcp-tree,zhipu-mcp-read-file,zmcp-file,anysearch-domains,as-domains,anysearch-search,as-search,as,anysearch-extract,as-extract,anysearch-batch,as-batch,sciverse-catalog,sv-catalog,sciverse-search,sv-search,sv,sciverse-semantic,sv-semantic,sciverse-read,sv-read,sciverse-relations,sv-relations,context7-library,c7,ctx7,context7-docs,c7d,c7docs,ctx7-docs,deep,dr,research,rs,research-run,rr,research-view,rv,research-environment,research-env,renv,smoke,sm,doctor,d,diagnose,diag,model,mdl,skills,skill,providers,prov,ui,web,setup,init,config,cfg,regression,reg}
+  {modes,agent-guide,search,s,route,rt,route-calibrate,route-cal,rcal,fetch,f,map,m,exa-search,exa,x,exa-similar,xs,zhipu-search,z,zp,zhipu-mcp-search,zmcp-search,zhipu-mcp-reader,zmcp-reader,zhipu-mcp-search-doc,zmcp-doc,zhipu-mcp-repo-structure,zmcp-tree,zhipu-mcp-read-file,zmcp-file,anysearch-domains,as-domains,anysearch-search,as-search,as,anysearch-extract,as-extract,anysearch-batch,as-batch,sciverse-catalog,sv-catalog,sciverse-search,sv-search,sv,sciverse-semantic,sv-semantic,sciverse-read,sv-read,sciverse-relations,sv-relations,context7-library,c7,ctx7,context7-docs,c7d,c7docs,ctx7-docs,deep,dr,research,rs,research-run,rr,research-view,rv,research-environment,research-env,renv,smoke,sm,doctor,d,diagnose,diag,model,mdl,skills,skill,providers,prov,ui,web,setup,init,config,cfg,regression,reg}
     modes               Explain public workflows, research depths, and
                         advanced interfaces without running probes.
+    agent-guide         Read the current CLI instructions for Agents.
     search (s)          Run OpenAI-compatible web search.
     route (rt)          Explain intent routing without running providers.
     route-calibrate (route-cal, rcal)
@@ -115,6 +116,20 @@ options:
 ```
 
 Parser defaults: `--format` = `json`; `--output` = ``.
+
+## `smart-search agent-guide`
+
+```text
+usage: smart-search agent-guide [-h] [--lang {auto,zh,en}] [section]
+
+positional arguments:
+  section
+
+options:
+  -h, --help           show this help message and exit
+  --lang {auto,zh,en}  Interface language for this call; does not change the
+                       saved preference.
+```
 
 ## `smart-search search`
 
@@ -1417,13 +1432,15 @@ Aliases: `skill`
 
 ```text
 usage: smart-search skills [-h] [--lang {auto,zh,en}]
-                           {status,st,update,up} ...
+                           {status,st,update,up,remove} ...
 
 positional arguments:
-  {status,st,update,up}
+  {status,st,update,up,remove}
     status (st)         Compare bundled and installed skill files.
     update (up)         Overwrite selected installed skill files with bundled
                         assets.
+    remove              Remove selected Skills, keeping a backup of their
+                        files.
 
 options:
   -h, --help            show this help message and exit
@@ -1481,6 +1498,28 @@ options:
                         Advanced synthetic home-directory override for
                         portable or test installs; defaults to the current
                         user's home directory.
+  --format {json,markdown,content}
+  --output OUTPUT       Write rendered output to a file.
+```
+
+Parser defaults: `--targets` = `codex,claude,cursor`; `--all` = `False`; `--skills-root` = ``; `--format` = `json`; `--output` = ``.
+
+## `smart-search skills remove`
+
+```text
+usage: smart-search skills remove [-h] [--lang {auto,zh,en}]
+                                  [--targets TARGETS] [--all]
+                                  [--skills-root SKILLS_ROOT]
+                                  [--format {json,markdown,content}]
+                                  [--output OUTPUT]
+
+options:
+  -h, --help            show this help message and exit
+  --lang {auto,zh,en}   Interface language for this call; does not change the
+                        saved preference.
+  --targets TARGETS
+  --all
+  --skills-root SKILLS_ROOT
   --format {json,markdown,content}
   --output OUTPUT       Write rendered output to a file.
 ```

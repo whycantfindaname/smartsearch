@@ -30,7 +30,7 @@ Windows：WinUI 3 / C#。macOS：SwiftUI / Swift。两端共用现有 Python 搜
 - 运行于用户自己的 Windows 或 macOS 桌面会话，本地优先。
 - App 内操作与终端/AI 发起的新版 CLI 调用都属于实时观测范围。
 - 第三方服务商仍使用现有 URL、Key、模型与网络配置；启动 App 和读取状态不等于发起计费探针。
-- 应用自带执行依赖，原有 npm CLI 保持可用；原配置不会因安装 App 而被静默迁移或覆盖。
+- App 与 Smart Search CLI 分别安装和更新。概览负责发现已有 mise/npm 安装或引导准备独立 CLI；App 不捆绑 CLI。原配置不会因安装或移动 App 而被静默迁移或覆盖。
 
 ## Capabilities and Constraints
 

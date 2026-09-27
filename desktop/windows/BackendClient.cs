@@ -34,6 +34,8 @@ internal sealed class BackendClient : IAsyncDisposable
     public bool IsConnected => _process is { HasExited: false };
     public string? Generation => _generation;
     public string? BackendPath { get; private set; }
+    internal CLIInstallation? Installation { get; set; }
+    internal bool UsesExplicitBackend => !string.IsNullOrWhiteSpace(_configuredPath ?? Environment.GetEnvironmentVariable("SMART_SEARCH_BACKEND_PATH"));
 
     public event EventHandler<BackendEvent>? EventReceived;
     public event EventHandler<string>? Disconnected;
@@ -43,7 +45,7 @@ internal sealed class BackendClient : IAsyncDisposable
         await StopAsync(sendShutdown: false);
         BackendPath = ResolveBackendPath();
         if (!File.Exists(BackendPath))
-            throw new BackendDisconnectedException(L("未找到随 App 提供的后端：{0}", BackendPath));
+            throw new BackendDisconnectedException(L("找不到所选 CLI：{0}。请打开概览的本地环境，重新检测或选择已有 CLI。", BackendPath));
 
         var startInfo = new ProcessStartInfo
         {
@@ -58,9 +60,11 @@ internal sealed class BackendClient : IAsyncDisposable
             StandardOutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
             StandardErrorEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)
         };
-        foreach (var argument in _configuredArguments)
+        foreach (var argument in UsesExplicitBackend ? _configuredArguments : Installation?.Arguments ?? [])
             startInfo.ArgumentList.Add(argument);
         startInfo.ArgumentList.Add("--desktop-backend");
+        if (!UsesExplicitBackend && Installation is { } installed)
+            foreach (var (key, value) in installed.Environment) startInfo.Environment[key] = value;
 
         var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.Exited += (_, _) => OnProcessExited(process);
@@ -79,7 +83,8 @@ internal sealed class BackendClient : IAsyncDisposable
             lang = Localization.Language,
             config_dir = configDirectory,
             app_version = _configuredPath is null ? System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) : "development",
-            enable_update_checks = _configuredPath is null
+            enable_update_checks = false,
+            independent_cli = !UsesExplicitBackend
         }, cancellationToken);
 
         var protocol = GetInt(result, "protocol_version");
@@ -270,7 +275,7 @@ internal sealed class BackendClient : IAsyncDisposable
         var configured = _configuredPath ?? Environment.GetEnvironmentVariable("SMART_SEARCH_BACKEND_PATH");
         if (!string.IsNullOrWhiteSpace(configured))
             return Path.GetFullPath(configured);
-        return Path.Combine(AppContext.BaseDirectory, "backend", "smart-search.exe");
+        return Installation?.Executable ?? throw new BackendDisconnectedException(L("尚未选择 CLI"));
     }
 
     private static string? GetString(JsonElement value, string property) =>

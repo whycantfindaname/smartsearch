@@ -14,7 +14,7 @@
 
 ## 桌面 App
 
-当前发布线（`0.1.23`）已经包含上游桌面 App：可管理 provider 配置、查看搜索与研究活动，并更新选定 Agent 的 Skills；App 关闭后，独立 CLI 仍可继续使用。可从[发行页](https://github.com/konbakuyomu/smartsearch/releases/latest)下载，或查看[桌面 App 指南](docs/guide/zh-CN/app.md)。macOS 包仍未签名、未公证；桌面端和 CLI 共用同一套 provider/configuration 契约。
+当前发布线（`0.1.25`）已经包含上游桌面 App：可管理 provider 配置、查看搜索与研究活动，并更新选定 Agent 的 Skills；App 关闭后，独立 CLI 仍可继续使用。可从[发行页](https://github.com/konbakuyomu/smartsearch/releases/latest)下载，或查看[桌面 App 指南](docs/guide/zh-CN/app.md)。macOS 使用 ad-hoc 包完整性签名和 Sparkle 更新签名，尚无 Developer ID 签名或公证；桌面端和 CLI 共用同一套 provider/configuration 契约。
 
 ## 它到底是什么
 
@@ -36,6 +36,13 @@ smart-search research "OpenAI Responses API web_search 和 Chat Completions 联�
 
 `smart-search search` 保持快速、直接联网。`smart-search deep` 是显式 Deep Research 离线规划入口：默认不联网、不跑 provider、不抓网页，只输出 `research_plan`。真正联网可以由 AI 或用户继续执行 `steps[].command`，也可以交给新的 `smart-search research` live 执行器完成。`research` 会按 plan -> discover -> fetch/read -> gap check -> evidence-only synthesis 执行。
 
+### 桌面端接入
+
+1. **下载并打开 Smart Search。** 在[发行页](https://github.com/konbakuyomu/smartsearch/releases/latest)选择适合系统的安装包。首页第一步会自动查找 npm，也可手动指定路径，然后安装并连接独立 CLI。
+2. **打开“服务商”。** 按页面提示配齐主搜索、文档检索和网页读取三类能力。页面会列出缺项和获取 Key 的入口；检查或测试配置后保存。
+3. **打开“更新 Skills”。** CLI 连接后，读取它提供的 Skills，选择 Agent 并确认备份更新。支持 Codex、Claude Code、Cursor 等 17 个目标；Agent 软件由你安装并登录。
+4. **验证 Agent 接入。** 在 AI 的新对话中使用 Skill 提供的独立 CLI 调用，先确认命令能运行，再试一次搜索。
+
 现在意图路由单独成了一层。可以把它理解成“更聪明的分诊台”：先判断用户到底需要哪些能力，再让已有 provider 注册表在同一能力内兜底，而不是让模型直接乱选 provider：
 
 ```text
@@ -46,6 +53,8 @@ smart-search research "OpenAI Responses API web_search 和 Chat Completions 联�
  -> 合并成 required_capabilities
  -> 在 docs_search / web_search / web_fetch / vertical_search 内选择 provider 和兜底
 ```
+
+v0.1.24 整合新的原生界面、Windows Velopack 与 macOS Sparkle，并首次发布正式框架更新源。当前开发版将 App 与独立 CLI 分别管理和更新，Skills 由 CLI 维护并保留个人修改；旧 Inno 安装需先完成一次完整迁移。Windows 的 `-signed.exe` 包使用**自签名证书**，仍可能出现 SmartScreen 提示，详见 [Windows 签名与首次启动](docs/windows-signing.md)。macOS 使用 ad-hoc 包完整性签名和独立的 Sparkle EdDSA 更新签名，尚无 Developer ID 签名或公证。最终 GUI 与旧安装迁移验收继续单独记录，不由自动构建和升级检查替代。
 
 `smart-search route "query"` 只解释这次会需要哪些能力，不执行搜索、文档查询、网页抓取或 provider 调用。`smart-search deep` 仍保持离线 planner 契约，只使用本地/rules 信号。
 
@@ -59,6 +68,8 @@ smart-search --version
 smart-search setup
 ```
 
+新版 npm CLI 只需要 Node.js 18+ / npm；平台包自带 Python 运行时，不使用用户安装的 Python。安装方法、语言设置和命令示例见 [CLI 使用指南](https://github.com/konbakuyomu/smartsearch/blob/main/docs/guide/zh-CN/cli.md)。
+
 测试版：
 
 ```powershell
@@ -66,12 +77,7 @@ npm install -g @konbakuyomu/smart-search@next
 smart-search --version
 ```
 
-npm 包安装时会自动创建隔离的 Python 运行环境。你平时只需要使用 `smart-search` 这个命令。
-
-前置条件：
-
-- 已安装 Node.js / npm。
-- 已安装 Python 3.10 或更新版本，并且终端里能运行 `python`、`python3` 或 Windows 的 `py -3`。
+个人 fork 必须从本 checkout 构建平台包，才能包含个人研究扩展；安装官方发布包会选择上游产品。
 
 ## 快速开始
 

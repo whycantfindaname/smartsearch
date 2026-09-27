@@ -66,7 +66,7 @@ def test_cli_discovery_never_triggers_npm_runtime_repair(tmp_path, monkeypatch):
     package = tmp_path / "node_modules/@konbakuyomu/smart-search"
     package.mkdir(parents=True)
     (package / "package.json").write_text(json.dumps({"name": "@konbakuyomu/smart-search", "version": "0.1.1"}))
-    monkeypatch.setattr("smart_search.desktop_backend.shutil.which", lambda _: str(wrapper))
+    monkeypatch.setattr("smart_search.desktop_backend.shutil.which", lambda _, **kwargs: str(wrapper))
     monkeypatch.setattr("smart_search.desktop_backend.subprocess.run", lambda *a, **k: pytest.fail("public wrapper was executed"))
     result = Backend(lambda _: None).cli_status()
     assert result["external_version"] == "0.1.1"
@@ -209,7 +209,7 @@ async def test_backend_protocol_catalog_and_real_worker(tmp_path):
     with pytest.raises(ValueError, match="握手"):
         await backend.handle("config.apply", {"revision": "", "set": {}})
     for version in (999, True, 1.0):
-        with pytest.raises(ValueError, match="不匹配"):
+        with pytest.raises(ValueError, match="协议"):
             await backend.handle("initialize", {"protocol_version": version})
     state = await backend.handle("initialize", {"protocol_version": 1, "config_dir": str(tmp_path)})
     catalog = {item["id"]: item for item in state["commands"]}
@@ -318,3 +318,121 @@ def test_stdio_version_handshake_and_shutdown(tmp_path):
     assert responses[3]["result"]["protocol_version"] == 1
     assert responses[4]["result"]["ok"]
     assert not (tmp_path / "config.json").exists()
+
+
+@pytest.mark.parametrize("include_secrets", [None, False, True])
+def test_native_config_secrets_require_opt_in_and_follow_selected_profile(tmp_path, include_secrets):
+    secret = "synthetic-editable-credential"
+    environment_secret = "synthetic-environment-credential"
+    saved = {"EXA_API_KEY": secret, "OPENAI_COMPATIBLE_MODEL": "editable-model"}
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps(saved), encoding="utf-8")
+    empty_profile = tmp_path / "empty-profile"
+    empty_profile.mkdir()
+    params = {"protocol_version": 1, "enable_update_checks": False}
+    if include_secrets is not None:
+        params["include_config_secrets"] = include_secrets
+    messages = [
+        {"id": 1, "method": "initialize", "params": params},
+        {"id": 2, "method": "get_state"},
+        {"id": 3, "method": "profile.select", "params": {"config_dir": str(empty_profile)}},
+        {"id": 4, "method": "shutdown"},
+    ]
+    env = {key: value for key, value in os.environ.items() if key not in config._CONFIG_KEYS}
+    env.update(SMART_SEARCH_CONFIG_DIR=str(tmp_path), PATH="", TAVILY_API_KEY=environment_secret)
+    result = subprocess.run(
+        [sys.executable, "-m", "smart_search.desktop_entry", "--desktop-backend"],
+        input="".join(json.dumps(message) + "\n" for message in messages),
+        capture_output=True, text=True, encoding="utf-8", timeout=20, env=env,
+    )
+    assert result.returncode == 0, result.stderr
+    frames = [json.loads(line) for line in result.stdout.splitlines()]
+    responses = {frame["id"]: frame["result"] for frame in frames if "id" in frame}
+    for identifier in (1, 2, 3):
+        state = responses[identifier]
+        if include_secrets:
+            credentials = state.pop("config_secrets")
+            assert credentials["EXA_API_KEY"] == ("" if identifier == 3 else secret)
+            assert "TAVILY_API_KEY" not in credentials
+            assert "OPENAI_COMPATIBLE_MODEL" not in credentials
+        else:
+            assert "config_secrets" not in state
+        if identifier != 3:
+            assert state["values"]["OPENAI_COMPATIBLE_MODEL"] == "editable-model"
+    assert secret not in json.dumps(frames)
+    assert environment_secret not in result.stdout
+    assert secret not in result.stderr
+    assert json.loads(config_path.read_text(encoding="utf-8")) == saved
+    assert not (empty_profile / "config.json").exists()
+
+
+def test_native_update_prepare_preserves_pr51_private_state_contract(tmp_path):
+    saved = {"EXA_API_KEY": "synthetic-pr51-key", "EXA_ENABLED": False}
+    config_file = tmp_path / "config.json"
+    config_file.write_text(json.dumps(saved), encoding="utf-8")
+    messages = [
+        {"id": 1, "method": "initialize", "params": {"protocol_version": 1,
+         "include_config_secrets": True, "enable_update_checks": False}},
+        {"id": 2, "method": "updates.state"},
+        {"id": 3, "method": "app.update-prepare"},
+        {"id": 4, "method": "get_state"},
+        {"id": 5, "method": "shutdown"},
+    ]
+    env = {key: value for key, value in os.environ.items() if key not in config._CONFIG_KEYS}
+    env.update(SMART_SEARCH_CONFIG_DIR=str(tmp_path), PATH="")
+    result = subprocess.run(
+        [sys.executable, "-m", "smart_search.desktop_entry", "--desktop-backend"],
+        input="".join(json.dumps(message) + "\n" for message in messages),
+        capture_output=True, text=True, encoding="utf-8", timeout=20, env=env,
+    )
+    assert result.returncode == 0, result.stderr
+    frames = [json.loads(line) for line in result.stdout.splitlines()]
+    replies = {frame["id"]: frame for frame in frames if "id" in frame}
+    state = replies[1]["result"]
+    assert state["config_secrets"]["EXA_API_KEY"] == saved["EXA_API_KEY"]
+    assert state["values"]["EXA_ENABLED"].lower() == "false"
+    assert state["default_config_dir"] and not state["is_default_config_dir"]
+    assert "installed_cli" in replies[2]["result"]
+    assert replies[3]["result"]["ok"] and replies[5]["result"]["ok"]
+    assert "error" in replies[4] and "result" not in replies[4]
+    assert json.loads(config_file.read_text(encoding="utf-8")) == saved
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("default_exists", [False, True])
+async def test_restore_default_profile_reads_its_config_without_copying_or_overwriting(tmp_path, monkeypatch, default_exists):
+    custom = tmp_path / "custom"
+    custom.mkdir()
+    custom_file = custom / "config.json"
+    custom_contents = '{"OPENAI_COMPATIBLE_MODEL":"custom-model"}'
+    custom_file.write_text(custom_contents, encoding="utf-8")
+    default = tmp_path / "default"
+    default_file = default / "config.json"
+    default_contents = '{"OPENAI_COMPATIBLE_MODEL":"default-model"}'
+    if default_exists:
+        default.mkdir()
+        default_file.write_text(default_contents, encoding="utf-8")
+    monkeypatch.setattr(config, "_default_config_dir", lambda: default)
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(custom))
+    monkeypatch.setattr("smart_search.desktop_backend.shutil.which", lambda _: None)
+    backend = Backend(lambda _: None)
+    try:
+        initial = await backend.handle("initialize", {"protocol_version": 1, "config_dir": str(custom)})
+        assert initial["default_config_dir"] == str(default)
+        assert not initial["is_default_config_dir"]
+        restored = await backend.handle("profile.select", {"config_dir": initial["default_config_dir"]})
+        assert restored["config_dir"] == str(default)
+        assert restored["is_default_config_dir"]
+        assert restored["values"].get("OPENAI_COMPATIBLE_MODEL", "") == ("default-model" if default_exists else "")
+        assert restored["environment"]["config_dir"] == str(default)
+        assert os.environ["SMART_SEARCH_CONFIG_DIR"] == str(custom)
+        assert custom_file.read_text(encoding="utf-8") == custom_contents
+        if default_exists:
+            assert default_file.read_text(encoding="utf-8") == default_contents
+        else:
+            assert not default_file.exists()
+        switched_back = await backend.handle("profile.select", {"config_dir": str(custom)})
+        assert not switched_back["is_default_config_dir"]
+        assert switched_back["values"]["OPENAI_COMPATIBLE_MODEL"] == "custom-model"
+    finally:
+        await backend.close()

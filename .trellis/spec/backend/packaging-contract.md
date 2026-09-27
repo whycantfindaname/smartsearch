@@ -8,13 +8,16 @@
 
 | Surface | Manifest | Consumed by |
 | --- | --- | --- |
-| npm tarball | `package.json` → `files` | npm users (`postinstall.js` bootstraps a venv and pip-installs the source tree) |
-| wheel | `pyproject.toml` → `[tool.setuptools.package-data]` (+ discovered package modules) | `pip install .` and the npm postinstall venv |
+| npm wrapper + platform tarball | `package.json` → `files`, `desktop/scripts/package_npm_cli.py` | npm users; the platform package contains a PyInstaller runtime built from this fork |
+| wheel | `pyproject.toml` → `[tool.setuptools.package-data]` (+ discovered package modules) | `pip install .` and native build inputs |
 | installed skill files | `skill_installer.py` (`_load_skill_files`, prefers `importlib.resources`), managed via `smart-search skills update --targets ...` | the user's AI tool skill directories (`~/.codex/skills`, `~/.claude/skills`, ...) |
 
-Key consequence: **the wheel path feeds npm users too.** A file missing from
-package-data is missing from the installed skill files even though `git` and
-the npm tarball both have it.
+Key consequence: build the native package from this fork, not the official binary,
+to preserve personal research modules and role resources. The native builder
+checks the complete source asset inventory; wheel reachability remains required.
+Default connected Skills use a bootstrap entrypoint to `smart-search agent-guide`
+and keep supporting files needed by the fork's executable adapters and research
+roles. Explicit source-root installs retain the full exported entrypoint too.
 
 ### Qoder regional Skill destination
 
@@ -56,11 +59,12 @@ machine-local names and the Smart Search adapter overlay — see its
 
 ## Contract 3: Tarball content is pinned
 
-`npm run smoke:tarball` (`npm/scripts/smoke-packed-install.js`) asserts exact
-file/prefix rules: required entries present, and `.env`, `runtime.conf`,
-`__pycache__`, and the retired nested `bundled-skills/anysearch/SKILL.md`
-absent. Update both sides of an assertion together — adding a file to `files`
-without the smoke check (or vice versa) is a silent drift.
+`npm run smoke:tarball -- .desktop-artifacts/npm-platform` consumes a prepared
+native package and tests a temporary offline install with the wrapper. It checks
+the bundled interpreter, research assets and modes, mock search, Skill bootstrap,
+desktop protocol and Python environment isolation. Missing native input fails;
+it never falls back to an official binary or the retired Python postinstall.
+Wrapper Skill exports must exclude private runtime files and nested Skill entries.
 
 ## Contract 4: Versions move together
 
@@ -85,7 +89,7 @@ The portable contract lives at `.jason-liao-agent-infra/managed-project.json`
 with schema `jason-agent-infra.managed-delivery-workflow.v2`. Its release
 readiness commands are `python3 scripts/managed_sync.py inspect`,
 `npm run --silent check:skill-parity`, and
-`npm run --silent smoke:tarball`; explicit live acceptance is
+`npm run --silent smoke:tarball -- .desktop-artifacts/npm-platform`; explicit live acceptance is
 `python3 scripts/managed_sync.py verify-live`.
 `python3 scripts/managed_sync.py downstream-handoff` is a read-only Skills
 `main` provenance gate after packed smoke; it uses Infra's registered workspace
@@ -132,7 +136,7 @@ and repository roots. It does not adopt a package or activate a platform.
 ### 6. Tests Required
 
 - Run `npm run --silent check:skill-parity` and
-  `npm run --silent smoke:tarball` for every release-readiness contract change.
+  `npm run --silent smoke:tarball -- .desktop-artifacts/npm-platform` for every release-readiness contract change.
 - Run the focused release suite (`tests/test_release_workflow.py`,
   `tests/test_package_data.py`, and `tests/test_regression.py`) when packaging
   files or behavior changes.

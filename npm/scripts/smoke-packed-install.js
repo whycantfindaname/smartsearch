@@ -32,213 +32,177 @@ function run(command, args, options = {}) {
 }
 
 function runNpm(args, options = {}) {
-  if (process.env.npm_execpath) {
-    return run(process.execPath, [process.env.npm_execpath, ...args], options);
-  }
-  return run("npm", args, { ...options, shell: process.platform === "win32" });
-}
-
-function assertPackContents(files) {
-  assert.ok(Array.isArray(files), "npm pack --json must report the packed file list");
-  const exactFiles = new Set([
-    "LICENSE",
-    "README.md",
-    "README.zh-CN.md",
-    "THIRD_PARTY_NOTICES.md",
-    "package.json",
-    "pyproject.toml"
-  ]);
-  const allowedPrefixes = [
-    "assets/branding/",
-    "npm/",
-    "src/smart_search/assets/research_visualizer/",
-    "src/smart_search/assets/sidecar/",
-    "src/smart_search/assets/ui/",
-    "src/smart_search/assets/i18n/",
-    "skills/smart-search-cli/",
-    "src/smart_search/assets/skills/smart-search-cli/"
-  ];
-  const unexpected = files
-    .map((file) => file.path)
-    .filter(
-      (filePath) =>
-        !exactFiles.has(filePath) &&
-        !allowedPrefixes.some((prefix) => filePath.startsWith(prefix)) &&
-        !(filePath.startsWith("src/smart_search/") && path.extname(filePath) === ".py")
-    );
-
-  assert.deepEqual(unexpected, [], "tarball contains files outside package.json files declarations");
-  const privateRuntimeFiles = files
-    .map((file) => file.path)
-    .filter((filePath) => filePath.endsWith("/.env") || filePath.endsWith("/runtime.conf"));
-  assert.deepEqual(privateRuntimeFiles, [], "tarball must not contain AnySearch private runtime files");
-  const compiledPythonFiles = files
-    .map((file) => file.path)
-    .filter(
-      (filePath) =>
-        /(^|\/)__pycache__(\/|$)/.test(filePath) ||
-        filePath.endsWith(".pyc") ||
-        filePath.endsWith(".pyo")
-    );
-  assert.deepEqual(compiledPythonFiles, [], "tarball must not contain compiled Python cache files");
-  for (const requiredPath of [
-    "package.json",
-    "pyproject.toml",
-    "npm/bin/smart-search.js",
-    "src/smart_search/cli.py",
-    "src/smart_search/assets/research_visualizer/index.html",
-    "src/smart_search/assets/research_visualizer/NOTICE.md",
-    "src/smart_search/assets/sidecar/pyproject.toml",
-    "src/smart_search/assets/sidecar/src/smart_search_sidecar/protocol.py",
-    "THIRD_PARTY_NOTICES.md",
-    "skills/smart-search-cli/bundled-skills/anysearch/CONTRACT.md",
-    "skills/smart-search-cli/bundled-skills/anysearch-source.json",
-    "src/smart_search/assets/skills/smart-search-cli/bundled-skills/anysearch/CONTRACT.md"
-  ]) {
-    assert.ok(files.some((file) => file.path === requiredPath), `tarball is missing ${requiredPath}`);
-  }
-  const nestedSkillEntrypoints = files
-    .map((file) => file.path)
-    .filter(
-      (filePath) =>
-        filePath.includes("skills/smart-search-cli/") &&
-        filePath.endsWith("/SKILL.md") &&
-        !filePath.endsWith("skills/smart-search-cli/SKILL.md")
-    );
-  assert.deepEqual(
-    nestedSkillEntrypoints,
-    [],
-    "smart-search-cli tarball must not expose a nested discoverable Skill"
-  );
+  const [node, arguments_] = require("./npm-command")(args);
+  return run(node, arguments_, options);
 }
 
 function normalizePackOutput(packOutput) {
-  let packed = [];
-  if (Array.isArray(packOutput)) {
-    packed = packOutput;
-  } else if (packOutput && typeof packOutput === "object") {
-    packed = Object.values(packOutput);
-  }
-
+  const packed = Array.isArray(packOutput) ? packOutput : Object.values(packOutput || {});
   assert.equal(packed.length, 1, "npm pack must produce exactly one tarball");
   assert.ok(packed[0] && typeof packed[0] === "object", "npm pack must report tarball metadata");
   return packed[0];
 }
 
 function main() {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "smart-search-tarball-"));
-  const tarballDir = path.join(tempRoot, "tarball");
-  const installPrefix = path.join(tempRoot, "install");
-  const callerCwd = path.join(tempRoot, "caller");
-  const homeDir = path.join(tempRoot, "home");
-  fs.mkdirSync(tarballDir);
-  fs.mkdirSync(installPrefix);
-  fs.mkdirSync(callerCwd);
-  fs.mkdirSync(homeDir);
+const nativeDirectory = process.argv[2];
+assert.ok(nativeDirectory && fs.existsSync(path.join(nativeDirectory, "package.json")),
+  "Pass a built platform package directory. Build it with desktop/scripts/build_backend.py --smoke --result-file .desktop-artifacts/npm-backend.json, then desktop/scripts/package_npm_cli.py --manifest .desktop-artifacts/npm-backend.json --output .desktop-artifacts/npm-platform");
 
-  const isolatedEnv = {
-    ...process.env,
-    HOME: homeDir,
-    USERPROFILE: homeDir,
-    INIT_CWD: callerCwd
-  };
-  for (const key of Object.keys(isolatedEnv)) {
-    const normalizedKey = key.toLowerCase();
-    if (normalizedKey === "npm_config_allow_scripts" || normalizedKey === "npm_config_userconfig") {
-      delete isolatedEnv[key];
-    }
-  }
+const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "smart-search-tarball-"));
+const tarballDir = path.join(tempRoot, "tarball");
+const installPrefix = path.join(tempRoot, "install");
+const callerCwd = path.join(tempRoot, "caller");
+const homeDir = path.join(tempRoot, "home");
+fs.mkdirSync(tarballDir);
+fs.mkdirSync(callerCwd);
+fs.mkdirSync(homeDir);
 
-  const packed = normalizePackOutput(
-    JSON.parse(runNpm(["pack", "--json", "--pack-destination", tarballDir], { capture: true }))
-  );
-  assertPackContents(packed.files);
+const packed = [normalizePackOutput(JSON.parse(
+  runNpm(["pack", "--json", "--pack-destination", tarballDir], { capture: true })
+))];
+assert.equal(packed.length, 1, "npm pack must produce exactly one tarball");
+assert.ok(packed[0].files.some(file => file.path === "npm/bin/smart-search.js"));
+assert.ok(!packed[0].files.some(file => file.path.startsWith("src/") || file.path.includes("postinstall")), "main package must not install source Python");
+assert.ok(!packed[0].files.some(file => /(?:^|\/)(?:\.env|runtime\.conf|config\.json|__pycache__)(?:\/|$)/.test(file.path)), "wrapper must not contain private runtime files");
+assert.ok(!packed[0].files.some(file => file.path.endsWith("/SKILL.md") && file.path !== "skills/smart-search-cli/SKILL.md"), "wrapper must not expose a nested Skill");
+const nativePacked = normalizePackOutput(JSON.parse(runNpm(["pack", path.resolve(nativeDirectory), "--json", "--pack-destination", tarballDir], { capture: true })));
+assert.ok(nativePacked.files.some(file => /runtime\/smart-search\/smart-search(?:\.exe)?$/.test(file.path)));
+assert.ok(nativePacked.files.some(file => /(?:libpython|Python|python313\.dll)/i.test(file.path)), "native package must contain its interpreter");
 
-  const tarballPath = path.join(tarballDir, packed.filename);
-  assert.ok(fs.existsSync(tarballPath), `npm pack did not create ${tarballPath}`);
-  fs.writeFileSync(
-    path.join(installPrefix, "package.json"),
-    `${JSON.stringify({ private: true, allowScripts: { [`file:${tarballPath}`]: true } }, null, 2)}\n`,
-    "utf8"
-  );
-  runNpm(["install", "--no-audit", "--no-fund", "--prefix", installPrefix, tarballPath], {
-    env: isolatedEnv
+const tarballPath = path.join(tarballDir, packed[0].filename);
+assert.ok(fs.existsSync(tarballPath), `npm pack did not create ${tarballPath}`);
+runNpm(["install", "--offline", "--ignore-scripts", "--global", "--no-audit", "--no-fund", "--prefix", installPrefix,
+  tarballPath, path.join(tarballDir, nativePacked.filename)]);
+
+const installedRoot = path.join(installPrefix, process.platform === "win32" ? "" : "lib", "node_modules", "@konbakuyomu", "smart-search");
+const wrapperPath = path.join(installedRoot, "npm", "bin", "smart-search.js");
+assert.ok(fs.existsSync(wrapperPath), "packed install is missing the smart-search wrapper");
+
+const isolatedEnv = {
+  ...process.env,
+  HOME: homeDir,
+  USERPROFILE: homeDir,
+  SMART_SEARCH_CONFIG_DIR: path.join(tempRoot, "config"),
+  SMART_SEARCH_LANGUAGE: "en",
+  PATH: callerCwd,
+  PYTHONHOME: path.join(tempRoot, "broken-python"),
+  PYTHONPATH: path.join(tempRoot, "broken-modules"),
+  VIRTUAL_ENV: path.join(tempRoot, "broken-venv"),
+  CONDA_PREFIX: path.join(tempRoot, "broken-conda"),
+  SMART_SEARCH_PYTHON: path.join(tempRoot, "missing-python"),
+  _PYI_APPLICATION_HOME_DIR: path.join(tempRoot, "wrong-pyinstaller"),
+  INIT_CWD: path.join(tempRoot, "wrong-cwd")
+};
+const version = run(process.execPath, [wrapperPath, "--version"], {
+  cwd: callerCwd,
+  env: isolatedEnv,
+  capture: true
+});
+assert.match(version, new RegExp(`smart-search ${packageJson.version.replaceAll(".", "\\.")}`));
+for (const [language, heading] of [["zh", "用法"], ["en", "usage"]]) {
+  const help = run(process.execPath, [wrapperPath, "config", "list", "--help", "--lang", language], {
+    cwd: callerCwd, env: isolatedEnv, capture: true
   });
+  assert.ok(help.includes(heading), `installed package is missing ${language} help`);
+  const route = JSON.parse(run(process.execPath, [wrapperPath, "route", "用户 query", "--router-mode", "rules", "--lang", language], {
+    cwd: callerCwd, env: isolatedEnv, capture: true
+  }));
+  assert.equal(route.query, "用户 query");
+  assert.equal(route.executed_search, false);
+}
+run(process.execPath, [wrapperPath, "regression"], { cwd: callerCwd, env: isolatedEnv, capture: true });
+const smokeOutput = run(process.execPath, [wrapperPath, "smoke", "--mock", "--format", "json"], {
+  cwd: callerCwd,
+  env: isolatedEnv,
+  capture: true
+});
+assert.equal(JSON.parse(smokeOutput).ok, true, "packed mock smoke must report ok=true");
 
-  const installedRoot = path.join(installPrefix, "node_modules", "@konbakuyomu", "smart-search");
-  const wrapperPath = path.join(installedRoot, "npm", "bin", "smart-search.js");
-  assert.ok(fs.existsSync(wrapperPath), "packed install is missing the smart-search wrapper");
-  const installedPython =
-    process.platform === "win32"
-      ? path.join(installedRoot, ".smart-search-python", "Scripts", "python.exe")
-      : path.join(installedRoot, ".smart-search-python", "bin", "python");
-  assert.ok(fs.existsSync(installedPython), "packed install did not run the approved postinstall script");
-  assert.ok(
-    fs.existsSync(path.join(installedRoot, "src", "smart_search", "assets", "sidecar", "pyproject.toml")),
-    "packed install is missing the Python 3.12 sidecar source"
-  );
-  assert.ok(
-    fs.existsSync(path.join(installedRoot, "src", "smart_search", "assets", "research_visualizer", "index.html")),
-    "packed install is missing the Research Workspace visualizer"
-  );
-
-  const version = run(process.execPath, [wrapperPath, "--version"], {
+const uiCheck = JSON.parse(
+  run(process.execPath, [wrapperPath, "ui", "--check", "--format", "json"], {
     cwd: callerCwd,
     env: isolatedEnv,
     capture: true
-  });
-  assert.match(version, new RegExp(`smart-search ${packageJson.version.replaceAll(".", "\\.")}`));
-  const modesOutput = run(process.execPath, [wrapperPath, "modes", "--format", "json"], {
-    cwd: callerCwd,
-    env: isolatedEnv,
-    capture: true
-  });
-  const modes = JSON.parse(modesOutput);
-  assert.deepEqual(
-    modes.public_workflows.map((item) => item.id),
-    ["search", "research_workflow"],
-    "packed modes command must expose the two public workflows"
-  );
-  assert.deepEqual(
-    modes.research_depths.map((item) => item.id),
-    ["focused", "standard", "deep"],
-    "packed modes command must expose the current research depths"
-  );
-  assert.equal(modesOutput.includes('"quick"'), false, "packed modes output must not expose the obsolete depth");
-  run(process.execPath, [wrapperPath, "regression"], { cwd: callerCwd, env: isolatedEnv });
-  const smokeOutput = run(process.execPath, [wrapperPath, "smoke", "--mock", "--format", "json"], {
-    cwd: callerCwd,
-    env: isolatedEnv,
-    capture: true
-  });
-  assert.equal(JSON.parse(smokeOutput).ok, true, "packed mock smoke must report ok=true");
+  })
+);
+assert.equal(uiCheck.ok, true, "packed install must be able to resolve the config UI page");
+assert.ok(uiCheck.asset_bytes > 1000, "packed config UI page must not be empty");
 
-  const skillsUpdate = JSON.parse(
-    run(
-      process.execPath,
-      [wrapperPath, "skills", "update", "--targets", "opencode", "--skills-root", homeDir, "--format", "json"],
-      { cwd: callerCwd, env: isolatedEnv, capture: true }
-    )
-  );
-  assert.equal(skillsUpdate.ok, true, "packed OpenCode skill update must report ok=true");
-  assert.equal(skillsUpdate.installed_count, 1, "packed OpenCode skill update must install one target");
-  const opencodeSkill = path.join(homeDir, ".config", "opencode", "skills", "smart-search-cli", "SKILL.md");
-  assert.ok(fs.existsSync(opencodeSkill), "packed OpenCode skill update must use the canonical global path");
+const skillsUpdate = JSON.parse(
+  run(
+    process.execPath,
+    [
+      wrapperPath,
+      "skills",
+      "update",
+      "--targets",
+      "opencode",
+      "--skills-root",
+      homeDir,
+      "--format",
+      "json"
+    ],
+    { cwd: callerCwd, env: isolatedEnv, capture: true }
+  )
+);
+assert.equal(skillsUpdate.ok, true, "packed OpenCode skill update must report ok=true");
+assert.equal(skillsUpdate.installed_count, 1, "packed OpenCode skill update must install one target");
+const opencodeSkill = path.join(homeDir, ".config", "opencode", "skills", "smart-search-cli", "SKILL.md");
+assert.ok(fs.existsSync(opencodeSkill), "packed OpenCode skill update must use the canonical global path");
 
-  const skillsStatus = JSON.parse(
-    run(
-      process.execPath,
-      [wrapperPath, "skills", "status", "--targets", "opencode", "--skills-root", homeDir, "--format", "json"],
-      { cwd: callerCwd, env: isolatedEnv, capture: true }
-    )
-  );
-  assert.equal(skillsStatus.targets[0].status, "up_to_date", "packed OpenCode status must inspect the canonical global path");
+const skillsStatus = JSON.parse(
+  run(
+    process.execPath,
+    [
+      wrapperPath,
+      "skills",
+      "status",
+      "--targets",
+      "opencode",
+      "--skills-root",
+      homeDir,
+      "--format",
+      "json"
+    ],
+    { cwd: callerCwd, env: isolatedEnv, capture: true }
+  )
+);
+assert.equal(skillsStatus.targets[0].status, "up_to_date", "packed OpenCode status must inspect the canonical global path");
 
-  console.log(`Packed tarball install smoke passed in temporary prefix ${installPrefix}.`);
+for (const required of ["assets/sidecar/pyproject.toml", "assets/research_visualizer/index.html"]) {
+  assert.ok(nativePacked.files.some(file => file.path.endsWith(required)), `native package is missing ${required}`);
+}
+for (const role of ["search_scout", "source_curator", "evidence_miner"]) {
+  const suffix = `assets/skills/smart-search-cli/agents/${role}.yaml`;
+  const entry = nativePacked.files.find(file => file.path.endsWith(suffix));
+  assert.ok(entry, `native package is missing ${role}`);
+  const content = fs.readFileSync(path.join(nativeDirectory, entry.path), "utf8");
+  assert.match(content, /model: "gpt-6-luna"/);
+  assert.match(content, /reasoning_effort: "max"/);
+}
+const modes = JSON.parse(run(process.execPath, [wrapperPath, "modes", "--format", "json"], { cwd: callerCwd, env: isolatedEnv, capture: true }));
+assert.deepEqual(modes.public_workflows.map(item => item.id), ["search", "research_workflow"]);
+assert.deepEqual(modes.research_depths.map(item => item.id), ["focused", "standard", "deep"]);
+const capabilities = JSON.parse(run(process.execPath, [wrapperPath, "--desktop-capabilities"], { cwd: callerCwd, env: isolatedEnv, capture: true }));
+assert.equal(capabilities.product, "smart-search");
+assert.equal(capabilities.desktop_protocol_version, 1);
+assert.equal(capabilities.version, packageJson.version);
+const protocol = spawnSync(process.execPath, [wrapperPath, "--desktop-backend"], {
+  cwd: callerCwd, env: isolatedEnv, encoding: "utf8", timeout: 60000,
+  input: JSON.stringify({ id: 1, method: "initialize", params: { protocol_version: 1, independent_cli: true, enable_update_checks: false, config_dir: path.join(tempRoot, "protocol-config") } }) + "\n"
+    + JSON.stringify({ id: 2, method: "shutdown", params: {} }) + "\n"
+});
+assert.equal(protocol.status, 0, protocol.stderr);
+const messages = protocol.stdout.trim().split("\n").map(line => JSON.parse(line));
+assert.equal(messages.find(message => message.id === 1)?.result?.version, packageJson.version);
+assert.ok(messages.find(message => message.id === 2)?.result);
+assert.equal(fs.existsSync(path.join(installedRoot, ".smart-search-python")), false);
+runNpm(["uninstall", "--global", "--prefix", installPrefix, packageJson.name]);
+assert.equal(fs.existsSync(wrapperPath), false);
+assert.ok(fs.existsSync(opencodeSkill), "uninstall must preserve Skills");
+console.log(`PASS: npm packed install/uninstall, no Python on PATH, poisoned Python environment, UTF-8, Skills and App protocol (${installPrefix})`);
+
 }
 
 module.exports = { normalizePackOutput };
-
-if (require.main === module) {
-  main();
-}
+if (require.main === module) main();

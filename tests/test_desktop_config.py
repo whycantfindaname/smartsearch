@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 import httpx
 import pytest
@@ -120,7 +121,6 @@ import sys,time
 from pathlib import Path
 from smart_search.config import config
 from smart_search.provider_health import provider_health
-from smart_search.state_files import file_lock
 root=Path(sys.argv[1]); key=sys.argv[2]; provider=sys.argv[3]
 (root / (provider+'.ready')).touch()
 while not (root / 'go').exists(): time.sleep(.01)
@@ -132,16 +132,57 @@ config.set_config_value(key,provider)
 provider_health.record_failure(provider, 'fingerprint', 'auth_error', 'denied')
 """
     env = dict(os.environ, SMART_SEARCH_CONFIG_DIR=str(tmp_path))
-    children = [subprocess.Popen([sys.executable, "-c", code, str(tmp_path), key, provider], env=env)
+    children = [subprocess.Popen([sys.executable, "-c", code, str(tmp_path), key, provider], env=env,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 for key, provider in [("EXA_API_KEY", "exa"), ("TAVILY_API_KEY", "tavily")]]
-    import time
     deadline = time.monotonic() + 10
     while not all((tmp_path / (p + ".ready")).exists() for p in ("exa", "tavily")):
         assert time.monotonic() < deadline
         time.sleep(.01)
     (tmp_path / "go").touch()
-    assert all(child.wait(timeout=10) == 0 for child in children)
+    outputs = [child.communicate(timeout=10) for child in children]
+    assert all(child.returncode == 0 for child in children), outputs
     values = json.loads((tmp_path / "config.json").read_text())
     assert values == {"EXA_API_KEY": "exa", "TAVILY_API_KEY": "tavily"}
     health = json.loads((tmp_path / "provider_health.json").read_text())
     assert set(health["providers"]) == {"exa", "tavily"}
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows byte-range locks prevent writes before locking")
+def test_empty_lock_waits_before_initializing(tmp_path):
+    import msvcrt
+
+    path = tmp_path / "state.json"
+    marker = tmp_path / "contended"
+    code = """
+import msvcrt, sys
+from pathlib import Path
+from smart_search.state_files import file_lock
+path = Path(sys.argv[1])
+original = msvcrt.locking
+def observed_lock(*args):
+    try:
+        return original(*args)
+    except OSError:
+        path.with_name('contended').touch()
+        raise
+msvcrt.locking = observed_lock
+with file_lock(path):
+    path.write_text('acquired')
+"""
+    with path.with_suffix(".json.lock").open("w+b", buffering=0) as stream:
+        # Windows can lock beyond EOF; both contenders must lock before writing byte 0.
+        msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+        child = subprocess.Popen([sys.executable, "-c", code, str(path)],
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        try:
+            deadline = time.monotonic() + 10
+            while not marker.exists() and child.poll() is None and time.monotonic() < deadline:
+                time.sleep(.01)
+            ran_while_locked = path.exists()
+        finally:
+            msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+        output = child.communicate(timeout=10)
+    assert marker.exists() and child.returncode == 0, output
+    assert not ran_while_locked
+    assert path.read_text() == "acquired"

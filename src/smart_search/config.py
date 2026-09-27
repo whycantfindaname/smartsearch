@@ -48,6 +48,21 @@ class Config:
     _ALLOWED_DOCUMENT_EMBEDDING_SOURCES = {"intent", "openai-compatible", "off"}
     _ALLOWED_DOCUMENT_SPLITTERS = {"markdown", "character"}
     _ALLOWED_LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "WARN", "ERROR", "CRITICAL", "FATAL", "NOTSET"}
+    PROVIDER_ENABLED_KEYS: dict[str, str] = {
+        "xai-responses": "XAI_ENABLED",
+        "openai-compatible": "OPENAI_COMPATIBLE_ENABLED",
+        "context7": "CONTEXT7_ENABLED",
+        "exa": "EXA_ENABLED",
+        "zhipu": "ZHIPU_ENABLED",
+        "zhipu-mcp": "ZHIPU_MCP_ENABLED",
+        "zhipu-mcp-reader": "ZHIPU_MCP_READER_ENABLED",
+        "tavily": "TAVILY_ENABLED",
+        "firecrawl": "FIRECRAWL_ENABLED",
+        "tinyfish": "TINYFISH_ENABLED",
+        "jina": "JINA_ENABLED",
+        "anysearch": "ANYSEARCH_ENABLED",
+        "sciverse": "SCIVERSE_ENABLED",
+    }
     _CONFIG_KEYS = {
         "SMART_SEARCH_LANGUAGE",
         "XAI_API_URL",
@@ -136,15 +151,18 @@ class Config:
         "SSL_VERIFY",
     }
     _CONFIG_KEYS.update(JEV_DEFAULTS)
+    _CONFIG_KEYS.update(PROVIDER_ENABLED_KEYS.values())
     _LEGACY_CONFIG_KEYS: dict[str, str] = {}
     # Writing any of these invalidates the resolved-model cache.
     _MODEL_CACHE_KEYS = frozenset({
         "XAI_API_URL",
         "XAI_API_KEY",
+        "XAI_ENABLED",
         "XAI_MODEL",
         "XAI_TOOLS",
         "OPENAI_COMPATIBLE_API_URL",
         "OPENAI_COMPATIBLE_API_KEY",
+        "OPENAI_COMPATIBLE_ENABLED",
         "OPENAI_COMPATIBLE_MODEL",
         "OPENAI_COMPATIBLE_FALLBACK_MODELS",
         "OPENAI_COMPATIBLE_API_MODE",
@@ -773,6 +791,9 @@ class Config:
         # empty string is how a key is cleared rather than a value to check.
         if not str(value).strip():
             return
+        if key in self.PROVIDER_ENABLED_KEYS.values():
+            self._validate_enum_value(key, value, {"true", "false", "1", "0", "yes", "no", "on", "off"})
+            return
         enum_allowed = {
             "SMART_SEARCH_VALIDATION_LEVEL": self._ALLOWED_VALIDATION_LEVELS,
             "SMART_SEARCH_FALLBACK_MODE": self._ALLOWED_FALLBACK_MODES,
@@ -1081,7 +1102,22 @@ class Config:
 
     @property
     def tavily_enabled(self) -> bool:
-        return (self._get_config_value("TAVILY_ENABLED", "true") or "true").lower() in ("true", "1", "yes")
+        return self.provider_enabled("tavily")
+
+    @classmethod
+    def provider_enabled_key(cls, provider: str) -> str:
+        if provider == "zhipu-mcp-zread":
+            provider = "zhipu-mcp"
+        return cls.PROVIDER_ENABLED_KEYS.get(provider, "")
+
+    def provider_enabled(self, provider: str) -> bool:
+        if provider == "main-search":
+            return any(self.provider_enabled(item) for item in ("xai-responses", "openai-compatible"))
+        key = self.provider_enabled_key(provider)
+        if not key:
+            return True
+        value = self._get_config_value(key, "true") or "true"
+        return value.strip().lower() in {"true", "1", "yes", "on"}
 
     @property
     def tavily_api_url(self) -> str:
@@ -1304,10 +1340,9 @@ class Config:
             except ValueError as exc:
                 config_parameter_errors.append(str(exc))
             jev_info[key] = self._mask_if_secret(key, str(value)) if "KEY" in key else value
-        explicit_main_configured = bool(
-            self.xai_api_key
-            or (self.openai_compatible_api_url and self.openai_compatible_api_key)
-        )
+        xai_configured = self.provider_enabled("xai-responses") and bool(self.xai_api_key)
+        openai_configured = self.provider_enabled("openai-compatible") and bool(self.openai_compatible_api_url and self.openai_compatible_api_key)
+        explicit_main_configured = xai_configured or openai_configured
         if explicit_main_configured:
             config_status = tr('ok: 配置完整')
         else:
@@ -1340,6 +1375,11 @@ class Config:
             self._DEFAULT_OPENAI_COMPATIBLE_API_MODE,
             self._ALLOWED_OPENAI_COMPATIBLE_API_MODES,
         )
+        primary_api_mode = tr('未配置')
+        if xai_configured:
+            primary_api_mode = "xai-responses"
+        elif openai_configured:
+            primary_api_mode = openai_compatible_api_mode
         intent_router_timeout, intent_router_timeout_error = self._float_info(
             "INTENT_ROUTER_TIMEOUT_SECONDS",
             self._DEFAULT_INTENT_ROUTER_TIMEOUT_SECONDS,
@@ -1440,6 +1480,7 @@ class Config:
 
         return {
             **jev_info,
+            **{key: self.provider_enabled(provider) for provider, key in self.PROVIDER_ENABLED_KEYS.items()},
             "XAI_API_URL": self.xai_api_url,
             "XAI_API_KEY": self._mask_api_key(self.xai_api_key) if self.xai_api_key else tr('未配置'),
             "XAI_MODEL": self.xai_model,
@@ -1485,7 +1526,6 @@ class Config:
             "SMART_SEARCH_RETRY_MULTIPLIER": self.retry_multiplier,
             "SMART_SEARCH_RETRY_MAX_WAIT": self.retry_max_wait,
             "TAVILY_API_URL": self.tavily_api_url,
-            "TAVILY_ENABLED": self.tavily_enabled,
             "TAVILY_API_KEY": self._mask_api_key(self.tavily_api_key) if self.tavily_api_key else tr('未配置'),
             "TAVILY_TIMEOUT_SECONDS": self.tavily_timeout,
             "FIRECRAWL_API_URL": self.firecrawl_api_url,
@@ -1524,7 +1564,7 @@ class Config:
             "JINA_RERANK_API_URL": self.jina_rerank_api_url,
             "JINA_RESPOND_WITH": self.jina_respond_with,
             "JINA_TIMEOUT_SECONDS": self.jina_timeout,
-            "primary_api_mode": "xai-responses" if self.xai_api_key else (openai_compatible_api_mode if self.openai_compatible_api_url and self.openai_compatible_api_key else tr('未配置')),
+            "primary_api_mode": primary_api_mode,
             "primary_api_mode_source": "config_file" if explicit_main_configured else "default",
             "config_file": str(self.config_file),
             "config_dir": str(self.config_file.parent),

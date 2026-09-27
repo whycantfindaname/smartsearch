@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import re
 import subprocess
@@ -13,6 +14,51 @@ WORKFLOW = ROOT / ".github" / "workflows" / "publish-npm.yml"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
 TARBALL_SMOKE = ROOT / "npm" / "scripts" / "smoke-packed-install.js"
 SKILL_PARITY_CHECK = ROOT / "npm" / "scripts" / "check-skill-parity.js"
+
+
+@pytest.mark.parametrize("declared,installed,error", [
+    ("0.1.24", "0.1.24", "desktop entry is not available"),
+    ("0.1.24-alpha.1", "0.1.24a1", "desktop entry is not available"),
+    ("0.1.24-beta.2", "0.1.24b2", "desktop entry is not available"),
+    ("0.1.24-rc.3", "0.1.24rc3", "desktop entry is not available"),
+    ("0.1.24-dev.4", "0.1.24.dev4", "desktop entry is not available"),
+    ("0.1.24-beta.2", "0.1.24b1", "metadata is stale"),
+    ("0.1.24-beta.2", "0.1.24rc2", "metadata is stale"),
+    ("0.1.24-beta.2", "0.1.24", "metadata is stale"),
+    ("0.1.24-beta.2", "0.1.25b2", "metadata is stale"),
+    ("invalid", "0.1.24", "Invalid version"),
+    ("0.1.24", "invalid", "Invalid version"),
+])
+def test_backend_build_accepts_equivalent_versions_but_rejects_stale_metadata(tmp_path, monkeypatch, declared, installed, error):
+    spec = importlib.util.spec_from_file_location("build_backend", ROOT / "desktop/scripts/build_backend.py")
+    backend = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(backend)
+    (tmp_path / "pyproject.toml").write_text(f'[project]\nversion = "{declared}"\n', encoding="utf-8")
+    monkeypatch.setattr(backend, "REPOSITORY_ROOT", tmp_path)
+    monkeypatch.setattr(backend.importlib.metadata, "version", lambda _: installed)
+    monkeypatch.setattr(sys, "argv", ["build_backend.py", "--entry", "missing.py"])
+    # A missing entry stops accepted versions before PyInstaller or artifact writes.
+    with pytest.raises((RuntimeError, ValueError), match=error):
+        backend.main()
+    assert not (tmp_path / ".desktop-artifacts").exists()
+
+
+def test_native_asset_inventory_ignores_caches_but_requires_real_assets(tmp_path):
+    spec = importlib.util.spec_from_file_location("build_backend", ROOT / "desktop/scripts/build_backend.py")
+    backend = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(backend)
+    source = tmp_path / "source"
+    packaged = tmp_path / "packaged"
+    source.mkdir()
+    packaged.mkdir()
+    (source / "__pycache__").mkdir()
+    (source / "__pycache__" / "module.pyc").write_bytes(b"cache")
+    (source / "config.json").write_text("{}", encoding="utf-8")
+    (source / "resource.md").write_text("resource", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="resource.md"):
+        backend.verify_asset_inventory(source, packaged)
+    (packaged / "resource.md").write_text("resource", encoding="utf-8")
+    assert backend.verify_asset_inventory(source, packaged) == 1
 
 
 def read_reference_tree(skill_dir: Path) -> str:
@@ -206,13 +252,11 @@ def test_ci_workflow_is_no_publish_and_covers_the_release_runtime_matrix():
     assert len(matrix) == 3
 
     for command in [
-        "npm ci",
         "npm test",
-        "node npm/bin/smart-search.js regression",
-        "node npm/bin/smart-search.js smoke --mock --format json",
+        "python -m smart_search.cli regression",
+        "python -m smart_search.cli smoke --mock --format json",
         "npm run check:skill-parity",
         "npm run pack:dry",
-        "npm run smoke:tarball",
         "git diff --check HEAD^1 HEAD",
         "git diff-tree --check --root -r --no-commit-id HEAD",
     ]:
@@ -241,9 +285,9 @@ def test_release_version_metadata_and_tarball_support_are_synchronized():
         "regression",
         "smoke",
         "--mock",
-        "assertPackContents",
-        "src/smart_search/assets/skills/smart-search-cli/",
-        'path.extname(filePath) === ".py"',
+        "--ignore-scripts",
+        "PYTHONHOME",
+        "--desktop-backend",
     ]:
         assert marker in tarball_smoke
 
@@ -338,29 +382,30 @@ def test_v015_release_notes_cover_beta_and_stable_lanes():
         assert marker in stable_notes
 
 
-@pytest.mark.skipif(sys.version_info < (3, 11), reason="The release runner uses Python 3.11+ file_digest")
-@pytest.mark.parametrize("windows_suffix", ["signed", "unsigned-test"])
-def test_desktop_release_requires_signed_windows_and_accepts_nested_paths(tmp_path, monkeypatch, windows_suffix):
+def test_native_release_requires_all_platforms_and_excludes_pr_secrets():
     workflow = yaml.safe_load((ROOT / ".github/workflows/desktop-build.yml").read_text())
-    step = next(step for step in workflow["jobs"]["release-assets"]["steps"]
-                if step.get("name") == "Validate version, platforms and checksums")
-    script = step["run"].split("python - <<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
-    names = [f"SmartSearch-0.1.20-win-{arch}-Setup-{windows_suffix}.exe" for arch in ("x64", "arm64")]
-    names += [f"SmartSearch-0.1.20-macos-{arch}-unsigned-test.dmg" for arch in ("x86_64", "arm64")]
-    (tmp_path / "package.json").write_text('{"version":"0.1.20"}')
-    for index, name in enumerate(names):
-        package = tmp_path / "release-packages" / f"build-{index}" / "installer" / name
-        package.parent.mkdir(parents=True)
-        package.write_bytes(name.encode())
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("RELEASE_TAG", "v0.1.20")
-    if windows_suffix != "signed":
-        with pytest.raises(AssertionError, match="Missing or unexpected"):
-            exec(compile(script, "desktop-release-validation", "exec"), {})
-        assert not (tmp_path / "release-packages" / "SHA256SUMS.txt").exists()
-        return
-    exec(compile(script, "desktop-release-validation", "exec"), {})
-    root = tmp_path / "release-packages"
-    assert {path.name for path in root.iterdir() if path.is_file()} == set(names) | {"SHA256SUMS.txt"}
-    assert all((root / name).read_bytes() == name.encode() for name in names)
-    assert len((root / "SHA256SUMS.txt").read_text().splitlines()) == 4
+    release = workflow["jobs"]["release-assets"]
+    assert release["needs"] == ["windows", "macos", "macos-universal-intel"]
+    assert "github.event_name == 'workflow_dispatch'" in release["if"]
+    assert "inputs.release_tag != ''" in release["if"]
+    assert "!inputs.windows_only" in release["if"]
+    assert "!inputs.windows_only" in workflow["jobs"]["macos"]["if"]
+    events = read_workflow_events((ROOT / ".github/workflows/desktop-build.yml").read_text())
+    assert events["workflow_dispatch"]["inputs"]["windows_only"]["default"] == "false"
+    assert events["workflow_dispatch"]["inputs"]["sign_macos_updates"]["default"] == "false"
+    for job in (workflow["jobs"]["windows"], workflow["jobs"]["macos"], workflow["jobs"]["macos-universal"]):
+        for step in job["steps"]:
+            if "secrets." in str(step.get("env", {})):
+                assert "github.event_name == 'workflow_dispatch'" in step["if"]
+    mac_steps = {step.get("name"): step for step in workflow["jobs"]["macos"]["steps"]}
+    signing = mac_steps["Prepare explicitly configured Sparkle release signing"]
+    assert "inputs.sign_macos_updates || inputs.release_tag != ''" in signing["if"]
+    assert 'test "$SMART_SEARCH_SPARKLE_PUBLIC_KEY" = "$expected"' in signing["run"]
+    assert signing["if"] in mac_steps["Remove only the temporary release key"]["if"]
+    windows_steps = {step.get("name"): step for step in workflow["jobs"]["windows"]["steps"]}
+    assert "Sparkle signing requires macOS jobs" in windows_steps["Validate release source before loading signing keys"]["run"]
+    release_steps = {step.get("name"): step for step in release["steps"]}
+    script = release_steps["Attach verified packages before exposing update feeds"]["run"]
+    assert script.index('"${packages[@]}"') < script.index('"${feeds[@]}"')
+    assert "set -euo pipefail" in script
+    assert "desktop:release:validate" in release_steps["Verify every feed reference and create checksums"]["run"]

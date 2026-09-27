@@ -76,6 +76,13 @@ def installer_environment(env, base):
     return clean
 
 
+def cli_runtime_commands(root, python):
+    private = root / ".smart-search-python"
+    executable = private / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    return ([python, "-m", "venv", str(private)],
+            [str(executable), "-m", "pip", "install", "--disable-pip-version-check", str(root)])
+
+
 def command_text(argv):
     if os.name == "nt":
         return "& " + " ".join("'" + str(arg).replace("'", "''") + "'" for arg in argv)
@@ -581,9 +588,8 @@ class Environment:
                         if not cli_info:
                             raise ValueError(tr('独立 npm 包安装位置未通过验证。'))
                     root = Path(cli_info["package_root"])
-                    await self.run([python["path"], "-m", "venv", str(root / ".smart-search-python")], clean)
-                    private_python = root / ".smart-search-python" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-                    await self.run([str(private_python), "-m", "pip", "install", "--disable-pip-version-check", str(root)], clean)
+                    for command in cli_runtime_commands(root, python["path"]):
+                        await self.run(command, clean)
             self.changed(message=tr('正在验证独立 CLI 启动链…'), can_cancel=False)
             cli_info = await asyncio.to_thread(refresh_cli)
             if not cli_info.get("external_runtime_verified") or cli_info.get("manager") == "bundled":

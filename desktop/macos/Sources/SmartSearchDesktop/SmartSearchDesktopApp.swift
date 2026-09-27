@@ -5,17 +5,55 @@ import SwiftUI
 struct SmartSearchDesktopApp: App {
     @NSApplicationDelegateAdaptor(ApplicationDelegate.self) private var applicationDelegate
     @StateObject private var model = AppModel()
+    @AppStorage(AppearancePreference.defaultsKey) private var appearance = AppearancePreference.system
 
     var body: some Scene {
-        WindowGroup(id: "main") {
+        Window("Smart Search", id: "main") {
             ContentView(model: model)
+                .preferredColorScheme(appearance.colorScheme)
+                .onAppear { appearance.applyToApplication() }
+                .onChange(of: appearance) { $0.applyToApplication() }
                 .frame(minWidth: 920, minHeight: 620)
                 .background(WindowConfigurator { window in
                     applicationDelegate.configure(window: window, model: model)
                 })
         }
+        .defaultSize(width: 1080, height: 760)
         .commands {
-            CommandMenu(L("导航")) {
+            LocalizedCommands(model: model, showMainWindow: applicationDelegate.showMainWindow)
+        }
+
+        MenuBarExtra("Smart Search", systemImage: "magnifyingglass") {
+            Group {
+                Button(L("显示 Smart Search")) { applicationDelegate.showMainWindow() }
+                if model.hasOwnedActiveRuns {
+                    Text(L("有 App 任务正在后台运行"))
+                }
+                Divider()
+                Button(L("退出")) { NSApp.terminate(nil) }
+            }
+            .id(model.languagePreference)
+            .environment(\.locale, model.interfaceLocale)
+        }
+        .menuBarExtraStyle(.menu)
+    }
+}
+
+@MainActor
+private struct LocalizedCommands: Commands {
+    @ObservedObject var model: AppModel
+    let showMainWindow: () -> Void
+
+    var body: some Commands {
+        CommandGroup(replacing: .appSettings) {
+            Button(L("设置与关于")) {
+                model.selectedDestination = .settings
+                showMainWindow()
+            }.keyboardShortcut(",", modifiers: .command)
+            .id(model.languagePreference)
+        }
+        CommandMenu(L("导航")) {
+            Group {
                 Button(L("概览")) { model.selectedDestination = .overview }.keyboardShortcut("1", modifiers: .command)
                 Button(L("服务商")) { model.selectedDestination = .providers }.keyboardShortcut("2", modifiers: .command)
                 Button(L("搜索与研究")) { model.selectedDestination = .search }.keyboardShortcut("3", modifiers: .command)
@@ -23,24 +61,13 @@ struct SmartSearchDesktopApp: App {
                 Button(L("更新 Skills")) { model.selectedDestination = .integration }.keyboardShortcut("5", modifiers: .command)
                 Button(L("设置与关于")) { model.selectedDestination = .settings }.keyboardShortcut("6", modifiers: .command)
             }
-            CommandGroup(after: .appInfo) {
-                Button(L("刷新状态")) { Task { await model.refreshState() } }.keyboardShortcut("r", modifiers: .command)
-            }
+            .id(model.languagePreference)
+            .environment(\.locale, model.interfaceLocale)
         }
-
-        MenuBarExtra {
-            Button(L("显示 Smart Search")) { applicationDelegate.showMainWindow() }
-            if model.hasOwnedActiveRuns {
-                Text(L("有 App 任务正在后台运行"))
-            }
-            Divider()
-            Button(L("退出")) { NSApp.terminate(nil) }
-        } label: {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable().scaledToFit().frame(width: 18, height: 18)
-                .accessibilityLabel("Smart Search")
+        CommandGroup(after: .appInfo) {
+            Button(L("刷新状态")) { Task { await model.refreshState() } }.keyboardShortcut("r", modifiers: .command)
+            .id(model.languagePreference)
         }
-        .menuBarExtraStyle(.menu)
     }
 }
 
@@ -48,9 +75,19 @@ struct SmartSearchDesktopApp: App {
 final class ApplicationDelegate: NSObject, NSApplicationDelegate {
     private let mainWindowDelegate = MainWindowDelegate()
     private weak var model: AppModel?
+    private weak var mainWindow: NSWindow?
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // Packaged apps keep the system-rendered bundle icon and its macOS background.
+        // Only bare SwiftPM launches need an explicit fallback icon.
+        if Bundle.main.bundleURL.pathExtension != "app" {
+            NSApp.applicationIconImage = AppBranding.icon
+        }
+    }
 
     func configure(window: NSWindow, model: AppModel) {
         self.model = model
+        mainWindow = window
         mainWindowDelegate.model = model
         window.delegate = mainWindowDelegate
     }
@@ -61,12 +98,26 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        if model?.terminationReady == true { return .terminateNow }
+        if model?.appUpdatePreparing == true { return .terminateCancel }
+        if let model, !model.configDraft.isEmpty || !model.clearSecretKeys.isEmpty {
+            model.noticeMessage = L("请先保存或放弃未保存的配置，再退出或安装更新。")
+            showMainWindow()
+            return .terminateCancel
+        }
         if let model, model.isUpdatingCLI || model.environmentBusy || model.skillsBusy {
             model.noticeMessage = L("环境或 Skills 操作正在进行，请等待完成后退出。")
             showMainWindow()
             return .terminateCancel
         }
-        guard let model, model.hasOwnedActiveRuns else { return .terminateNow }
+        guard let model else { return .terminateNow }
+        if !model.hasOwnedActiveRuns {
+            Task {
+                await model.shutdownForQuit()
+                sender.reply(toApplicationShouldTerminate: true)
+            }
+            return .terminateLater
+        }
         model.presentQuitChoice { choice in
             switch choice {
             case .background, .return:
@@ -83,8 +134,12 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
     func showMainWindow() {
         NSApp.activate(ignoringOtherApps: true)
-        let window = NSApp.windows.first { $0.isVisible || $0.canBecomeKey }
-        window?.makeKeyAndOrderFront(nil)
+        if mainWindow?.isMiniaturized == true { mainWindow?.deminiaturize(nil) }
+        mainWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
     }
 }
 
@@ -93,14 +148,35 @@ private final class MainWindowDelegate: NSObject, NSWindowDelegate {
     weak var model: AppModel?
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
+        if model?.appUpdatePreparing == true { return false }
         if let model, model.isUpdatingCLI || model.environmentBusy || model.skillsBusy {
             model.noticeMessage = L("环境操作或 CLI 更新正在进行，请等待完成；可以最小化窗口。")
             return false
         }
-        guard let model, model.hasOwnedActiveRuns else { return true }
+        guard let model, model.hasOwnedActiveRuns else {
+            sender.orderOut(nil)
+            return false
+        }
         model.presentWindowCloseChoice(for: sender)
         return false
     }
+}
+
+enum AppBranding {
+    static let mascot: NSImage? = Bundle.main.url(forResource: "mascot", withExtension: "png")
+        .flatMap { NSImage(contentsOf: $0) }
+
+    static let icon: NSImage = {
+        if let url = Bundle.main.url(forResource: "smart-search", withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            return image
+        }
+        if let url = Bundle.main.url(forResource: "SmartSearch", withExtension: "icns"),
+           let image = NSImage(contentsOf: url) {
+            return image
+        }
+        return NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: "Smart Search")!
+    }()
 }
 
 private struct WindowConfigurator: NSViewRepresentable {

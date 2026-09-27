@@ -7,7 +7,7 @@ from functools import lru_cache
 from .cli import build_parser
 from .i18n import tr
 
-_MANAGED = {"setup", "config", "skills", "providers", "ui"}
+_MANAGED = {"agent-guide", "setup", "config", "skills", "providers", "ui"}
 _LABELS = {"modes": "工作模式", "search": "搜索", "route": "查看路由", "deep": "离线研究计划", "research": "在线研究",
            "fetch": "读取网页", "map": "站点地图", "doctor": "服务商全面诊断（在线）",
            "smoke": "冒烟检查", "regression": "离线回归检查", "model/current": "当前模型",

@@ -46,12 +46,15 @@ npm install -g @konbakuyomu/smart-search@next
 smart-search --version
 ```
 
-npm 包安装时会自动创建隔离的 Python 运行环境。你平时只需要使用 `smart-search` 这个命令。
+新版 npm 包按操作系统和 CPU 架构安装自带运行时的 CLI。Python 解释器和依赖已在发布时打包；安装或首次运行不会寻找、下载或配置用户 Python。CLI 启动时隔离 Python、venv、Conda 和 PyInstaller 环境变量。
 
 前置条件：
 
-- 已安装 Node.js / npm。
-- 已安装 Python 3.10 或更新版本，并且终端里能运行 `python`、`python3` 或 Windows 的 `py -3`。
+- 已安装 Node.js 18+ / npm。
+- macOS、Windows、Linux 的 x64 / arm64 平台。Linux 需要 glibc 2.35+，不支持 Alpine/musl。
+- npm 安装时保留 optional dependencies（不要使用 `--omit=optional`）。允许 `--ignore-scripts`，无需执行安装脚本。
+
+旧的 0.1.24 及更早 npm 包仍使用 Python 安装流程；上述方式在新的二进制 npm 版本发布后生效。
 
 ## CLI 快速开始
 
