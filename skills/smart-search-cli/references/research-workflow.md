@@ -32,10 +32,24 @@ Depth never weakens the evidence rule: a retained source-dependent Claim still n
 
 ## Source boundary
 
+Ordinary CLI search continues to use the PATH-resolved `smart-search`; it does not require this checkout preparation. For the named Research Workflow, locate `<repo>` from the current host's workspace and the existing Agent Infra companion registry's `smartsearch` entry (`manifests/companion-repositories.json`, including the selected profile's override under the owner's manifest-resolution rules). Resolve `workspace_path` under that host's workspace root and check the registered repository, branch, and remote roles. An installed Skill directory or another host's absolute path is not the source checkout.
+
+If the registered checkout is missing, read the matching Infra platform worktree's `PROJECT_RULES.md`, profile, and `docs/runbooks/adaptive-machine-bootstrap.md`, then use its existing repository owner:
+
+```text
+PYTHONPATH=src python3 bootstrap.py repo-preview --set <profile> --workspace-root <workspace-root> --output-dir <plan-dir>
+PYTHONPATH=src python3 bootstrap.py lock --plan <plan-dir>/repository-plan.json --output <plan-dir>/repository-plan.lock.json
+PYTHONPATH=src python3 bootstrap.py repo-apply --plan <plan-dir>/repository-plan.lock.json --receipt <receipt-path>
+```
+
+Run these steps sequentially from that Infra worktree. After preview and before lock, retain every registered plan entry and identity field, enable only the missing `smartsearch` entry, and set all other entries' `enabled` to `false`. Confirm `action=clone`, the canonical target, `lwj_dev`, the registered remote roles, and the pinned commit. Apply only within the user's authorization for this preparation; preserve the owner's plan, receipt, and recovery entry. If authorization is absent, report the required preparation. If preview or an owner precondition fails, stop preparation and report the concrete gap. Do not create a temporary checkout, clone independently, change the registry, or broaden this step into machine bootstrap.
+
+For an existing checkout, inspect `git -C <repo> status --short` and the registered remote roles before use. Preserve dirty work, wrong-branch checkouts, and identity mismatches for the owner to resolve; do not overwrite, switch branches, or recover over them. A prepared checkout must pass the source checks below before retrieval; preparation success alone does not establish workflow readiness.
+
 Run this workflow from the current Smart Search source checkout, not a PATH-resolved global package:
 
-1. Resolve the repository root with `git rev-parse --show-toplevel` and confirm branch `lwj_dev`.
-2. Confirm that `<repo>/npm/bin/smart-search.js`, `<repo>/skills/smart-search-cli/agents/`, and the `research-run` command family exist.
+1. Resolve the repository root with `git -C <repo> rev-parse --show-toplevel` and confirm branch `lwj_dev` using `git -C <repo> branch --show-current`.
+2. Confirm that `<repo>/npm/bin/smart-search.js`, `<repo>/skills/smart-search-cli/agents/`, and the `research-run` command family exist. Check the commands with `node <repo>/npm/bin/smart-search.js research-run --help`; if its local runtime is missing, use the project's existing runtime preparation within authorization before invoking the wrapper, which may attempt runtime repair. Do not replace it with a global package.
 3. Use the absolute project-local entrypoint for every Smart Search invocation:
 
    ```text
