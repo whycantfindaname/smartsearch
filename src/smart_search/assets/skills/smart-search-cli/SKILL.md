@@ -63,7 +63,7 @@ AnySearch remains outside the Smart Search provider registry. Its adapter reads 
 
 ## Timeout Retry Policy
 
-For `error_type: "timeout"`, Retry up to 3 total attempts with `--timeout 300` and `--extra-sources 1` when the user has not supplied an explicit one-call override. That means use `--extra-sources 1` during retry attempts and `--timeout` only for an explicit one-call override. Do not wrap `smart-search` in a shell-level `timeout` command. Do not rely on `SMART_SEARCH_RETRY_*` settings as the contract. If the main search still times out, fall back to source-first evidence: Run `exa-search` with the original query, then `fetch` the top 1-2 relevant URLs and label the result with `source_mode: "fallback"`.
+For `error_type: "timeout"`, follow the [Agent timeout handling contract](references/error-recovery.md#agent-timeout-handling-contract) before any new request. The catalog owns submission-state checks, bounded CLI replay, partial-result handling, and source-first fallback. A timeout alone does not authorize another main-search request.
 
 ## Sciverse boundary
 

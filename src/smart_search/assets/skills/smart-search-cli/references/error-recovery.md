@@ -95,10 +95,12 @@ retry or logical replay.
 
 ## Main search default budget
 
-The default search command is:
+The default search budget is 300 seconds unless configuration overrides it.
+Omit `--timeout` to use that configured budget; an explicit `--timeout` overrides
+it for one invocation:
 
 ```powershell
-smart-search search QUERY --timeout 120 --max-try 5 --format json --output PATH
+smart-search search QUERY --max-try 5 --format json --output PATH
 ```
 
 `--timeout` is the hard timeout for one logical search call. `--max-try` is the
@@ -108,11 +110,40 @@ safety budget, not a general retry switch. A result records
 
 ## Agent timeout handling contract
 
-When the returned `error_type` is `timeout`, the bounded recovery command is
-`smart-search search ... --timeout 300 --extra-sources 1 --format json --output PATH`.
-This is not a shell-level `timeout` wrapper. `SMART_SEARCH_RETRY_*` settings are not the contract. If the bounded search still times out, switch to source-first fallback: run `exa-search --include-domains` with the original
-query, fetch the top 1-2 relevant URLs, and label the degraded result with
-`source_mode: "fallback"`.
+The returned `error_type: "timeout"` alone never authorizes replay. Inspect
+`timeout_phase`, `phase_attempts`, `partial_success`, and `provider_attempts`
+before choosing the next action.
+
+- If `partial_success=true` retains usable primary content after an optional
+  phase deadline, keep that content and disclose the missing evidence. Do not
+  repeat the main search to recover an optional phase.
+- Submitted, running, or unknown outcomes, post-submission connection loss,
+  HTTP 499, and hard timeouts must not be replayed automatically. Preserve
+  request/attempt metadata and check for a late result. Increasing the timeout
+  does not resolve uncertain submission.
+- Provably pre-submission connection failures may use the provider's bounded
+  transport retry. Let that handling finish; do not add an agent-side loop.
+- CLI logical replay is limited to the exact provider/status/marker combinations
+  in the main-provider tables: OpenAI-compatible HTTP 429 with
+  `concurrency_limit_exceeded`, or xAI HTTP 504 with `upstream_server_error`.
+  Any uncertain-submission evidence takes precedence over those markers.
+  `--max-try` bounds that built-in budget; do not add three outer attempts.
+- Follow structured `recovery` guidance when present. A later fresh main-search
+  request requires a changed condition and resolved submission state; it is
+  not an automatic response to a timeout. For that one fresh invocation,
+  `smart-search search ... --timeout 300 --extra-sources 1 --max-try 1 --format json --output PATH`
+  is an explicit one-call budget override. Preserve any user-supplied override.
+- When main-search evidence remains unavailable, report the gap and switch to
+  source-first fallback within the authorized retrieval workflow: run
+  `exa-search` with the original query, use `exa-search --include-domains` when
+  official domains are known, and `fetch` the top 1-2 relevant URLs before
+  making source-dependent claims. Label the result with
+  `source_mode: "fallback"`.
+
+The CLI budget is not a shell-level `timeout` wrapper. Do not wrap
+`smart-search` in a shell-level `timeout` command because termination may lose
+structured failure metadata. `SMART_SEARCH_RETRY_*` settings are not the contract
+for agent-side logical replay; use the catalog's channel-specific rules.
 
 ## CLI and local invocation channel
 
