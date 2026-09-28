@@ -8,14 +8,15 @@
 
 ```text
 用法：smart-search [-h] [--lang {auto,zh,en}] [-v]
-                {modes,search,s,route,rt,route-calibrate,route-cal,rcal,fetch,f,map,m,exa-search,exa,x,exa-similar,xs,zhipu-search,z,zp,zhipu-mcp-search,zmcp-search,zhipu-mcp-reader,zmcp-reader,zhipu-mcp-search-doc,zmcp-doc,zhipu-mcp-repo-structure,zmcp-tree,zhipu-mcp-read-file,zmcp-file,anysearch-domains,as-domains,anysearch-search,as-search,as,anysearch-extract,as-extract,anysearch-batch,as-batch,sciverse-catalog,sv-catalog,sciverse-search,sv-search,sv,sciverse-semantic,sv-semantic,sciverse-read,sv-read,sciverse-relations,sv-relations,context7-library,c7,ctx7,context7-docs,c7d,c7docs,ctx7-docs,deep,dr,research,rs,research-run,rr,research-view,rv,research-environment,research-env,renv,smoke,sm,doctor,d,diagnose,diag,model,mdl,skills,skill,providers,prov,ui,web,setup,init,config,cfg,regression,reg} ...
+                {modes,agent-guide,search,s,route,rt,route-calibrate,route-cal,rcal,fetch,f,map,m,exa-search,exa,x,exa-similar,xs,zhipu-search,z,zp,zhipu-mcp-search,zmcp-search,zhipu-mcp-reader,zmcp-reader,zhipu-mcp-search-doc,zmcp-doc,zhipu-mcp-repo-structure,zmcp-tree,zhipu-mcp-read-file,zmcp-file,anysearch-domains,as-domains,anysearch-search,as-search,as,anysearch-extract,as-extract,anysearch-batch,as-batch,sciverse-catalog,sv-catalog,sciverse-search,sv-search,sv,sciverse-semantic,sv-semantic,sciverse-read,sv-read,sciverse-relations,sv-relations,context7-library,c7,ctx7,context7-docs,c7d,c7docs,ctx7-docs,deep,dr,research,rs,research-run,rr,research-view,rv,research-environment,research-env,renv,smoke,sm,doctor,d,diagnose,diag,model,mdl,skills,skill,providers,prov,ui,web,setup,init,config,cfg,regression,reg} ...
 
 供 AI 联网研究使用的 Smart Search 命令行工具。
 
 位置参数:
-  {modes,search,s,route,rt,route-calibrate,route-cal,rcal,fetch,f,map,m,exa-search,exa,x,exa-similar,xs,zhipu-search,z,zp,zhipu-mcp-search,zmcp-search,zhipu-mcp-reader,zmcp-reader,zhipu-mcp-search-doc,zmcp-doc,zhipu-mcp-repo-structure,zmcp-tree,zhipu-mcp-read-file,zmcp-file,anysearch-domains,as-domains,anysearch-search,as-search,as,anysearch-extract,as-extract,anysearch-batch,as-batch,sciverse-catalog,sv-catalog,sciverse-search,sv-search,sv,sciverse-semantic,sv-semantic,sciverse-read,sv-read,sciverse-relations,sv-relations,context7-library,c7,ctx7,context7-docs,c7d,c7docs,ctx7-docs,deep,dr,research,rs,research-run,rr,research-view,rv,research-environment,research-env,renv,smoke,sm,doctor,d,diagnose,diag,model,mdl,skills,skill,providers,prov,ui,web,setup,init,config,cfg,regression,reg}
+  {modes,agent-guide,search,s,route,rt,route-calibrate,route-cal,rcal,fetch,f,map,m,exa-search,exa,x,exa-similar,xs,zhipu-search,z,zp,zhipu-mcp-search,zmcp-search,zhipu-mcp-reader,zmcp-reader,zhipu-mcp-search-doc,zmcp-doc,zhipu-mcp-repo-structure,zmcp-tree,zhipu-mcp-read-file,zmcp-file,anysearch-domains,as-domains,anysearch-search,as-search,as,anysearch-extract,as-extract,anysearch-batch,as-batch,sciverse-catalog,sv-catalog,sciverse-search,sv-search,sv,sciverse-semantic,sv-semantic,sciverse-read,sv-read,sciverse-relations,sv-relations,context7-library,c7,ctx7,context7-docs,c7d,c7docs,ctx7-docs,deep,dr,research,rs,research-run,rr,research-view,rv,research-environment,research-env,renv,smoke,sm,doctor,d,diagnose,diag,model,mdl,skills,skill,providers,prov,ui,web,setup,init,config,cfg,regression,reg}
     modes               Explain public workflows, research depths, and
                         advanced interfaces without running probes.
+    agent-guide         读取当前 CLI 提供给 Agent 的使用说明。
     search (s)          运行 OpenAI 兼容接口联网搜索。
     route (rt)          解释意图路由，不运行服务商。
     route-calibrate (route-cal, rcal)
@@ -101,6 +102,19 @@
 ```
 
 解析器默认值：`--format` = `json`; `--output` = ``.
+
+## `smart-search agent-guide`
+
+```text
+用法：smart-search agent-guide [-h] [--lang {auto,zh,en}] [section]
+
+位置参数:
+  section
+
+选项:
+  -h, --help           显示此帮助并退出
+  --lang {auto,zh,en}  本次调用的界面语言，不改变已保存的偏好。
+```
 
 ## `smart-search search`
 
@@ -1327,12 +1341,14 @@
 别名：`skill`
 
 ```text
-用法：smart-search skills [-h] [--lang {auto,zh,en}] {status,st,update,up} ...
+用法：smart-search skills [-h] [--lang {auto,zh,en}]
+                       {status,st,update,up,remove} ...
 
 位置参数:
-  {status,st,update,up}
+  {status,st,update,up,remove}
     status (st)         比较内置技能文件与已安装文件。
     update (up)         用内置资源覆盖所选已安装技能的文件。
+    remove              移除所选 Skills 并保留文件备份。
 
 选项:
   -h, --help            显示此帮助并退出
@@ -1379,6 +1395,26 @@
   --all                 更新所有已知技能目标。
   --skills-root SKILLS_ROOT
                         用于便携或测试安装的高级合成 home 目录覆盖；默认使用当前用户的 home 目录。
+  --format {json,markdown,content}
+  --output OUTPUT       将渲染后的输出写入文件。
+```
+
+解析器默认值：`--targets` = `codex,claude,cursor`; `--all` = `False`; `--skills-root` = ``; `--format` = `json`; `--output` = ``.
+
+## `smart-search skills remove`
+
+```text
+用法：smart-search skills remove [-h] [--lang {auto,zh,en}] [--targets TARGETS]
+                              [--all] [--skills-root SKILLS_ROOT]
+                              [--format {json,markdown,content}]
+                              [--output OUTPUT]
+
+选项:
+  -h, --help            显示此帮助并退出
+  --lang {auto,zh,en}   本次调用的界面语言，不改变已保存的偏好。
+  --targets TARGETS
+  --all
+  --skills-root SKILLS_ROOT
   --format {json,markdown,content}
   --output OUTPUT       将渲染后的输出写入文件。
 ```

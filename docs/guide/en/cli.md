@@ -46,12 +46,15 @@ npm install -g @konbakuyomu/smart-search@next
 smart-search --version
 ```
 
-The npm package creates an isolated Python runtime during install. You still use the single `smart-search` command.
+The new npm package selects a self-contained CLI for your OS and CPU. Python and its dependencies are bundled at release time. Installation and first launch do not find, download or configure user Python. The launcher isolates Python, virtualenv, Conda and PyInstaller environment variables.
 
 Prerequisites:
 
-- Node.js / npm.
-- Python 3.10 or newer available as `python`, `python3`, or `py -3` on Windows.
+- Node.js 18+ / npm.
+- macOS, Windows or Linux on x64 / arm64. Linux requires glibc 2.35+; Alpine/musl is unsupported.
+- Keep npm optional dependencies enabled; do not use `--omit=optional`. `--ignore-scripts` is supported.
+
+Published npm 0.1.24 and earlier still use the Python setup flow. This behavior takes effect with the new binary npm release.
 
 ## CLI quick start
 

@@ -1,11 +1,7 @@
-"""Update selection, trust boundaries, and real streamed-download lifecycle."""
+"""Independent CLI checks and the native App update handoff."""
 import asyncio
-import hashlib
 import json
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-import threading
 import time
-from unittest.mock import Mock
 
 import httpx
 import pytest
@@ -20,15 +16,7 @@ def chinese_presentation():
 
 from smart_search import desktop_updates as updates
 from smart_search.desktop_backend import Backend
-
-
-def release(version="0.2.0", arch="x64", digest=True):
-    name = f"SmartSearch-{version}-win-{arch}-Setup-unsigned-test.exe"
-    asset = {"id": 17, "name": name, "size": 4,
-             "browser_download_url": f"{updates.RELEASE_URL}/download/v{version}/{name}"}
-    if digest:
-        asset["digest"] = "sha256:" + hashlib.sha256(b"test").hexdigest()
-    return {"tag_name": f"v{version}", "assets": [asset]}
+from smart_search import desktop_backend
 
 
 @pytest.mark.parametrize("remote,current,expected", [("v1.2.3", "1.2.2", True), ("1.2.3", "1.2.3", False),
@@ -37,165 +25,144 @@ def test_versions(remote, current, expected):
     assert updates.newer(remote, current) is expected
 
 
-def test_self_signed_assets_keep_legacy_compatibility_and_reject_ambiguity():
-    for architecture in ("x64", "arm64"):
-        data = release(arch=architecture)
-        assert updates.asset_for(data, "windows", architecture)
-        asset = data["assets"][0]
-        signed = {**asset, "name": asset["name"].replace("unsigned-test", "signed"),
-                  "browser_download_url": asset["browser_download_url"].replace("unsigned-test", "signed")}
-        data["assets"] = [signed]
-        selected = updates.asset_for(data, "windows", architecture)
-        assert selected["name"].endswith("-signed.exe")
-        assert selected["signature_verified"] is False  # filename is not local signature verification
-        assert updates.asset_for(data, "windows", "arm64" if architecture == "x64" else "x64") is None
-        data["assets"].append(asset)
-        assert updates.asset_for(data, "windows", architecture) is None
-
-
-@pytest.mark.asyncio
-async def test_release_assets_and_cli_are_independent_and_failed_check_preserves_success(tmp_path, monkeypatch):
-    state = {"fail": False, "count": 0}
-    def handle(request):
-        state["count"] += 1
-        if state["fail"]:
-            return httpx.Response(429)
-        data = [release("0.3.0", arch="arm64"), release(), release("0.1.9")] if request.url.host == "api.github.com" else {"version": "0.3.0"}
-        return httpx.Response(200, json=data)
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handle))
-    monkeypatch.setattr(updates.httpx, "AsyncClient", lambda **_: client)
-    monkeypatch.setattr(updates, "platform_target", lambda: ("windows", "x64"))
+@pytest.mark.parametrize('version,known', [('0.1.23', True), ('development', False)])
+def test_cached_release_keeps_current_app_identity_without_enabling_cached_download(tmp_path, version, known):
+    (tmp_path / 'state.json').write_text(json.dumps({'app': {
+        'current_version': '0.1.22', 'latest_version': '0.1.23', 'checked_at': 1,
+        'version_known': True, 'available': True, 'asset': {'untrusted': 'cached'}}}))
     manager = updates.Updates(lambda *_: None, directory=tmp_path)
-    manager.current_version = "0.1.19"
-    manager.check({"external_version": "0.2.5"})
-    first_task = manager.check_task
-    manager.check({"external_version": "0.2.5"})
-    assert manager.check_task is first_task
-    await first_task
-    assert state["count"] == 2
-    assert manager.state["app"]["latest_version"] == "0.2.0"
-    assert manager.state["app"]["package_pending"] is True
-    assert manager.state["cli"]["latest_version"] == "0.3.0"
-    old_success = manager.state["last_success"]
-    state["fail"] = True
-    monkeypatch.setattr(updates.httpx, "AsyncClient", lambda **_: type(client)(transport=httpx.MockTransport(handle)))
-    manager.check({"external_version": "0.2.5"})
-    await manager.check_task
-    assert manager.state["app"]["latest_version"] == "0.2.0"
-    assert manager.state["last_success"] == old_success
-    assert manager.state["error"] and manager.state["app"]["error"]
-    with pytest.raises(ValueError):
-        manager.download()
-    assert not manager.state["checking"]
+    manager.current_version = version
+    manager.refresh_installed({})
+    app = manager.state['app']
+    assert app['current_version'] == version and app['version_known'] is known
+    assert not app['available'] and 'asset' not in app
+    assert app['managed_by'] == 'native'
 
 
-@pytest.mark.asyncio
-async def test_checksums_and_untrusted_redirects():
-    data = release(digest=False)
-    asset = updates.asset_for(data, "windows", "x64")
-    assert updates.asset_for(data, "windows", "arm64") is None
-    data["assets"].append({"name": "SHA256SUMS.txt", "size": 200,
-        "browser_download_url": f"{updates.RELEASE_URL}/download/v0.2.0/SHA256SUMS.txt"})
-    seen = []
-    def handle(request):
-        seen.append(str(request.url))
-        if request.url.path.endswith("SHA256SUMS.txt"):
-            return httpx.Response(200, text=f"{'a' * 64}  {asset['name']}\n")
-        return httpx.Response(302, headers={"location": "http://127.0.0.1/private"})
-    async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
-        assert await updates.asset_checksum(client, data, asset) == "a" * 64
-        with pytest.raises(ValueError, match="受信任"):
-            await updates.asset_response(client, asset["url"])
-    assert len(seen) == 2
-    for bad in ("https://github.com.evil.test/a", "https://u:p@github.com/a", "http://github.com/a",
-                "https://github.com/other/repo/releases/download/a", "https://objects.githubusercontent.com/a"):
-        assert not updates.trusted_asset_url(bad)
-
-
-@pytest.mark.asyncio
-async def test_stream_download_retry_cancel_size_hash_and_installer_recheck(tmp_path, monkeypatch):
-    content = b"package bytes" * 65536
-    source = {"slow": False, "wrong": False}
-    class Handler(BaseHTTPRequestHandler):
-        def log_message(self, *_):
-            pass
-        def do_GET(self):
-            self.send_response(200)
-            self.send_header("Content-Length", str(len(content)))
-            self.end_headers()
-            for offset in range(0, len(content), 16384):
-                if source["slow"]:
-                    time.sleep(.01)
-                try:
-                    self.wfile.write((b"x" * 16384) if source["wrong"] else content[offset:offset + 16384])
-                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
-                    return
-    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    monkeypatch.setattr(updates, "trusted_asset_url", lambda *a, **k: True)
-    monkeypatch.setattr(updates, "platform_target", lambda: ("windows", "x64"))
+@pytest.mark.parametrize('fresh,owned,verified,available', [(True, True, False, True),
+    (False, True, False, False), (True, False, False, False), (True, True, True, False)])
+def test_latest_cli_can_retry_incomplete_runtime_only_after_fresh_owned_check(tmp_path, fresh, owned, verified, available):
     manager = updates.Updates(lambda *_: None, directory=tmp_path)
-    asset = updates.asset_for(release(), "windows", "x64")
-    asset.update(url=f"http://127.0.0.1:{server.server_port}/package", size=len(content), sha256=hashlib.sha256(content).hexdigest())
-    manager.state["app"] = {"available": True, "asset": asset}
-    try:
-        source["slow"] = True
-        manager.download()
-        first = manager.download_task
-        manager.download()
-        assert manager.download_task is first
-        await asyncio.sleep(.08)
-        cancel = Mock(wraps=first.cancel)
-        monkeypatch.setattr(first, "cancel", cancel)
-        cancellation = asyncio.create_task(manager.cancel_download())
-        await asyncio.sleep(0)
-        assert manager.state["download"]["status"] == "cancelling"
-        await manager.cancel_download()
-        manager.download()
-        assert manager.download_task is first and cancel.call_count == 1
-        await cancellation
-        assert manager.state["download"]["status"] == "cancelled"
-        assert not list(tmp_path.glob("*.part"))
-        source.update(slow=False, wrong=True)
-        manager.download()
-        await manager.download_task
-        assert manager.state["download"]["status"] == "failed"
-        with pytest.raises(ValueError):
-            await manager.installer()
-        source["wrong"] = False
-        manager.download()
-        await manager.download_task
-        assert manager.state["download"]["status"] == "ready"
-        assert (await manager.installer())["version"] == "0.2.0"
-        (tmp_path / asset["name"]).write_bytes(b"tampered")
-        with pytest.raises(ValueError):
-            await manager.installer()
-        asset["size"] = len(content) - 1
-        manager.download()
-        await manager.download_task
-        assert manager.state["download"]["status"] == "failed"
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(2)
+    manager.state['cli'] = {'latest_version': '0.1.23', 'checked_at': 1, 'cached': not fresh}
+    manager.refresh_installed({'external_version': '0.1.23', 'can_update': owned,
+                              'external_runtime_verified': verified, 'manager': 'npm',
+                              'manager_command': ['node', 'npm.js'], 'manager_options': []})
+    assert manager.state['cli']['available'] is available
+    assert manager.state['cli']['runtime_needs_repair'] is (owned and not verified)
 
 
 @pytest.mark.asyncio
-async def test_cancel_before_download_starts_is_terminal_and_retryable(tmp_path):
+async def test_cli_refresh_recovers_update_controls_from_previous_detection_failure(tmp_path, monkeypatch):
     events = []
-    manager = updates.Updates(lambda _, state: events.append(state["download"]["status"]), directory=tmp_path)
-    manager.state["app"] = {"available": True, "asset": updates.asset_for(release(), "windows", "x64")}
+    backend = Backend(events.append)
+    backend.initialized, backend.directory = True, str(tmp_path / 'config')
+    backend.updates = updates.Updates(backend.event, directory=tmp_path / 'updates')
+    backend.updates.current_version = '0.1.23'
+    backend.updates.state['cli'] = {'latest_version': '0.1.23', 'checked_at': 1, 'error': ''}
+    backend.cli_info = {'manager': 'unknown', 'external_version': None, 'can_update': False}
+    backend.cli_status()
+    assert not backend.updates.state['cli']['available']
+    healthy = {'manager': 'mise', 'external_version': '0.1.22', 'can_update': True,
+               'external_runtime_verified': True, 'manager_command': ['mise'], 'manager_options': []}
+    monkeypatch.setattr(desktop_backend.shutil, 'which', lambda *a, **k: str(tmp_path / 'smart-search.exe'))
+    monkeypatch.setattr(desktop_backend, 'managed_cli_info', lambda *a: None)
+    monkeypatch.setattr(desktop_backend, 'discover', lambda *a: dict(healthy))
+    await backend.handle('cli.status', {})
+    snapshot = events[-1]['data']
+    assert events[-1]['event'] == 'updates'
+    assert snapshot['installed_cli']['can_update'] and snapshot['installed_cli']['external_version'] == '0.1.22'
+    assert snapshot['cli']['available'] and '@0.1.23' in snapshot['cli']['command']
+    healthy['external_version'] = '0.1.23'
+    await backend.handle('cli.status', {})
+    assert not backend.updates.state['cli']['available']
+
+
+@pytest.mark.asyncio
+async def test_inflight_remote_check_does_not_restore_old_cli_detection(tmp_path, monkeypatch):
+    gate = asyncio.Event()
+    async def response(request):
+        await gate.wait()
+        return httpx.Response(200, json={'version': '0.1.23'})
+    client = httpx.AsyncClient(transport=httpx.MockTransport(response))
+    monkeypatch.setattr(updates.httpx, 'AsyncClient', lambda **_: client)
+    manager = updates.Updates(lambda *_: None, directory=tmp_path)
+    manager.current_version = '0.1.23'
+    manager.check({'external_version': None, 'can_update': False})
+    await asyncio.sleep(0)
+    manager.refresh_installed({'external_version': '0.1.22', 'can_update': True, 'manager': 'npm',
+                               'manager_command': ['node', 'npm-cli.js'], 'manager_options': []})
+    gate.set()
+    await manager.check_task
+    assert manager.state['installed_cli']['external_version'] == '0.1.22'
+    assert manager.state['cli']['current_version'] == '0.1.22' and manager.state['cli']['available']
+
+
+@pytest.mark.asyncio
+async def test_cli_checks_never_fetch_app_releases_and_errors_do_not_enable_update(tmp_path, monkeypatch):
+    failed = False
+    urls = []
+    def respond(request):
+        urls.append(str(request.url))
+        return httpx.Response(429) if failed else httpx.Response(200, json={"version": "0.2.0"})
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(updates.httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(respond), **kw))
+    manager = updates.Updates(lambda *_: None, directory=tmp_path)
+    manager.check({"external_version": "0.1.23"})
+    first = manager.check_task
+    manager.check({"external_version": "0.1.23"})
+    assert manager.check_task is first
+    await first
+    assert urls == [updates.NPM_URL] and manager.state['cli']['available']
+    success = manager.state['last_success']
+    failed = True
+    manager.check({"external_version": "0.1.23"})
+    await manager.check_task
+    assert manager.state['last_success'] == success
+    assert manager.state['cli']['error'] and not manager.state['cli']['available']
+    assert not manager.state['app']['available'] and 'asset' not in manager.state['app']
+
+
+@pytest.mark.asyncio
+async def test_native_update_prepare_locks_backend_without_stopping_active_work(tmp_path):
     backend = Backend(lambda _: None)
-    backend.initialized, backend.directory, backend.updates = True, str(tmp_path), manager
-    await backend.handle("updates.download", {})
-    result = await backend.handle("updates.cancel", {})
-    assert result["download"]["status"] == "cancelled"
-    assert events == ["downloading", "cancelling", "cancelled"]
-    assert manager.download_task.done() and not list(tmp_path.iterdir())
-    manager.download()
-    assert manager.state["download"]["status"] == "downloading"
-    await manager.cancel_download()
+    backend.initialized, backend.directory = True, str(tmp_path)
+    backend.skills.state['busy'] = True
+    with pytest.raises(ValueError, match='Skills'):
+        await backend.handle('app.update-prepare', {})
+    assert not backend.app_update_pending
+    backend.skills.state['busy'] = False
+    backend.environment.state['busy'] = True
+    with pytest.raises(ValueError, match='环境'):
+        await backend.handle('app.update-prepare', {})
+    assert not backend.app_update_pending
+    backend.environment.state['busy'] = False
+    backend.runs['active'] = {'status': 'running'}
+    with pytest.raises(ValueError, match='任务'):
+        await backend.handle('app.update-prepare', {})
+    assert not backend.app_update_pending and backend.runs['active']['status'] == 'running'
+    del backend.runs['active']
+    backend.updates.state['cli_update']['status'] = 'running'
+    with pytest.raises(ValueError, match='CLI'):
+        await backend.handle('app.update-prepare', {})
+    assert not backend.app_update_pending
+    backend.updates.state['cli_update']['status'] = 'idle'
+    assert (await backend.handle('app.update-prepare', {}))['ok']
+    with pytest.raises(ValueError, match='App'):
+        await backend.handle('config.apply', {})
+    original_language = backend.language
+    with pytest.raises(ValueError, match='App'):
+        await backend.handle('language.set', {'lang': 'en' if original_language != 'en' else 'zh'})
+    assert backend.language == original_language
+    assert (await backend.handle('shutdown', {}))['ok']
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('method', ['updates.download', 'updates.cancel', 'updates.installer', 'app.update-check'])
+async def test_removed_app_downloader_cannot_be_invoked(method,tmp_path):
+    backend = Backend(lambda _: None)
+    backend.initialized, backend.directory = True, str(tmp_path)
+    with pytest.raises(ValueError, match='未知协议方法'):
+        await backend.handle(method, {})
 
 
 @pytest.mark.asyncio

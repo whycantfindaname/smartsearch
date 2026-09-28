@@ -14,7 +14,7 @@ CLI-first, skill-driven web research for AI agents and terminal users. `smart-se
 
 ## Desktop App
 
-The upstream desktop app is included in the current release line (`0.1.23`). It provides provider configuration, search and research activity, and selected Agent Skills update flows while keeping the independent CLI available after the app is closed. Download the latest package from the [release page](https://github.com/konbakuyomu/smartsearch/releases/latest), or see the [desktop guide](docs/guide/en/app.md). macOS packages remain unsigned and unnotarized; the native desktop build and CLI share the same provider/configuration contracts.
+The upstream desktop app is included in the current release line (`0.1.25`). It provides provider configuration, search and research activity, and selected Agent Skills update flows while keeping the independent CLI available after the app is closed. Download the latest package from the [release page](https://github.com/konbakuyomu/smartsearch/releases/latest), or see the [desktop guide](docs/guide/en/app.md). macOS uses ad-hoc bundle integrity signing and Sparkle update signatures, without Developer ID signing or notarization; the native desktop build and CLI share the same provider/configuration contracts.
 
 ## What It Is
 
@@ -36,6 +36,13 @@ The current architecture has two layers:
 
 Default `smart-search search` stays fast and live. `smart-search deep` is the explicit offline Deep Research planner. It does not call providers, run `doctor`, or fetch pages by default; it emits a `research_plan` that an AI agent or user can execute step by step. `smart-search research` is the live Deep Research executor: it uses the same planner shape, then runs discovery, fetch/read, gap check, and evidence-only synthesis.
 
+### Desktop Setup
+
+1. **Download and open Smart Search.** Choose the package for your system from [Releases](https://github.com/konbakuyomu/smartsearch/releases/latest). The first step on Overview detects npm or accepts a manual npm path, then installs and connects the independent CLI.
+2. **Open Providers.** Add services for the three required jobs: answering searches, finding documentation, and reading pages. The page shows what is still missing and where to obtain each key. Check or test the settings, then save them.
+3. **Open Update Skills.** Once the CLI is connected, read its Skills, select your Agents, and confirm backup and sync. Codex, Claude Code, Cursor and 14 other targets are supported. Install and sign in to the Agent applications yourself.
+4. **Verify the Agent connection.** In a new AI conversation, use the independent CLI invocation supplied by the Skill. First check that the command runs; then try a search.
+
 Intent routing now has its own layer. Instead of letting a model pick providers directly, Smart Search first decides which capabilities are needed, then the existing capability-first provider registry chooses same-capability fallback:
 
 ```text
@@ -46,6 +53,8 @@ user query
  -> merged required_capabilities
  -> provider fallback inside docs_search / web_search / web_fetch / vertical_search
 ```
+
+Version 0.1.24 combines the refreshed native interface with Velopack on Windows and Sparkle on macOS, and publishes the first official framework update feeds. The current development version manages App and CLI updates independently; the CLI maintains connected Skills while preserving personal edits. Existing Inno installations require a one-time full migration. Windows `-signed.exe` packages use a **self-signed certificate** and may still trigger SmartScreen; see [Windows signatures and first launch](docs/windows-signing.md). macOS uses ad-hoc bundle integrity signing and separate Sparkle EdDSA update signatures, without Developer ID signing or notarization. Final GUI and old-install migration acceptance remains separate from automated build and upgrade checks.
 
 `smart-search route "query"` explains this decision without calling search, docs, fetch, or provider APIs. `smart-search deep` keeps the offline planner contract and uses local/rules signals only.
 
@@ -59,6 +68,8 @@ smart-search --version
 smart-search setup
 ```
 
+The new npm CLI requires Node.js 18+ / npm only. Its platform package includes the Python runtime and does not use a user-installed Python. See the [CLI guide](https://github.com/konbakuyomu/smartsearch/blob/main/docs/guide/en/cli.md) for installation, language settings, commands, and examples.
+
 Test channel:
 
 ```powershell
@@ -66,12 +77,7 @@ npm install -g @konbakuyomu/smart-search@next
 smart-search --version
 ```
 
-The npm package creates an isolated Python runtime during install. You still use the single `smart-search` command.
-
-Prerequisites:
-
-- Node.js / npm.
-- Python 3.10 or newer available as `python`, `python3`, or `py -3` on Windows.
+The personal fork must build its platform package from this checkout to include its research extensions. Installing the official published package selects the upstream product instead.
 
 ## Quick Start
 

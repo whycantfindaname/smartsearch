@@ -201,7 +201,7 @@ async def test_backend_blocks_conflicting_mutations_during_setup(tmp_path):
     backend = Backend(lambda *_: None)
     backend.directory, backend.initialized = str(tmp_path), True
     backend.environment.state.update(busy=True, status="installing", can_cancel=False)
-    for method, params in [("cli.update", {"confirm": True}), ("cli.enable", {"confirm": True}), ("updates.installer", {}),
+    for method, params in [("cli.update", {"confirm": True}), ("cli.enable", {"confirm": True}), ("app.update-prepare", {}),
                             ("profile.select", {"config_dir": str(tmp_path / "other")}), ("skills.install", {"targets": ["codex"]}), ("shutdown", {})]:
         with pytest.raises(ValueError, match="环境|安装|准备"):
             await backend.handle(method, params)

@@ -1,6 +1,6 @@
 {
   "name": "@konbakuyomu/smart-search",
-  "version": "0.1.23",
+  "version": "0.1.25",
   "description": "CLI-first multi-source web research with structured Agentic Research workspaces, xAI/OpenAI-compatible search, Exa, Context7, Zhipu, Tavily, Firecrawl, and Deep Research planning.",
   "license": "MIT",
   "homepage": "https://github.com/konbakuyomu/smartsearch#readme",
@@ -15,34 +15,19 @@
     "smart-search": "npm/bin/smart-search.js"
   },
   "files": [
-    "assets/branding/smart-search.png",
-    "assets/branding/README.md",
-    "npm/",
+    "npm/bin/",
     "skills/smart-search-cli/**",
     "!skills/smart-search-cli/bundled-skills/anysearch/.env",
     "!skills/smart-search-cli/**/config.json",
     "!skills/smart-search-cli/**/__pycache__/**",
     "!skills/smart-search-cli/**/*.pyc",
     "!skills/smart-search-cli/**/*.pyo",
-    "src/smart_search/**/*.py",
-    "src/smart_search/assets/research_visualizer/**",
-    "src/smart_search/assets/sidecar/**",
-    "src/smart_search/assets/skills/smart-search-cli/**",
-    "!src/smart_search/assets/skills/smart-search-cli/bundled-skills/anysearch/.env",
-    "!src/smart_search/assets/skills/smart-search-cli/**/config.json",
-    "!src/smart_search/**/__pycache__/**",
-    "!src/smart_search/**/*.pyc",
-    "!src/smart_search/**/*.pyo",
-    "src/smart_search/assets/ui/**",
-    "src/smart_search/assets/i18n/**",
-    "pyproject.toml",
     "README.md",
     "README.zh-CN.md",
     "THIRD_PARTY_NOTICES.md",
     "LICENSE"
   ],
   "scripts": {
-    "postinstall": "node npm/scripts/postinstall.js",
     "test": "node npm/scripts/test.js",
     "set-version": "node npm/scripts/set-package-version.js",
     "sync:python-version": "node npm/scripts/sync-python-version.js",
@@ -57,5 +42,14 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "smartSearchBinary": true,
+  "optionalDependencies": {
+    "@konbakuyomu/smart-search-darwin-x64": "0.1.25",
+    "@konbakuyomu/smart-search-darwin-arm64": "0.1.25",
+    "@konbakuyomu/smart-search-win32-x64": "0.1.25",
+    "@konbakuyomu/smart-search-win32-arm64": "0.1.25",
+    "@konbakuyomu/smart-search-linux-x64": "0.1.25",
+    "@konbakuyomu/smart-search-linux-arm64": "0.1.25"
   }
 }

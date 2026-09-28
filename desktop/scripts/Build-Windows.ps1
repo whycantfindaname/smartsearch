@@ -8,8 +8,7 @@ param(
     [string] $OutputRoot = ".desktop-artifacts",
     [ValidateSet("Auto", "Required", "Skip")]
     [string] $InstallerMode = "Auto",
-    [string] $InnoSetupPath,
-    [switch] $BootstrapInnoSetup,
+    [string] $PreviousReleaseDirectory,
     [ValidateSet("Required", "Skip")]
     [string] $SigningMode = "Skip"
 )
@@ -18,11 +17,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $repositoryRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-. (Join-Path $PSScriptRoot 'Windows-Signing.ps1')
 $signingEnabled = $SigningMode -eq 'Required'
 $signatures = @()
 $signingCertificate = $null
 if ($signingEnabled) {
+    . (Join-Path $PSScriptRoot 'Windows-Signing.ps1')
     $signingCertificate = Get-ExpectedSigningCertificate (Join-Path $PSScriptRoot '../packaging/windows/smart-search.cer')
     Assert-SigningCertificate $signingCertificate $signingCertificate
     $identityPath = "Cert:/CurrentUser/My/$($signingCertificate.Thumbprint)"
@@ -47,15 +46,15 @@ function Resolve-RepositoryPath([string] $Candidate) {
 }
 
 function Get-PythonArchitecture([string] $PythonExecutable) {
-    $reported = [string] (& $PythonExecutable -c "import platform; print(platform.machine())")
+    # The interpreter target controls PyInstaller output, including x64 Python
+    # running under Windows on ARM emulation.
+    $reported = [string] (& $PythonExecutable -c "import sysconfig; print(sysconfig.get_platform())")
     if ($LASTEXITCODE -ne 0) {
         throw "Could not determine the selected Python architecture."
     }
     switch ($reported.Trim().ToLowerInvariant()) {
-        "amd64" { return "x64" }
-        "x86_64" { return "x64" }
-        "arm64" { return "arm64" }
-        "aarch64" { return "arm64" }
+        "win-amd64" { return "x64" }
+        "win-arm64" { return "arm64" }
         default { throw "Unsupported Python architecture for PyInstaller: $reported" }
     }
 }
@@ -79,8 +78,9 @@ function Copy-WindowsProjectSource([string] $SourceDirectory, [string] $Destinat
         throw "Refusing to reuse staged project directory: $DestinationDirectory"
     }
     New-Item -ItemType Directory -Path $DestinationDirectory | Out-Null
+    $sourcePrefix = [System.IO.Path]::GetFullPath($SourceDirectory).TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
     Get-ChildItem -LiteralPath $SourceDirectory -Recurse -File -Force | ForEach-Object {
-        $relativePath = [System.IO.Path]::GetRelativePath($SourceDirectory, $_.FullName)
+        $relativePath = $_.FullName.Substring($sourcePrefix.Length)
         if ($relativePath -match '(^|[\\/])(bin|obj|\.desktop-artifacts)([\\/]|$)') {
             return
         }
@@ -99,24 +99,6 @@ function Get-ProjectVersion([string] $ProjectRoot) {
         throw "Could not read the project version from pyproject.toml."
     }
     return $Matches[1]
-}
-
-function Find-InnoSetup([string] $ExplicitPath) {
-    if ($ExplicitPath) {
-        if (-not (Test-Path -LiteralPath $ExplicitPath -PathType Leaf)) {
-            throw "The requested Inno Setup compiler does not exist: $ExplicitPath"
-        }
-        return [System.IO.Path]::GetFullPath($ExplicitPath)
-    }
-    $command = Get-Command -Name "ISCC.exe" -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($null -ne $command) {
-        return $command.Source
-    }
-    $locations = @(
-        (Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86)) "Inno Setup 6\ISCC.exe"),
-        (Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFiles)) "Inno Setup 6\ISCC.exe")
-    )
-    return $locations | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
 }
 
 $python = Resolve-ExecutablePath $PythonPath
@@ -162,23 +144,16 @@ $desktopExecutable = Join-Path $publishDirectory "SmartSearch.Desktop.exe"
 if (-not (Test-Path -LiteralPath $desktopExecutable -PathType Leaf)) {
     throw "dotnet publish did not create the expected desktop executable: $desktopExecutable"
 }
-foreach ($resource in @("App.xbf", "MainWindow.xbf", "SmartSearch.Desktop.pri", "Assets/smart-search.ico", "Assets/smart-search.png")) {
+foreach ($resource in @("App.xbf", "MainWindow.xbf", "SmartSearch.Desktop.pri", "Assets/smart-search.ico", "Assets/smart-search.png", "Assets/mascot.png")) {
     if (-not (Test-Path -LiteralPath (Join-Path $publishDirectory $resource) -PathType Leaf)) {
         throw "Published Windows app is missing its compiled UI resource: $resource"
     }
 }
-$backendDestination = Join-Path $publishDirectory "backend"
-if (Test-Path -LiteralPath $backendDestination) {
-    throw "Refusing to merge backend files into an existing directory: $backendDestination"
+$standaloneCLI = Join-Path $backendDirectory "smart-search.exe"
+if (Test-Path -LiteralPath (Join-Path $publishDirectory "backend")) {
+    throw 'The native App must not contain a bundled CLI.'
 }
-New-Item -ItemType Directory -Path $backendDestination | Out-Null
-Get-ChildItem -LiteralPath $backendDirectory -Force | Copy-Item -Destination $backendDestination -Recurse
-$bundledBackend = Join-Path $backendDestination "smart-search.exe"
-if (-not (Test-Path -LiteralPath $bundledBackend -PathType Leaf)) {
-    throw "Published Windows app is missing backend\smart-search.exe."
-}
-
-$ownedFiles = @($desktopExecutable, (Join-Path $publishDirectory 'SmartSearch.Desktop.dll'), $bundledBackend)
+$ownedFiles = @($desktopExecutable, (Join-Path $publishDirectory 'SmartSearch.Desktop.dll'), $standaloneCLI)
 $thirdPartyHashes = @{}
 if ($signingEnabled) {
     foreach ($file in Get-ChildItem -LiteralPath $publishDirectory -File -Recurse) {
@@ -195,74 +170,12 @@ $installer = [ordered]@{
     note = "Installer packaging was not requested."
 }
 if ($InstallerMode -ne "Skip") {
-    $iscc = Find-InnoSetup $InnoSetupPath
-    $compilerOrigin = "existing-local-installation"
-    if ($null -eq $iscc -and $BootstrapInnoSetup) {
-        $bootstrapManifest = Join-Path $runDirectory "inno-setup.json"
-        $bootstrapScript = Join-Path $PSScriptRoot "Get-LocalInnoSetup.ps1"
-        & $bootstrapScript -OutputRoot $runDirectory -ResultFile $bootstrapManifest
-        if ($LASTEXITCODE -ne 0) {
-            throw "Local Inno Setup bootstrap failed. Its fresh evidence directory is $runDirectory."
-        }
-        $bootstrap = Get-Content -Raw -LiteralPath $bootstrapManifest | ConvertFrom-Json
-        $iscc = [string] $bootstrap.compiler_path
-        if (-not (Test-Path -LiteralPath $iscc -PathType Leaf)) {
-            throw "Local Inno Setup bootstrap did not provide ISCC.exe."
-        }
-        $compilerOrigin = "official-local-extraction"
-    }
-    if ($null -eq $iscc) {
-        $message = "Inno Setup 6 (ISCC.exe) was not found. No tool was installed; portable publish output remains available at $publishDirectory. Pass -BootstrapInnoSetup to download and locally extract the pinned official compiler inside this build run."
-        if ($InstallerMode -eq "Required") {
-            throw $message
-        }
-        Write-Warning $message
-        $installer = [ordered]@{ status = "not-built"; path = $null; note = $message }
-    }
-    else {
-        $installerDirectory = Join-Path $runDirectory "installer"
-        New-Item -ItemType Directory -Path $installerDirectory | Out-Null
-        $installerScript = Join-Path $repositoryRoot "desktop\packaging\windows\SmartSearch.iss"
-        if (-not (Test-Path -LiteralPath $installerScript -PathType Leaf)) {
-            throw "Inno Setup script is not available: $installerScript"
-        }
-        $version = Get-ProjectVersion $repositoryRoot
-        $allowedArchitectures = if ($Architecture -eq "arm64") { "arm64" } else { "x64compatible" }
-        $innoArguments = @(
-            "/DSourceDir=$publishDirectory",
-            "/DOutputDir=$installerDirectory",
-            "/DMyAppVersion=$version",
-            "/DMyAppArch=$Architecture",
-            "/DAllowedArchitectures=$allowedArchitectures",
-            "/DInstallModeArchitectures=$allowedArchitectures",
-            $installerScript
-        )
-        if ($signingEnabled) {
-            $uninstallerDirectory = Join-Path $runDirectory 'signed-uninstaller'
-            New-Item -ItemType Directory -Path $uninstallerDirectory | Out-Null
-            $signCommand = '/Ssmartsearch=$q{0}$q -NoProfile -File $q{1}$q -UninstallerDirectory $q{2}$q -Path $f' -f (Get-Process -Id $PID).Path, (Join-Path $PSScriptRoot 'Sign-WindowsFile.ps1'), $uninstallerDirectory
-            $innoArguments = @('/DSignedBuild=1', "/DSignedUninstallerDirectory=$uninstallerDirectory", $signCommand) + $innoArguments
-        }
-        & $iscc @innoArguments
-        if ($LASTEXITCODE -ne 0) {
-            throw "Inno Setup compilation failed. Its fresh evidence directory is $runDirectory."
-        }
-        $installerFile = Get-ChildItem -LiteralPath $installerDirectory -File -Filter "*.exe" | Select-Object -First 1
-        if ($null -eq $installerFile) {
-            throw "Inno Setup did not create an installer in $installerDirectory."
-        }
-        $installer = [ordered]@{
-            status = if ($signingEnabled) { 'built-self-signed-package' } else { 'built-unsigned-test-package' }
-            path = $installerFile.FullName
-            note = "Current-user installer only; compiler=$compilerOrigin; it does not modify PATH or remove shared config/results on uninstall."
-        }
-        if ($signingEnabled) {
-            $signatures += Test-WindowsSignature $installerFile.FullName $signingCertificate
-            $uninstallers = @(Get-ChildItem -LiteralPath $uninstallerDirectory -File)
-            if ($uninstallers.Count -ne 1) { throw 'Expected exactly one signed uninstaller generated by this Inno build.' }
-            $signatures += Test-WindowsSignature $uninstallers[0].FullName $signingCertificate
-        }
-    }
+    $packageResult = Join-Path $runDirectory 'package-result.json'
+    & (Join-Path $PSScriptRoot 'Package-Windows.ps1') -PublishDirectory $publishDirectory `
+        -OutputDirectory (Join-Path $runDirectory 'installer') -Version $version -Architecture $Architecture `
+        -SigningMode $SigningMode -PreviousReleaseDirectory $PreviousReleaseDirectory -ResultFile $packageResult
+    $installer = Get-Content -Raw -LiteralPath $packageResult | ConvertFrom-Json
+    $signatures += @($installer.signatures)
 }
 
 if ($signingEnabled) {
@@ -274,7 +187,12 @@ if ($signingEnabled) {
     $signingCertificate.Dispose()
 }
 
+$cliOutput = Join-Path $runDirectory 'installer'
+& $python (Join-Path $PSScriptRoot 'package_cli.py') --bundle $backendDirectory --output $cliOutput --platform windows --architecture $Architecture --version $version
+if ($LASTEXITCODE -ne 0) { throw 'Standalone CLI packaging failed.' }
+
 $result = [ordered]@{
+    version = $version
     run_directory = $runDirectory
     staged_project_directory = $stagedProjectDirectory
     publish_directory = $publishDirectory

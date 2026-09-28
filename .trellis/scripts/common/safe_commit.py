@@ -35,7 +35,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from .git import run_git
+from .git import run_git, run_git_retry_index_lock
 from .paths import (
     DIR_ARCHIVE,
     DIR_TASKS,
@@ -145,12 +145,14 @@ def safe_archive_paths_to_add(
     repo_root: Path,
     task_name: str | None = None,
     modified_children: list[str] | None = None,
+    archived_task_dir: Path | None = None,
 ) -> list[str]:
     """Return paths to stage after `task.py archive`.
 
     Scoped to ONLY the paths the archive operation actually touched:
 
-      - the archive subtree (where the freshly-moved task lives)
+      - the freshly-archived task directory (``archived_task_dir``); only
+        when the caller cannot supply it, the whole archive subtree
       - the source task directory (for source-side deletes; caller pairs
         this with `git rm --cached` since `git add` won't stage deletes
         for a path that no longer exists in the working tree)
@@ -178,7 +180,15 @@ def safe_archive_paths_to_add(
         # `git add` doesn't choke on the moved-away source). The caller
         # handles the source-side deletes via `git rm --cached`
         # explicitly.
-        if archive_dir.is_dir():
+        # Stage only the task that was just archived: the archive root also
+        # holds earlier archived tasks whose unrelated edits must stay
+        # unstaged.
+        if archived_task_dir is not None and archived_task_dir.is_dir():
+            paths.append(
+                f"{DIR_WORKFLOW}/{DIR_TASKS}/{DIR_ARCHIVE}/"
+                f"{archived_task_dir.parent.name}/{archived_task_dir.name}"
+            )
+        elif archive_dir.is_dir():
             paths.append(
                 f"{DIR_WORKFLOW}/{DIR_TASKS}/{DIR_ARCHIVE}"
             )
@@ -208,7 +218,7 @@ def _stderr_indicates_ignored(stderr: str) -> bool:
 
 
 def safe_git_add(
-    paths: list[str], repo_root: Path
+    paths: list[str], repo_root: Path, retry_on_index_lock: bool = False
 ) -> tuple[bool, bool, str]:
     """Run `git add` on specific paths; never retry with -f.
 
@@ -222,11 +232,18 @@ def safe_git_add(
       - Plain fails (any reason — ignored or otherwise) → return failure with
         the stderr. Callers should inspect the stderr (see
         :func:`print_gitignore_warning`) and skip the auto-commit.
+
+    ``retry_on_index_lock`` opts into the bounded backoff-retry for a held
+    ``.git/index.lock`` (see :func:`~.git.run_git_retry_index_lock`). It is
+    off by default: only the archive path, which has already moved the task
+    directory on disk by the time it stages, needs to wait out a transient
+    lock rather than fail.
     """
     if not paths:
         return True, False, ""
 
-    rc, _, err = run_git(["add", "--", *paths], cwd=repo_root)
+    runner = run_git_retry_index_lock if retry_on_index_lock else run_git
+    rc, _, err = runner(["add", "--", *paths], cwd=repo_root)
     if rc == 0:
         return True, False, ""
     return False, False, err

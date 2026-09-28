@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 from pathlib import Path
 from unittest import mock
+
+import pytest
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts/managed_sync.py"
 SPEC = importlib.util.spec_from_file_location("smartsearch_managed_sync", MODULE_PATH)
@@ -186,3 +189,119 @@ def test_missing_helper_requires_handoff(tmp_path: Path, monkeypatch) -> None:
     assert payload["status"] == "handoff_required"
     assert payload["artifacts"] == []
     assert "missing" in payload["reason"]
+
+
+@pytest.mark.parametrize("platform", ["win32", "linux", "darwin"])
+@pytest.mark.parametrize("layout", ["missing", "default", "legacy", "override"])
+def test_live_config_selection_matches_runtime(tmp_path, monkeypatch, platform, layout):
+    from smart_search.config import Config
+
+    home = tmp_path / "home"
+    local = tmp_path / "local"
+    monkeypatch.setattr(Path, "home", lambda: home)
+    monkeypatch.setattr(managed_sync.sys, "platform", platform)
+    monkeypatch.setenv("LOCALAPPDATA", str(local))
+    paths = {
+        "default": local / "smart-search/config.json",
+        "legacy": home / ".config/smart-search/config.json",
+        "override": tmp_path / "override/config.json",
+    }
+    if layout != "missing":
+        path = paths[layout]
+        path.parent.mkdir(parents=True)
+        path.write_text("private-fixture", encoding="utf-8")
+    if layout == "override":
+        monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(paths[layout].parent))
+    expected = Config._resolve_config_dir()[0] / "config.json"
+    with mock.patch.object(Path, "read_text", side_effect=AssertionError("no secret reads")):
+        assert managed_sync._live_config_path() == expected
+
+
+@pytest.mark.parametrize("doctor_exit,search_exit,status,calls", [
+    (0, 0, "live", 2), (1, 0, "failed", 1), (0, 1, "activated", 2),
+])
+def test_live_uses_one_installed_entry(tmp_path, monkeypatch, doctor_exit, search_exit, status, calls):
+    config = tmp_path / "config.json"
+    config.write_text("secret-fixture", encoding="utf-8")
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path))
+    entry = str(tmp_path / "installed-smart-search")
+    with (
+        mock.patch.object(managed_sync.shutil, "which", return_value=entry) as resolve,
+        mock.patch.object(managed_sync.subprocess, "run", side_effect=[
+            subprocess.CompletedProcess([], doctor_exit, "private-provider-output", "secret"),
+            subprocess.CompletedProcess([], search_exit, "private-provider-output", "secret"),
+        ]) as run,
+    ):
+        result = managed_sync.verify_live()
+    assert result["status"] == status
+    assert result["command_entry"] == entry
+    assert resolve.call_count == 1
+    assert run.call_count == calls
+    assert run.call_args_list[0].args[0] == [entry, "doctor", "--format", "json"]
+    if calls == 2:
+        assert run.call_args_list[1].args[0] == [
+            entry, "search", "RFC 9110 HTTP Semantics", "--format", "json",
+            "--validation", "fast", "--fallback", "off", "--max-try", "1", "--timeout", "90",
+        ]
+    assert "secret" not in json.dumps(result)
+    assert "private-provider-output" not in json.dumps(result)
+
+
+def test_live_missing_installed_entry_does_not_probe(tmp_path, monkeypatch):
+    (tmp_path / "config.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path))
+    with (
+        mock.patch.object(managed_sync.shutil, "which", return_value=None),
+        mock.patch.object(managed_sync.subprocess, "run") as run,
+    ):
+        result = managed_sync.verify_live()
+    assert result["status"] == "blocked"
+    assert result["errors"] == ["SS_VERIFY_EXTERNAL_GATE_MISSING"]
+    run.assert_not_called()
+
+
+def test_live_missing_config_does_not_probe(tmp_path, monkeypatch):
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path))
+    with mock.patch.object(managed_sync.subprocess, "run") as run:
+        result = managed_sync.verify_live()
+    assert result["status"] == "blocked"
+    assert result["config_present"] is False
+    run.assert_not_called()
+
+
+@pytest.mark.parametrize("doctor_passes,status,calls", [(False, "failed", 1), (True, "activated", 2)])
+def test_live_timeout_does_not_retry(tmp_path, monkeypatch, doctor_passes, status, calls):
+    (tmp_path / "config.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path))
+    responses = [subprocess.CompletedProcess([], 0)] if doctor_passes else []
+    responses.append(subprocess.TimeoutExpired("private-provider-output", 1))
+    with (
+        mock.patch.object(managed_sync.shutil, "which", return_value="installed-command"),
+        mock.patch.object(managed_sync.subprocess, "run", side_effect=responses) as run,
+    ):
+        result = managed_sync.verify_live()
+    assert result["status"] == status
+    assert run.call_count == calls
+    assert "private-provider-output" not in json.dumps(result)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows npm command shim")
+def test_live_windows_cmd_entry_with_spaces(tmp_path, monkeypatch):
+    directory = tmp_path / "native prefix & fixture"
+    directory.mkdir()
+    command = directory / "smart-search.cmd"
+    command.write_text(
+        '@echo off\n'
+        'if "%~1"=="doctor" if "%~2"=="--format" if "%~3"=="json" '
+        '(echo private-provider-output & exit /b 0)\n'
+        'if "%~1"=="search" if "%~2"=="RFC 9110 HTTP Semantics" '
+        '(echo private-provider-output & exit /b 0)\n'
+        'exit /b 9\n', encoding="utf-8",
+    )
+    (tmp_path / "config.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("SMART_SEARCH_CONFIG_DIR", str(tmp_path))
+    monkeypatch.setenv("PATH", str(directory))
+    result = managed_sync.verify_live()
+    assert result["status"] == "live", result
+    assert Path(result["command_entry"]) == command
+    assert "private-provider-output" not in json.dumps(result)

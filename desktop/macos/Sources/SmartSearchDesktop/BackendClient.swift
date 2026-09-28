@@ -12,11 +12,11 @@ enum BackendClientError: LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case let .backendNotFound(path):
-            return L("找不到内置后端：{0}。开发环境请在设置中明确选择后端文件。", "\(path)")
+            return L("找不到所选 CLI：{0}。请打开概览的本地环境，重新检测或选择已有 CLI。", path)
         case .notConnected:
             return L("后端尚未连接。")
         case .incompatibleProtocol:
-            return L("App 与内置后端的协议版本不兼容，未执行任何写入。")
+            return L("App 与所选 CLI 的协议不兼容，请更新 CLI 或 App。")
         case .timedOut:
             return L("后端未在设定时间内响应。")
         case .disconnected:
@@ -56,6 +56,8 @@ actor BackendClient {
     private var processToken: UUID?
     private var generation: String?
     private var stdoutBuffer = Data()
+    private var outputTask: Task<Void, Never>?
+    private var outputContinuation: AsyncStream<Data>.Continuation?
     private var nextID = 1
     private var timeoutSeconds: TimeInterval = 30
     private var pending: [Int: PendingRequest] = [:]
@@ -78,7 +80,7 @@ actor BackendClient {
         timeoutSeconds = min(max(seconds, 5), 300)
     }
 
-    func start(backendURL: URL) async throws {
+    func start(backendURL: URL, arguments: [String] = [], environment: [String: String] = [:]) async throws {
         await shutdown()
         guard FileManager.default.isExecutableFile(atPath: backendURL.path) else {
             throw BackendClientError.backendNotFound(backendURL.path)
@@ -89,7 +91,8 @@ actor BackendClient {
         let error = Pipe()
         let newProcess = Process()
         newProcess.executableURL = backendURL
-        newProcess.arguments = ["--desktop-backend"]
+        newProcess.arguments = arguments + ["--desktop-backend"]
+        newProcess.environment = ProcessInfo.processInfo.environment.merging(environment) { _, value in value }
         newProcess.standardInput = input
         newProcess.standardOutput = output
         newProcess.standardError = error
@@ -115,10 +118,25 @@ actor BackendClient {
         stdoutBuffer.removeAll(keepingCapacity: true)
         nextID = 1
 
-        output.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            let data = handle.availableData
-            guard !data.isEmpty else { return }
-            Task { await self?.consumeStdout(data, token: token) }
+        // Pipe callbacks arrive in order; separate Tasks do not. Feed one
+        // consumer so a large JSON response cannot have its chunks reordered.
+        let chunks = AsyncStream<Data> { continuation in
+            outputContinuation = continuation
+            output.fileHandleForReading.readabilityHandler = { handle in
+                let data = handle.availableData
+                if data.isEmpty {
+                    handle.readabilityHandler = nil
+                    continuation.finish()
+                } else {
+                    continuation.yield(data)
+                }
+            }
+        }
+        outputTask = Task { [weak self] in
+            for await data in chunks {
+                guard !Task.isCancelled else { break }
+                await self?.consumeStdout(data, token: token)
+            }
         }
         // stderr can contain diagnostics but must not become protocol or UI content.
         error.fileHandleForReading.readabilityHandler = { handle in
@@ -126,10 +144,11 @@ actor BackendClient {
         }
     }
 
-    func initialize(configDirectory: String? = nil, enableUpdateChecks: Bool = true, language: String = "auto") async throws -> JSONValue {
+    func initialize(configDirectory: String? = nil, enableUpdateChecks: Bool = true, language: String = "auto", independentCLI: Bool = false) async throws -> JSONValue {
         var params: [String: JSONValue] = ["protocol_version": .number(Double(Self.protocolVersion)),
             "app_version": .string(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "development"),
-            "enable_update_checks": .bool(enableUpdateChecks), "lang": .string(language)]
+            "enable_update_checks": .bool(enableUpdateChecks), "lang": .string(language),
+            "include_config_secrets": .bool(true), "independent_cli": .bool(independentCLI)]
         if let configDirectory, !configDirectory.isEmpty {
             params["config_dir"] = .string(configDirectory)
         }
@@ -166,7 +185,9 @@ actor BackendClient {
             pending[id] = PendingRequest(token: token, continuation: continuation)
             let requestTimeout = timeout ?? timeoutSeconds
             timeoutTasks[id] = Task { [weak self] in
-                try? await Task.sleep(nanoseconds: UInt64(requestTimeout * 1_000_000_000))
+                do {
+                    try await Task.sleep(nanoseconds: UInt64(requestTimeout * 1_000_000_000))
+                } catch { return }
                 await self?.expireRequest(id, token: token)
             }
             inputHandle.write(line)
@@ -277,6 +298,10 @@ actor BackendClient {
         inputHandle?.closeFile()
         outputHandle?.readabilityHandler = nil
         errorHandle?.readabilityHandler = nil
+        outputContinuation?.finish()
+        outputContinuation = nil
+        outputTask?.cancel()
+        outputTask = nil
         outputHandle = nil
         errorHandle = nil
     }
@@ -293,11 +318,6 @@ enum BackendLocator {
         if let overridePath, !overridePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return URL(fileURLWithPath: overridePath)
         }
-        guard let resources = Bundle.main.resourceURL else {
-            throw BackendClientError.backendNotFound("Contents/Resources/backend/smart-search")
-        }
-        return resources
-            .appendingPathComponent("backend", isDirectory: true)
-            .appendingPathComponent("smart-search", isDirectory: false)
+        throw BackendClientError.backendNotFound(L("尚未选择 CLI"))
     }
 }

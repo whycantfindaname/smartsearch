@@ -43,10 +43,23 @@ gate）继续由本仓库自己的 CI/Trellis 运行。只有直接证明 Smart 
 
 从 Smart Search authority branch 的干净、已提交工作树开始：
 
+0.1.25 使用 wrapper 与本平台 native npm 包。先在项目构建 Python 环境安装本 checkout
+和 `pyinstaller==6.22.3`，再准备本次来源的产物；不得拿官方二进制替代个人 fork：
+
+```bash
+python3 -m pip install . "pyinstaller==6.22.3"
+python3 desktop/scripts/build_backend.py --smoke --result-file .desktop-artifacts/npm-backend.json
+python3 desktop/scripts/package_npm_cli.py --manifest .desktop-artifacts/npm-backend.json --output .desktop-artifacts/npm-platform
+```
+
+构建目录是忽略的本地准备产物；每次来源变化重新构建并使用新的输出目录，交付门禁
+消费 `.desktop-artifacts/npm-platform`。Windows 使用当前项目 Python 的原生路径。
+已有目录不得覆盖；由 owner 保存旧产物并准备新的目录。缺少产物时门禁明确失败。
+
 ```bash
 python3 scripts/managed_sync.py inspect
 npm run --silent check:skill-parity
-npm run --silent smoke:tarball
+npm run --silent smoke:tarball -- .desktop-artifacts/npm-platform
 ```
 
 等价的 Infra 入口是：
@@ -61,8 +74,9 @@ agent-infra sync project smartsearch \
 1. `inspect` 确认当前分支是 `lwj_dev`、工作树 clean，并比较源码 Skill 与打包镜像。
 2. `check:skill-parity` 逐文件确认 `skills/smart-search-cli/` 与
    `src/smart_search/assets/skills/smart-search-cli/` 相同，忽略明确的机器本地文件。
-3. `smoke:tarball` 在临时前缀打包并安装 npm tarball，验证版本、公开 modes、regression、
-   mock smoke 和 OpenCode Skill 安装；临时目录不属于仓库变更。
+3. `smoke:tarball` 在临时前缀离线安装 wrapper 和本平台 native tarball，验证版本、
+   公开 modes、研究资源、regression、mock smoke、OpenCode Skill 和桌面协议，
+   同时验证不依赖 PATH 中的 Python；临时目录不属于仓库变更。
 
 任一门禁失败即停止本项目交付，不进入下游传播。完整普通测试仍按项目
 `.trellis/spec/backend/quality-guidelines.md` 运行，不由本合同替代。
@@ -100,6 +114,12 @@ agent-infra sync verify smartsearch \
 合同命令只记录配置是否存在与探针结果，不读取或写出密钥。一次验收最多一次 doctor/
 恢复探针；doctor 成功不等于 live，固定搜索成功才报告 `live`，doctor 成功而搜索
 失败只能报告 `activated`/diagnostic-ready。
+
+验收从当前 PATH 一次解析已安装的 `smart-search`（Windows 为 `smart-search.cmd`），
+两个探针使用同一入口，并在回执的 `command_entry` 中记录路径；不从源码目录启动
+wrapper 或 Python。配置存在性门禁遵循 `SMART_SEARCH_CONFIG_DIR`、Windows
+`LOCALAPPDATA/smart-search` 及旧 HOME 路径回退规则，其他平台使用
+`~/.config/smart-search`；门禁不读取配置内容。
 
 ## 恢复
 

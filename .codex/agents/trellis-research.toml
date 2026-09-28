@@ -85,5 +85,8 @@ through CLI, SDK, or other agents. For another role or changed scope, return
 NEEDS_DELEGATION to the main session.
 """
 
+[features]
+multi_agent_v2 = false
+
 [agents]
 enabled = false

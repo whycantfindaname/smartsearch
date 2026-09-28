@@ -748,6 +748,17 @@ def _tavily_disabled_message() -> str:
     return source_message('Tavily is disabled by TAVILY_ENABLED=false. No Tavily network request was made.')
 
 
+def _provider_disabled_result(provider: str) -> dict[str, Any] | None:
+    if config.provider_enabled(provider):
+        return None
+    message = _tavily_disabled_message() if provider == "tavily" else source_message(
+        'Provider {0} is disabled by {1}=false. No network request was made.',
+        provider, config.provider_enabled_key(provider),
+    )
+    return {"ok": False, "provider": provider, "disabled": True, "status": "disabled",
+            "error_type": "config_error", "error": message, "message": message}
+
+
 PROVIDER_CREDENTIAL_SOURCES: dict[str, Any] = {
     "xai-responses": lambda: (config.xai_api_key, config.xai_api_url),
     "openai-compatible": lambda: (config.openai_compatible_api_key, config.openai_compatible_api_url),
@@ -1280,7 +1291,9 @@ def _fallback_used(attempts: list[dict]) -> bool:
 
 
 def provider_profiles() -> dict[str, dict[str, Any]]:
-    return {provider: dict(profile) for provider, profile in PROVIDER_PROFILES.items()}
+    return {provider: {**profile, "enabled": config.provider_enabled(provider),
+                       "enabled_key": config.provider_enabled_key(provider)}
+            for provider, profile in PROVIDER_PROFILES.items()}
 
 
 def intent_router_status() -> dict[str, Any]:
@@ -1307,6 +1320,8 @@ def _provider_supports_capability(provider: str, capability: str) -> bool:
 
 
 def _provider_configured(provider: str) -> bool:
+    if not config.provider_enabled(provider):
+        return False
     if provider == "xai-responses":
         return bool(config.xai_api_key)
     if provider == "openai-compatible":
@@ -1334,7 +1349,7 @@ def _provider_configured(provider: str) -> bool:
     if provider == "sciverse":
         return bool(config.sciverse_api_token)
     if provider == "main-search":
-        return bool(config.xai_api_key or (config.openai_compatible_api_url and config.openai_compatible_api_key))
+        return any(_provider_configured(item) for item in MAIN_SEARCH_FALLBACK_CHAIN)
     return False
 
 
@@ -1344,7 +1359,7 @@ def _configured_for_capability(capability: str, capability_status: dict[str, Any
         return [
             provider
             for provider in RESEARCH_PROFILE_ORDER.get(capability, [])
-            if provider in configured and _provider_supports_capability(provider, capability)
+            if provider in configured and config.provider_enabled(provider) and _provider_supports_capability(provider, capability)
         ]
     return [provider for provider in RESEARCH_PROFILE_ORDER.get(capability, []) if _provider_configured(provider)]
 
@@ -1366,7 +1381,7 @@ def _apply_research_overrides(capability: str, providers: list[str]) -> list[str
     allowed = [
         provider
         for provider in providers
-        if provider not in disabled and _provider_supports_capability(provider, capability)
+        if provider not in disabled and config.provider_enabled(provider) and _provider_supports_capability(provider, capability)
     ]
     ordered = [
         provider
@@ -2417,7 +2432,7 @@ def get_capability_status() -> dict[str, Any]:
             "configured": [
                 name
                 for name, enabled in [
-                    ("sciverse", bool(config.sciverse_api_token)),
+                    ("sciverse", _provider_configured("sciverse")),
                 ]
                 if enabled
             ],
@@ -2525,21 +2540,14 @@ def _provider_allowed(provider_id: str, provider_filter: set[str] | None) -> boo
 
 
 def _configured_main_search_provider_ids() -> list[str]:
-    configured: set[str] = set()
-
-    if config.xai_api_key:
-        configured.add("xai-responses")
-    if config.openai_compatible_api_url and config.openai_compatible_api_key:
-        configured.add("openai-compatible")
-
-    return [provider for provider in MAIN_SEARCH_FALLBACK_CHAIN if provider in configured]
+    return [provider for provider in MAIN_SEARCH_FALLBACK_CHAIN if _provider_configured(provider)]
 
 
 def _main_search_provider_configs(model_override: str = "", providers: str = "auto") -> list[dict[str, Any]]:
     provider_filter = _parse_provider_filter(providers)
     by_provider: dict[str, dict[str, Any]] = {}
 
-    if config.xai_api_key:
+    if _provider_configured("xai-responses"):
         by_provider["xai-responses"] = {
             "provider": "xai-responses",
             "mode": "xai-responses",
@@ -2550,7 +2558,7 @@ def _main_search_provider_configs(model_override: str = "", providers: str = "au
             "source": "XAI_*",
         }
 
-    if config.openai_compatible_api_url and config.openai_compatible_api_key:
+    if _provider_configured("openai-compatible"):
         by_provider["openai-compatible"] = {
             "provider": "openai-compatible",
             "mode": config.openai_compatible_api_mode,
@@ -2913,7 +2921,9 @@ async def _run_vertical_search_fallback(
 ) -> tuple[list[dict], list[dict]]:
     provider_filter = _parse_provider_filter(providers)
     attempts: list[dict] = []
-    configured = ["anysearch"] if config.anysearch_api_key else []
+    configured: list[str] = []
+    if _provider_configured("anysearch"):
+        configured.append("anysearch")
     if provider_filter is not None:
         configured = [provider for provider in configured if provider in provider_filter]
     if fallback == "off":
@@ -3045,6 +3055,8 @@ async def call_tavily_search(query: str, max_results: int = 6) -> list[dict] | N
 
 
 async def call_firecrawl_search(query: str, limit: int = 14) -> list[dict] | None:
+    if not config.provider_enabled("firecrawl"):
+        return None
     api_key = config.firecrawl_api_key
     if not api_key:
         return None
@@ -3082,6 +3094,8 @@ async def call_firecrawl_search(query: str, limit: int = 14) -> list[dict] | Non
 
 
 async def call_firecrawl_scrape(url: str, ctx=None) -> str | None:
+    if not config.provider_enabled("firecrawl"):
+        return None
     api_key = config.firecrawl_api_key
     if not api_key:
         return None
@@ -3122,6 +3136,8 @@ async def call_tinyfish_search(query: str, max_results: int = 6) -> list[dict] |
     A provider-side failure raises so the shared web_search boundary records the
     attempt and falls through to the next configured provider.
     """
+    if not config.provider_enabled("tinyfish"):
+        return None
     api_key = config.tinyfish_api_key
     if not api_key:
         return None
@@ -3146,6 +3162,8 @@ async def call_tinyfish_search(query: str, max_results: int = 6) -> list[dict] |
 
 
 async def call_tinyfish_fetch(url: str) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("tinyfish"):
+        return disabled
     api_key = config.tinyfish_api_key
     if not api_key:
         return {
@@ -3166,6 +3184,8 @@ async def call_tinyfish_fetch(url: str) -> dict[str, Any]:
 
 
 async def call_jina_reader(url: str) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("jina"):
+        return disabled
     raw = await JinaReaderProvider(
         config.jina_reader_api_url,
         config.jina_api_key,
@@ -4394,6 +4414,8 @@ async def exa_search(
     exclude_domains: str | list[str] | tuple[str, ...] = "",
     category: str = "",
 ) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("exa"):
+        return disabled
     api_key = config.exa_api_key
     if not api_key:
         return {
@@ -4458,6 +4480,8 @@ def _anysearch_provider() -> AnySearchProvider:
 
 
 async def anysearch_domains(domain: str = "") -> dict[str, Any]:
+    if disabled := _provider_disabled_result("anysearch"):
+        return disabled
     return await _decode_provider_json(await _anysearch_provider().get_sub_domains(domain))
 
 
@@ -4468,6 +4492,8 @@ async def anysearch_search(
     max_results: int = 5,
     sub_domain_params: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("anysearch"):
+        return disabled
     return await _decode_provider_json(
         await _anysearch_provider().vertical_search(
             query=query,
@@ -4480,10 +4506,14 @@ async def anysearch_search(
 
 
 async def anysearch_extract(url: str, max_length: int = 20000) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("anysearch"):
+        return disabled
     return await _decode_provider_json(await _anysearch_provider().extract(url, max_length=max_length))
 
 
 async def anysearch_batch(queries: list[str], max_results: int = 3) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("anysearch"):
+        return disabled
     return await _decode_provider_json(await _anysearch_provider().batch_search(queries, max_results=max_results))
 
 
@@ -4492,6 +4522,8 @@ async def sciverse_catalog(
     include_sample_values: bool = False,
     include_field_stats: bool = False,
 ) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("sciverse"):
+        return disabled
     try:
         params = normalize_sciverse_catalog_params(
             collection=collection,
@@ -4526,6 +4558,8 @@ async def sciverse_search(
     page: int = 1,
     page_size: int = 10,
 ) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("sciverse"):
+        return disabled
     try:
         payload = build_sciverse_meta_search_payload(
             query=query,
@@ -4560,6 +4594,8 @@ async def sciverse_semantic(
     *,
     mode: str | None = None,
 ) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("sciverse"):
+        return disabled
     legacy_mode = mode
     if legacy_mode is None and isinstance(retrieval, str) and retrieval.strip().lower() in {"fast", "balanced", "quality"}:
         legacy_mode = retrieval
@@ -4584,6 +4620,8 @@ async def sciverse_semantic(
 
 
 async def sciverse_read(doc_id: str, offset: int = 0, limit: int = 4096) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("sciverse"):
+        return disabled
     return await _decode_provider_json(
         await _sciverse_provider().read_content(doc_id=doc_id, offset=offset, limit=limit),
         provider="sciverse",
@@ -4596,6 +4634,8 @@ async def sciverse_relations(
     page: int = 1,
     page_size: int = 25,
 ) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("sciverse"):
+        return disabled
     try:
         payload = normalize_sciverse_relations_payload(
             unique_id=unique_id,
@@ -4646,26 +4686,38 @@ async def jina_fetch(url: str) -> dict[str, Any]:
 
 
 async def zhipu_mcp_search(query: str, count: int = 5) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("zhipu-mcp"):
+        return disabled
     return await _decode_provider_json(await _zhipu_mcp_search_provider().web_search(query, count=count), provider="zhipu-mcp")
 
 
 async def zhipu_mcp_reader(url: str) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("zhipu-mcp-reader"):
+        return disabled
     return await _decode_provider_json(await _zhipu_mcp_reader_provider().web_reader(url), provider="zhipu-mcp-reader")
 
 
 async def zhipu_mcp_search_doc(repo: str, query: str, max_results: int = 5) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("zhipu-mcp-zread"):
+        return disabled
     return await _decode_provider_json(await _zhipu_mcp_zread_provider().search_doc(repo, query, max_results=max_results), provider="zhipu-mcp-zread")
 
 
 async def zhipu_mcp_repo_structure(repo: str, ref: str = "") -> dict[str, Any]:
+    if disabled := _provider_disabled_result("zhipu-mcp-zread"):
+        return disabled
     return await _decode_provider_json(await _zhipu_mcp_zread_provider().get_repo_structure(repo, ref=ref), provider="zhipu-mcp-zread")
 
 
 async def zhipu_mcp_read_file(repo: str, path: str, ref: str = "") -> dict[str, Any]:
+    if disabled := _provider_disabled_result("zhipu-mcp-zread"):
+        return disabled
     return await _decode_provider_json(await _zhipu_mcp_zread_provider().read_file(repo, path, ref=ref), provider="zhipu-mcp-zread")
 
 
 async def exa_find_similar(url: str, num_results: int = 5) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("exa"):
+        return disabled
     api_key = config.exa_api_key
     if not api_key:
         return {
@@ -4694,6 +4746,8 @@ async def zhipu_search(
     search_domain_filter: str = "",
     content_size: str = "medium",
 ) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("zhipu"):
+        return disabled
     api_key = config.zhipu_api_key
     if not api_key:
         return {
@@ -4726,6 +4780,8 @@ async def zhipu_search(
 
 
 async def context7_library(name: str, query: str = "") -> dict[str, Any]:
+    if disabled := _provider_disabled_result("context7"):
+        return disabled
     api_key = config.context7_api_key
     if not api_key:
         return {
@@ -4746,6 +4802,8 @@ async def context7_library(name: str, query: str = "") -> dict[str, Any]:
 
 
 async def context7_docs(library_id: str, query: str) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("context7"):
+        return disabled
     api_key = config.context7_api_key
     if not api_key:
         return {
@@ -4984,6 +5042,8 @@ async def _probe_openai_compatible_search_shape(
 
 
 async def diagnose_openai_compatible(timeout_seconds: float = 30.0) -> dict[str, Any]:
+    if disabled := _provider_disabled_result("openai-compatible"):
+        return disabled
     start = time.time()
     api_url = config.openai_compatible_api_url
     api_key = config.openai_compatible_api_key
@@ -5255,6 +5315,8 @@ async def _safe_test_main_provider_connection(provider_config: dict[str, Any]) -
 
 
 async def _test_exa_connection() -> dict[str, Any]:
+    if disabled := _provider_disabled_result("exa"):
+        return disabled
     exa_key = config.exa_api_key
     if not exa_key:
         return {"status": "not_configured", "message": source_message('EXA_API_KEY 未设置，Exa 搜索功能不可用')}
@@ -5300,6 +5362,8 @@ async def _test_tavily_connection() -> dict[str, Any]:
 
 
 async def _test_jina_connection() -> dict[str, Any]:
+    if disabled := _provider_disabled_result("jina"):
+        return disabled
     if config.jina_respond_with and not config.jina_api_key:
         return {"status": "config_error", "message": source_message('JINA_RESPOND_WITH requires JINA_API_KEY')}
     if not config.jina_api_key:
@@ -5366,6 +5430,8 @@ async def _test_firecrawl_connection() -> dict[str, Any]:
 
 
 async def _test_zhipu_connection() -> dict[str, Any]:
+    if disabled := _provider_disabled_result("zhipu"):
+        return disabled
     if not config.zhipu_api_key:
         return {"status": "not_configured", "message": source_message('ZHIPU_API_KEY 未设置，智谱搜索功能不可用')}
     result = await zhipu_search("test", count=1)
@@ -5375,6 +5441,8 @@ async def _test_zhipu_connection() -> dict[str, Any]:
 
 
 async def _test_zhipu_mcp_connection() -> dict[str, Any]:
+    if disabled := _provider_disabled_result("zhipu-mcp"):
+        return disabled
     if not config.zhipu_mcp_api_key:
         return {"status": "not_configured", "message": source_message('ZHIPU_MCP_API_KEY 未设置，智谱 Coding Plan MCP 功能不可用')}
     result = await zhipu_mcp_search("test", count=1)
@@ -5386,6 +5454,8 @@ async def _test_zhipu_mcp_connection() -> dict[str, Any]:
 
 
 async def _test_context7_connection() -> dict[str, Any]:
+    if disabled := _provider_disabled_result("context7"):
+        return disabled
     if not config.context7_api_key:
         return {"status": "not_configured", "message": source_message('CONTEXT7_API_KEY 未设置，Context7 功能不可用')}
     result = await context7_library("react", "hooks")
@@ -5396,6 +5466,8 @@ async def _test_context7_connection() -> dict[str, Any]:
 
 async def _test_anysearch_connection() -> dict[str, Any]:
     """Probe AnySearch with a domain listing, which costs no search quota."""
+    if disabled := _provider_disabled_result("anysearch"):
+        return disabled
     if not config.anysearch_api_key:
         return {"status": "not_configured", "message": source_message('ANYSEARCH_API_KEY 未设置，AnySearch 垂直搜索不可用')}
     start = time.time()
@@ -5410,6 +5482,8 @@ async def _test_anysearch_connection() -> dict[str, Any]:
 
 async def _test_sciverse_connection() -> dict[str, Any]:
     """Probe Sciverse with a catalog listing, which costs no search quota."""
+    if disabled := _provider_disabled_result("sciverse"):
+        return disabled
     if not config.sciverse_api_token:
         return {"status": "not_configured", "message": source_message('SCIVERSE_API_TOKEN 未设置，Sciverse 学术检索不可用')}
     start = time.time()
@@ -5428,12 +5502,16 @@ async def _test_firecrawl_presence() -> dict[str, Any]:
     Reported as `probe: presence` so callers can render "key present, unverified"
     instead of a green tick they have not earned.
     """
+    if disabled := _provider_disabled_result("firecrawl"):
+        return disabled
     if not config.firecrawl_api_key:
         return {"status": "not_configured", "message": source_message('FIRECRAWL_API_KEY 未设置，Firecrawl 功能不可用')}
     return {"status": "configured", "message": source_message('FIRECRAWL_API_KEY 已配置（未发起真实请求验证）')}
 
 
 async def _test_tinyfish_connection() -> dict[str, Any]:
+    if disabled := _provider_disabled_result("tinyfish"):
+        return disabled
     if not config.tinyfish_api_key:
         return {"status": "not_configured", "message": source_message('TINYFISH_API_KEY 未设置，TinyFish 功能不可用')}
     start = time.time()
@@ -5570,6 +5648,8 @@ async def test_provider_connection(
             "error": message,
             "known_providers": sorted({*PROBE_KIND, *EXTERNAL_PROBE_KIND}),
         }
+    if disabled := _provider_disabled_result(provider):
+        return {**disabled, "response_time_ms": 0, "probe": "none", "recorded_as": ""}
     if record_health is None:
         record_health = not overrides
     ceiling = timeout_seconds if timeout_seconds and timeout_seconds > 0 else PROBE_TIMEOUT_CEILING

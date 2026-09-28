@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -202,6 +203,21 @@ def downstream_handoff() -> dict:
 SEARCH_QUERY = "RFC 9110 HTTP Semantics"
 
 
+def _live_config_path() -> Path:
+    # Match Config._resolve_config_dir without importing its runtime dependencies
+    # or reading private configuration into this standalone delivery script.
+    override = os.environ.get("SMART_SEARCH_CONFIG_DIR")
+    if override:
+        return Path(override).expanduser() / "config.json"
+    legacy = Path.home() / ".config" / "smart-search" / "config.json"
+    if sys.platform.startswith("win") and os.environ.get("LOCALAPPDATA"):
+        default = Path(os.environ["LOCALAPPDATA"]).expanduser() / "smart-search" / "config.json"
+        if not default.exists() and legacy.exists():
+            return legacy
+        return default
+    return legacy
+
+
 def verify_live() -> dict:
     """Gate-aware live verification: config gate, one doctor probe, one real search.
 
@@ -210,14 +226,13 @@ def verify_live() -> dict:
     succeed against the real provider path.  If doctor passes but the search
     fails, the result is ``activated`` (diagnostic_ready), never ``live``.
 
-    Both probes use the npm bin wrapper (node npm/bin/smart-search.js), which
-    owns the project Python runtime and repairs it when missing.  The raw
-    ``python -m smart_search`` module is not installed system-wide, so it is
-    never invoked directly.  Probe outputs are discarded: only exit codes and
+    Both probes use the installed command resolved once from native PATH, not
+    the source checkout's wrapper or Python runtime. Probe outputs are
+    discarded: only the command entry, exit codes and
     the fixed query enter the receipt, so no provider response content or
     secret value can leak.
     """
-    config_path = Path.home() / ".config" / "smart-search" / "config.json"
+    config_path = _live_config_path()
     result = {
         "schema": "jason-smartsearch.managed-sync-live-verify.v1",
         "project_id": "smartsearch",
@@ -231,14 +246,17 @@ def verify_live() -> dict:
         result["status"] = "blocked"
         return result
     # Single recovery/doctor probe maximum; failures are surfaced, not retried.
-    wrapper = REPO_ROOT / "npm" / "bin" / "smart-search.js"
-    if not wrapper.is_file():
+    command = shutil.which("smart-search")
+    if command:
+        command = os.path.abspath(command)
+    result["command_entry"] = command
+    if not command:
         result["errors"].append("SS_VERIFY_EXTERNAL_GATE_MISSING")
         result["status"] = "blocked"
         return result
     try:
         proc = subprocess.run(
-            ["node", str(wrapper), "doctor", "--format", "json"],
+            [command, "doctor", "--format", "json"],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
@@ -262,7 +280,7 @@ def verify_live() -> dict:
     try:
         search = subprocess.run(
             [
-                "node", str(wrapper), "search", SEARCH_QUERY,
+                command, "search", SEARCH_QUERY,
                 "--format", "json",
                 "--validation", "fast",
                 "--fallback", "off",

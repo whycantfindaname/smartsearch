@@ -3797,6 +3797,11 @@ def _run_skills(args: argparse.Namespace) -> int:
             data = {"ok": False, "error_type": "runtime_error", "error": str(e), "selected": target_ids}
         return _print_result("skills", data, args.format, args.output)
 
+    if args.skills_command == "remove":
+        from .skill_maintenance import remove
+        data = remove(target_ids, home=args.skills_root or None, env={} if args.skills_root else None)
+        return _print_result("skills", data, args.format, args.output)
+
     data = {"ok": False, "error_type": "parameter_error", "error": tr('Unknown skills command'), "selected": target_ids}
     return _print_result("skills", data, args.format, args.output)
 
@@ -4017,6 +4022,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     modes_parser.set_defaults(command="modes")
     _add_format_args(modes_parser)
+
+    guide = sub.add_parser("agent-guide", help="Read the current CLI instructions for Agents.")
+    guide.add_argument("section", nargs="?", default="SKILL.md")
 
     search_parser = sub.add_parser(
         "search", aliases=COMMAND_ALIASES["search"], help="Run OpenAI-compatible web search."
@@ -4529,6 +4537,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Advanced synthetic home-directory override for portable or test installs; defaults to the current user's home directory.",
     )
     _add_format_args(skills_update)
+    skills_remove = skills_sub.add_parser("remove", help="Remove selected Skills, keeping a backup of their files.")
+    skills_remove.set_defaults(skills_command="remove")
+    skills_remove.add_argument("--targets", default=",".join(DEFAULT_SKILL_TARGET_IDS))
+    skills_remove.add_argument("--all", action="store_true")
+    skills_remove.add_argument("--skills-root", default="")
+    _add_format_args(skills_remove)
 
     providers_parser = sub.add_parser(
         "providers",
@@ -4768,8 +4782,12 @@ def _main(argv: list[str] | None = None) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments == ["--desktop-backend"]:
+        from .desktop_backend import main as desktop_main
+        return desktop_main()
     if arguments == ["--desktop-capabilities"]:
-        print(json.dumps({"version": _get_version(), "activity_protocol_version": 1}))
+        print(json.dumps({"product": "smart-search", "version": _get_version(), "activity_protocol_version": 1,
+                          "desktop_protocol_version": 1, "skills_protocol_version": 1}))
         return EXIT_OK
     try:
         arguments, language, warning = _command_language(arguments)
@@ -4778,8 +4796,25 @@ def main(argv: list[str] | None = None) -> int:
             _write_stderr(render_messages(tr(str(error))) + "\n")
         return EXIT_PARAMETER_ERROR
     with use_language(language):
+        if arguments[:1] == ["agent-guide"] and not any(arg in {"--help", "-h"} for arg in arguments):
+            from .skill_maintenance import maintain
+            with contextlib.suppress(OSError, ValueError):
+                maintain()
+            from .skill_installer import _load_skill_files
+            files = dict(_load_skill_files())
+            section = arguments[1] if len(arguments) == 2 else "SKILL.md"
+            if len(arguments) > 2 or section not in files or not section.endswith(".md"):
+                _write_stderr("Usage: smart-search agent-guide [" + " | ".join(name for name in files if name.endswith(".md")) + "]\n")
+                return EXIT_PARAMETER_ERROR
+            print(files[section].decode("utf-8"))
+            print("\nRead a referenced document with: smart-search agent-guide <relative-path>")
+            return EXIT_OK
         if warning:
             _write_stderr(str(tr(warning)) + "\n")
+        if arguments and arguments[0] not in {"--help", "-h", "--version", "skills"}:
+            from .skill_maintenance import maintain
+            with contextlib.suppress(OSError, ValueError):
+                maintain()
         return _observed_main(arguments)
 
 

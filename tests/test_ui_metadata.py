@@ -57,6 +57,21 @@ def test_every_field_is_labelled_in_both_languages():
         assert item.label_en.strip(), f"{item.key} has no English label"
 
 
+def test_field_help_and_routing_endpoint_examples_reach_the_frontends():
+    fields = {item["key"]: item for item in metadata_payload()["fields"]}
+    for key, item in fields.items():
+        assert item["help_zh"].strip() and item["help_en"].strip(), key
+        if item["kind"] == "url":
+            assert item["placeholder"] or item["default"], key
+    for key, endpoint in (
+        ("INTENT_EMBEDDING_API_URL", "/v1/embeddings"),
+        ("INTENT_CLASSIFIER_API_URL", "/v1/chat/completions"),
+    ):
+        assert fields[key]["placeholder"].endswith(endpoint)
+        assert endpoint in fields[key]["help_en"]
+        assert fields[key]["default"] == ""  # Examples must not enable a service.
+
+
 @pytest.mark.parametrize(
     "key,allowed_attr",
     [

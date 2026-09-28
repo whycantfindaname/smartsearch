@@ -1,4 +1,5 @@
 import json
+import os
 from types import SimpleNamespace
 
 from smart_search import cli
@@ -50,7 +51,7 @@ def test_research_environment_install_creates_isolated_venv_and_saves_python(mon
     )
 
     data = json.loads(capsys.readouterr().out)
-    expected_python = environment_dir / "bin" / "python"
+    expected_python = environment_dir / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     assert code == cli.EXIT_OK
     assert data["health"]["protocol"] == "stdio-jsonl-v1"
     assert saved == {"SMART_SEARCH_SIDECAR_PYTHON": str(expected_python)}

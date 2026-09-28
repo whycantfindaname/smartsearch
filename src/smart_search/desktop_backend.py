@@ -20,10 +20,11 @@ from .config import config
 from .desktop_catalog import command_arguments, command_catalog
 from .desktop_updates import Updates
 from .desktop_cli import discover, managed_cli_info, package_root, path_entries, update_command
-from .desktop_environment import Environment
+from .desktop_environment import Environment, cli_runtime_commands, depends_on_app, installer_environment
 from .desktop_skills import Skills
 from .i18n import render_messages, resolve, tr, use_language
 from .provider_errors import sanitize_provider_error_message as sanitize_error_message
+from .ui_metadata import CONFIG_FIELDS
 
 PROTOCOL_VERSION = 1
 MAX_LINE = 2 * 1024 * 1024
@@ -59,8 +60,11 @@ class Backend:
         self.generation = uuid.uuid4().hex
         self.directory = ""
         self.initialized = False
+        self.independent_cli = False
+        self.include_config_secrets = False
         self.language = "zh"  # Protocol v1 clients without a language keep their existing presentation.
         self.stopping = False
+        self.app_update_pending = False
         self.runs = {}
         self.cli_info = None
         self.updates = Updates(self.event)
@@ -118,8 +122,11 @@ class Backend:
 
     def state(self):
         data = ui_api.state()
+        default_directory = config._default_config_dir().resolve()
         data.update(protocol_version=PROTOCOL_VERSION, version=cli._get_version(), generation=self.generation,
-                    config_dir=self.directory, commands=command_catalog(), activity=self.activity(), cli=self.cli_status(),
+                    config_dir=self.directory, default_config_dir=str(default_directory),
+                    is_default_config_dir=config._same_config_dir(Path(self.directory), default_directory),
+                    commands=command_catalog(), activity=self.activity(), cli=self.cli_status(),
                     updates=self.updates.state, environment=self.environment.state, skills=self.skills.state, language=self.language)
         checks = {}
         for run in sorted(self.runs.values(), key=lambda item: item.get("finished_at", 0)):
@@ -130,10 +137,29 @@ class Backend:
                                        "source": "app", "scope": run["scope"], "probe": result.get("probe", "none"),
                                        "message": result.get("message", result.get("error", ""))}
         data["provider_checks"] = checks
+        if self.include_config_secrets:
+            # Only an opted-in native client receives editable credentials over
+            # its private pipe. Shared Web/CLI status remains masked.
+            effective = config.effective_values(masked=False)
+            data["config_secrets"] = {
+                field.key: effective.get(field.key, "")
+                for field in CONFIG_FIELDS
+                if field.kind == "secret" and config.get_config_source(field.key) != "environment"
+            }
         return data
 
     def cli_status(self):
+        if self.independent_cli:
+            data = {"external_path": sys.executable, "resolved_path": sys.executable,
+                    "external_version": cli._get_version(), "version": cli._get_version(),
+                    "manager": "self", "manager_label": "CLI", "can_update": False,
+                    "external_runtime_verified": True, "activity_protocol_version": 1,
+                    "external_activity_protocol_version": 1, "other_paths": [],
+                    "update_note": tr('CLI 安装由 App 的独立安装管理器处理。')}
+            self.updates.refresh_installed(data)
+            return data
         if self.cli_info is not None:
+            self.updates.refresh_installed(self.cli_info)
             return self.cli_info
         bundled = sys.executable if getattr(sys, "frozen", False) else " ".join(engine_command())
         external = shutil.which("smart-search")
@@ -170,24 +196,27 @@ class Backend:
                         data["external_status"] = tr('外部 npm CLI 的运行环境缺失；App 不会自动修复该安装。')
             if probe_command is None:
                 self.cli_info = data
+                self.updates.refresh_installed(data)
                 return data
             env = {**manager_environment(self.directory), "SMART_SEARCH_ACTIVITY_ENABLED": "false"}
             try:
-                version = subprocess.run([*probe_command, "--version"], capture_output=True, text=True, encoding="utf-8", errors="replace",
+                version = subprocess.run([*probe_command, "--version"], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace",
                                          timeout=3, env=env, cwd=Path.home(), creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
                 if version.returncode == 0 and version.stdout.strip().startswith("smart-search "):
                     reported_version = version.stdout.strip().split()[-1]
                     data["external_runtime_verified"] = data["external_version"] in {None, reported_version}
                     data["external_version"] = reported_version
-                capabilities = subprocess.run([*probe_command, "--desktop-capabilities"], capture_output=True, text=True, encoding="utf-8", errors="replace",
+                capabilities = subprocess.run([*probe_command, "--desktop-capabilities"], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace",
                                               timeout=3, env=env, cwd=Path.home(), creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
                 if capabilities.returncode == 0:
                     parsed = json.loads(capabilities.stdout)
                     data["external_activity_protocol_version"] = parsed.get("activity_protocol_version")
                 data["external_status"] = tr('支持实时活动') if data["external_activity_protocol_version"] == 1 else tr('该 CLI 尚未接入活动观测；升级后可见新调用。')
-            except (OSError, ValueError, subprocess.TimeoutExpired):
+            except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+                data["runtime_probe_error"] = "timeout" if isinstance(error, subprocess.TimeoutExpired) else "launch_failed" if isinstance(error, OSError) else "invalid_result"
                 data["external_status"] = tr('外部 CLI 检查未完成；不能判断是否支持活动观测。')
         self.cli_info = data
+        self.updates.refresh_installed(data)
         return data
 
     def update_cli(self, params):
@@ -222,6 +251,33 @@ class Backend:
     async def execute_cli_update(self, command, version, manager):
         state = self.updates.state["cli_update"]
         log_path = self.updates.directory / "cli-update.log"
+        tail = ""
+
+        async def run(argv, env):
+            nonlocal tail
+            tail = sanitize_error_message(tail + "\n> " + subprocess.list2cmdline(argv) + "\n", limit=32000)[-16000:]
+            state["log"] = tail
+            self.updates.changed()
+            process = await asyncio.create_subprocess_exec(*argv, cwd=Path.home(), env=env,
+                stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+            async def consume():
+                nonlocal tail
+                last_notice = 0
+                while chunk := await process.stdout.read(4096):
+                    tail = sanitize_error_message(tail + chunk.decode("utf-8", errors="replace"), limit=32000)[-16000:]
+                    if time.monotonic() - last_notice >= .5:
+                        state["log"] = tail
+                        self.updates.changed()
+                        last_notice = time.monotonic()
+                return await process.wait()
+            try:
+                return await asyncio.wait_for(consume(), 1200)
+            finally:
+                if process.returncode is None:
+                    process.kill()
+                    await process.wait()
+
         try:
             self.updates.directory.mkdir(parents=True, exist_ok=True)
             env = manager_environment(self.directory)
@@ -230,32 +286,47 @@ class Backend:
                 node = info["manager_command"][0]
                 env["PATH"] = os.pathsep.join([str(Path(node).parent), str(Path(info["python_path"]).parent), env.get("PATH", "")])
                 env["SMART_SEARCH_PYTHON"] = info["python_path"]
-            process = await asyncio.create_subprocess_exec(*command, cwd=Path.home(), env=env,
-                stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
-            tail = ""
-            last_notice = 0
-            while chunk := await process.stdout.read(4096):
-                tail = sanitize_error_message(tail + chunk.decode("utf-8", errors="replace"))[-16000:]
-                if time.monotonic() - last_notice >= .5:
-                    state["log"] = tail
-                    self.updates.changed()
-                    last_notice = time.monotonic()
-            exit_code = await process.wait()
-            log_path.write_text(tail, encoding="utf-8")
+            exit_code = await run(command, env)
             self.cli_info = None
             current = self.cli_status()
-            verified = exit_code == 0 and current.get("external_version") == version and current.get("manager") == manager and current.get("external_runtime_verified") is True
+            def same_install(current):
+                return (current.get("external_version") == version and current.get("manager") == manager
+                        and current.get("can_update") and all(current.get(key) == info.get(key)
+                        for key in ("external_path", "manager_command", "manager_options", "manager_config")))
+            if exit_code == 0 and same_install(current) and current.get("external_runtime_verified") is not True:
+                root, package = package_root(current.get("resolved_path", ""))
+                if root is None or str(root) != current.get("package_root") or package.get("version") != version or depends_on_app(root):
+                    raise ValueError(tr('CLI 包的位置或版本已变化，未准备运行环境；请重新检查。'))
+                python = await asyncio.to_thread(self.environment.probe_python, env)
+                if not python.get("ready"):
+                    raise ValueError(tr('CLI 包已更新，但缺少可用的独立 Python；请在“共用独立 CLI 环境”完成准备后重试。'))
+                tail += "\n" + tr('正在修复独立 CLI 私有环境；保留原 npm/mise 安装与版本…') + "\n"
+                state["log"] = tail
+                self.updates.changed()
+                clean = installer_environment(env, self.updates.directory / "cli-runtime")
+                for argv in cli_runtime_commands(root, python["path"]):
+                    if await run(argv, clean) != 0:
+                        raise ValueError(tr('CLI 包已更新，但 Python 运行环境准备失败；请查看日志并重试。'))
+                self.cli_info = None
+                current = self.cli_status()
+            verified = exit_code == 0 and same_install(current) and current.get("external_runtime_verified") is True
             state.update(status="finished" if verified else "failed", exit_code=exit_code, log=tail,
-                         error="" if verified else tr('管理器执行失败，或 CLI 实际版本/运行环境未通过验证；请在原终端执行 smart-search --version 检查，再刷新状态。'),
+                         error="" if verified else tr('管理器执行失败，或 CLI 实际版本/运行环境未通过验证；请查看日志并重新检查。'),
                          actual_version=current.get("external_version"), log_path=str(log_path), cli=current)
-            self.updates.state["cli"].update(current_version=current.get("external_version"), available=not verified)
-        except (OSError, ValueError):
-            state.update(status="failed", error=tr('无法完成 CLI 更新，请使用原管理器检查安装并刷新状态。'))
+            self.updates.refresh_installed(current)
+        except ValueError as error:
+            state.update(status="failed", error=sanitize_error_message(str(error)))
+        except (OSError, asyncio.TimeoutError):
+            state.update(status="failed", error=tr('CLI 更新或运行环境准备未完成，请查看日志并重试。'))
         finally:
+            state.update(log=tail, log_path=str(log_path))
+            with contextlib.suppress(OSError):
+                log_path.write_text(tail, encoding="utf-8")
             self.updates.changed()
 
     def enable_cli(self, params):
+        if self.independent_cli:
+            raise ValueError(tr("CLI 安装由 App 的独立安装管理器处理。"))
         if self.environment.state["busy"]:
             raise ValueError(tr('环境操作正在进行，请等待完成。'))
         if params.get("confirm") is not True:
@@ -414,6 +485,9 @@ class Backend:
         await asyncio.gather(*(run["task"] for run in self.runs.values()), return_exceptions=True)
 
     async def handle(self, method, params):
+        if self.app_update_pending and method != "shutdown":
+            with use_language(self.language):
+                raise ValueError(tr("App 正在准备更新，请等待重启。"))
         if method == "initialize":
             with use_language(self.language):
                 self.language = resolve(params.get("lang", "zh"))
@@ -431,15 +505,17 @@ class Backend:
             return render_messages(await self._handle(method, params), self.language)
 
     async def _handle(self, method, params):
-        if self.skills.state["busy"] and method in {"profile.select", "language.set", "cli.update", "cli.enable", "environment.install", "environment.check", "environment.verify", "skills.install", "updates.installer", "shutdown"}:
+        if self.skills.state["busy"] and method in {"profile.select", "language.set", "cli.update", "cli.enable", "environment.install", "environment.check", "environment.verify", "skills.install", "app.update-prepare", "shutdown"}:
             raise ValueError(tr('Skills 操作正在进行，请等待完成。'))
         if method == "ping":
             return {"protocol_version": 1, "version": cli._get_version(), "generation": self.generation}
         if method == "initialize":
             if type(params.get("protocol_version")) is not int or params["protocol_version"] != PROTOCOL_VERSION:
-                raise ValueError(tr('App 与后端协议版本不匹配，请安装完整的同版本 App。'))
+                raise ValueError(tr('App 与 CLI 协议版本不兼容，请更新 CLI 或 App。'))
             self.directory = absolute_directory(params["config_dir"]) if params.get("config_dir") else str(config.config_file.parent)
             self.initialized = True
+            self.independent_cli = params.get("independent_cli") is True
+            self.include_config_secrets = params.get("include_config_secrets") is True
             self.updates.current_version = str(params.get("app_version", cli._get_version()))
             self.updates.state["app"]["current_version"] = self.updates.current_version
             self.updates.enabled = params.get("enable_update_checks") is True
@@ -476,7 +552,7 @@ class Backend:
                 return ui_api.reset_health(params)
             if method == "skills.status":
                 return ui_api.skills_status(params.get("targets"))
-            if method in {"skills.catalog", "skills.check", "skills.sync", "skills.auto"}:
+            if method in {"skills.catalog", "skills.check", "skills.sync", "skills.remove", "skills.auto"}:
                 if method == "skills.auto":
                     if type(params.get("enabled")) is not bool:
                         raise ValueError(tr('enabled 必须为布尔值。'))
@@ -484,12 +560,14 @@ class Backend:
                     self.skills.save()
                     self.skills.changed()
                     return self.skills.state
-                if method in {"skills.catalog", "skills.check", "skills.sync"}:
+                if method in {"skills.catalog", "skills.check", "skills.sync", "skills.remove"}:
                     if self.environment.state["busy"] or self.updates.state["cli_update"]["status"] == "running":
                         raise ValueError(tr('环境操作或 CLI 更新正在进行，请等待完成。'))
                     self.cli_info = None
                     info = self.cli_status()
                     await asyncio.to_thread(self.skills.snapshot, manager_environment(self.directory), info, self.directory)
+                if method == "skills.remove":
+                    return self.skills.remove(params)
                 if method == "skills.sync":
                     if any(run["command"] == "skills.install" and run["status"] in {"running", "cancelling"} for run in self.runs.values()):
                         raise ValueError(tr('Skills 操作正在进行，请等待完成。'))
@@ -524,7 +602,9 @@ class Backend:
                 return {"ok": True, "enabled": params["enabled"]}
             if method == "cli.status":
                 self.cli_info = None
-                return self.cli_status()
+                current = self.cli_status()
+                self.updates.changed()
+                return current
             if method == "environment.status":
                 return self.environment.state
             if method in {"environment.check", "environment.verify", "environment.install"}:
@@ -549,7 +629,7 @@ class Backend:
                 return self.enable_cli(params)
             if method == "cli.update":
                 return self.update_cli(params)
-            if method == "app.update-check":
+            if method == "cli.update-check":
                 self.cli_info = None
                 return self.updates.check(self.cli_status())
             if method == "updates.state":
@@ -561,18 +641,15 @@ class Backend:
                 self.updates.save()
                 self.updates.changed()
                 return self.updates.state
-            if method == "updates.download":
-                return self.updates.download()
-            if method == "updates.cancel":
-                return await self.updates.cancel_download()
-            if method == "updates.installer":
+            if method == "app.update-prepare":
                 if self.environment.state["busy"]:
                     raise ValueError(tr('环境准备正在进行，请等待完成后再升级 App。'))
                 if any(run["status"] in {"running", "cancelling"} for run in self.runs.values()):
                     raise ValueError(tr('请先等待或取消 App 自有任务，再启动安装。'))
                 if self.updates.state["cli_update"]["status"] == "running":
                     raise ValueError(tr('CLI 正在更新，请等待结果。'))
-                return await self.updates.installer()
+                self.app_update_pending = True
+                return {"ok": True}
             if method == "shutdown":
                 if self.environment.state["busy"] and self.environment.state["status"] == "installing" and not self.environment.state["can_cancel"]:
                     raise ValueError(tr('正在写入独立运行环境，请保持 App 打开直到完成。'))
@@ -590,11 +667,12 @@ async def serve():
     async def poll():
         while not backend.stopping:
             await asyncio.sleep(1)
-            if backend.initialized:
+            if backend.initialized and not backend.app_update_pending:
                 backend.event("activity", backend.activity())
                 backend.updates.auto_check(backend.cli_status())
-                if backend.updates.enabled:
-                    backend.skills.auto_check(manager_environment(backend.directory), backend.cli_status(), backend.directory)
+                if (backend.independent_cli or backend.updates.enabled) and not backend.skills.state["busy"] and not backend.environment.state["busy"]:
+                    with config.snapshot(directory=backend.directory):
+                        backend.skills.auto_check(manager_environment(backend.directory), backend.cli_status(), backend.directory)
 
     poller = asyncio.create_task(poll())
     try:

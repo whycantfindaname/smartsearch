@@ -15,6 +15,15 @@ Use Smart Search as the default execution layer for web retrieval and evidence-b
 4. For setup, configuration, credential storage, installed-Skill status, or endpoint diagnostics, read [`references/setup-config.md`](references/setup-config.md).
 5. For any provider or recovery failure, read [`references/error-recovery.md`](references/error-recovery.md) before retrying, replaying, falling back, probing, or stopping.
 
+## Installation and Maintenance
+
+- The Skill does not provide search access by itself; the configured `smart-search` CLI and its providers do the work.
+- The Skill is not an MCP server, does not store provider API keys, and does not create Trellis, hooks, agents, or commands.
+- `smart-search setup --install-skills ...` connects selected Agents. Installed Skills use a short bootstrap: run `smart-search agent-guide` for this CLI's current instructions and `smart-search agent-guide references/<name>.md` for a referenced document.
+- The App's **Update Skills** page reads the selected CLI's catalog. Explicit sync backs up changed files; **Remove Skills** backs up and disconnects selected targets. Automatic maintenance belongs to the CLI, works with the App closed, and preserves personal edits. Each connected target retains its CLI installation and configuration profile.
+- After upgrading the CLI, normal use checks its managed Skills; `skills status` remains read-only and `skills update` provides an explicit refresh. Reopen the Agent session after changes (Gemini: `/skills reload`).
+- Skill updates do not change provider configuration or API keys. Missing optional keys remain skipped rather than being treated as successful live checks.
+
 ## Research Depth Routing
 
 Research Workflow supports three depth presets:
@@ -54,7 +63,7 @@ AnySearch remains outside the Smart Search provider registry. Its adapter reads 
 
 ## Timeout Retry Policy
 
-For `error_type: "timeout"`, Retry up to 3 total attempts with `--timeout 300` and `--extra-sources 1` when the user has not supplied an explicit one-call override. That means use `--extra-sources 1` during retry attempts and `--timeout` only for an explicit one-call override. Do not wrap `smart-search` in a shell-level `timeout` command. Do not rely on `SMART_SEARCH_RETRY_*` settings as the contract. If the main search still times out, fall back to source-first evidence: Run `exa-search` with the original query, then `fetch` the top 1-2 relevant URLs and label the result with `source_mode: "fallback"`.
+For `error_type: "timeout"`, follow the [Agent timeout handling contract](references/error-recovery.md#agent-timeout-handling-contract) before any new request. The catalog owns submission-state checks, bounded CLI replay, partial-result handling, and source-first fallback. A timeout alone does not authorize another main-search request.
 
 ## Sciverse boundary
 

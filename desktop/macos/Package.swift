@@ -7,8 +7,13 @@ let package = Package(
     products: [
         .executable(name: "SmartSearchDesktop", targets: ["SmartSearchDesktop"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.9.6"),
+    ],
     targets: [
-        .executableTarget(name: "SmartSearchDesktop", resources: [.copy("Localization.json")]),
+        .executableTarget(name: "SmartSearchDesktop", dependencies: [.product(name: "Sparkle", package: "Sparkle")],
+                          resources: [.copy("Localization.json")],
+                          linkerSettings: [.unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])]),
         .testTarget(name: "SmartSearchDesktopTests", dependencies: ["SmartSearchDesktop"]),
     ]
 )

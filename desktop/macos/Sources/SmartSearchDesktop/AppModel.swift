@@ -1,9 +1,11 @@
 import AppKit
 import Foundation
+import OSLog
 import SwiftUI
 
 @MainActor
 final class AppModel: ObservableObject {
+    private let connectionLog = Logger(subsystem: "com.smartsearch.desktop", category: "BackendConnection")
     enum ExitChoice {
         case background
         case stopAndQuit
@@ -51,14 +53,20 @@ final class AppModel: ObservableObject {
     @Published private(set) var skillStatuses: [String: String] = [:]
     @Published private(set) var skillsState: JSONValue?
     private var skillSelectionInitialized = false
-    @Published private(set) var updateResult: JSONValue?
+    @Published private(set) var updateResult: JSONValue? {
+        didSet {
+            if let installed = updateResult?["installed_cli"] { cliStatus = installed }
+        }
+    }
     @Published private(set) var environmentState: JSONValue?
     @Published var errorMessage: String?
+    @Published private(set) var errorPresentationID = UUID()
     @Published var noticeMessage: String?
     @Published private(set) var isBusy: Set<String> = []
     private var operations = OperationState()
 
     @Published var configDraft: [String: String] = [:]
+    private var configSecrets: [String: String] = [:]
     @Published var clearSecretKeys: Set<String> = []
     @Published private(set) var configPreview: JSONValue?
     @Published var selectedCommandID: String?
@@ -71,6 +79,26 @@ final class AppModel: ObservableObject {
     @Published var requestTimeoutSeconds: Double
     @Published private(set) var languagePreference: String
 
+    @Published private(set) var appUpdatePreparing = false
+    @Published private(set) var managingCLI = false
+    let cliManager = CLIInstallationManager()
+    private(set) var terminationReady = false
+    lazy var appUpdater: AppUpdater = {
+        let updates = AppUpdater()
+        updates.canInstall = { [weak self] in self?.canInstallAppUpdate == true }
+        updates.prepareInstall = { [weak self] in await self?.prepareForAppUpdate() ?? false }
+        updates.recoverInstall = { [weak self] in
+            guard let self else { return }
+            self.appUpdatePreparing = false
+            self.terminationReady = false
+            await self.connect()
+        }
+        return updates
+    }()
+    var canInstallAppUpdate: Bool {
+        configDraft.isEmpty && clearSecretKeys.isEmpty && !hasOwnedActiveRuns &&
+        !isUpdatingCLI && !isBusy.contains("connect") && !environmentBusy && !skillsBusy && !configOperationBusy && !appUpdatePreparing
+    }
     private let backend = BackendClient()
     private var eventTask: Task<Void, Never>?
     private var ownedActiveRunIDs: Set<String> = []
@@ -92,8 +120,11 @@ final class AppModel: ObservableObject {
         let storedTimeout = UserDefaults.standard.double(forKey: DefaultsKey.timeout)
         requestTimeoutSeconds = storedTimeout == 0 ? 30 : min(max(storedTimeout, 5), 300)
         observedDirectories = UserDefaults.standard.stringArray(forKey: DefaultsKey.observedDirectories) ?? []
+        appUpdater.start()
+        cliManager.startAutomaticChecks()
         Task {
             await connect()
+            await cliManager.checkAutomatically(onLaunch: true)
             if !validLanguage { noticeMessage = L("无法读取已保存的显示偏好，已使用默认设置。原配置文件未修改。") }
         }
     }
@@ -103,19 +134,15 @@ final class AppModel: ObservableObject {
     }
 
     var hasOwnedActiveRuns: Bool { !ownedActiveRunIDs.isEmpty }
-    var isUpdatingCLI: Bool { isBusy.contains("cli.update") || updateResult?["cli_update"]?["status"]?.stringValue == "running" }
+    var isSearchRunning: Bool {
+        guard let selectedBusinessRunID else { return false }
+        return ownedActiveRunIDs.contains(selectedBusinessRunID)
+    }
+    var interfaceLocale: Locale { Locale(identifier: Localization.resolve(languagePreference)) }
+    var isUpdatingCLI: Bool { managingCLI || isBusy.contains("cli.update") || updateResult?["cli_update"]?["status"]?.stringValue == "running" }
     var environmentBusy: Bool { isBusy.contains("environment.request") || environmentState?["busy"]?.boolValue == true }
     var skillsBusy: Bool { isBusy.contains("skills.sync") || skillsState?["busy"]?.boolValue == true }
     var skillsChecking: Bool { isBusy.contains("skills.check") || isBusy.contains("skills.catalog") || skillsState?["checking"]?.boolValue == true }
-    var environmentActions: [String] {
-        (environmentState?["plan"]?.arrayValue ?? []).map(\.displayString)
-    }
-    var environmentActionLabel: String {
-        guard environmentState?["plan_id"]?.stringValue?.isEmpty == false else { return L("安装缺少的组件") }
-        if environmentActions.isEmpty { return L("环境已就绪") }
-        return (environmentState?["plan"]?.arrayValue ?? []).isEmpty ? L("配置所选 AI 接入") : L("按清单准备环境")
-    }
-
     var selectedCommand: CommandCatalogEntry? {
         guard let selectedCommandID else { return nil }
         return state?.commands.first(where: { $0.id == selectedCommandID })
@@ -126,24 +153,115 @@ final class AppModel: ObservableObject {
         guard !isBusy.contains("connect") else { return }
         clearOperations()
         guard begin("connect") else { return }
+        defer { end("connect") }
         intentionalShutdown = false
         connection = .connecting
         errorMessage = nil
+        let started = Date()
         do {
-            let backendURL = try BackendLocator.resolvedURL(overridePath: backendPathOverride)
             await backend.setTimeout(seconds: requestTimeoutSeconds)
-            try await backend.start(backendURL: backendURL)
+            if backendPathOverride.isEmpty {
+                await cliManager.discover()
+                guard let installation = cliManager.selected, installation.compatible else {
+                    intentionalShutdown = true
+                    await backend.shutdown()
+                    connection = .disconnected
+                    state = nil
+                    return
+                }
+                try await backend.start(backendURL: URL(fileURLWithPath: installation.executable), arguments: installation.arguments, environment: installation.environment)
+            } else {
+                try await backend.start(backendURL: BackendLocator.resolvedURL(overridePath: backendPathOverride))
+            }
             startEventListener()
-            let snapshot = try await backend.initialize(enableUpdateChecks: backendPathOverride.isEmpty, language: Localization.language)
+            let snapshot = try await backend.initialize(enableUpdateChecks: false, language: Localization.language, independentCLI: backendPathOverride.isEmpty)
             applyState(snapshot)
             connection = .ready
+            connectionLog.info("Backend initialized in \(Int(Date().timeIntervalSince(started) * 1000), privacy: .public) ms")
             await refreshActivity()
             await refreshCLIStatus()
         } catch {
             connection = .failed
+            connectionLog.error("Backend initialization failed")
             present(error)
         }
-        end("connect")
+    }
+
+    var environmentStatus: String {
+        if cliManager.busy || connection == .connecting { return L("正在检测本地环境…") }
+        guard let installation = cliManager.selected else {
+            return cliManager.npm == nil ? L("尚未找到 Node.js/npm 或可用的 Smart Search CLI") : L("Node.js/npm 已就绪，等待准备 Smart Search CLI")
+        }
+        if !installation.compatible { return L("{0} · {1} · 需要更新或修复", installation.source, installation.version) }
+        if cliManager.updateAvailable { return L("{0} · 可更新至 {1}", installation.version, cliManager.latestVersion) }
+        return connection == .ready ? L("{0} · 已就绪", installation.version) : L("{0} · 尚未连接", installation.version)
+    }
+
+    var environmentExplanation: String {
+        let unavailable = !cliManager.latestVersion.isEmpty && !cliManager.latestSupportsBinary
+        if let selected = cliManager.selected, !selected.compatible {
+            return selected.note + (unavailable ? "\n" + L("npm 上尚未发布兼容版本。可手动下载独立 CLI，或稍后重新检查。") : "")
+        }
+        if !cliManager.message.isEmpty { return cliManager.message }
+        if let selected = cliManager.selected, !selected.note.isEmpty { return selected.note }
+        if connection == .failed { return L("Smart Search CLI 已找到，但连接失败。请重新检测；错误详情显示在上方。") }
+        if unavailable && cliManager.selected == nil { return L("npm 上尚未发布兼容版本。可手动下载独立 CLI，或稍后重新检查。") }
+        return L("App 通过本机独立安装的 Smart Search CLI 读取配置并运行搜索，两者分别安装和更新。检测会复用已有的 mise 或 npm 安装。")
+    }
+
+    func selectCLI(_ id: String, manual: Bool = false) async {
+        guard canInstallAppUpdate, !cliManager.busy, !cliManager.checking else { return }
+        intentionalShutdown = true
+        await backend.shutdown()
+        state = nil
+        if manual { cliManager.setCliPath(id) } else { cliManager.selectInstallation(id) }
+        backendPathOverride = ""
+        UserDefaults.standard.removeObject(forKey: DefaultsKey.backendPath)
+        await connect()
+    }
+
+    func setNpmPath(_ path: String) async {
+        guard canInstallAppUpdate, !cliManager.busy, !cliManager.checking else { return }
+        intentionalShutdown = true
+        await backend.shutdown()
+        state = nil
+        cliManager.setNpmPath(path)
+        backendPathOverride = ""
+        UserDefaults.standard.removeObject(forKey: DefaultsKey.backendPath)
+        await connect()
+        await cliManager.checkAutomatically(onLaunch: true)
+    }
+
+    func manageCLI(remove: Bool = false) async {
+        guard canInstallAppUpdate, !cliManager.busy, !cliManager.checking else { return }
+        if !remove {
+            await cliManager.checkVersion()
+            guard !cliManager.latestVersion.isEmpty, cliManager.checkError.isEmpty else { noticeMessage = cliManager.checkError; return }
+            guard cliManager.latestSupportsBinary else {
+                noticeMessage = L("npm 上尚未发布自带运行时的 CLI，请等待新版发布后再安装。")
+                return
+            }
+        }
+        let alert = NSAlert()
+        alert.messageText = remove ? L("卸载所选 CLI？") : L("安装或更新独立 CLI？")
+        alert.informativeText = (cliManager.selected?.id ?? cliManager.npm?.prefix ?? "") + (remove ? "" : "\n" + L("CLI 最新版本：{0}", cliManager.latestVersion)) + "\n\n" + L("只处理所选 CLI；配置和 Skills 保留。App 自身不会更新。")
+        alert.addButton(withTitle: remove ? L("卸载 CLI") : L("继续"))
+        alert.addButton(withTitle: L("取消"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        managingCLI = true
+        intentionalShutdown = true
+        eventTask?.cancel()
+        await backend.shutdown()
+        connection = .disconnected
+        state = nil
+        var failure: Error?
+        do {
+            if remove { try await cliManager.uninstall() } else { try await cliManager.installOrRepair(expectedVersion: cliManager.latestVersion) }
+            noticeMessage = cliManager.message
+        } catch { failure = error }
+        managingCLI = false
+        await connect()
+        if let failure { present(failure) }
     }
 
     func reconnect() async {
@@ -151,7 +269,7 @@ final class AppModel: ObservableObject {
     }
 
     func setLanguage(_ preference: String) async {
-        guard !environmentBusy && !isUpdatingCLI && !isBusy.contains("language") else { return }
+        guard !environmentBusy && !skillsBusy && !isUpdatingCLI && !isBusy.contains("language") else { return }
         guard begin("language") else { return }
         defer { end("language") }
         do {
@@ -163,7 +281,16 @@ final class AppModel: ObservableObject {
             languagePreference = preference
             errorMessage = nil
             noticeMessage = nil
-            if let snapshot { applyState(snapshot) }
+            if let snapshot {
+                applyState(snapshot)
+            } else if let cached = state?.raw {
+                // Offline language changes still rebuild the cached field labels.
+                // Keep the last refresh time: this did not read a new backend state.
+                state = DesktopState(cached)
+                if let selectedBusinessRunID, let descriptor = ownedRunResults.descriptor(for: selectedBusinessRunID) {
+                    currentResultCommand = localizedLabel(descriptor)
+                }
+            }
         } catch { present(error) }
     }
 
@@ -178,7 +305,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func refreshActivity() async {
+    func refreshActivity(repeatFeedback: Bool = false) async {
         guard connection == .ready, !isBusy.contains("activity") else { return }
         guard begin("activity") else { return }
         defer { end("activity") }
@@ -200,10 +327,12 @@ final class AppModel: ObservableObject {
             }
             activityEnabled = result["enabled"]?.boolValue ?? activityEnabled
             if result["ok"]?.boolValue == false {
-                errorMessage = L("一个或多个配置目录的活动记录不可读；可读取的记录仍已显示，其他状态未知。")
+                let message = L("一个或多个配置目录的活动记录不可读；可读取的记录仍已显示，其他状态未知。")
+                if repeatFeedback { showError(message) } else { errorMessage = message }
             }
+            await refreshSelectedActivity(repeatFeedback: repeatFeedback)
         } catch {
-            present(error)
+            present(error, repeatFeedback: repeatFeedback)
         }
     }
 
@@ -287,7 +416,7 @@ final class AppModel: ObservableObject {
     func selectProfile(_ directory: String) async {
         guard connection == .ready else { return }
         guard configDraft.isEmpty && clearSecretKeys.isEmpty else {
-            errorMessage = L("还有未保存的修改，请先保存或放弃，再切换配置目录。")
+            showError(L("还有未保存的修改，请先保存或放弃，再切换配置目录。"))
             return
         }
         guard begin("profile") else { return }
@@ -298,6 +427,12 @@ final class AppModel: ObservableObject {
         } catch {
             present(error)
         }
+    }
+
+    func restoreDefaultConfigDirectory() async {
+        guard let directory = state?.defaultConfigDirectory, !directory.isEmpty,
+              state?.isDefaultConfigDirectory == false else { return }
+        await selectProfile(directory)
     }
 
     func addObservedDirectory() {
@@ -322,31 +457,48 @@ final class AppModel: ObservableObject {
 
     func draftBinding(for field: ConfigField) -> Binding<String> {
         Binding(
-            get: { self.configDraft[field.key] ?? "" },
+            get: {
+                if self.clearSecretKeys.contains(field.key) { return "" }
+                return self.configDraft[field.key] ?? self.currentConfigValue(for: field)
+            },
             set: { self.setDraft($0, for: field) }
         )
+    }
+
+    private func currentConfigValue(for field: ConfigField) -> String {
+        if field.isSecret { return configSecrets[field.key] ?? "" }
+        return state?.effectiveValue(for: field) ?? field.defaultValue
     }
 
     func setDraft(_ value: String, for field: ConfigField) {
         guard !isEnvironmentReadOnly(field), !isBusy.contains("save") else { return }
         configPreview = nil
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty || (!field.isSecret && trimmed == state?.effectiveValue(for: field)) {
-            configDraft.removeValue(forKey: field.key) // Empty secret input means KEEP.
+        if field.isSecret && value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if state?.hasSecretValue(for: field) == true {
+                clearSecret(field)
+            } else {
+                keepSecret(field)
+            }
+            return
+        }
+        clearSecretKeys.remove(field.key)
+        if value == currentConfigValue(for: field) {
+            configDraft.removeValue(forKey: field.key)
         } else {
             configDraft[field.key] = value
-            clearSecretKeys.remove(field.key)
         }
     }
 
     func clearSecret(_ field: ConfigField) {
         guard field.isSecret, !isEnvironmentReadOnly(field), !isBusy.contains("save") else { return }
+        configPreview = nil
         configDraft.removeValue(forKey: field.key)
         clearSecretKeys.insert(field.key)
     }
 
     func keepSecret(_ field: ConfigField) {
         guard !isBusy.contains("save") else { return }
+        configPreview = nil
         clearSecretKeys.remove(field.key)
         configDraft.removeValue(forKey: field.key)
     }
@@ -358,10 +510,13 @@ final class AppModel: ObservableObject {
     func draftStatus(for field: ConfigField) -> String {
         if isEnvironmentReadOnly(field) { return L("由环境变量提供，只读") }
         if clearSecretKeys.contains(field.key) { return L("将在保存时清除") }
-        if configDraft[field.key]?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+        if configDraft[field.key] != nil {
             return field.isSecret ? L("将在保存时替换") : L("将在保存时更新")
         }
-        return field.isSecret ? L("保持当前密钥") : L("未修改")
+        if field.isSecret {
+            return state?.hasSecretValue(for: field) == true ? L("保持当前密钥") : L("未配置")
+        }
+        return L("未修改")
     }
 
     func resetConfigDraft() {
@@ -374,6 +529,7 @@ final class AppModel: ObservableObject {
         guard connection == .ready else { return }
         guard begin("preview") else { return }
         defer { end("preview") }
+        configPreview = nil
         let parameters = configMutationParameters(includeRevision: false)
         do {
             let preview = try await backend.request(method: "config.preview", params: parameters)
@@ -386,7 +542,7 @@ final class AppModel: ObservableObject {
     func saveConfig() async {
         guard connection == .ready else { return }
         guard let revision = state?.revision else {
-            errorMessage = L("没有可用的配置版本，请先刷新后再保存。")
+            showError(L("没有可用的配置版本，请先刷新后再保存。"))
             return
         }
         guard begin("save") else { return }
@@ -396,9 +552,9 @@ final class AppModel: ObservableObject {
         do {
             let result = try await backend.request(method: "config.apply", params: .object(params))
             guard result["ok"]?.boolValue == true else {
-                errorMessage = result["error_type"]?.stringValue == "conflict"
+                showError(result["error_type"]?.stringValue == "conflict"
                     ? L("配置已被其他进程修改；你改的内容还在，请刷新后核对。")
-                    : L("后端没有保存配置；你改的内容还在。")
+                    : L("后端没有保存配置；你改的内容还在。"))
                 return
             }
             // config.apply returns a compact status snapshot; get_state restores the
@@ -417,7 +573,7 @@ final class AppModel: ObservableObject {
         defer { end("test:\(provider)") }
         let providerKeys = Set(state.fields.filter { $0.provider == provider }.map(\.key))
         var overrides = configDraft.reduce(into: [String: JSONValue]()) { partial, item in
-            if providerKeys.contains(item.key), !item.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if providerKeys.contains(item.key) {
                 partial[item.key] = .string(item.value)
             }
         }
@@ -431,11 +587,11 @@ final class AppModel: ObservableObject {
                 "overrides": .object(overrides),
             ]))
             guard result["ok"]?.boolValue == true, let runID = result["run_id"]?.stringValue else {
-                errorMessage = L("后端未能开始测试；配置没有改变。")
+                showError(L("后端未能开始测试；配置没有改变。"))
                 return
             }
             ownedActiveRunIDs.insert(runID)
-            ownedRunResults.register(runID: runID, kind: .providerTest, label: L("测试 {0}", "\(provider)"))
+            ownedRunResults.register(runID: runID, kind: .providerTest, label: L("测试 {0}", "\(provider)"), providerID: provider)
             trackRun(runID, key: "test:\(provider)")
             await recoverRun(runID)
             await refreshActivity()
@@ -480,7 +636,7 @@ final class AppModel: ObservableObject {
         guard connection == .ready, let command = selectedCommand else { return }
         let missing = CommandArgumentBuilder.missingRequired(for: command, values: commandValues, booleans: commandBooleans)
         guard missing.isEmpty else {
-            errorMessage = L("请填写必填项：{0}。", "\(missing.map(\.label).joined(separator: "、"))")
+            showError(L("请填写必填项：{0}。", "\(missing.map(\.label).joined(separator: "、"))"))
             return
         }
         guard begin("run:\(command.id)") else { return }
@@ -492,15 +648,15 @@ final class AppModel: ObservableObject {
                 "arguments": .array(arguments.map(JSONValue.string)),
             ]))
             guard result["ok"]?.boolValue == true, let runID = result["run_id"]?.stringValue else {
-                errorMessage = L("后端未能开始此操作。")
+                showError(L("后端未能开始此操作。"))
                 return
             }
             ownedActiveRunIDs.insert(runID)
-            ownedRunResults.register(runID: runID, kind: .business, label: command.label)
+            ownedRunResults.register(runID: runID, kind: .business, label: command.label, commandID: command.id)
             trackRun(runID, key: "run:\(command.id)")
             selectedBusinessRunID = runID
             currentResult = nil
-            currentResultCommand = command.label
+            currentResultCommand = state?.commands.first { $0.id == command.id }?.label ?? command.label
             noticeMessage = L("操作已开始，进度会显示在活动页。")
             await recoverRun(runID)
             await refreshActivity()
@@ -520,7 +676,7 @@ final class AppModel: ObservableObject {
                 await recoverRun(run.runID)
                 noticeMessage = L("已请求取消，等待后端确认最终状态。")
             } else {
-                errorMessage = L("后端未接受取消请求；任务仍保持原状态。")
+                showError(L("后端未接受取消请求；任务仍保持原状态。"))
             }
         } catch {
             present(error)
@@ -531,11 +687,26 @@ final class AppModel: ObservableObject {
         ownedActiveRunIDs.contains(run.runID) && run.isActive
     }
 
-    func showActivityDetails(_ run: ActivityRun) async {
+    private func refreshSelectedActivity(repeatFeedback: Bool) async {
+        guard selectedDestination == .activity, let selected = selectedActivity else { return }
+        guard let current = activityRuns.first(where: { $0.runID == selected.runID }) else {
+            selectedActivity = nil
+            activityDetails = nil
+            activityResultRunID = nil
+            activityResult = nil
+            return
+        }
+        await showActivityDetails(current, preservingContent: true, repeatFeedback: repeatFeedback)
+    }
+
+    func showActivityDetails(_ run: ActivityRun, preservingContent: Bool = false, repeatFeedback: Bool = true) async {
+        let selectionChanged = selectedActivity?.runID != run.runID
         selectedActivity = run
-        activityDetails = nil
-        activityResultRunID = nil
-        activityResult = nil
+        if selectionChanged || !preservingContent {
+            activityDetails = nil
+            activityResultRunID = nil
+            activityResult = nil
+        }
         guard connection == .ready else { return }
         guard begin("details:\(run.runID)") else { return }
         defer { end("details:\(run.runID)") }
@@ -544,51 +715,27 @@ final class AppModel: ObservableObject {
         do {
             // activity.details carries only protocol-approved, redacted metadata.
             let result = try await backend.request(method: "activity.details", params: .object(params))
+            guard selectedActivity?.runID == run.runID else { return }
             activityDetails = result.redacted()
         } catch {
-            present(error)
+            guard selectedActivity?.runID == run.runID else { return }
+            activityDetails = .object(["ok": .bool(false), "error": .string(error.localizedDescription)])
+            present(error, repeatFeedback: repeatFeedback)
         }
     }
 
-    func environmentAction(_ method: String, params: JSONValue = .object([:])) async {
-        guard connection == .ready, !isUpdatingCLI else { return }
-        if environmentBusy && method != "environment.cancel" { return }
-        guard begin("environment.request") else { return }
-        defer { end("environment.request") }
-        do { environmentState = try await backend.request(method: method, params: params) }
-        catch { present(error) }
-    }
-
-    func prepareEnvironment() async {
-        guard !environmentBusy, !environmentActions.isEmpty, environmentState?["can_install"]?.boolValue == true,
-              let planID = environmentState?["plan_id"]?.stringValue else { return }
-        let targets: [String] = []
-        let replace = false
-        let plan = environmentActions.joined(separator: "\n")
-        let alert = NSAlert()
-        alert.messageText = L("准备独立 CLI")
-        alert.informativeText = plan + L("\n接入目标：") + (targets.isEmpty ? L("只准备独立 CLI") : targets.joined(separator: "、")) +
-            L("\n独立安装目录：") + (environmentState?["tools_dir"]?.displayString ?? "") + "\n" +
-            (replace ? L("内容不同的接入文件将先备份再替换。") : L("已有个人修改将保留。")) + L("\n关闭或卸载 App 后，独立 CLI 仍可使用。")
-        alert.addButton(withTitle: L("开始准备"))
-        alert.addButton(withTitle: L("取消"))
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        await environmentAction("environment.install", params: .object([
-            "confirm": .bool(true), "plan_id": .string(planID), "targets": .array(targets.map(JSONValue.string)),
-            "replace_modified": .bool(replace)]))
-    }
-
-    func copyEnvironmentTest() {
-        guard let command = environmentState?["invocation"]?.stringValue, !command.isEmpty else { return }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(L("请使用 Smart Search 技能，先运行以下命令并报告实际版本，不要仅检查文件，也先不要联网搜索：\n") + command + L(" --version\n如果技能未出现，请重新打开 AI。配置目录：") + (environmentState?["config_dir"]?.displayString ?? ""), forType: .string)
-        noticeMessage = L("已复制指引；请在 AI 内执行，本机检查不代表 AI 已调用成功。")
+    var skillTargetsToUpdate: [String] {
+        (skillsState?["targets"]?.arrayValue ?? []).compactMap { row in
+            guard let id = row["target"]?.stringValue, selectedSkillTargets.contains(id),
+                  row["needs_update"]?.boolValue == true else { return nil }
+            return id
+        }.sorted()
     }
 
     func installSelectedSkills() async {
+        let targets = skillTargetsToUpdate
         guard !environmentBusy, !isUpdatingCLI, !skillsBusy, !skillsChecking,
-              !selectedSkillTargets.isEmpty, skillsState?["can_sync"]?.boolValue == true else { return }
-        let targets = selectedSkillTargets.sorted()
+              !targets.isEmpty, skillsState?["can_sync"]?.boolValue == true else { return }
         let plan = skillsState?["plan_id"]?.stringValue ?? ""
         let paths = (skillsState?["targets"]?.arrayValue ?? []).filter { targets.contains($0["target"]?.stringValue ?? "") }
             .map { ($0["label"]?.displayString ?? "") + "\n" + ($0["path"]?.displayString ?? "") }.joined(separator: "\n\n")
@@ -601,22 +748,15 @@ final class AppModel: ObservableObject {
         await skillsAction("skills.sync", params: .object(["targets": .array(targets.map(JSONValue.string)), "confirm": .bool(true), "plan_id": .string(plan)]))
     }
 
-    func enableBundledCLI() async {
-        guard !environmentBusy else { return }
-        guard connection == .ready else { return }
-        guard begin("cli.enable") else { return }
-        defer { end("cli.enable") }
-        do {
-            let result = try await backend.request(method: "cli.enable", params: .object(["confirm": .bool(true)]))
-            if result["ok"]?.boolValue == true {
-                noticeMessage = result["message"]?.displayString ?? L("已启用内置 CLI，请重新打开终端。")
-                await refreshCLIStatus()
-            } else {
-                errorMessage = L("内置 CLI 未启用；已有同名外部 CLI 不会被覆盖。")
-            }
-        } catch {
-            present(error)
-        }
+    func removeSelectedSkills() async {
+        guard !skillsBusy, !skillsChecking, !isUpdatingCLI, !selectedSkillTargets.isEmpty else { return }
+        let alert = NSAlert()
+        alert.messageText = L("移除所选 Skills？")
+        alert.informativeText = L("所选 Skill 文件会移入备份目录，CLI 和配置保留。")
+        alert.addButton(withTitle: L("移除 Skills"))
+        alert.addButton(withTitle: L("取消"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        await skillsAction("skills.remove", params: .object(["targets": .array(selectedSkillTargets.sorted().map(JSONValue.string)), "confirm": .bool(true)]))
     }
 
     func setActivityEnabled(_ enabled: Bool) async {
@@ -629,7 +769,7 @@ final class AppModel: ObservableObject {
             let result = try await backend.request(method: "activity.enabled", params: .object(["enabled": .bool(enabled)]))
             if result["ok"]?.boolValue != true {
                 activityEnabled = priorValue
-                errorMessage = L("活动记录设置没有改变。")
+                showError(L("活动记录设置没有改变。"))
             }
         } catch {
             activityEnabled = priorValue
@@ -647,61 +787,28 @@ final class AppModel: ObservableObject {
                 noticeMessage = L("已清除已结束任务的活动元数据；配置和用户导出未受影响。")
                 await refreshActivity()
             } else {
-                errorMessage = L("活动历史没有被清除。")
+                showError(L("活动历史没有被清除。"))
             }
         } catch {
             present(error)
         }
     }
 
-    func checkForUpdates() async {
-        guard connection == .ready else { return }
-        guard begin("update") else { return }
-        defer { end("update") }
+    private func prepareForAppUpdate() async -> Bool {
+        guard canInstallAppUpdate else {
+            noticeMessage = L("请先处理未保存配置，并等待 App 自有任务完成。")
+            return false
+        }
+        appUpdatePreparing = true
         do {
-            updateResult = try await backend.request(method: "app.update-check")
+            if connection == .ready { _ = try await backend.request(method: "app.update-prepare") }
+            await shutdownForQuit()
+            return true
         } catch {
+            appUpdatePreparing = false
             present(error)
+            return false
         }
-    }
-
-    func updateAction(_ method: String, params: JSONValue = .object([:])) async {
-        if environmentBusy && ["cli.update", "updates.installer"].contains(method) { return }
-        guard connection == .ready, begin(method) else { return }
-        defer { end(method) }
-        do { updateResult = try await backend.request(method: method, params: params) }
-        catch { present(error) }
-    }
-
-    func updateCLI() async {
-        guard !isUpdatingCLI && !environmentBusy, let version = updateResult?["cli"]?["latest_version"]?.stringValue else { return }
-        let alert = NSAlert()
-        alert.messageText = L("更新独立 CLI")
-        alert.informativeText = L("来源：{0}\n生效路径：{1}\n{2} → {3}\n只更新 Smart Search。请先结束其他终端中的 CLI 调用，更新期间保持 App 打开。", "\(cliStatus?["manager_label"]?.displayString ?? L("未知"))", "\(cliStatus?["resolved_path"]?.displayString ?? cliStatus?["external_path"]?.displayString ?? L("未知"))", "\(cliStatus?["external_version"]?.displayString ?? L("未知"))", "\(version)")
-        alert.addButton(withTitle: L("更新 CLI"))
-        alert.addButton(withTitle: L("取消"))
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        await updateAction("cli.update", params: .object(["confirm": .bool(true), "version": .string(version)]))
-    }
-
-    func openDownloadedUpdate() async {
-        guard configDraft.isEmpty && clearSecretKeys.isEmpty && !hasOwnedActiveRuns && !isUpdatingCLI && !environmentBusy else {
-            noticeMessage = L("请先处理未保存配置，并等待 App 自有任务完成。"); return
-        }
-        guard begin("updates.installer") else { return }
-        defer { end("updates.installer") }
-        do {
-            let ready = try await backend.request(method: "updates.installer")
-            guard let path = ready["path"]?.stringValue, path.hasPrefix("/"), path.hasSuffix(".dmg") else { return }
-            if NSWorkspace.shared.open(URL(fileURLWithPath: path)) {
-                noticeMessage = L("已打开校验过的 DMG，尚未安装。请退出 App 后按正常方式安装，再重新打开核对版本；系统代码签名尚未验证。")
-            } else { errorMessage = L("无法打开 DMG，请从下载目录手动打开。") }
-        } catch { present(error) }
-    }
-
-    func revealDownloadedUpdate() {
-        guard let path = updateResult?["download"]?["path"]?.stringValue else { return }
-        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
     }
 
     func copyCLIUpdateCommand() {
@@ -729,7 +836,7 @@ final class AppModel: ObservableObject {
             try data.write(to: url, options: .atomic)
             noticeMessage = L("已导出脱敏结果。")
         } catch {
-            errorMessage = L("无法写入所选导出文件。")
+            showError(L("无法写入所选导出文件。"))
         }
     }
 
@@ -741,6 +848,7 @@ final class AppModel: ObservableObject {
     }
 
     func shutdownForQuit() async {
+        appUpdatePreparing = true
         intentionalShutdown = true
         eventTask?.cancel()
         for runID in ownedActiveRunIDs {
@@ -750,13 +858,25 @@ final class AppModel: ObservableObject {
         clearOperations()
         await backend.shutdown()
         connection = .disconnected
+        terminationReady = true
     }
 
     func displayLabel(for run: ActivityRun) -> String {
-        ownedRunResults.descriptor(for: run.runID)?.label
+        ownedRunResults.descriptor(for: run.runID).map(localizedLabel)
             ?? state?.commands.first { $0.id == run.command }?.label
             ?? ["provider.test": L("服务商测试"), "version": L("版本查询"), "skills.install": L("安装 / 更新 Skills")][run.command]
             ?? L("其他任务")
+    }
+
+    private func localizedLabel(_ descriptor: OwnedRunDescriptor) -> String {
+        switch descriptor.kind {
+        case .business:
+            return state?.commands.first { $0.id == descriptor.commandID }?.label ?? descriptor.label
+        case .providerTest:
+            return descriptor.providerID.map { L("测试 {0}", $0) } ?? L("服务商测试")
+        case .skillsInstall:
+            return L("安装 / 更新 Skills")
+        }
     }
 
     func hasOwnedResult(for run: ActivityRun) -> Bool {
@@ -776,7 +896,7 @@ final class AppModel: ObservableObject {
         if descriptor.kind.updatesSearchResult {
             selectedBusinessRunID = run.runID
             currentResult = result
-            currentResultCommand = descriptor.label
+            currentResultCommand = localizedLabel(descriptor)
         }
     }
 
@@ -803,9 +923,7 @@ final class AppModel: ObservableObject {
 
     private func configMutationParameters(includeRevision: Bool) -> JSONValue {
         var params: [String: JSONValue] = [
-            "set": .object(configDraft.compactMapValues { value in
-                value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : .string(value)
-            }),
+            "set": .object(configDraft.mapValues(JSONValue.string)),
             "unset": .array(clearSecretKeys.sorted().map(JSONValue.string)),
         ]
         if includeRevision, let revision = state?.revision { params["revision"] = revision }
@@ -813,12 +931,20 @@ final class AppModel: ObservableObject {
     }
 
     private func applyState(_ raw: JSONValue) {
-        let snapshot = raw["state"]?.objectValue == nil ? raw : (raw["state"] ?? raw)
-        guard let parsed = DesktopState(snapshot) else {
+        let incoming = raw["state"]?.objectValue == nil ? raw : (raw["state"] ?? raw)
+        var payload = incoming.objectValue
+        // Credentials belong only to the form binding, never to raw state or diagnostics.
+        let secrets = payload?.removeValue(forKey: "config_secrets")?.objectValue ?? [:]
+        guard let payload, let parsed = DesktopState(.object(payload)) else {
             errorMessage = L("后端状态格式无法读取；没有使用旧状态覆盖它。")
             return
         }
+        let snapshot = parsed.raw
+        configSecrets = secrets.compactMapValues(\.stringValue)
         state = parsed
+        if let selectedBusinessRunID, let descriptor = ownedRunResults.descriptor(for: selectedBusinessRunID) {
+            currentResultCommand = localizedLabel(descriptor)
+        }
         updateResult = snapshot["updates"]
         cliStatus = snapshot["cli"]
         environmentState = snapshot["environment"]
@@ -860,7 +986,6 @@ final class AppModel: ObservableObject {
             if let installed = event.data["cli"] { cliStatus = installed }
         case "updates":
             updateResult = event.data
-            if let installed = event.data["cli_update"]?["cli"] { cliStatus = installed }
         case "activity":
             Task { await reconcileRuns() }
             // Backend push events cover its active profile.  With user-added directories,
@@ -895,7 +1020,7 @@ final class AppModel: ObservableObject {
                    let descriptor = ownedRunResults.cache(result.redacted(), for: runID) {
                     if descriptor.kind.updatesSearchResult, selectedBusinessRunID == runID {
                         currentResult = result.redacted()
-                        currentResultCommand = descriptor.label
+                        currentResultCommand = localizedLabel(descriptor)
                     }
                 }
                 if descriptor?.kind == .providerTest {
@@ -941,6 +1066,7 @@ final class AppModel: ObservableObject {
     var configOperationBusy: Bool { !isBusy.isDisjoint(with: ["state", "save", "preview", "profile"]) }
 
     private func begin(_ identifier: String) -> Bool {
+        if appUpdatePreparing { return false }
         if ["state", "save", "preview", "profile"].contains(identifier), configOperationBusy { return false }
         guard operations.begin(identifier) else { return false }
         isBusy = operations.busyKeys
@@ -1003,8 +1129,18 @@ final class AppModel: ObservableObject {
         return changed ? L("用未保存的修改测试") : L("测试")
     }
 
-    private func present(_ error: Error) {
-        errorMessage = (error as? LocalizedError)?.errorDescription ?? L("操作未完成。")
+    func showError(_ message: String) {
+        errorMessage = message
+        errorPresentationID = UUID()
+    }
+
+    private func present(_ error: Error, repeatFeedback: Bool = true) {
+        let message = (error as? LocalizedError)?.errorDescription ?? L("操作未完成。")
+        if repeatFeedback {
+            showError(message)
+        } else {
+            errorMessage = message
+        }
     }
 
     private func presentExitChoice(for window: NSWindow?, completion: @escaping (ExitChoice) -> Void) {

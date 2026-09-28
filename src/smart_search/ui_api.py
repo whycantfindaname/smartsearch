@@ -25,7 +25,7 @@ from .skill_installer import (
     parse_skill_targets,
     status_skill_targets,
 )
-from .ui_metadata import metadata_payload
+from .ui_metadata import CONFIG_FIELDS, metadata_payload
 
 
 def _parameter_error(message: str, **extra: Any) -> dict[str, Any]:
@@ -49,12 +49,19 @@ def status() -> dict[str, Any]:
 def _status() -> dict[str, Any]:
     info = config.get_config_info()
     minimum = service.validate_minimum_profile()
+    effective = config.effective_values(masked=False)
     return {
         "ok": True,
         "error_type": "",
         "error": "",
         "values": config.effective_values(masked=True),
         "saved_values": config.get_saved_config(masked=True),
+        # Empty and short keys can have the same legacy mask. Report presence
+        # separately so native clients never mistake an empty key for a saved one.
+        "secret_presence": {
+            field.key: bool(effective.get(field.key))
+            for field in CONFIG_FIELDS if field.kind == "secret"
+        },
         "revision": config.snapshot_revision(),
         "sources": config.get_config_sources(),
         "resolved": {

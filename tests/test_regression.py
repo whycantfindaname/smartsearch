@@ -191,15 +191,9 @@ def test_search_error_recovery_catalog_is_the_single_instruction_source():
         "Change code, tests, and specifications only when machine classification",
         "Timeout Retry Policy",
         "error_type: \"timeout\"",
-        "Retry up to 3 total attempts with `--timeout 300`",
-        "`--extra-sources 1` during retry attempts",
-        "`--timeout` only for an explicit one-call override",
-        "Do not wrap `smart-search` in a shell-level `timeout` command",
-        "Do not rely on `SMART_SEARCH_RETRY_*` settings",
-        "fall back to source-first evidence",
-        "Run `exa-search` with the original query",
-        "`fetch` the top 1-2 relevant URLs",
-        "source_mode: \"fallback\"",
+        "references/error-recovery.md#agent-timeout-handling-contract",
+        "before any new request",
+        "A timeout alone does not authorize another main-search request",
     ]
     contract_markers = [
         "single extensible decision catalog",
@@ -209,12 +203,20 @@ def test_search_error_recovery_catalog_is_the_single_instruction_source():
         "`doctor` is a diagnostic probe, not a repair operation",
         "documentation-only operator response belongs here alone",
         "Agent timeout handling contract",
-        "`smart-search search ... --timeout 300 --extra-sources 1 --format json --output PATH`",
+        "`smart-search search ... --timeout 300 --extra-sources 1 --max-try 1 --format json --output PATH`",
         "not a shell-level `timeout` wrapper",
         "`SMART_SEARCH_RETRY_*` settings are not the contract",
-        "switch to source-first fallback",
+        "source-first fallback within the authorized retrieval workflow",
         "`exa-search --include-domains`",
         "`source_mode: \"fallback\"`",
+        "`error_type: \"timeout\"` alone never authorizes replay",
+        "`partial_success=true` retains usable primary content",
+        "repeat the main search to recover an optional phase",
+        "HTTP 499, and hard timeouts must not be replayed automatically",
+        "Provably pre-submission connection failures",
+        "xAI HTTP 504 with `upstream_server_error`",
+        "Any uncertain-submission evidence takes precedence",
+        "request requires a changed condition and resolved submission state",
     ]
 
     for marker in entrypoint_markers:
@@ -232,6 +234,8 @@ def test_search_error_recovery_catalog_is_the_single_instruction_source():
     ]
     for skill_dir in (PUBLIC_SKILL_DIR, PACKAGED_SKILL_DIR):
         for path, text in _skill_text_files(skill_dir).items():
+            assert "Retry up to 3 total attempts" not in text
+            assert "retryable terminal main-search deadline" not in text
             if path == catalog_relative_path.as_posix():
                 continue
             for marker in status_specific_markers:

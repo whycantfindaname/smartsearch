@@ -49,7 +49,7 @@ lists* — the `TypeError` was swallowed by provider error handling. See
 | --- | --- |
 | Full suite | `python -m pytest tests/ -q` |
 | Skill mirror parity | `npm run check:skill-parity` |
-| Tarball content | `npm run pack:dry` (and `npm run smoke:tarball` for release) |
+| Tarball content | `npm run pack:dry` (and `npm run smoke:tarball -- .desktop-artifacts/npm-platform` after a native build for release) |
 | Regression contracts | included in the suite (`tests/test_regression.py`) |
 
 See [packaging-contract.md](./packaging-contract.md) for what each packaging
@@ -64,5 +64,8 @@ gate actually protects.
   directly inside `async def` paths — wrap with `asyncio.to_thread`.
 - POSIX-only assertions (e.g. file mode `0o600`) need
   `@pytest.mark.skipif(os.name == "nt", ...)`; CI runs Windows.
+- Compare symlink target identity with `Path.samefile()`; Windows `readlink()`
+  may return an extended-length path prefix. Virtual environment assertions must
+  use `Scripts/python.exe` on Windows and `bin/python` on POSIX.
 - Lint: `ruff` with the repo default ruleset; changed files must not add new
   findings versus `HEAD` (the existing codebase has a baseline).

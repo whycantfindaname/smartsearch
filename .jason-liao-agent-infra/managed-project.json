@@ -17,7 +17,7 @@
       "receipt_schema": "jason-smartsearch.managed-sync-parity.v1"
     },
     "packed_smoke": {
-      "argv": ["npm", "run", "--silent", "smoke:tarball"],
+      "argv": ["npm", "run", "--silent", "smoke:tarball", "--", ".desktop-artifacts/npm-platform"],
       "cwd": ".",
       "timeout_seconds": 900,
       "mutates": [],

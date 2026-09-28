@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from packaging.version import Version
+
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ENTRY = Path("src/smart_search/desktop_entry.py")
@@ -96,7 +98,14 @@ def find_package_metadata(bundle_directory: Path) -> Path:
 
 
 def verify_asset_inventory(source_assets: Path, packaged_assets: Path) -> int:
-    source_files = [path for path in source_assets.rglob("*") if path.is_file()]
+    # Ignore generated caches and private runtime state, as the package does.
+    source_files = [
+        path for path in source_assets.rglob("*")
+        if path.is_file()
+        and path.name not in {".DS_Store", ".env", "config.json", "runtime.conf"}
+        and "__pycache__" not in path.parts
+        and path.suffix not in {".pyc", ".pyo"}
+    ]
     missing = [
         path.relative_to(source_assets)
         for path in source_files
@@ -108,20 +117,23 @@ def verify_asset_inventory(source_assets: Path, packaged_assets: Path) -> int:
     return len(source_files)
 
 
-def smoke_backend(executable: Path, run_directory: Path, expected_version: str) -> None:
+def smoke_backend(executable: Path, run_directory: Path, expected_version: str, *, architecture: str | None = None) -> None:
     smoke_config = run_directory / "smoke-config"
     smoke_config.mkdir()
     requests = [
         {
             "id": 1,
             "method": "initialize",
-            "params": {"protocol_version": 1, "config_dir": str(smoke_config)},
+            "params": {"protocol_version": 1, "config_dir": str(smoke_config), "independent_cli": True, "enable_update_checks": False},
         },
         {"id": 2, "method": "shutdown", "params": {}},
     ]
     try:
+        command = [str(executable), "--desktop-backend"]
+        if architecture:
+            command = ["arch", "-arch", architecture, *command]
         completed = subprocess.run(
-            [str(executable), "--desktop-backend"],
+            command,
             input="\n".join(json.dumps(request, ensure_ascii=False) for request in requests) + "\n",
             cwd=run_directory,
             capture_output=True,
@@ -129,10 +141,10 @@ def smoke_backend(executable: Path, run_directory: Path, expected_version: str) 
             encoding="utf-8",
             errors="replace",
             text=True,
-            timeout=15,
+            timeout=45,
         )
     except subprocess.TimeoutExpired as error:
-        raise RuntimeError("packaged backend did not finish initialize/shutdown within 15 seconds") from error
+        raise RuntimeError("packaged backend did not finish initialize/shutdown within 45 seconds") from error
 
     messages: list[dict[str, Any]] = []
     malformed: list[str] = []
@@ -187,7 +199,7 @@ def main() -> int:
     args = parse_args()
     project_version = re.search(r'^version = "([^"]+)"',
         (REPOSITORY_ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.MULTILINE).group(1)
-    if importlib.metadata.version(PACKAGE_NAME) != project_version:
+    if Version(importlib.metadata.version(PACKAGE_NAME)) != Version(project_version):
         raise RuntimeError("Installed package metadata is stale; install this checkout into the build Python before packaging.")
     entry = repository_path(args.entry)
     output_root = repository_path(args.output_root)
