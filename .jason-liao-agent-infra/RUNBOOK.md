@@ -115,6 +115,12 @@ agent-infra sync verify smartsearch \
 恢复探针；doctor 成功不等于 live，固定搜索成功才报告 `live`，doctor 成功而搜索
 失败只能报告 `activated`/diagnostic-ready。
 
+验收从当前 PATH 一次解析已安装的 `smart-search`（Windows 为 `smart-search.cmd`），
+两个探针使用同一入口，并在回执的 `command_entry` 中记录路径；不从源码目录启动
+wrapper 或 Python。配置存在性门禁遵循 `SMART_SEARCH_CONFIG_DIR`、Windows
+`LOCALAPPDATA/smart-search` 及旧 HOME 路径回退规则，其他平台使用
+`~/.config/smart-search`；门禁不读取配置内容。
+
 ## 恢复
 
 恢复不是正向 sync stage。恢复 owner 是选定的 Infra platform adapter；restore
