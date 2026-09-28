@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import json
 import os
+import queue
 import re
 import subprocess
 import sys
+import threading
 import warnings
 from io import StringIO
 from pathlib import Path
@@ -185,6 +187,7 @@ def run_script(script_path: Path, context_key: str | None = None) -> str:
         cmd = [sys.executable, "-W", "ignore", str(script_path)]
         result = subprocess.run(
             cmd,
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -302,6 +305,7 @@ def _run_git(repo_root: Path, args: list[str]) -> str:
     try:
         result = subprocess.run(
             ["git", *args],
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -491,19 +495,51 @@ def _build_workflow_toc(workflow_path: Path) -> str:
     return "\n".join(out_lines).rstrip()
 
 
+def _load_hook_input() -> dict:
+    """Match sibling hooks: accept complete JSON without waiting for pipe EOF."""
+    chunks: queue.Queue[bytes] = queue.Queue()
+
+    def _read() -> None:
+        try:
+            fd = sys.stdin.fileno()
+            while True:
+                chunk = os.read(fd, 65536)
+                chunks.put(chunk)
+                if not chunk:
+                    return
+        except (OSError, ValueError, AttributeError):
+            chunks.put(b"")
+
+    threading.Thread(target=_read, daemon=True).start()
+    buf = b""
+    while True:
+        try:
+            chunk = chunks.get(timeout=0.2)
+        except queue.Empty:
+            break
+        if not chunk:
+            break
+        buf += chunk
+        try:
+            data = json.loads(buf.decode("utf-8"))
+        except ValueError:
+            continue
+        if isinstance(data, dict):
+            return data
+
+    try:
+        data = json.loads(buf.decode("utf-8")) if buf.strip() else {}
+    except ValueError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def main() -> None:
     if should_skip_injection():
         sys.exit(0)
 
-    # Read hook input from stdin
-    try:
-        hook_input = json.loads(sys.stdin.read())
-        if not isinstance(hook_input, dict):
-            hook_input = {}
-        project_dir = Path(_normalize_windows_shell_path(hook_input.get("cwd", "."))).resolve()
-    except (json.JSONDecodeError, KeyError):
-        hook_input = {}
-        project_dir = Path(".").resolve()
+    hook_input = _load_hook_input()
+    project_dir = Path(_normalize_windows_shell_path(hook_input.get("cwd", "."))).resolve()
 
     configure_project_encoding(project_dir)
 

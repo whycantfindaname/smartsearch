@@ -43,6 +43,7 @@ def run_git(
         result = subprocess.run(
             git_args,
             cwd=cwd,
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             encoding="utf-8",
