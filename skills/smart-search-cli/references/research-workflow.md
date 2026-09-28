@@ -49,7 +49,7 @@ For an existing checkout, inspect `git -C <repo> status --short` and the registe
 Run this workflow from the current Smart Search source checkout, not a PATH-resolved global package:
 
 1. Resolve the repository root with `git -C <repo> rev-parse --show-toplevel` and confirm branch `lwj_dev` using `git -C <repo> branch --show-current`.
-2. Confirm that `<repo>/npm/bin/smart-search.js`, `<repo>/skills/smart-search-cli/agents/`, and the `research-run` command family exist. Check the commands with `node <repo>/npm/bin/smart-search.js research-run --help`; if its local runtime is missing, use the project's existing runtime preparation within authorization before invoking the wrapper, which may attempt runtime repair. Do not replace it with a global package.
+2. Confirm that `<repo>/npm/bin/smart-search.js`, `<repo>/skills/smart-search-cli/agents/`, and the `research-run` command family exist. Since 0.1.25, the wrapper loads a platform-native npm package instead of preparing a Python environment. Build that package from this selected fork checkout using `.jason-liao-agent-infra/RUNBOOK.md`, and make the verified package available to this checkout's wrapper through the existing npm installation flow. A matching version from the public registry is not proof that the personal research modules are included. Check the resulting entry with `node <repo>/npm/bin/smart-search.js research-run --help`; missing or mismatched native input is a preparation gap, not a reason to substitute a global CLI or an official binary.
 3. Use the absolute project-local entrypoint for every Smart Search invocation:
 
    ```text
