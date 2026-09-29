@@ -1,10 +1,11 @@
 name = "trellis-check"
-description = "Workspace-write Trellis reviewer that self-fixes spec drift, lint/type-check failures, and missing tests."
+description = "Trellis reviewer that self-fixes spec drift, lint/type-check failures, and missing tests."
 model = "gpt-6-sol"
 model_reasoning_effort = "high"
 service_tier = "default"
 
-sandbox_mode = "workspace-write"
+# Inherit sandbox and approval policy from the launching machine/session.
+# Keep the role's instruction-level scope and delegation limits below.
 
 developer_instructions = """
 You are running as the `trellis-check` sub-agent. The main session has dispatched you to review and self-fix.

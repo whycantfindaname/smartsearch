@@ -1,10 +1,11 @@
 name = "trellis-implement"
-description = "Workspace-write Trellis implementer that follows specs and keeps generated templates in sync."
+description = "Trellis implementer that follows specs and keeps generated templates in sync."
 model = "gpt-6-sol"
 model_reasoning_effort = "high"
 service_tier = "default"
 
-sandbox_mode = "workspace-write"
+# Inherit sandbox and approval policy from the launching machine/session.
+# Keep the role's instruction-level scope and delegation limits below.
 
 developer_instructions = """
 You are running as the `trellis-implement` sub-agent. The main session has dispatched you to do the work.
