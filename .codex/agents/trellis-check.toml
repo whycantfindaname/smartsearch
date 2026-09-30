@@ -1,6 +1,6 @@
 name = "trellis-check"
 description = "Trellis reviewer that self-fixes spec drift, lint/type-check failures, and missing tests."
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "high"
 service_tier = "default"
 

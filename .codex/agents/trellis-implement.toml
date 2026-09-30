@@ -1,6 +1,6 @@
 name = "trellis-implement"
 description = "Trellis implementer that follows specs and keeps generated templates in sync."
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "high"
 service_tier = "default"
 
