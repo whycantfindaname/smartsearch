@@ -724,11 +724,6 @@ def _attempt(
     return data
 
 
-def _attempt_from_exception(capability: str, provider: str, start: float, exc: BaseException) -> dict[str, Any]:
-    error_type, error = classify_provider_exception(exc)
-    return _attempt(capability, provider, "error", start, error_type=error_type, error=error)
-
-
 def _attempt_with_health(capability: str, provider: str, start: float, exc: BaseException) -> dict[str, Any]:
     """Record a raised optional-provider failure in persisted health, then report it."""
     error_type, error = classify_provider_exception(exc)
@@ -1597,10 +1592,6 @@ def _is_zh_current_intent(query: str) -> bool:
 
 def _is_web_current_intent(query: str) -> bool:
     return build_rules_route(query, mode="rules").web_current_intent
-
-
-def _is_fetch_intent(query: str) -> bool:
-    return build_rules_route(query, mode="rules").fetch_intent
 
 
 def _contains_any(query: str, keywords: set[str]) -> bool:

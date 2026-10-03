@@ -376,38 +376,6 @@ def _search_recovery(
     }
 
 
-def _search_timeout_result(query: str, timeout: float, search_kwargs: dict[str, Any] | None = None) -> dict[str, Any]:
-    seconds = _format_seconds(timeout)
-    search_kwargs = search_kwargs or {}
-    stream = search_kwargs.get("stream")
-    if stream is None:
-        stream = service.config.openai_compatible_stream
-    model = search_kwargs.get("model") or service.config.openai_compatible_model
-    return {
-        "ok": False,
-        "error_type": "network_error",
-        "error": f"Search timed out after {seconds} seconds",
-        "query": query,
-        "content": "",
-        "sources": [],
-        "sources_count": 0,
-        "primary_sources": [],
-        "primary_sources_count": 0,
-        "extra_sources": [],
-        "extra_sources_count": 0,
-        "source_warning": "",
-        "routing_decision": {},
-        "providers_used": [],
-        "provider_attempts": [],
-        "fallback_used": False,
-        "validation_level": "",
-        "timeout_seconds": timeout,
-        "provider": search_kwargs.get("providers", "auto"),
-        "model": model,
-        "stream": stream,
-        "diagnose_command": "smart-search diagnose openai-compatible --format markdown",
-        "recommendation": "Run `smart-search diagnose openai-compatible --format markdown` to check whether OpenAI-compatible stream/no-stream search requests are hanging upstream.",
-    }
 def _one_line(value: Any, limit: int = 160) -> str:
     text = "" if value is None else str(value)
     text = " ".join(text.replace("\r", " ").replace("\n", " ").split())
@@ -1881,18 +1849,6 @@ def _add_format_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--output", default="", help="Write rendered output to a file.")
 
 
-def _parse_json_object_arg(value: str, option_name: str) -> dict[str, Any] | None:
-    if not value:
-        return None
-    try:
-        data = json.loads(value)
-    except json.JSONDecodeError as exc:
-        raise ValueError(tr('{0} must be a JSON object: {1}', option_name, exc.msg)) from exc
-    if not isinstance(data, dict):
-        raise ValueError(tr('{0} must be a JSON object', option_name))
-    return data
-
-
 def _parse_json_array_arg(value: str, option_name: str) -> list[Any] | None:
     if not value:
         return None
@@ -2349,20 +2305,6 @@ def _prompt_skill_targets(lang: str) -> list[str]:
     except SkillInstallError as e:
         _write_stderr(f"{e}\n")
         return list(DEFAULT_SKILL_TARGET_IDS)
-
-
-def _setup_choice(prompt: str, choices: set[str], default: str) -> str:
-    value = _prompt_choice(prompt, default).strip().lower()
-    aliases = {
-        "保持": "keep",
-        "跳过": "skip",
-        "都配": "both",
-        "两个": "both",
-        "是": "yes",
-        "否": "no",
-    }
-    value = aliases.get(value, value)
-    return value if value in choices else default
 
 
 def _prompt_main_search(values: dict[str, str], current: dict[str, str], lang: str) -> None:
